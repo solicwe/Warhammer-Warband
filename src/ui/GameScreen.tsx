@@ -35,7 +35,7 @@ import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '
 import { botPledge, setPledge } from '../factions/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../rules-engine/detachments';
-import { botAct, botShouldAct, botStep } from '../ai/bot';
+import { autoActions, botAct, botShouldAct, botStep } from '../ai/bot';
 import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../ai/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
@@ -2489,6 +2489,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div style={{ fontWeight: 700, color: '#93c5fd', fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icon name="objective" size={15} /> Mission Actions Available:
             </div>
+            {/* the same choice the bot makes for itself: an action where it is worth more than that unit's shooting */}
+            <button className="btn small" style={{ marginBottom: 6 }} onClick={() => { const n = act((g) => autoActions(g, g.active)); flash(n ? `${n} mission action${n > 1 ? 's' : ''} started` : 'Shooting is worth more for every unit this turn'); }}>
+              <Icon name="objective" size={14} /> Pick the best actions for me
+            </button>
             <div className="row wrap" style={{ gap: 6 }}>
               {actionOptions(s).map((o) => {
                 const performer = s.units.find((x) => x.id === o.unitId);

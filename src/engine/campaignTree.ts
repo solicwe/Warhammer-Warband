@@ -1,6 +1,6 @@
 // The campaign's army tree (docs/04-campaign-tree.md): one passive tree for the whole army, paid for with Renown.
-// Seven shared spokes and the army's own branch around a start node, an inner ring of bridges halfway out and an
-// outer ring of keystones that convert keywords. Nodes reach units through keywords and use the existing Effect
+// Seven shared spokes and the army's own branch around a start node, an inner ring of bridges halfway out and,
+// past each shared spoke's tip, a keystone that converts keywords. Nodes reach units through keywords and use the existing Effect
 // fields, so the engine and the bot need no new rules code.
 import { addTimed } from '../rules-engine/effects';
 import type { Effect } from '../rules-engine/effects';
@@ -36,7 +36,7 @@ export interface TreeNode extends Spec {
   links: string[];
 }
 
-interface Branch { id: string; name: string; /** what the spoke is for, in one line */ about: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[] }
+interface Branch { id: string; name: string; /** what the spoke is for, in one line */ about: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[]; sideC?: Spec[] }
 
 const s = (name: string, text: string, units: string | undefined, e: Effect | Effect[]): Spec => ({ name, text, units, e });
 const R = (e: Effect, ...rounds: ('early' | 'late')[]): Effect => ({ ...e, if: [...(e.if ?? []), ...rounds.map((r) => (r === 'early' ? '!roundAtLeast:3' : 'roundAtLeast:3'))] });
@@ -206,6 +206,46 @@ const SPOKES: Branch[] = [
     ],
   },
 ];
+
+/** A third cluster on each shared spoke, off its sixth node: more to take along the spoke you chose. */
+const SIDE_C: Record<string, Spec[]> = {
+  fire: [
+    s('Suppressing Fire', 'BATTLELINE ranged weapons: +3" Range.', 'BATTLELINE', { rangeBonus: 3, attack: 'ranged' }),
+    s('Tank Hunters', 'VEHICLE ranged attacks re-roll Wound rolls of 1.', 'VEHICLE', { reroll: 'wounds1', attack: 'ranged' }),
+    s('Killing Field', 'From round 3: ranged weapons have [LETHAL HITS].', undefined, R({ abilities: ['lethal hits'], attack: 'ranged' }, 'late')),
+  ],
+  assault: [
+    s('Close Order', 'BATTLELINE melee attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'melee' }),
+    s('Blade Masters', 'CHARACTER melee weapons: +1 AP.', 'CHARACTER', { ap: 1, attack: 'melee' }),
+    s('Bloodbath', 'From round 3: melee weapons have [SUSTAINED HITS 1].', undefined, R({ abilities: ['sustained hits 1'], attack: 'melee' }, 'late')),
+  ],
+  armour: [
+    s('Ablative Hides', 'MONSTER: +1 Toughness.', 'MONSTER', { toughness: 1 }),
+    s('Dug In', 'Units in a terrain area: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['inTerrain'] }),
+    s('Stand Firm', 'BATTLELINE on an objective: +1 to saves.', 'BATTLELINE', { defend: { save: 1 }, if: ['onObjective'] }),
+  ],
+  speed: [
+    s('Swift Riders', 'MOUNTED: +1" Move.', 'MOUNTED', { move: 1 }),
+    s('Fast Movers', 'VEHICLE: +2" Move.', 'VEHICLE', { move: 2 }),
+    s('Hit and Run', 'Units that charged this turn: +1 to Wound in melee.', undefined, { wound: 1, attack: 'melee', if: ['charged'] }),
+  ],
+  command: [
+    s('Iron Resolve', 'BATTLELINE: +1 Leadership.', 'BATTLELINE', { ld: 1 }),
+    s('Field Orders', 'Units led by a CHARACTER re-roll Wound rolls of 1.', undefined, { reroll: 'wounds1', if: ['attached'] }),
+    { name: 'Staff Officers', text: '+1 CP at the start of every battle.', cp: 1 },
+  ],
+  objectives: [
+    s('Claim Stakers', 'INFANTRY on an objective: +1 OC.', 'INFANTRY', { oc: 1, if: ['onObjective'] }),
+    s('Fortified Positions', 'Units on an objective: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['onObjective'] }),
+    s('Mobile Garrison', 'VEHICLE: +1 OC.', 'VEHICLE', { oc: 1 }),
+  ],
+  logistics: [
+    { name: 'Requisition Officers', text: '+10 Scrap after every won battle.', scrap: 10 },
+    s('Seasoned', 'VETERAN ranged attacks re-roll Hit rolls of 1.', 'VETERAN', { reroll: 'hits1', attack: 'ranged' }),
+    s('Grizzled', 'VETERAN melee attacks re-roll Wound rolls of 1.', 'VETERAN', { reroll: 'wounds1', attack: 'melee' }),
+  ],
+};
+for (const b of SPOKES) b.sideC = SIDE_C[b.id];
 
 /** Inner ring: one bridge between each pair of neighbouring slots (the army's branch is the eighth slot). */
 const BRIDGES: Spec[] = [
@@ -484,12 +524,15 @@ export function treeFor(factionId: string): TreeNode[] {
       [k ? `${b.id}-${key}${k}` : `${b.id}-${from}`]));
     side(b.sideA, 2, -1, 'a');
     side(b.sideB, 5, 1, 'b');
+    side(b.sideC, 6, -1, 'c');
   });
-  // inner ring at depth 4, outer ring between the tips of the shared spokes
+  // inner ring at depth 4; past each shared spoke's tip, its keyword keystone
   branches.forEach((b, i) => {
     const nb = branches[(i + 1) % SLOTS];
     add({ ...BRIDGES[i], id: `ring-${b.id}`, kind: 'small', slot: 'ring', ...at(angleOf(i + 0.5), 4.15), links: [] }, [`${b.id}-4`, `${nb.id}-4`]);
-    if (i < CONVERSIONS.length) add({ ...CONVERSIONS[i], id: `outer-${b.id}`, kind: 'keystone', slot: 'ring', ...at(angleOf(i + 0.5), 7.6), links: [] }, [`${b.id}-7`, `${nb.id}-7`]);
+    // the outer keystones hang off one spoke's tip: the ends of two spokes are not joined, so a spoke's end is reached
+    // only by walking that spoke
+    if (i < CONVERSIONS.length) add({ ...CONVERSIONS[i], id: `outer-${b.id}`, kind: 'keystone', slot: b.id, ...at(angleOf(i), 8.4), links: [] }, [`${b.id}-7`]);
   });
   treeCache.set(key, nodes);
   return nodes;
@@ -497,7 +540,7 @@ export function treeFor(factionId: string): TreeNode[] {
 
 export const branchName = (factionId: string) => branchOf(factionId).name;
 /** The eight slots in drawing order: name, what it is for, and where its label goes on the map. */
-export const slotGuide = (factionId: string) => [...SPOKES, branchOf(factionId)].map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleOf(i), 8.45) }));
+export const slotGuide = (factionId: string) => [...SPOKES, branchOf(factionId)].map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleOf(i), 9.3) }));
 export const SLOT_NAMES: Record<string, string> = Object.fromEntries([...SPOKES.map((b) => [b.id, b.name]), ['ring', 'Ring'], ['start', 'Start']]);
 
 // ---------- Renown, allocating and refunding ----------

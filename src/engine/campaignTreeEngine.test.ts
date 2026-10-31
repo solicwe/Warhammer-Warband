@@ -146,7 +146,7 @@ describe('army tree in a whole campaign battle', () => {
     expect(s.phase).toBe('gameover');
     const plain = createGame({ lists: [run.list, autoList(ORK, 500, 4)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9, dispositions: campaignMission(node).dispositions });
     applyCampaign(plain, { ...run, tree: [] }, []);
-    expect(cp0 - plain.players[0].cp).toBe(6); // War Council 1, Master Tactician 1 + its bonus 1, Total War 2, Tithe Masters' bonus 1
+    expect(cp0 - plain.players[0].cp).toBe(7); // War Council 1, Staff Officers 1, Master Tactician 1 + its bonus 1, Total War 2, Tithe Masters' bonus 1
     // the buffs last the whole battle
     expect(s.units.filter((u) => u.owner === 0 && u.status !== 'destroyed').every((u) => (u.timed ?? []).some((t) => t.label === 'Swift Strike'))).toBe(true);
     const after = afterBattle(run, s.winner, SM, 'Orks');

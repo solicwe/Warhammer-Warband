@@ -21,11 +21,16 @@ describe('army tree: shape', () => {
   const ids = fs.readdirSync('public/data/factions').map((f) => f.replace('.json', ''));
   const allKeywords = new Set(ids.flatMap((id) => load(id).datasheets.flatMap((d) => [...d.keywords, ...d.factionKeywords])));
 
-  it('every army gets a tree of about 115 nodes, every node reachable from the start, links both ways', () => {
+  it('every army gets a tree of about 135 nodes, every node reachable from the start, links both ways', () => {
     for (const id of ['SM', 'TS', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU', 'AM', 'GC']) {
       const nodes = treeFor(id);
-      expect(nodes.length).toBeGreaterThanOrEqual(110);
-      expect(nodes.length).toBeLessThanOrEqual(130);
+      expect(nodes.length).toBeGreaterThanOrEqual(130);
+      expect(nodes.length).toBeLessThanOrEqual(150);
+      // a spoke's far end is not joined to another spoke: past depth 4 every link stays on the spoke
+      for (const n of nodes) {
+        const depth = Number(/-(\d)$/.exec(n.id)?.[1] ?? 0);
+        if (n.slot !== 'ring' && n.slot !== 'start' && depth > 4) for (const l of n.links) expect(nodes.find((m) => m.id === l)!.slot).toBe(n.slot);
+      }
       expect(new Set(nodes.map((n) => n.id)).size).toBe(nodes.length);
       for (const n of nodes) for (const l of n.links) expect(nodes.find((m) => m.id === l)!.links).toContain(n.id);
       const seen = new Set(['start']);

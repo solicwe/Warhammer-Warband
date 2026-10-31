@@ -14,7 +14,7 @@ that already applies to its keywords.
 
 - **Renown** is earned by the army, never by units: battle 3, elite 5, boss 6, a loss 1. A new run starts with 3.
   One sector (about 6 fights) gives about 25 Renown.
-- Each Renown point allocates one node. The tree has about 115 nodes, so one sector fills a fifth of it and each run
+- Each Renown point allocates one node. The tree has about 135 nodes, so one sector fills a fifth of it and each run
   has to pick a direction.
 - **Scrap** stays as it is: recruits, wargear, enhancements, detachments. The tree never costs Scrap.
 - **Respec**: at an armory or a medicae tent, refund one node for Scrap (20, then 10 more for each refund in the
@@ -25,11 +25,13 @@ that already applies to its keywords.
 A graph, not tiers. The start is the centre; a node can be taken once it links to a taken node.
 
 - **Eight slots** around the start: seven shared spokes and the army's own branch.
-- **Spoke**: a main line of 7 nodes (small, small, notable, small, small, notable, keystone) and two side clusters
-  of 3 nodes (two small and a notable), one leaving at depth 2 and one at depth 5. 13 nodes.
+- **Spoke**: a main line of 7 nodes (small, small, notable, small, small, notable, keystone) and side clusters of
+  3 nodes (two small and a notable) leaving at depth 2 and depth 5; a shared spoke has a third at depth 6 and its
+  conversion keystone past the tip. 17 nodes on a shared spoke.
 - **Inner ring**: a bridge node between each pair of neighbouring slots at depth 4, so a build can cross into the
   next spoke halfway out instead of walking back to the centre.
-- **Outer ring**: a keystone between the tips of neighbouring shared spokes. These keystones convert keywords.
+- **Spoke ends**: past each shared spoke's tip, a keystone joined to that spoke only. These keystones convert
+  keywords. Spoke ends are not joined to each other, so a spoke's far nodes are reached only by walking it.
 
 | Spoke | Theme |
 |---|---|
@@ -48,7 +50,7 @@ A graph, not tiers. The start is the centre; a node can be taken once it links t
   effect once enough nodes of the same spoke are taken ("+1 Damage when 6 Assault nodes are allocated"). Some are
   **round-conditional**: active only in rounds 1-2 (alpha strike) or from round 3 on (the long game).
 - **Keystone**: changes how the army plays, with a cost ("all weapons +1 Damage; all units -1 to saving throws").
-- **Conversion keystone** (outer ring): a keyword counts as another for the tree. "Mechanised Infantry: INFANTRY units
+- **Conversion keystone** (past a shared spoke's tip, joined to that spoke only): a keyword counts as another for the tree. "Mechanised Infantry: INFANTRY units
   also count as VEHICLE for tree nodes."
 
 Every effect uses the existing `Effect` fields, so the engine and the bot need no new rules code. CP and Scrap

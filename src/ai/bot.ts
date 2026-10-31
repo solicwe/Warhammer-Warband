@@ -555,20 +555,10 @@ export function botShootOne(s: GameState): boolean {
       markTried(s, u);
       unitSelected(s, u, 'shoot');
       botShootActs(s, u);
-      // a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
-      const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
-      const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
-      if (acts.length) {
-        const P = s.players[u.owner];
-        const already = (a: string) => P.mission.done.some((d) => d.action === a && d.turn === s.turn) || s.pendingActions.some((x) => x.action === a && x.player === u.owner && x.turn === s.turn);
-        const pick = acts
-          .filter((o) => !(o.action === 'surveil' && already('surveil')))
-          .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
-        const best = ranked[0]?.v ?? 0;
-        if (pick && (ACTION_VP[pick.action] ?? 3) * 16 >= best) {
-          startAction(s, pick);
-          return true;
-        }
+      const pick = actionWorthIt(s, u, ranked[0]?.v ?? 0);
+      if (pick) {
+        startAction(s, pick);
+        return true;
       }
       botExplosives(s, u);
     }
@@ -591,6 +581,38 @@ export function botShootOne(s: GameState): boolean {
     if (didShoot || s.attack || s.window) return true;
   }
   return false;
+}
+
+// a mission action is worth roughly 16 points of damage per VP it brings (a 1000-point game is decided by ~30 VP)
+const ACTION_VP: Record<string, number> = { cleanse: 3, plunder: 5, 'booby-trap': 3, decoy: 4, 'sensor-sweep': 4, triangulate: 5, surveil: 4, 'extract-intelligence': 7, 'secure-asset': 4, 'maintain-control': 3, 'vanguard-operation': 4, sabotage: 4 };
+
+/** The mission action this unit should start instead of shooting, or null when its shooting (worth `shotValue`) is better. */
+function actionWorthIt(s: GameState, u: UnitState, shotValue: number) {
+  const acts = actionOptions(s, u.owner).filter((o) => o.unitId === u.id);
+  if (!acts.length) return null;
+  const P = s.players[u.owner];
+  const already = (a: string) => P.mission.done.some((d) => d.action === a && d.turn === s.turn) || s.pendingActions.some((x) => x.action === a && x.player === u.owner && x.turn === s.turn);
+  const pick = acts
+    .filter((o) => !(o.action === 'surveil' && already('surveil')))
+    .sort((a, b) => Number(b.objId?.startsWith('home') ?? 0) - Number(a.objId?.startsWith('home') ?? 0))[0];
+  return pick && (ACTION_VP[pick.action] ?? 3) * 16 >= shotValue ? pick : null;
+}
+
+/** For a player: start, with each unit that has not shot yet, the mission action the bot would start in its place.
+ *  Returns how many were started. */
+export function autoActions(s: GameState, p: PlayerId): number {
+  let n = 0;
+  for (const u of boardUnits(s, p)) {
+    if (u.selectedToShoot) continue;
+    const modes = shootingModes(s, u);
+    const best = modes.length ? Math.max(0, ...boardUnits(s, other(p)).map((t) => {
+      const r = buildShootPools(s, u.id, t.id, { mode: modes[0] });
+      return r.error || !r.pools.length ? 0 : shotValue(s, u, t, r.pools.reduce((a, q) => a + expectedDamage(s, q, t).models, 0));
+    })) : 0;
+    const pick = actionWorthIt(s, u, best);
+    if (pick) { startAction(s, pick); n++; }
+  }
+  return n;
 }
 
 export function botShooting(s: GameState) {

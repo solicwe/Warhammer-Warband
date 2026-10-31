@@ -128,3 +128,22 @@ describe('campaign kills', () => {
     expect(plain.players[0].vp).toBe(0);
   });
 });
+
+describe('mission actions for the player', () => {
+  it('Pick the best actions for me starts what the bot would: an action in reach where shooting is worth less', async () => {
+    const { autoActions } = await import('../ai/bot');
+    const { actionOptions } = await import('./missions');
+    const pr = MISSIONS.primaries.find((p) => p.id === 'secure-asset')!;
+    const s = createGame({ lists: [autoList(SM, 500, 3), autoList(ORK, 500, 3)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', seed: 3, dispositions: [pr.forceDisposition, pr.vs] as never });
+    // put a unit of ours on a non-home objective and move the game to our Shooting phase, enemies far away
+    const o = s.objectives.find((x) => x.type !== 'home')!;
+    const u = s.units.find((x) => x.owner === 0 && !(x.keywords ?? []).some((k) => ['AIRCRAFT', 'TITANIC', 'FORTIFICATION'].includes(k)))!;
+    for (const [i, m] of u.models.entries()) { m.x = o.x + (i % 3) * 1.3; m.y = o.y + Math.floor(i / 3) * 1.3; }
+    u.status = 'board';
+    for (const e of s.units.filter((x) => x.owner === 1)) e.status = 'reserves' as never;
+    Object.assign(s, { phase: 'shooting', active: 0, round: 2, turn: 3 });
+    expect(actionOptions(s, 0).some((a) => a.unitId === u.id)).toBe(true);
+    expect(autoActions(s, 0)).toBeGreaterThan(0);
+    expect(s.pendingActions.some((a) => a.unitId === u.id) || s.players[0].mission.done.some((d) => d.unitId === u.id)).toBe(true);
+  });
+});
