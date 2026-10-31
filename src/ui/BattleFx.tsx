@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
-import { fxTextures, type TexKind } from './fxTextures';
+import { energyTex, fxTextures, type TexKind } from './fxTextures';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
 export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
@@ -76,7 +76,7 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
     return (
       <g opacity={1 - f}>
         <Glow at={e.at} r={1.2 + f * 1.5} color="purple" op={0.7} />
-        <circle cx={e.at.x} cy={e.at.y} r={0.8 + easeOut(f) * 2.2} fill="none" stroke="#c084fc" strokeWidth={0.18 * (1 - f)} />
+        <Swirl at={e.at} r={1.2 + easeOut(f) * 1.2} color="#c084fc" k={f} seed={e.seq} n={4} />
         <text x={e.at.x} y={e.at.y - 1 - f * 1.6} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
       </g>
     );
@@ -116,17 +116,9 @@ function ChargeRollFx({ e, f }: { e: Extract<FxEvent, { kind: 'roll' }>; f: numb
 
 type RitualEvent = Extract<FxEvent, { kind: 'ritual' }>;
 
-/** A sigil of eight points, turning: the mark of a Ritual. */
+/** The mark of a Ritual: warp energy gathering and turning around the caster. */
 function Sigil({ at, r, rot, color, op }: { at: Pt; r: number; rot: number; color: string; op: number }) {
-  const pts = Array.from({ length: 8 }, (_, i) => { const a = rot + (i * Math.PI) / 4; return `${at.x + Math.cos(a) * r},${at.y + Math.sin(a) * r}`; });
-  const star = [0, 3, 6, 1, 4, 7, 2, 5].map((i) => pts[i]).join(' ');
-  return (
-    <g opacity={op}>
-      <circle cx={at.x} cy={at.y} r={r} fill="none" stroke={color} strokeWidth={0.1} />
-      <circle cx={at.x} cy={at.y} r={r * 0.78} fill="none" stroke={color} strokeWidth={0.05} strokeDasharray="0.25 0.18" />
-      <polygon points={star} fill="none" stroke={color} strokeWidth={0.07} strokeLinejoin="round" />
-    </g>
-  );
+  return <Swirl at={at} r={r} color={color} k={rot / 6} seed={Math.round(at.x * 7 + at.y * 3)} n={5} op={op} />;
 }
 
 /**
@@ -175,20 +167,17 @@ function RitualFx({ e, f }: { e: RitualEvent; f: number }) {
       {land > 0 && (
         <g>
           <Glow at={e.to} r={1.5 + land * (e.ritual === 'doombolt' ? 2.6 : 1.4)} color={glow} op={0.8 * (1 - land)} />
-          {e.ritual === 'doombolt' && <><Sparks at={e.to} seed={seed + 3} k={land} color={col} size={2.2} /><circle cx={e.to.x} cy={e.to.y} r={0.6 + easeOut(land) * 3} fill="none" stroke={col} strokeWidth={0.2 * (1 - land)} /></>}
+          {e.ritual === 'doombolt' && <><Sparks at={e.to} seed={seed + 3} k={land} color={col} size={2.2} /><DustRing at={e.to} k={land} r={3.2} seed={seed} /><Wisp at={e.to} r={1.2 + land * 2} color={col} op={1 - land} rot={land * 120} /></>}
           {e.ritual === 'destinys-ruin' && (
-            <g opacity={1 - land * 0.6}>
-              <ellipse cx={e.to.x} cy={e.to.y} rx={1.6} ry={0.75 * Math.min(1, land * 3)} fill="none" stroke={col} strokeWidth={0.14} />
-              <circle cx={e.to.x} cy={e.to.y} r={0.45} fill={col} />
-            </g>
+            <Swirl at={e.to} r={1.6} color={col} k={land} seed={seed + 5} n={5} op={1 - land * 0.6} inward={0.6} />
           )}
           {e.ritual === 'twist-of-fate' && (
-            <path d={Array.from({ length: 28 }, (_, i) => { const a = i * 0.5 + land * 6, r = 0.2 + i * 0.07; return `${i ? 'L' : 'M'}${e.to.x + Math.cos(a) * r},${e.to.y + Math.sin(a) * r}`; }).join(' ')} fill="none" stroke={col} strokeWidth={0.1} opacity={1 - land * 0.5} />
+            <Swirl at={e.to} r={2} color={col} k={land * 2} seed={seed + 9} n={6} op={1 - land * 0.5} inward={0.4} />
           )}
           {e.ritual === 'temporal-surge' && (
             <g opacity={1 - land * 0.5}>
-              <Sigil at={e.to} r={1.6} rot={-land * 5} color={col} op={0.9} />
-              <path d={`M${e.to.x - 0.6},${e.to.y - 0.9} L${e.to.x + 0.6},${e.to.y - 0.9} L${e.to.x - 0.6},${e.to.y + 0.9} L${e.to.x + 0.6},${e.to.y + 0.9} Z`} fill="none" stroke="#fff" strokeWidth={0.1} />
+              {/* time runs backwards: motes of light rise and fall back */}
+              {Array.from({ length: 5 }, (_, i) => <Wisp key={i} at={{ x: e.to.x + (noise(seed, i + 70) - 0.5) * 2.2, y: e.to.y + 0.8 - Math.sin((land + i / 5) * Math.PI) * 2 }} r={0.7 + noise(seed, i + 71) * 0.5} color={col} op={0.8} rot={i * 72 + land * 60} v={i} />)}
             </g>
           )}
           <text x={e.to.x} y={e.to.y - 2.2 - land * 0.6} fontSize={0.85} textAnchor="middle" fill="#fff" stroke="#000" strokeWidth={0.13} paintOrder="stroke" fontWeight={900}>{e.name}{e.text ? ` · ${e.text}` : ''}</text>
@@ -249,6 +238,29 @@ function Sprite({ kind, at, r, op = 1, rot = 0, v = 0 }: { kind: TexKind; at: Pt
   const t = fxTextures();
   if (!t || r <= 0 || op <= 0) return null;
   return <image href={t[kind][Math.abs(Math.floor(v)) % t[kind].length]} x={at.x - r} y={at.y - r} width={r * 2} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
+}
+
+/** a ragged tendril of coloured energy (warp, power fields, sound); a faint disc where there is no canvas */
+function Wisp({ at, r, color, op = 1, rot = 0, v = 0 }: { at: Pt; r: number; color: string; op?: number; rot?: number; v?: number }) {
+  if (r <= 0 || op <= 0) return null;
+  const t = energyTex(color);
+  if (!t.length) return <circle cx={at.x} cy={at.y} r={r * 0.5} fill={color} opacity={Math.min(1, op) * 0.35} />;
+  return <image href={t[Math.abs(Math.floor(v)) % t.length]} x={at.x - r} y={at.y - r} width={r * 2} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
+}
+
+/** energy gathering and turning around a point: a few wisps that orbit, drift and change size, never a drawn circle */
+function Swirl({ at, r, color, k, seed, n = 5, op = 1, inward = 0 }: { at: Pt; r: number; color: string; k: number; seed: number; n?: number; op?: number; inward?: number }) {
+  if (op <= 0) return null;
+  return (
+    <g>
+      {Array.from({ length: n }, (_, i) => {
+        const a = noise(seed, i + 60) * Math.PI * 2 + k * (2.5 + noise(seed, i + 61) * 2) * (i % 2 ? 1 : -1);
+        const d = r * (0.35 + noise(seed, i + 62) * 0.65) * (1 - inward * k);
+        const p = { x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d * 0.8 };
+        return <Wisp key={i} at={p} r={r * (0.45 + noise(seed, i + 63) * 0.4)} color={color} op={op * (0.55 + 0.45 * Math.sin((k + noise(seed, i + 64)) * Math.PI * 2) ** 2)} rot={(a * 180) / Math.PI + k * 90} v={i} />;
+      })}
+    </g>
+  );
 }
 
 /** grey and brown puffs are drawn as ragged smoke or dust; tinted ones (spores, blood) stay soft discs */
@@ -765,34 +777,20 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           break;
         }
         case 'sonic': {
+          // sound is unseen: a pink-tinged ripple of pressure in the air, dust shaken off the ground under it,
+          // and at the target a burst of pressure that throws up dust
           if (k > 0 && k < 1) {
             for (let j = 0; j < 3; j++) {
-              const sk = Math.max(0, k - j * 0.08);
-              const sp = lerp(src, impact, sk);
-              const wr = 0.3 + (1 - sk) * 0.2 + j * 0.14;
-              over.push(
-                <ellipse
-                  key={`sw${key}-${j}`}
-                  cx={sp.x}
-                  cy={sp.y}
-                  rx={wr * 0.45}
-                  ry={wr}
-                  transform={`rotate(${(ang * 180) / Math.PI + 90} ${sp.x} ${sp.y})`}
-                  fill="none"
-                  stroke={j === 0 ? '#fbcfe8' : '#f472b6'}
-                  strokeWidth={0.09}
-                  opacity={0.85 - j * 0.22}
-                />,
-              );
+              const sk = Math.max(0, k - j * 0.1);
+              over.push(<Wisp key={`sw${key}-${j}`} at={lerp(src, impact, sk)} r={(0.6 + j * 0.25) * P} color="#f472b6" op={0.55 - j * 0.15} rot={(ang * 180) / Math.PI + j * 40 + k * 200} v={j} />);
             }
-            over.push(<Glow key={`sg${key}`} at={lerp(src, impact, k)} r={0.65} color="pink" op={0.75} />);
+            under.push(<Puff key={`sp${key}`} at={lerp(src, impact, Math.max(0, k - 0.2))} k={k} r={0.6} color="rgba(120,110,95,0.4)" />);
           }
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
-            over.push(<circle key={`sx${key}`} cx={impact.x} cy={impact.y} r={(0.4 + easeOut(xk) * 2.0) * P} fill="none" stroke="#f472b6" strokeWidth={0.12 * (1 - xk)} strokeDasharray="0.5 0.35" opacity={0.7 * (1 - xk)} />);
-            over.push(<Glow key={`sh${key}`} at={impact} r={0.8 + xk * 0.9} color="pink" op={1 - xk} />);
+            under.push(<DustRing key={`sx${key}`} at={impact} k={xk} r={2.2 * P} seed={sd} />);
+            over.push(<Wisp key={`sh${key}`} at={impact} r={(0.8 + xk * 1.2) * P} color="#f472b6" op={0.8 * (1 - xk)} rot={xk * 140 + sd} />);
             if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#fbcfe8" size={1.1} />);
-            else under.push(<circle key={`sd${key}`} cx={impact.x} cy={impact.y} r={0.5} fill="url(#fx-scorch)" opacity={1 - xk} />);
           }
           break;
         }
@@ -877,8 +875,9 @@ function missDirt(key: string, at: Pt, ik: number, sd: number, under: React.Reac
 function meleeHit(fx: WeaponFx, key: string, at: Pt, hit: boolean, t: number, sd: number, over: React.ReactNode[], under: React.ReactNode[], P = 1) {
   const sk = t / (fx === 'crush' ? 0.3 : 0.2);
   const a = noise(sd, 21) * 360;
-  const arc = (dy: number, w: number, col: string, op: number, dash?: string) => (
-    <path d={`M -1 ${-0.6 + sk * 0.3 + dy} Q 0 ${-1.4 + sk + dy} 1 ${-0.6 + sk * 0.3 + dy}`} fill="none" stroke={col} strokeWidth={w} strokeLinecap="round" opacity={op} strokeDasharray={dash} />
+  // a swing reads as a motion smear: a crescent thick in the middle and thinning to points, fading behind the blade
+  const smear = (dy: number, thick: number, col: string, op: number) => (
+    <path d={`M -1.1 ${-0.45 + dy} Q 0 ${-1.55 - thick + dy} 1.1 ${-0.45 + dy} Q 0 ${-1.55 + thick * 0.4 + dy} -1.1 ${-0.45 + dy} Z`} fill={col} opacity={op} />
   );
   if (sk > 0 && sk < 1) {
     if (fx === 'crush') {
@@ -893,17 +892,19 @@ function meleeHit(fx: WeaponFx, key: string, at: Pt, hit: boolean, t: number, sd
       const col = fx === 'power' ? '#60a5fa' : fx === 'chain' ? '#ef4444' : fx === 'claw' ? '#93c5fd' : '#e5e7eb';
       over.push(
         <g key={`s${key}`} transform={`translate(${at.x} ${at.y}) rotate(${a}) scale(${Math.sqrt(P)})`} opacity={1 - sk}>
-          {fx === 'claw' ? [-0.3, 0, 0.3].map((dy, j) => <g key={j}>{arc(dy, 0.28, col, 0.4)}{arc(dy, 0.08, '#fff', 1)}</g>)
-            : <>{arc(0, fx === 'power' ? 0.5 : 0.4, col, fx === 'power' ? 0.55 : 0.45)}{arc(0, 0.14, '#fff', 1, fx === 'chain' ? '0.18 0.1' : undefined)}</>}
+          {fx === 'claw' ? [-0.3, 0, 0.3].map((dy, j) => <g key={j}>{smear(dy, 0.12, col, 0.3)}{smear(dy, 0.04, '#fff', 0.55)}</g>)
+            : <>{smear(0, fx === 'power' ? 0.35 : 0.28, col, 0.3)}{smear(0, 0.1, '#fff', 0.5)}</>}
         </g>,
       );
-      if (fx === 'power') over.push(<Glow key={`pg${key}`} at={at} r={0.9 * P} color="blue" op={0.7 * (1 - sk)} />);
+      // a power field discharges where it bites
+      if (fx === 'power') over.push(<Wisp key={`pg${key}`} at={at} r={1.1 * P} color="#60a5fa" op={0.9 * (1 - sk)} rot={sd * 53 + sk * 90} v={sd} />);
     }
   }
   if (hit) {
     const hk = (t - 0.08) / 0.25;
     over.push(<Sparks key={`k${key}`} at={at} seed={sd} k={hk} color={fx === 'power' ? '#bfdbfe' : fx === 'chain' ? '#fdba74' : '#fecaca'} size={fx === 'chain' ? 1.2 : 0.9} />);
-    if (fx === 'chain' && hk > 0 && hk < 1) under.push(<Debris key={`cb${key}`} at={at} k={hk} seed={sd + 5} n={5} color="#7f1d1d" size={0.6} />);
+    // blades and teeth throw out a spray of blood and gore
+    if (fx !== 'power' && hk > 0 && hk < 1) under.push(<Debris key={`cb${key}`} at={at} k={hk} seed={sd + 5} n={fx === 'chain' ? 6 : 3} color="#7f1d1d" size={0.5} />);
   }
 }
 
@@ -937,45 +938,25 @@ function SkillFx({ e, f }: { e: SkillEvent; f: number }) {
       {/* the battlefield darkens a little and takes the colour of the power */}
       {e.epic && <rect x={x - 40} y={y - 40} width={80} height={80} fill={c.deep} opacity={0.16 * Math.sin(Math.min(1, f * 1.3) * Math.PI)} />}
       {/* charge-up: sparks spiral in */}
-      {charge < 1 && Array.from({ length: 14 }, (_, i) => {
-        const a = (i / 14) * Math.PI * 2 + charge * 2.5;
-        const d = (1 - charge) * R * 2.2 + 0.3;
-        return <circle key={`c${i}`} cx={x + Math.cos(a) * d} cy={y + Math.sin(a) * d} r={0.12 * big} fill={c.glow} opacity={0.4 + charge * 0.6} />;
-      })}
+      {charge < 1 && <Swirl at={e.at} r={R * 1.6} color={c.glow} k={charge} seed={seed} n={6} op={0.4 + charge * 0.6} inward={0.8} />}
       <g>
         {/* flash */}
-        {f > 0.12 && f < 0.4 && <circle cx={x} cy={y} r={(0.6 + (f - 0.12) * 9) * big} fill={c.core} opacity={Math.max(0, 1 - (f - 0.12) / 0.28)} />}
+        {f > 0.12 && f < 0.4 && <Wisp at={e.at} r={(1 + (f - 0.12) * 9) * big} color={c.glow} op={Math.max(0, 1 - (f - 0.12) / 0.28)} rot={seed * 37} />}
         {/* shockwaves */}
-        {[0, 0.12].map((d, i) => {
-          const k = Math.max(0, burst - d);
-          if (k <= 0 || k >= 0.7) return null;
-          return <circle key={`w${i}`} cx={x} cy={y} r={(0.8 + easeOut(k / 0.7) * 6.3) * big} fill="none" stroke={c.glow} strokeWidth={(0.45 - k * 0.5) * big} opacity={1 - k / 0.7} />;
-        })}
+        {burst > 0 && burst < 0.7 && <DustRing at={e.at} k={burst / 0.7} r={6 * big} seed={seed} />}
         {/* rays */}
-        <g transform={`translate(${x} ${y}) rotate(${spin * 0.3})`} opacity={Math.sin(Math.min(1, burst * 1.6) * Math.PI) * 0.75 * fadeOut}>
-          {Array.from({ length: rays }, (_, i) => {
-            const a = (i / rays) * 360;
-            const L = (R * 1.9 + noise(seed, i) * R) * (0.6 + burst * 0.6);
-            return <polygon key={`r${i}`} transform={`rotate(${a})`} points={`0,-0.18 ${L},0 0,0.18`} fill={c.glow} opacity={0.55} />;
+        {/* the power bursts out in uneven tongues, not a star of rays */}
+        <g opacity={Math.sin(Math.min(1, burst * 1.6) * Math.PI) * 0.8 * fadeOut}>
+          {Array.from({ length: rays / 2 }, (_, i) => {
+            const a = (i / (rays / 2)) * Math.PI * 2 + noise(seed, i) * 0.6, L = (R * 0.8 + noise(seed, i + 3) * R) * (0.5 + burst * 0.7);
+            return <Wisp key={`r${i}`} at={{ x: x + Math.cos(a) * L, y: y + Math.sin(a) * L }} r={(0.9 + noise(seed, i + 4) * 0.6) * big} color={c.glow} rot={(a * 180) / Math.PI + spin} v={i} />;
           })}
         </g>
         {/* core glow */}
-        <circle cx={x} cy={y} r={0.9 * big} fill={c.glow} opacity={0.5 * fadeOut * circleIn} />
+        <Wisp at={e.at} r={1.3 * big} color={c.glow} op={0.7 * fadeOut * circleIn} rot={spin} v={1} />
       </g>
-      {/* rune circle: two rings turning against each other, with marks */}
-      <g transform={`translate(${x} ${y})`} opacity={circleIn * fadeOut}>
-        <circle r={R} fill="none" stroke={c.glow} strokeWidth={0.12} opacity={0.9} />
-        <circle r={R * 0.78} fill="none" stroke={c.glow} strokeWidth={0.07} strokeDasharray="0.5 0.25" transform={`rotate(${-spin})`} />
-        <g transform={`rotate(${spin})`}>
-          {Array.from({ length: 12 }, (_, i) => (
-            <rect key={`t${i}`} transform={`rotate(${i * 30}) translate(${R - 0.05} -0.09)`} width={0.36 * big} height={0.18} fill={c.glow} />
-          ))}
-          {e.epic && Array.from({ length: 6 }, (_, i) => (
-            <polygon key={`s${i}`} transform={`rotate(${i * 60})`} points={`${R + 0.3},-0.3 ${R + 1.1},0 ${R + 0.3},0.3`} fill={c.glow} opacity={0.85} />
-          ))}
-        </g>
-        <circle r={R * 1.04} fill="none" stroke={c.deep} strokeWidth={0.05} opacity={0.8} />
-      </g>
+      {/* the power keeps turning around the hero while it lasts */}
+      <Swirl at={e.at} r={R} color={c.glow} k={f} seed={seed + 1} n={e.epic ? 7 : 5} op={circleIn * fadeOut * 0.8} />
       {/* embers drifting up and out */}
       {burst > 0 && Array.from({ length: e.epic ? 26 : 16 }, (_, i) => {
         const a = noise(seed, i + 7) * Math.PI * 2;
@@ -1012,9 +993,21 @@ function SkillLite({ e, f }: { e: SkillEvent; f: number }) {
   const fade = f < 0.15 ? f / 0.15 : f > 0.7 ? (1 - f) / 0.3 : 1;
   return (
     <g opacity={fade}>
-      <circle cx={x} cy={y} r={1.2 + f * 0.8} fill={c.glow} opacity={0.18} />
-      <circle cx={x} cy={y} r={1.1 + f * 1.4} fill="none" stroke={c.glow} strokeWidth={0.1} opacity={0.8 * (1 - f)} />
+      <Swirl at={e.at} r={1.3 + f * 0.6} color={c.glow} k={f} seed={e.seq} n={3} op={0.8 * (1 - f * 0.5)} />
       <text x={x} y={y - 2.1 - f * 0.5} fontSize={0.8} textAnchor="middle" fontWeight={800} fill={c.text} stroke="#000" strokeWidth={0.16} paintOrder="stroke">{e.name}</text>
+    </g>
+  );
+}
+
+/** a column of light coming down (or going up): stacked tendrils of energy, brightest at the ground */
+function LightColumn({ at, w, h, op, seed, color = '#67e8f9' }: { at: Pt; w: number; h: number; op: number; seed: number; color?: string }) {
+  if (op <= 0) return null;
+  return (
+    <g opacity={op}>
+      {Array.from({ length: 7 }, (_, i) => {
+        const t = i / 6, y = at.y - t * h;
+        return <Wisp key={i} at={{ x: at.x + (noise(seed, i + 90) - 0.5) * w * 0.4, y }} r={w * (1.1 - t * 0.5)} color={color} op={(1 - t * 0.75)} rot={90 + (noise(seed, i + 91) - 0.5) * 40} v={i} />;
+      })}
     </g>
   );
 }
@@ -1032,26 +1025,14 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
   return (
     <g>
       {/* Warp Beam */}
-      {beam > 0 && (
-        <g opacity={beam}>
-          <rect x={at.x - (deepStrike ? 1.6 : 0.9)} y={at.y - 18} width={deepStrike ? 3.2 : 1.8} height={18} fill="url(#fx-beam)" />
-          <rect x={at.x - (deepStrike ? 0.6 : 0.25)} y={at.y - 18} width={deepStrike ? 1.2 : 0.5} height={18} fill="#fff" opacity={0.85} />
-        </g>
-      )}
+      <LightColumn at={at} w={deepStrike ? 2.4 : 1.4} h={14} op={beam} seed={seed} />
       <Glow at={at} r={deepStrike ? 2.5 + 4 * beam : 1 + 2.2 * beam} color="cyan" op={beam} />
 
       {/* Primary Shockwave Ring */}
-      {ring > 0 && ring < 1 && (
-        <g>
-          <circle cx={at.x} cy={at.y} r={0.8 + easeOut(ring) * (deepStrike ? 6.5 : 4.2)} fill="none" stroke="#67e8f9" strokeWidth={(deepStrike ? 0.35 : 0.22) * (1 - ring)} opacity={0.95 * (1 - ring)} />
-          <circle cx={at.x} cy={at.y} r={0.5 + easeOut(ring) * (deepStrike ? 4.5 : 2.8)} fill="none" stroke="#ffffff" strokeWidth={0.12} opacity={0.85 * (1 - ring)} />
-        </g>
-      )}
+      <DustRing at={at} k={ring} r={deepStrike ? 6.5 : 4.2} seed={seed} />
 
       {/* Secondary Resonant Shockwave Ring for Deep Strike */}
-      {deepStrike && ring2 > 0 && ring2 < 1 && (
-        <circle cx={at.x} cy={at.y} r={0.4 + easeOut(ring2) * 5.5} fill="none" stroke="#fbcfe8" strokeWidth={0.25 * (1 - ring2)} opacity={0.75 * (1 - ring2)} />
-      )}
+      {deepStrike && ring2 > 0 && ring2 < 1 && <Swirl at={at} r={2.5} color="#67e8f9" k={ring2} seed={seed + 3} n={4} op={1 - ring2} />}
 
       {/* Warp Lightning Arcs */}
       {deepStrike && f < 0.7 && (
@@ -1064,10 +1045,12 @@ function ArrivalFx({ at, f, seed, deepStrike, label }: { at: Pt; f: number; seed
             const my = at.y + Math.sin(angle + 0.25) * r1;
             const ex = at.x + Math.cos(angle) * r2;
             const ey = at.y + Math.sin(angle) * r2;
+            // a forked, jagged arc rather than two straight strokes
+            const kink = (a: Pt, b: Pt, j: number) => `${(a.x + b.x) / 2 + (noise(seed + Math.floor(f * 30), i * 7 + j) - 0.5) * 0.7},${(a.y + b.y) / 2 + (noise(seed + Math.floor(f * 30), i * 7 + j + 3) - 0.5) * 0.7}`;
             return (
               <polyline
                 key={i}
-                points={`${at.x},${at.y} ${mx},${my} ${ex},${ey}`}
+                points={`${at.x},${at.y} ${kink(at, { x: mx, y: my }, 1)} ${mx},${my} ${kink({ x: mx, y: my }, { x: ex, y: ey }, 2)} ${ex},${ey}`}
                 fill="none"
                 stroke={i % 2 === 0 ? '#67e8f9' : '#ffffff'}
                 strokeWidth={0.12}
@@ -1133,8 +1116,7 @@ function ExtractFx({ e, f }: { e: Extract<FxEvent, { kind: 'extract' }>; f: numb
       {/* Upward Warp Beam into the sky */}
       {beamOp > 0 && (
         <g opacity={beamOp}>
-          <rect x={at.x - 1.5} y={at.y - 22} width={3.0} height={22} fill="url(#fx-beam)" />
-          <rect x={at.x - 0.45} y={at.y - 22} width={0.9} height={22} fill="#ffffff" opacity={0.92} />
+          <LightColumn at={at} w={2.2} h={16} op={1} seed={Math.round(at.x * 7 + at.y * 3)} color="#38bdf8" />
           <Glow at={at} r={2.8} color="cyan" op={beamOp * 0.85} />
         </g>
       )}
@@ -1142,8 +1124,7 @@ function ExtractFx({ e, f }: { e: Extract<FxEvent, { kind: 'extract' }>; f: numb
       {/* Contracting Energy Rings towards centre */}
       {f < 0.9 && (
         <g opacity={1 - f * 0.85}>
-          <circle cx={at.x} cy={at.y} r={contractRing} fill="none" stroke="#38bdf8" strokeWidth={0.16} />
-          <circle cx={at.x} cy={at.y} r={contractRing * 0.6} fill="none" stroke="#ffffff" strokeWidth={0.08} />
+          <Swirl at={at} r={contractRing} color="#38bdf8" k={f} seed={Math.round(at.x * 7 + at.y * 3)} n={5} />
         </g>
       )}
 
@@ -1168,25 +1149,16 @@ function ExtractFx({ e, f }: { e: Extract<FxEvent, { kind: 'extract' }>; f: numb
   );
 }
 
-// ---------- a unit breaks: a cracked red ring that shudders, and the word over it ----------
+// ---------- a unit breaks: red wisps of panic that shudder, and the word over it ----------
 
 function ShockFx({ at, f, seed }: { at: Pt; f: number; seed: number }) {
   const inK = clamp01(f / 0.2), out = f > 0.75 ? (1 - f) / 0.25 : 1;
   const shake = f < 0.35 ? (noise(seed, Math.floor(f * 60)) - 0.5) * 0.25 : 0;
   const R = 2.1 + (1 - inK) * 1.2;
-  // the ring broken into arcs, as if it cracked
-  const arcs = Array.from({ length: 7 }, (_, i) => {
-    const a0 = (i / 7) * Math.PI * 2 + noise(seed, i) * 0.3, a1 = a0 + (Math.PI * 2) / 7 - 0.28;
-    return `M${at.x + shake + Math.cos(a0) * R},${at.y + Math.sin(a0) * R} A${R},${R} 0 0 1 ${at.x + shake + Math.cos(a1) * R},${at.y + Math.sin(a1) * R}`;
-  });
   return (
     <g opacity={inK * out}>
       <Glow at={at} r={2.6} color="red" op={0.35} />
-      {arcs.map((d, i) => <path key={i} d={d} fill="none" stroke="#f87171" strokeWidth={0.2} strokeLinecap="round" />)}
-      {Array.from({ length: 5 }, (_, i) => {
-        const a = noise(seed, i + 20) * Math.PI * 2, r0 = R - 0.2, r1 = R + 0.5 + noise(seed, i + 21) * 0.6;
-        return <path key={i} d={`M${at.x + Math.cos(a) * r0},${at.y + Math.sin(a) * r0} L${at.x + Math.cos(a + 0.12) * (r0 + r1) / 2},${at.y + Math.sin(a + 0.12) * (r0 + r1) / 2} L${at.x + Math.cos(a) * r1},${at.y + Math.sin(a) * r1}`} fill="none" stroke="#fca5a5" strokeWidth={0.08} />;
-      })}
+      <Swirl at={{ x: at.x + shake, y: at.y }} r={R * 0.8} color="#f87171" k={f} seed={seed} n={4} op={0.7} />
       <text x={at.x + shake} y={at.y - R - 0.6 - f * 0.4} fontSize={0.85} textAnchor="middle" fontWeight={900} letterSpacing={0.08} fill="#fecaca" stroke="#000" strokeWidth={0.16} paintOrder="stroke">BATTLE-SHOCKED</text>
     </g>
   );
@@ -1199,7 +1171,7 @@ function HealFx({ at, f, seed, n, revive }: { at: Pt; f: number; seed: number; n
   return (
     <g opacity={fade}>
       <Glow at={at} r={1.6 + f} color="green" op={0.4} />
-      {revive && <circle cx={at.x} cy={at.y} r={0.6 + f * 2.6} fill="none" stroke="#bef264" strokeWidth={0.12 * (1 - f)} />}
+      {revive && <Swirl at={at} r={0.8 + f * 1.6} color="#bef264" k={f} seed={seed} n={4} op={1 - f} />}
       {Array.from({ length: 9 }, (_, i) => {
         const k = (f + noise(seed, i)) % 1, x = at.x + (noise(seed, i + 9) - 0.5) * 2.6 + Math.sin(k * 6 + i) * 0.2;
         return <circle key={i} cx={x} cy={at.y + 0.8 - k * 3} r={0.09 + noise(seed, i + 18) * 0.08} fill="#d9f99d" opacity={1 - k} />;
@@ -1225,7 +1197,7 @@ function ChargeFx({ paths, f, seed }: { paths: [string, Pt[]][]; f: number; seed
         const head = lerp(a, b, k), tail = lerp(a, b, Math.max(0, k - 0.35));
         return <line key={id} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fde68a" strokeWidth={0.12} strokeLinecap="round" opacity={0.55 * lines} />;
       })}
-      {hit > 0 && hit < 1 && <circle cx={c.x} cy={c.y} r={0.8 + easeOut(hit) * 3} fill="none" stroke="#fde68a" strokeWidth={0.18 * (1 - hit)} opacity={1 - hit} />}
+      <DustRing at={c} k={hit} r={3.2} seed={seed} />
       {hit > 0 && ends.slice(0, 8).map((p, i) => <Puff key={i} at={p} k={hit} r={0.7 + noise(seed, i) * 0.4} />)}
     </g>
   );

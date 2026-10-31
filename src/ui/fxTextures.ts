@@ -67,3 +67,37 @@ export function fxTextures(): Record<TexKind, string[]> | null {
   } catch { cache = null; }
   return cache;
 }
+
+const energyCache = new Map<string, string[]>();
+
+/** Ragged tendrils of light in one colour (warp energy, power fields, sound pressure): a white-hot heart with filaments
+ *  of the colour licking out of it. Made on first use per colour; empty where there is no canvas. */
+export function energyTex(hex: string): string[] {
+  const hit = energyCache.get(hex);
+  if (hit) return hit;
+  if (!fxTextures()) return [];
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const out = Array.from({ length: 3 }, (_, vi) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = SIZE;
+    const g = c.getContext('2d');
+    if (!g) return '';
+    const img = g.createImageData(SIZE, SIZE), n = fbm(vi * 31 + 3), warp = fbm(vi * 17 + 11);
+    for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+      const u = (x + 0.5) / SIZE * 2 - 1, v = (y + 0.5) / SIZE * 2 - 1, r = Math.hypot(u, v);
+      // domain warp, then ridges of the noise: thin bright filaments rather than a soft blob
+      const wx = u + (warp(u * 2 + 1, v * 2 + 1) - 0.5) * 0.8, wy = v + (warp(u * 2 + 7, v * 2 + 7) - 0.5) * 0.8;
+      const ridge = Math.pow(1 - Math.abs(n(wx * 2.5 + 4, wy * 2.5 + 4) * 2 - 1), 4);
+      const fall = Math.max(0, 1 - r), core = Math.pow(Math.max(0, 1 - r * 2.2), 2);
+      const A = Math.min(1, fall * fall * (ridge * 1.6 + 0.12) + core);
+      const w = Math.min(1, core * 1.4 + ridge * fall * 0.35); // whiter where it is hottest
+      const i = (y * SIZE + x) * 4;
+      img.data[i] = cr + (255 - cr) * w; img.data[i + 1] = cg + (255 - cg) * w; img.data[i + 2] = cb + (255 - cb) * w;
+      img.data[i + 3] = A * 255;
+    }
+    g.putImageData(img, 0, 0);
+    return c.toDataURL();
+  });
+  energyCache.set(hex, out);
+  return out;
+}
