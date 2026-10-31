@@ -16,17 +16,23 @@ const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 's
 /** How much bigger effects are drawn: the whole table on a phone is ~60" in 400px, where an inch-sized flash is a few
  *  pixels. Zoomed out they grow (up to 2.2x), zoomed in to a fight they are their real size. Set by the layer each frame. */
 let VIS = 1;
+/** shots, beams and tracers: a little thinner than the rest of the effects */
+let TRACE = 0.8;
 
 export const FxLayer = memo(function FxLayer({ fx, viewW = 30 }: { fx: ActiveFx[]; viewW?: number }) {
-  VIS = Math.max(1, Math.min(2.2, viewW / 28));
+  // zoomed out, effects grow a little so they still read; not as much as the board shrinks, or a shot swamps the models
+  VIS = Math.max(1, Math.min(1.6, viewW / 32));
+  TRACE = VIS * 0.8;
   const live = fx.filter((a) => LIVE.has(a.e.kind) || (a.e.kind === 'move' && a.e.moveKind === 'charge') || (a.e.kind === 'place' && !!a.e.at));
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
     if (!live.length) return;
     let raf = 0;
+    // ~30 frames a second is smooth for a flash and halves the work on a phone
+    let last = 0;
     const tick = () => {
       const t = performance.now();
-      setNow(t);
+      if (t - last >= 30) { last = t; setNow(t); }
       if (live.some((a) => t - a.t0 < FX_MS[a.e.kind])) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -231,8 +237,8 @@ function DustRing({ at, k, r, seed, color = 'rgba(120,110,95,0.5)' }: { at: Pt; 
   const R = r * easeOut(k);
   return (
     <g opacity={1 - k}>
-      {Array.from({ length: 11 }, (_, i) => {
-        const a = (i / 11) * Math.PI * 2 + noise(seed, i + 40) * 0.5, rr = R * (0.75 + noise(seed, i + 41) * 0.4);
+      {Array.from({ length: 7 }, (_, i) => {
+        const a = (i / 7) * Math.PI * 2 + noise(seed, i + 40) * 0.5, rr = R * (0.75 + noise(seed, i + 41) * 0.4);
         const p = { x: at.x + Math.cos(a) * rr, y: at.y + Math.sin(a) * rr }, size = (0.2 + k * 0.6) * (0.6 + noise(seed, i + 42) * 0.8) * r / 3;
         const tex = puffTex(color);
         return (tex && fxTextures()) ? <Sprite key={i} kind={tex} at={p} r={size * 1.6} op={0.9} rot={noise(seed, i + 43) * 360} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={size} fill={color} />;
@@ -307,15 +313,16 @@ function Debris({ at, k, seed, n = 8, color = '#2b241c', size = 1 }: { at: Pt; k
 /** A blast: white flash, fireball, shockwave ring, flying debris, then a column of smoke over a scorch mark. */
 function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: number; big?: number }) {
   if (k <= 0 || k >= 1) return null;
-  const big = b0 * VIS;
+  // a hit's blast stays the size of the thing that made it: it grows with the zoom less than the shots do
+  const big = b0 * Math.sqrt(VIS) * 0.75;
   const fire = clamp01(k / 0.45), ring = clamp01(k / 0.35), smoke = clamp01((k - 0.1) / 0.9);
   return (
     <g>
       <circle cx={at.x} cy={at.y} r={1.6 * big} fill="url(#fx-scorch)" opacity={Math.min(1, k * 4) * (1 - smoke * 0.3)} />
       {ring < 1 && <circle cx={at.x} cy={at.y} r={(0.5 + easeOut(ring) * 3) * big} fill="none" stroke="#fde68a" strokeWidth={0.12 * (1 - ring) * big} opacity={0.6 * (1 - ring)} />}
-      <DustRing at={at} k={ring} r={3 * b0} seed={seed} />
+      <DustRing at={at} k={ring} r={2.2 * big} seed={seed} />
       <g opacity={0.9 * (1 - smoke)}>
-        {Array.from({ length: 5 }, (_, i) => {
+        {Array.from({ length: 3 }, (_, i) => {
           const a = noise(seed, i + 70) * Math.PI * 2, d = smoke * (0.6 + noise(seed, i + 71)) * big;
           const p = { x: at.x + Math.cos(a) * d * 0.7, y: at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big }, rr = (0.6 + smoke * 1.4) * big * (0.7 + noise(seed, i + 72) * 0.5);
           return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={rr * 1.2} sx={1.4} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
@@ -324,7 +331,7 @@ function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: numb
       {fire < 1 && (
         <g>
           {/* a lumpy fireball of a few overlapping blobs, not one perfect disc, and only a brief flash */}
-          {Array.from({ length: 4 }, (_, i) => {
+          {Array.from({ length: 3 }, (_, i) => {
             const a = noise(seed, i + 80) * Math.PI * 2, d = (0.2 + fire * 0.7) * big * noise(seed, i + 81);
             const p = { x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d - fire * 0.4 * big }, rr = (0.4 + fire * 1.3) * big * (0.7 + noise(seed, i + 82) * 0.5);
             return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.2} sx={1.6} op={1 - fire * fire} rot={(Math.atan2(p.y - at.y, p.x - at.x) * 180) / Math.PI} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
@@ -333,7 +340,7 @@ function Explosion({ at, k, seed, big: b0 = 1 }: { at: Pt; k: number; seed: numb
           <Glow at={at} r={(2.4 + fire * 2) * big} color="orange" op={0.6 * (1 - fire)} />
         </g>
       )}
-      <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={9} size={big} />
+      <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={5} size={big} />
     </g>
   );
 }
@@ -413,9 +420,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
   const volleys = e.volleys?.length ? e.volleys
     : [{ fx: LEGACY[e.style ?? (e.attackKind === 'fight' ? 'melee' : 'bullet')] ?? 'bolt', shots: e.shots ?? 6, hits: e.hits ?? e.shots ?? 6, models: shooters.length }];
   const after = clamp01((f - 0.5) / 0.5); // damage numbers and casualties
-  // at most ~28 shots drawn for the whole attack, shared between its weapons: a big unit still reads as one volley
+  // at most ~20 shots drawn for the whole attack, shared between its weapons: a big unit still reads as one volley
   const want = volleys.map((v) => Math.min((SHOT[v.fx] ?? SHOT.bolt).max, Math.max(v.fx === 'gatling' ? 8 : 1, v.shots)));
-  const budget = Math.min(1, 28 / Math.max(1, want.reduce((a, b) => a + b, 0)));
+  const budget = Math.min(1, 20 / Math.max(1, want.reduce((a, b) => a + b, 0)));
   const under: React.ReactNode[] = []; // smoke, dirt
   const over: React.ReactNode[] = []; // light
   volleys.forEach((v, vi) => {
@@ -464,7 +471,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             if (k > 0 && k < 1) for (let j = 0; j < 5; j++) {
               const a = ang + (noise(sd, 80 + j) - 0.5) * 0.28, L = Math.hypot(impact.x - src.x, impact.y - src.y);
               const h = { x: src.x + Math.cos(a) * L * k, y: src.y + Math.sin(a) * L * k }, t = { x: src.x + Math.cos(a) * L * Math.max(0, k - 0.3), y: src.y + Math.sin(a) * L * Math.max(0, k - 0.3) };
-              over.push(<line key={`sg${key}-${j}`} x1={t.x} y1={t.y} x2={h.x} y2={h.y} stroke={core} strokeWidth={(0.06) * VIS} strokeLinecap="round" />);
+              over.push(<line key={`sg${key}-${j}`} x1={t.x} y1={t.y} x2={h.x} y2={h.y} stroke={core} strokeWidth={(0.06) * TRACE} strokeLinecap="round" />);
             }
           } else if (k > 0 && k < 1) {
             const tl = v.fx === 'gatling' ? 0.3 : heavy ? 0.28 : 0.22;
@@ -472,9 +479,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (heavy ? 1.5 : v.fx === 'gatling' ? 0.7 : 1) * P;
             over.push(
               <g key={`t${key}`}>
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(1.1 * w) * VIS} strokeLinecap="round" opacity={0.12} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(0.3 * w) * VIS} strokeLinecap="round" opacity={0.45} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={core} strokeWidth={(0.1 * w) * VIS} strokeLinecap="round" />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(1.1 * w) * TRACE} strokeLinecap="round" opacity={0.12} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={glow} strokeWidth={(0.3 * w) * TRACE} strokeLinecap="round" opacity={0.45} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={core} strokeWidth={(0.1 * w) * TRACE} strokeLinecap="round" />
                 {v.fx === 'pulse' && <Glow at={head} r={0.45} color="cyan" />}
               </g>,
             );
@@ -493,8 +500,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           const lk = (f - t0) / 0.35;
           if (lk > 0 && lk < 1) over.push(
             <g key={`sn${key}`} opacity={1 - lk}>
-              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#e0f2fe" strokeWidth={(0.18) * VIS} opacity={0.35} />
-              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.05) * VIS} />
+              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#e0f2fe" strokeWidth={(0.18) * TRACE} opacity={0.35} />
+              <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.05) * TRACE} />
             </g>,
           );
           if (hit && ik > 0 && ik < 1) { over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color="#fff" size={0.7} />); under.push(<Puff key={`bm${key}`} at={impact} k={ik} r={0.7 * P} color="rgba(127,13,13,0.55)" />); }
@@ -504,9 +511,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
         case 'plasma': {
           if (k > 0 && k < 1) {
             // a ball of plasma with a fading tail
-            for (let j = 3; j >= 1; j--) over.push(<Glow key={`pt${key}-${j}`} at={lerp(src, impact, Math.max(0, k - j * 0.06))} r={0.55 - j * 0.1} color="blue" op={0.5 - j * 0.1} />);
+            for (let j = 3; j >= 1; j--) over.push(<Glow key={`pt${key}-${j}`} at={lerp(src, impact, Math.max(0, k - j * 0.06))} r={0.45 - j * 0.08} color="blue" op={0.5 - j * 0.1} />);
             const p = lerp(src, impact, k);
-            over.push(<g key={`pb${key}`}><Glow at={p} r={0.9 * P} color="cyan" /><circle cx={p.x} cy={p.y} r={0.2 * P} fill="#f0f9ff" /></g>);
+            over.push(<g key={`pb${key}`}><Glow at={p} r={0.7 * P} color="cyan" /><circle cx={p.x} cy={p.y} r={0.16 * P * TRACE} fill="#f0f9ff" /></g>);
           }
           const xk = (f - t0 - S.travel) / 0.3;
           if (xk > 0 && xk < 1) {
@@ -531,8 +538,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const head = lerp(src, impact, lk), tail = lerp(src, impact, Math.max(0, lk - 0.35));
               over.push(
                 <g key={`lp${key}`}>
-                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={col[0]} strokeWidth={(0.3) * VIS} strokeLinecap="round" opacity={0.5} />
-                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fff" strokeWidth={(0.07) * VIS} strokeLinecap="round" />
+                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke={col[0]} strokeWidth={(0.3) * TRACE} strokeLinecap="round" opacity={0.5} />
+                  <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#fff" strokeWidth={(0.07) * TRACE} strokeLinecap="round" />
                 </g>,
               );
             }
@@ -550,10 +557,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk) * P;
             over.push(
               <g key={`b${key}`}>
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(1.8 * w) * VIS} strokeLinecap="round" opacity={0.1} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.6 * w) * VIS} strokeLinecap="round" opacity={0.35} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.22 * w) * VIS} strokeLinecap="round" opacity={0.8} />
-                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.07 * w) * VIS} strokeLinecap="round" />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(1.8 * w) * TRACE} strokeLinecap="round" opacity={0.1} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.6 * w) * TRACE} strokeLinecap="round" opacity={0.35} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke={col[0]} strokeWidth={(0.22 * w) * TRACE} strokeLinecap="round" opacity={0.8} />
+                <line x1={src.x} y1={src.y} x2={impact.x} y2={impact.y} stroke="#fff" strokeWidth={(0.07 * w) * TRACE} strokeLinecap="round" />
               </g>,
             );
             if (v.fx !== 'las') for (let j = 0; j < 4; j++) {
@@ -589,10 +596,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const w = (1 - bk * 0.6) * P;
             over.push(
               <g key={`mb${key}`} opacity={bk > 0.8 ? (1 - bk) * 5 : 1}>
-                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(2.2 * w) * VIS} strokeLinecap="round" opacity={0.1} />
-                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(0.9 * w) * VIS} strokeLinecap="round" opacity={0.3} />
-                <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth={(0.35 * w) * VIS} strokeLinecap="round" opacity={0.85} />
-                <polyline points={pts} fill="none" stroke="#fffbeb" strokeWidth={(0.12 * w) * VIS} strokeLinecap="round" />
+                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(2.2 * w) * TRACE} strokeLinecap="round" opacity={0.1} />
+                <polyline points={pts} fill="none" stroke="#f97316" strokeWidth={(0.9 * w) * TRACE} strokeLinecap="round" opacity={0.3} />
+                <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth={(0.35 * w) * TRACE} strokeLinecap="round" opacity={0.85} />
+                <polyline points={pts} fill="none" stroke="#fffbeb" strokeWidth={(0.12 * w) * TRACE} strokeLinecap="round" />
               </g>,
             );
           }
@@ -611,7 +618,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           // a graviton beam is unseen: only a faint shimmer in the air, then the target is crushed into the ground
           if (k > 0 && k < 1) {
             const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.4));
-            over.push(<line key={`gr${key}`} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#a78bfa" strokeWidth={(0.35 * P) * VIS} strokeLinecap="round" opacity={0.18} />);
+            over.push(<line key={`gr${key}`} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#a78bfa" strokeWidth={(0.35 * P) * TRACE} strokeLinecap="round" opacity={0.18} />);
           }
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
@@ -633,9 +640,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             }).join(' ');
             over.push(
               <g key={`lt${key}`} opacity={1 - bk * 0.5}>
-                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(1.1) * VIS} strokeLinejoin="round" opacity={0.1} />
-                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(0.32) * VIS} strokeLinejoin="round" opacity={0.4} />
-                <polyline points={pts} fill="none" stroke="#f0fdff" strokeWidth={(0.08) * VIS} strokeLinejoin="round" />
+                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(1.1) * TRACE} strokeLinejoin="round" opacity={0.1} />
+                <polyline points={pts} fill="none" stroke="#67e8f9" strokeWidth={(0.32) * TRACE} strokeLinejoin="round" opacity={0.4} />
+                <polyline points={pts} fill="none" stroke="#f0fdff" strokeWidth={(0.08) * TRACE} strokeLinejoin="round" />
               </g>,
             );
           }
@@ -650,7 +657,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const s2 = j / 4, off = j === 0 || j === 4 ? 0 : (noise(sd + fr, 160 + j) - 0.5) * 0.7;
               return `${impact.x + Math.cos(a2) * L2 * s2 - Math.sin(a2) * off},${impact.y + Math.sin(a2) * L2 * s2 + Math.cos(a2) * off}`;
             }).join(' ');
-            over.push(<polyline key={`lc${key}`} points={pts} fill="none" stroke="#a5f3fc" strokeWidth={(0.07) * VIS} strokeLinejoin="round" opacity={1 - ck} />);
+            over.push(<polyline key={`lc${key}`} points={pts} fill="none" stroke="#a5f3fc" strokeWidth={(0.07) * TRACE} strokeLinejoin="round" opacity={1 - ck} />);
           }
           break;
         }
@@ -703,7 +710,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
                 // tongues stretched along the flow and curling as they go, so the jet reads as one licking stream
                 const r = (0.55 + life * 1.2) * size, rot = ((a + Math.sin(life * 7 + j) * 0.45) * 180) / Math.PI;
                 // a soft heat glow under every other tongue, so the jet is one hazy body and not separate flakes
-                if (j % 2 === 0) under.push(<Glow key={`fg${key}-${j}`} at={p} r={r * 1.6} color={TINT_GLOW[v.tint ?? ''] ?? (life < 0.4 ? 'orange' : 'red')} op={0.7 * (1 - life)} />);
+                if (j % 3 === 0) under.push(<Glow key={`fg${key}-${j}`} at={p} r={r * 1.6} color={TINT_GLOW[v.tint ?? ''] ?? (life < 0.4 ? 'orange' : 'red')} op={0.7 * (1 - life)} />);
                 over.push(<Sprite key={`fl${key}-${j}`} kind="fire" href={tinted.length ? tinted[j % tinted.length] : undefined} at={p} r={r} sx={2.1 - life * 0.7} op={0.85 * (1 - life * life)} rot={rot} v={j} />);
                 // warpfire burns without smoke; real fire turns to black smoke as it dies
                 if (!v.tint && life > 0.55) under.push(<Sprite key={`fk${key}-${j}`} kind="smoke" at={{ x: p.x, y: p.y - life }} r={0.8 + life * 1.4} op={0.7 * (life - 0.55) * 2.2 * (1 - life)} rot={j * 67} v={j} />);
@@ -738,7 +745,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const mid = { x: (src.x + impact.x) / 2, y: (src.y + impact.y) / 2 - Math.hypot(impact.x - src.x, impact.y - src.y) * 0.18 };
             const q = (a: Pt, b: Pt, cc: Pt, s: number) => lerp(lerp(a, cc, s), lerp(cc, b, s), s);
             const p = q(src, impact, mid, k), tail = q(src, impact, mid, Math.max(0, k - 0.15));
-            under.push(<line key={`tt${key}`} x1={tail.x} y1={tail.y} x2={p.x} y2={p.y} stroke="rgba(150,150,150,0.5)" strokeWidth={(0.35) * VIS} strokeLinecap="round" />);
+            under.push(<line key={`tt${key}`} x1={tail.x} y1={tail.y} x2={p.x} y2={p.y} stroke="rgba(150,150,150,0.5)" strokeWidth={(0.35) * TRACE} strokeLinecap="round" />);
             over.push(<g key={`t${key}`}><Glow at={p} r={0.5} color="amber" /><circle cx={p.x} cy={p.y} r={0.18} fill="#fff1c2" /></g>);
           }
           const xk = (f - t0 - S.travel) / 0.4;
@@ -750,10 +757,10 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.28));
             over.push(
               <g key={`gs${key}`}>
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(1.3) * VIS} strokeLinecap="round" opacity={0.12} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(0.5) * VIS} strokeLinecap="round" opacity={0.4} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={(0.2) * VIS} strokeLinecap="round" opacity={0.9} />
-                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={(0.08) * VIS} strokeLinecap="round" />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(1.3) * TRACE} strokeLinecap="round" opacity={0.12} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#22c55e" strokeWidth={(0.5) * TRACE} strokeLinecap="round" opacity={0.4} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#86efac" strokeWidth={(0.2) * TRACE} strokeLinecap="round" opacity={0.9} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0fdf4" strokeWidth={(0.08) * TRACE} strokeLinecap="round" />
                 <Glow at={head} r={0.55} color="green" />
               </g>,
             );
@@ -778,9 +785,9 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             const spinDeg = ((f - t0) * 1800 + sd * 30) % 360;
             over.push(
               <g key={`sh${key}`}>
-                <line x1={trail.x} y1={trail.y} x2={p.x} y2={p.y} stroke="#38bdf8" strokeWidth={(0.16) * VIS} strokeLinecap="round" opacity={0.55} />
+                <line x1={trail.x} y1={trail.y} x2={p.x} y2={p.y} stroke="#38bdf8" strokeWidth={(0.16) * TRACE} strokeLinecap="round" opacity={0.55} />
                 <g transform={`translate(${p.x} ${p.y}) rotate(${spinDeg})`}>
-                  <polygon points="-0.18,-0.05 0,-0.18 0.18,-0.05 0.05,0 0.18,0.05 0,0.18 -0.18,0.05 -0.05,0" fill="#f0f9ff" stroke="#0284c7" strokeWidth={(0.03) * VIS} />
+                  <polygon points="-0.18,-0.05 0,-0.18 0.18,-0.05 0.05,0 0.18,0.05 0,0.18 -0.18,0.05 -0.05,0" fill="#f0f9ff" stroke="#0284c7" strokeWidth={(0.03) * TRACE} />
                   <circle r={0.05} fill="#38bdf8" />
                 </g>
                 <Glow at={p} r={0.4} color="cyan" op={0.7} />
@@ -875,7 +882,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             );
           })}
           <g opacity={after < 0.75 ? 1 : (1 - after) * 4} transform={`translate(${e.to.x} ${e.to.y - 1.6 - after * 1.6}) scale(${after < 0.15 ? 0.6 + after * 3 : 1.05})`}>
-            <text fontSize={1.05} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={(0.16) * VIS} paintOrder="stroke" fontWeight={900}>
+            <text fontSize={1.05} textAnchor="middle" fill={e.dmg ? '#fecaca' : '#e5e7eb'} stroke="#000" strokeWidth={(0.16) * TRACE} paintOrder="stroke" fontWeight={900}>
               {e.dmg ? `-${e.dmg}W` : 'no damage'}{e.killed ? ` · ${e.killed} slain` : ''}
             </text>
           </g>
