@@ -104,8 +104,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Scrap** is the currency. You earn it by winning (and 25 a round in battle, +20 and +1 CP while you hold the
   centre objective) and spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs
   60, 110 or 170 Scrap for 1, 2 or 3 Detachment Points.
-- **Missions.** Each battle plays one of the official primary missions (many are won with actions), shown on the
-  map before you fight.
+- **Missions.** Each battle is a normal battle: one of the official primary missions (many are won with actions),
+  Tactical secondaries and five rounds, shown on the map before you fight. Only the Force Dispositions are drawn at
+  random.
 - **The enemy grows with you.** Enemies bring more detachments as you win (one more every 3 wins and every sector,
   one more for an elite or boss, up to 4), and an army tree with as many nodes as yours (+3 elite, +6 boss).
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how

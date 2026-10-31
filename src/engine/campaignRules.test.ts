@@ -15,7 +15,7 @@ const SM = load('SM');
 const ORK = load('ORK');
 
 describe('campaign battles', () => {
-  it('each battle plays one of the official primaries, some with actions, the same one for the same node', () => {
+  it('each battle is a normal one: an official primary, Tactical secondaries, 5 rounds, the same for the same node', () => {
     const run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
     const fights = run.map.filter((n) => n.enemy);
     const names = new Set(fights.map((n) => campaignMission(n).primary.id));
@@ -24,9 +24,12 @@ describe('campaign battles', () => {
       const m = campaignMission(n);
       expect(MISSIONS.primaries).toContain(m.primary);
       expect(campaignMission(n).primary.id).toBe(m.primary.id);
-      const s = createGame({ lists: [run.list, autoList(ORK, 500, 1)], factions: [SM, ORK], names: ['You', 'Orks'], dispositions: m.dispositions, secondaryMode: 'none', maxRounds: 3, seed: n.enemy!.seed });
+      // a normal battle: Tactical secondaries and five rounds, only the Force Dispositions drawn at random
+      expect([m.secondaryMode, m.maxRounds]).toEqual(['tactical', 5]);
+      const s = createGame({ lists: [run.list, autoList(ORK, 500, 1)], factions: [SM, ORK], names: ['You', 'Orks'], dispositions: m.dispositions, secondaryMode: m.secondaryMode, maxRounds: m.maxRounds, seed: n.enemy!.seed });
       applyCampaign(s, { ...run, fighting: n.id }, n.enemy!.rules);
       expect(primaryById(s.players[0].primaryId).id).toBe(m.primary.id);
+      expect([s.players[0].secMode, s.players[1].secMode, s.maxRounds ?? 5]).toEqual(['tactical', 'tactical', 5]);
     }
     expect(MISSIONS.primaries.filter((p) => p.action).length).toBeGreaterThan(5);
   });

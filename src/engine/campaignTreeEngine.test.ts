@@ -152,8 +152,9 @@ describe('army tree in a whole campaign battle', () => {
     const node = base.map.find((n) => n.layer === 0)!;
     const run: Run = { ...base, tree, fighting: node.id };
     const orks = autoList(ORK, 500, 4);
-    // as the campaign plays it: the battle's own primary mission, and a later-campaign enemy with three detachments
-    const s = createGame({ lists: [run.list, { ...orks, detachments: enemyDetachments(ORK, orks.detachments, 3, 4) }], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', maxRounds: 3, seed: 9, dispositions: campaignMission(node).dispositions });
+    // as the campaign plays it: the battle's own primary mission, Tactical secondaries, five rounds, and a later-campaign
+    // enemy with three detachments
+    const s = createGame({ lists: [run.list, { ...orks, detachments: enemyDetachments(ORK, orks.detachments, 3, 4) }], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: campaignMission(node).secondaryMode, maxRounds: campaignMission(node).maxRounds, seed: 9, dispositions: campaignMission(node).dispositions });
     applyCampaign(s, run, []);
     const cp0 = s.players[0].cp;
     expect(s.units.filter((u) => u.owner === 0).every((u) => (u.timed ?? []).length > 0)).toBe(true);

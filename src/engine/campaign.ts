@@ -1056,12 +1056,12 @@ export function pruneTree(run: Run): Run {
     story: back ? [...run.story, `The army tree was redrawn to fit the army: ${back} node${back > 1 ? 's' : ''} refunded as Renown`] : run.story };
 }
 
-/** A campaign battle's primary mission: one of the official ones (many are won with actions), the same for the same
- *  battle. Both sides play it and the battle is won on VP. */
-export function campaignMission(node: MapNode): { primary: PrimaryDef; dispositions: [DispositionId, DispositionId] } {
+/** A campaign battle is a normal battle: the official primary mission, Tactical secondaries and five rounds. Only the
+ *  Force Dispositions are drawn at random (by the battle's seed, so the same battle always plays the same mission). */
+export function campaignMission(node: MapNode): { primary: PrimaryDef; dispositions: [DispositionId, DispositionId]; secondaryMode: 'tactical'; maxRounds: number } {
   const all = MISSIONS.primaries;
   const primary = all[(node.enemy?.seed ?? 0) % all.length];
-  return { primary, dispositions: [primary.forceDisposition, primary.vs] };
+  return { primary, dispositions: [primary.forceDisposition, primary.vs], secondaryMode: 'tactical', maxRounds: 5 };
 }
 
 /** Detachments an enemy brings: one more for every 3 battles won and every sector after the first, one more for an

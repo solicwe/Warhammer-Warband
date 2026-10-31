@@ -40,8 +40,8 @@ interface Props {
 }
 
 const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string }> = {
-  battle: { name: 'Battle', icon: 'fight', note: 'A 3-round battle. Win to earn Scrap and rewards.' },
-  elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A 3-round battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
+  battle: { name: 'Battle', icon: 'fight', note: 'A full battle: the mission, Tactical secondaries, 5 rounds. Win to earn Scrap and rewards.' },
+  elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A full battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
   armory: { name: 'Munitorum Depot', icon: 'shop', note: '+25 Scrap, then take one: a reinforcement unit for free, or a relic (one you hold levels up).' },
   medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate, hold a tactical briefing for +1 CP per battle, or refund army tree nodes.' },
   supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
@@ -147,11 +147,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const enemyList = { ...base, detachments: enemyDetachments(ef, base.detachments, enemyDetachmentCount(run, node.kind), node.enemy.seed) };
       const r = run.fighting === node.id ? run : enter(run, node.id, fac);
       const isBoss = node.kind === 'boss';
-      const maxRounds = isBoss ? 5 : 3;
+      const m = campaignMission(node);
       const s = createGame({
         lists: [syncList(r.list, fac), autoAttach(syncList(enemyList, ef), ef)], factions: [fac, ef],
-        names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: 'none', maxRounds, seed: node.enemy.seed,
-        dispositions: campaignMission(node).dispositions,
+        names: ['You', isBoss ? `${ef.name} Warlord` : ef.name], secondaryMode: m.secondaryMode, maxRounds: m.maxRounds, seed: node.enemy.seed,
+        dispositions: m.dispositions,
       });
       s.botPlayer = 1;
       s.bots = [1];
@@ -201,7 +201,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-kicker">Roguelike Tactical Run</div>
             <div className="cmp-title">Fight your way to the Warlord</div>
             <ul className="cmp-points">
-              <li><Icon name="fight" size={16} /> {START_POINTS}-point army, 3-round battles</li>
+              <li><Icon name="fight" size={16} /> {START_POINTS}-point army, full battles with secondaries</li>
               <li><Icon name="shop" size={16} /> Earn Scrap for recruits and wargear, and Renown for the army tree</li>
               <li><Icon name="cards" size={16} /> Relics & boons: stack powerful army-wide modifiers</li>
               <li><Icon name="fate" size={16} /> 3 Fate: each defeat costs one</li>
