@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct } from '../ai/bot';
 import { layoutsFor, MISSIONS, type DispositionId } from './config';
+import { KILL_VP } from './attack';
 import { createGame } from './game';
 import { PRESETS } from '../ui/presets';
 import type { GameState } from './types';
@@ -13,7 +14,7 @@ const ORK = load('ORK');
 function checkInvariants(s: GameState) {
   for (const p of s.players) {
     expect(p.cp).toBeGreaterThanOrEqual(0);
-    expect(p.vp).toBeLessThanOrEqual(MISSIONS.vpCaps.primaryTotal);
+    expect(p.vp).toBeLessThanOrEqual(MISSIONS.vpCaps.primaryTotal + KILL_VP); // kills give a little on top
   }
   for (const u of s.units) for (const m of u.models) {
     if (!m.dead) expect(m.wounds).toBeGreaterThan(0);

@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import type { FxEvent, Pt } from '../engine/types';
 import type { WeaponFx } from '../engine/weaponFx';
+import { fxTextures, type TexKind } from './fxTextures';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
 export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
@@ -44,9 +45,11 @@ export const FxDefs = memo(function FxDefs() {
     <defs>
       {Object.entries(GLOWS).map(([k, c]) => (
         <radialGradient key={k} id={`fxg-${k}`}>
-          <stop offset="0" stopColor="#fff" stopOpacity="0.7" />
-          <stop offset="0.3" stopColor={c} stopOpacity="0.6" />
-          <stop offset="0.65" stopColor={c} stopOpacity="0.18" />
+          {/* a hot core with a fast falloff: a wide soft halo (heavy bloom) is what makes effects look fake */}
+          <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+          <stop offset="0.14" stopColor={c} stopOpacity="0.75" />
+          <stop offset="0.38" stopColor={c} stopOpacity="0.2" />
+          <stop offset="0.7" stopColor={c} stopOpacity="0.04" />
           <stop offset="1" stopColor={c} stopOpacity="0" />
         </radialGradient>
       ))}
@@ -205,22 +208,62 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
 
-function Sparks({ at, seed, k, color = '#fde68a', size = 0.9 }: { at: Pt; seed: number; k: number; color?: string; size?: number }) {
+/** Hot fragments thrown off a hit: uneven streaks that droop as they fly, sprayed back from the surface when the shot's
+ *  direction is known, then a few slower embers after the first burst. */
+function Sparks({ at, seed, k, color = '#fde68a', size = 0.9, ang }: { at: Pt; seed: number; k: number; color?: string; size?: number; ang?: number }) {
   if (k <= 0 || k >= 1) return null;
+  const dirOf = (i: number) => ang === undefined ? noise(seed, i) * Math.PI * 2 : ang + Math.PI + (noise(seed, i) - 0.5) * 2.4;
+  const streak = (i: number, kk: number, sp: number, w: number) => {
+    if (kk <= 0 || kk >= 1) return null;
+    const a = dirOf(i), d = sp * size * (1 - (1 - kk) ** 2), len = (0.15 + noise(seed, i + 13) * 0.35) * size * (1 - kk);
+    const x = at.x + Math.cos(a) * d, y = at.y + Math.sin(a) * d + kk * kk * 0.5 * size;
+    return <line key={i} x1={x} y1={y} x2={x - Math.cos(a) * len} y2={y - Math.sin(a) * len - kk * 0.12} stroke={kk < 0.3 ? '#fff' : color} strokeWidth={w} strokeLinecap="round" opacity={1 - kk} />;
+  };
+  return (
+    <g>
+      {k < 0.15 && <circle cx={at.x} cy={at.y} r={(0.12 + k * 1.2) * size} fill="#fff" opacity={1 - k / 0.15} />}
+      {Array.from({ length: 7 }, (_, i) => streak(i, k * 1.3, 0.5 + noise(seed, i + 7) * 1.1, 0.05))}
+      {Array.from({ length: 3 }, (_, i) => streak(20 + i, (k - 0.25) * 1.5, 0.3 + noise(seed, i + 27) * 0.5, 0.07))}
+    </g>
+  );
+}
+
+/** a broken ring of dust thrown out along the ground: what a blast's shockwave looks like from above */
+function DustRing({ at, k, r, seed, color = 'rgba(120,110,95,0.5)' }: { at: Pt; k: number; r: number; seed: number; color?: string }) {
+  if (k <= 0 || k >= 1) return null;
+  const R = r * easeOut(k);
   return (
     <g opacity={1 - k}>
-      <circle cx={at.x} cy={at.y} r={0.25 + k * 0.5 * size} fill="#fff" opacity={0.9 * (1 - k)} />
-      {Array.from({ length: 6 }, (_, i) => {
-        const a = noise(seed, i) * Math.PI * 2;
-        const r0 = 0.2 + k * 0.4 * size, r1 = r0 + (0.35 + noise(seed, i + 7) * 0.5) * size * (1 - k * 0.5);
-        return <line key={i} x1={at.x + Math.cos(a) * r0} y1={at.y + Math.sin(a) * r0} x2={at.x + Math.cos(a) * r1} y2={at.y + Math.sin(a) * r1} stroke={color} strokeWidth={0.07} strokeLinecap="round" />;
+      {Array.from({ length: 11 }, (_, i) => {
+        const a = (i / 11) * Math.PI * 2 + noise(seed, i + 40) * 0.5, rr = R * (0.75 + noise(seed, i + 41) * 0.4);
+        const p = { x: at.x + Math.cos(a) * rr, y: at.y + Math.sin(a) * rr }, size = (0.2 + k * 0.6) * (0.6 + noise(seed, i + 42) * 0.8) * r / 3;
+        const tex = puffTex(color);
+        return (tex && fxTextures()) ? <Sprite key={i} kind={tex} at={p} r={size * 1.6} op={0.9} rot={noise(seed, i + 43) * 360} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={size} fill={color} />;
       })}
     </g>
   );
 }
 
+/** one noise sprite (smoke, fire, flash, dust); null when there is no canvas, and the caller draws a plain shape */
+function Sprite({ kind, at, r, op = 1, rot = 0, v = 0 }: { kind: TexKind; at: Pt; r: number; op?: number; rot?: number; v?: number }) {
+  const t = fxTextures();
+  if (!t || r <= 0 || op <= 0) return null;
+  return <image href={t[kind][Math.abs(Math.floor(v)) % t[kind].length]} x={at.x - r} y={at.y - r} width={r * 2} height={r * 2} opacity={Math.min(1, op)} preserveAspectRatio="none" transform={rot ? `rotate(${rot} ${at.x} ${at.y})` : undefined} />;
+}
+
+/** grey and brown puffs are drawn as ragged smoke or dust; tinted ones (spores, blood) stay soft discs */
+const puffTex = (color: string): TexKind | null => {
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
+  if (!m) return null;
+  const [r, g, b] = [+m[1], +m[2], +m[3]];
+  return Math.max(r, g, b) - Math.min(r, g, b) <= 32 ? 'smoke' : r > g && g > b && r - b < 70 ? 'dust' : null;
+};
+
 function Puff({ at, k, r = 1, color = 'rgba(120,115,105,0.55)' }: { at: Pt; k: number; r?: number; color?: string }) {
   if (k <= 0 || k >= 1) return null;
+  const tex = puffTex(color), id = Math.round(at.x * 10); // drifting puffs move in y, so x keeps their look steady
+  const alpha = +(/,\s*([\d.]+)\)\s*$/.exec(color)?.[1] ?? 0.5);
+  if (tex && fxTextures()) return <Sprite kind={tex} at={at} r={r * (0.45 + k * 1.1)} op={Math.min(1, alpha * 1.6) * (1 - k)} rot={(id * 47 + k * 40) % 360} v={id} />;
   return <circle cx={at.x} cy={at.y} r={r * (0.3 + k * 0.9)} fill={color} opacity={0.8 * (1 - k)} />;
 }
 
@@ -245,17 +288,23 @@ function Explosion({ at, k, seed, big = 1 }: { at: Pt; k: number; seed: number; 
   return (
     <g>
       <circle cx={at.x} cy={at.y} r={1.6 * big} fill="url(#fx-scorch)" opacity={Math.min(1, k * 4) * (1 - smoke * 0.3)} />
-      {ring < 1 && <circle cx={at.x} cy={at.y} r={(0.5 + easeOut(ring) * 3) * big} fill="none" stroke="#fde68a" strokeWidth={0.18 * (1 - ring)} opacity={0.8 * (1 - ring)} />}
+      <DustRing at={at} k={ring} r={3 * big} seed={seed} />
       <g opacity={0.9 * (1 - smoke)}>
         {Array.from({ length: 5 }, (_, i) => {
           const a = noise(seed, i + 70) * Math.PI * 2, d = smoke * (0.6 + noise(seed, i + 71)) * big;
-          return <circle key={i} cx={at.x + Math.cos(a) * d * 0.7} cy={at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big} r={(0.6 + smoke * 1.4) * big * (0.7 + noise(seed, i + 72) * 0.5)} fill="url(#fx-smoke-g)" />;
+          const p = { x: at.x + Math.cos(a) * d * 0.7, y: at.y + Math.sin(a) * d * 0.7 - smoke * 1.4 * big }, rr = (0.6 + smoke * 1.4) * big * (0.7 + noise(seed, i + 72) * 0.5);
+          return fxTextures() ? <Sprite key={i} kind="smoke" at={p} r={rr * 1.3} rot={noise(seed, i + 73) * 360 + smoke * 30} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-smoke-g)" />;
         })}
       </g>
       {fire < 1 && (
         <g>
-          <circle cx={at.x} cy={at.y} r={(0.6 + fire * 1.8) * big} fill="url(#fx-boom)" opacity={1 - fire} />
-          {fire < 0.25 && <circle cx={at.x} cy={at.y} r={(0.9 + fire * 3) * big} fill="#fffbe6" opacity={0.9 * (1 - fire * 4)} />}
+          {/* a lumpy fireball of a few overlapping blobs, not one perfect disc, and only a brief flash */}
+          {Array.from({ length: 4 }, (_, i) => {
+            const a = noise(seed, i + 80) * Math.PI * 2, d = (0.2 + fire * 0.7) * big * noise(seed, i + 81);
+            const p = { x: at.x + Math.cos(a) * d, y: at.y + Math.sin(a) * d - fire * 0.4 * big }, rr = (0.4 + fire * 1.3) * big * (0.7 + noise(seed, i + 82) * 0.5);
+            return fxTextures() ? <Sprite key={i} kind="fire" at={p} r={rr * 1.4} op={1 - fire * fire} rot={noise(seed, i + 83) * 360} v={i} /> : <circle key={i} cx={p.x} cy={p.y} r={rr} fill="url(#fx-boom)" opacity={1 - fire} />;
+          })}
+          {fire < 0.15 && <Glow at={at} r={(0.8 + fire * 4) * big} color="molten" op={1 - fire / 0.15} />}
         </g>
       )}
       <Debris at={at} k={clamp01(k / 0.6)} seed={seed} n={9} size={big} />
@@ -371,7 +420,11 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
       if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic' && v.fx !== 'sonic') {
         const mk = (f - t0) / (v.fx === 'las' || v.fx === 'melta' || v.fx === 'volkite' || v.fx === 'gauss' || v.fx === 'cryo' ? 0.12 : 0.07);
         if (mk > 0 && mk < 1) over.push(<Muzzle key={`m${vi}-${i}`} at={src} ang={ang} k={mk} sd={sd} fx={v.fx} pow={P} />);
-        if (mk > 0 && mk < 1 && v.fx !== 'las' && v.fx !== 'lightning' && v.fx !== 'gauss' && v.fx !== 'cryo') under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + (noise(sd, 60) - 0.5) * 0.6, y: src.y - mk * 0.4 }} k={mk * 0.5} r={v.fx === 'missile' ? 1.4 : 0.7} color="rgba(190,185,175,0.35)" />);
+      }
+      // gun smoke comes just after the flash and hangs a moment, drifting up
+      const smk = (f - t0 - 0.03) / 0.35;
+      if (smk > 0 && smk < 1 && !['las', 'lightning', 'gauss', 'cryo', 'gatling', 'flame', 'psychic', 'sonic'].includes(v.fx)) {
+        under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + Math.cos(ang) * 0.5 + (noise(sd, 60) - 0.5) * 0.5, y: src.y + Math.sin(ang) * 0.5 - smk * 0.7 }} k={smk} r={(v.fx === 'missile' ? 1.4 : 0.6) * Math.sqrt(P)} color="rgba(150,145,138,0.4)" />);
       }
       const key = `${vi}-${i}`;
       switch (v.fx) {
@@ -402,7 +455,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               over.push(<Glow key={`pop${key}`} at={impact} r={(heavy ? 0.9 : 0.6) * P * (0.5 + ik)} color={ig} op={1 - ik} />);
               under.push(<Puff key={`bp${key}`} at={impact} k={ik} r={0.5 * P} color="rgba(90,84,76,0.5)" />);
             }
-            over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color={core} size={(heavy ? 1.1 : 0.8) * P} />);
+            over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color={core} size={(heavy ? 1.1 : 0.8) * P} ang={ang} />);
           } else if (!hit) missDirt(key, impact, ik, sd, under);
           break;
         }
@@ -430,7 +483,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             over.push(
               <g key={`px${key}`}>
                 <Glow at={impact} r={(0.6 + xk * (hit ? 1.6 : 1)) * P} color="blue" op={1 - xk} />
-                <circle cx={impact.x} cy={impact.y} r={(0.4 + easeOut(xk) * 1.8) * P} fill="none" stroke="#a5f3fc" strokeWidth={0.12 * (1 - xk)} opacity={1 - xk} />
+                <Puff at={{ x: impact.x, y: impact.y - xk * 0.6 }} k={xk} r={0.9 * P} color="rgba(200,215,225,0.35)" />
               </g>,
             );
             over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#bae6fd" size={1.1} />);
@@ -479,15 +532,17 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           }
           const hk = (f - t0) / 0.4;
           if (hk > 0 && hk < 1) {
-            over.push(<Glow key={`bh${key}`} at={impact} r={(0.5 + hk * 0.6) * P} color={glow} op={1 - hk} />);
+            over.push(<Glow key={`bh${key}`} at={impact} r={(0.5 + hk * 0.6) * P * (v.fx === 'cryo' ? 0.6 : 1)} color={glow} op={(1 - hk) * (v.fx === 'cryo' ? 0.6 : 1)} />);
             if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={hk} color={col[1]} size={0.9 * P} />);
-            else under.push(<circle key={`bs${key}`} cx={impact.x} cy={impact.y} r={0.45 * P} fill={v.fx === 'cryo' ? 'rgba(224,242,254,0.6)' : 'url(#fx-scorch)'} opacity={1 - hk} />);
+            else if (v.fx === 'cryo') under.push(<Puff key={`bs${key}`} at={impact} k={hk} r={0.8 * P} color="rgba(224,242,254,0.6)" />);
+            else under.push(<circle key={`bs${key}`} cx={impact.x} cy={impact.y} r={0.45 * P} fill="url(#fx-scorch)" opacity={1 - hk} />);
             // volkite deflagrates: the target bursts into flame; helfrost leaves a ring of frost
             if (hit && v.fx === 'volkite') for (let j = 0; j < 3; j++) {
               const life = clamp01(hk * 1.4 - j * 0.15);
-              if (life > 0 && life < 1) over.push(<Glow key={`vf${key}-${j}`} at={{ x: impact.x + (noise(sd, 150 + j) - 0.5) * 0.7, y: impact.y - life * 0.9 }} r={0.35 + life * 0.5} color={life < 0.4 ? 'molten' : 'orange'} op={1 - life} />);
+              if (life > 0 && life < 1) over.push(fxTextures() ? <Sprite key={`vf${key}-${j}`} kind="fire" at={{ x: impact.x + (noise(sd, 150 + j) - 0.5) * 0.7, y: impact.y - life * 0.9 }} r={0.5 + life * 0.6} op={1 - life} rot={j * 120 + life * 60} v={j} />
+                : <Glow key={`vf${key}-${j}`} at={{ x: impact.x + (noise(sd, 150 + j) - 0.5) * 0.7, y: impact.y - life * 0.9 }} r={0.35 + life * 0.5} color={life < 0.4 ? 'molten' : 'orange'} op={1 - life} />);
             }
-            if (v.fx === 'cryo') over.push(<circle key={`cr${key}`} cx={impact.x} cy={impact.y} r={(0.3 + easeOut(hk) * 1.2) * P} fill="none" stroke="#e0f2fe" strokeWidth={0.1 * (1 - hk)} strokeDasharray="0.25 0.15" opacity={1 - hk} />);
+            if (v.fx === 'cryo') under.push(<DustRing key={`cr${key}`} at={impact} k={hk} r={1.4 * P} seed={sd} color="rgba(224,242,254,0.55)" />);
           }
           break;
         }
@@ -513,26 +568,25 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           if (hk > 0 && hk < 1) {
             // molten glow and heat rings where it lands
             over.push(<Glow key={`mh${key}`} at={impact} r={(1 + hk * 0.8) * P} color="molten" op={1 - hk} />);
-            for (let j = 0; j < 2; j++) {
-              const rk = clamp01(hk * 1.6 - j * 0.3);
-              if (rk > 0 && rk < 1) over.push(<circle key={`mr${key}-${j}`} cx={impact.x} cy={impact.y} r={0.5 + rk * 2} fill="none" stroke="#fdba74" strokeWidth={0.08} opacity={0.7 * (1 - rk)} />);
-            }
+            // molten metal smokes as it cools
+            under.push(<Puff key={`mr${key}`} at={{ x: impact.x, y: impact.y - hk * 1.2 }} k={hk} r={1.1 * P} color="rgba(55,48,42,0.5)" />);
             if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={hk} color="#fde68a" size={1.3} />);
             under.push(<circle key={`ms${key}`} cx={impact.x} cy={impact.y} r={0.8} fill="url(#fx-scorch)" opacity={Math.min(1, hk * 3) * (1 - hk)} />);
           }
           break;
         }
         case 'grav': {
-          if (k > 0 && k < 1) for (let j = 0; j < 4; j++) {
-            const p = lerp(src, impact, Math.max(0, k - j * 0.08));
-            over.push(<circle key={`gr${key}-${j}`} cx={p.x} cy={p.y} r={0.25 + j * 0.08} fill="none" stroke="#c084fc" strokeWidth={0.08} opacity={0.9 - j * 0.2} />);
+          // a graviton beam is unseen: only a faint shimmer in the air, then the target is crushed into the ground
+          if (k > 0 && k < 1) {
+            const head = lerp(src, impact, k), tail = lerp(src, impact, Math.max(0, k - 0.4));
+            over.push(<line key={`gr${key}`} x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#a78bfa" strokeWidth={0.35 * P} strokeLinecap="round" opacity={0.18} />);
           }
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
-            // gravity crushes inwards
-            over.push(<Glow key={`gg${key}`} at={impact} r={0.9 * P} color="purple" op={0.8 * (1 - xk)} />);
-            for (let j = 0; j < 3; j++) over.push(<circle key={`gc${key}-${j}`} cx={impact.x} cy={impact.y} r={Math.max(0.05, (1.8 - j * 0.4) * P * (1 - xk))} fill="none" stroke="#e9d5ff" strokeWidth={0.07} opacity={1 - xk} />);
-            if (hit) under.push(<circle key={`gd${key}`} cx={impact.x} cy={impact.y} r={0.6} fill="#1e1b4b" opacity={0.5 * (1 - xk)} />);
+            over.push(<Glow key={`gg${key}`} at={impact} r={0.6 * P * (1 - xk * 0.5)} color="purple" op={0.6 * (1 - xk)} />);
+            // dust pulled inwards, and a dent pressed into the ground
+            under.push(<DustRing key={`gd${key}`} at={impact} k={1 - xk * 0.999} r={1.6 * P} seed={sd} color="rgba(90,80,100,0.45)" />);
+            if (hit) under.push(<circle key={`gc${key}`} cx={impact.x} cy={impact.y} r={0.55 * P} fill="url(#fx-scorch)" opacity={Math.min(1, xk * 3) * (1 - xk)} />);
           }
           break;
         }
@@ -579,7 +633,6 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
             over.push(<Glow key={`px${key}`} at={impact} r={(0.6 + xk * 1.8) * P} color="purple" op={1 - xk} />);
-            over.push(<circle key={`pr${key}`} cx={impact.x} cy={impact.y} r={0.5 + easeOut(xk) * 2.4} fill="none" stroke="#e9d5ff" strokeWidth={0.1 * (1 - xk)} opacity={1 - xk} />);
           }
           break;
         }
@@ -591,14 +644,18 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             // a cone of burning fuel: a soft body, then overlapping tongues rolling out along it
             const reach = len * easeOut(clamp01(fk * 1.8)), w = reach * spread * 0.9;
             const cx = Math.cos(ang), cy = Math.sin(ang), nx = -cy, ny = cx;
-            over.push(<polygon key={`fc${key}`} points={`${src.x},${src.y} ${src.x + cx * reach + nx * w},${src.y + cy * reach + ny * w} ${src.x + cx * reach * 1.05},${src.y + cy * reach * 1.05} ${src.x + cx * reach - nx * w},${src.y + cy * reach - ny * w}`} fill="#f97316" opacity={0.22 * (1 - fk)} />);
+            if (!fxTextures()) over.push(<polygon key={`fc${key}`} points={`${src.x},${src.y} ${src.x + cx * reach + nx * w},${src.y + cy * reach + ny * w} ${src.x + cx * reach * 1.05},${src.y + cy * reach * 1.05} ${src.x + cx * reach - nx * w},${src.y + cy * reach - ny * w}`} fill="#f97316" opacity={0.22 * (1 - fk)} />);
             for (let j = 0; j < 14; j++) {
               const life = clamp01(fk * 1.6 - j * 0.045);
               if (life <= 0 || life >= 1) continue;
               const a = ang + (noise(sd, 140 + j) - 0.5) * spread * 1.6;
               const d = len * easeOut(life);
               const p = { x: src.x + Math.cos(a) * d, y: src.y + Math.sin(a) * d - life * 0.3 };
-              over.push(<Glow key={`fl${key}-${j}`} at={p} r={0.5 + life * 1.5} color={life < 0.3 ? 'molten' : life < 0.65 ? 'orange' : 'red'} op={0.95 * (1 - life * 0.6)} />);
+              if (fxTextures()) {
+                // burning fuel rolls out and turns to black smoke as it dies
+                over.push(<Sprite key={`fl${key}-${j}`} kind="fire" at={p} r={0.7 + life * 1.5} op={0.8 * (1 - life * life)} rot={noise(sd, 150 + j) * 360 + life * 90} v={j} />);
+                if (life > 0.55) under.push(<Sprite key={`fk${key}-${j}`} kind="smoke" at={{ x: p.x, y: p.y - life }} r={0.8 + life * 1.4} op={0.7 * (life - 0.55) * 2.2 * (1 - life)} rot={j * 67} v={j} />);
+              } else over.push(<Glow key={`fl${key}-${j}`} at={p} r={0.5 + life * 1.5} color={life < 0.3 ? 'molten' : life < 0.65 ? 'orange' : 'red'} op={0.95 * (1 - life * 0.6)} />);
             }
             under.push(<Puff key={`fs${key}`} at={{ x: impact.x, y: impact.y - fk }} k={fk} r={1.3} color="rgba(60,55,50,0.45)" />);
           }
@@ -613,7 +670,8 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
               const kk = k - j * 0.06;
               if (kk <= 0) break;
               const age = j / 6;
-              under.push(<circle key={`ms${key}-${j}`} cx={at(kk).x} cy={at(kk).y} r={0.22 + age * 0.45} fill="rgba(170,165,155,0.5)" opacity={0.8 * (1 - age)} />);
+              under.push(fxTextures() ? <Sprite key={`ms${key}-${j}`} kind="smoke" at={at(kk)} r={0.4 + age * 0.8} op={0.9 * (1 - age)} rot={j * 71 + sd} v={j} />
+                : <circle key={`ms${key}-${j}`} cx={at(kk).x} cy={at(kk).y} r={0.22 + age * 0.45} fill="rgba(170,165,155,0.5)" opacity={0.8 * (1 - age)} />);
             }
             const p = at(k);
             over.push(<g key={`mr${key}`}><Glow at={p} r={0.6} color="orange" /><circle cx={p.x} cy={p.y} r={0.12} fill="#fff" /></g>);
@@ -651,7 +709,6 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             over.push(
               <g key={`gx${key}`}>
                 <Glow at={impact} r={(0.7 + xk * (hit ? 1.4 : 0.8)) * P} color="green" op={1 - xk} />
-                <circle cx={impact.x} cy={impact.y} r={0.3 + easeOut(xk) * 1.6} fill="none" stroke="#86efac" strokeWidth={0.1 * (1 - xk)} opacity={1 - xk} />
               </g>,
             );
             // a gauss hit flays the target layer by layer: green flecks peel away
@@ -693,7 +750,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
             over.push(
               <g key={`bp${key}`}>
                 <Glow at={bp} r={0.55} color="green" op={0.8} />
-                <ellipse cx={bp.x} cy={bp.y} rx={0.18} ry={0.1} transform={`rotate(${(ang * 180) / Math.PI} ${bp.x} ${bp.y})`} fill="#4d7c0f" stroke="#bef264" strokeWidth={0.04} />
+                <ellipse cx={bp.x} cy={bp.y} rx={0.18} ry={0.1} transform={`rotate(${(ang * 180) / Math.PI} ${bp.x} ${bp.y})`} fill="#3f6212" opacity={0.9} />
               </g>,
             );
           }
@@ -732,7 +789,7 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           }
           const xk = (f - t0 - S.travel) / 0.35;
           if (xk > 0 && xk < 1) {
-            over.push(<circle key={`sx${key}`} cx={impact.x} cy={impact.y} r={(0.4 + easeOut(xk) * 2.0) * P} fill="none" stroke="#f472b6" strokeWidth={0.12 * (1 - xk)} opacity={1 - xk} />);
+            over.push(<circle key={`sx${key}`} cx={impact.x} cy={impact.y} r={(0.4 + easeOut(xk) * 2.0) * P} fill="none" stroke="#f472b6" strokeWidth={0.12 * (1 - xk)} strokeDasharray="0.5 0.35" opacity={0.7 * (1 - xk)} />);
             over.push(<Glow key={`sh${key}`} at={impact} r={0.8 + xk * 0.9} color="pink" op={1 - xk} />);
             if (hit) over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={xk} color="#fbcfe8" size={1.1} />);
             else under.push(<circle key={`sd${key}`} cx={impact.x} cy={impact.y} r={0.5} fill="url(#fx-scorch)" opacity={1 - xk} />);
@@ -799,10 +856,12 @@ function Muzzle({ at, ang, k, sd, fx, pow = 1 }: { at: Pt; ang: number; k: numbe
     const rr = (j % 2 ? 0.12 : 0.18 + fwd * fwd * (0.9 + noise(sd, j) * 0.3)) * big;
     return `${at.x + Math.cos(a) * rr},${at.y + Math.sin(a) * rr}`;
   }).join(' ');
+  // chemical guns get a ragged flame-coloured flash; energy weapons keep a clean coloured flare
+  const chem = col === 'amber' || col === 'orange';
   return (
     <g opacity={1 - k}>
-      <Glow at={at} r={(0.7 + k * 0.4) * big} color={col} op={0.8} />
-      <polygon points={star} fill={core} opacity={0.9} />
+      <Glow at={at} r={(0.45 + k * 0.2) * big} color={col} op={0.9} />
+      {chem && fxTextures() ? <Sprite kind="flash" at={at} r={1.1 * big} rot={(ang * 180) / Math.PI} v={sd} /> : <polygon points={star} fill={core} opacity={0.9} />}
     </g>
   );
 }
@@ -825,11 +884,11 @@ function meleeHit(fx: WeaponFx, key: string, at: Pt, hit: boolean, t: number, sd
     if (fx === 'crush') {
       over.push(
         <g key={`c${key}`}>
-          <Glow at={at} r={(0.6 + sk * 1.4) * P} color={hit ? 'cyan' : 'white'} op={1 - sk} />
-          <circle cx={at.x} cy={at.y} r={(0.4 + easeOut(sk) * 2.4) * P} fill="none" stroke="#e0f2fe" strokeWidth={0.2 * (1 - sk)} opacity={1 - sk} />
+          <Glow at={at} r={(0.4 + sk * 0.8) * P} color={hit ? 'amber' : 'white'} op={(1 - sk) * 0.8} />
         </g>,
       );
       under.push(<Debris key={`cd${key}`} at={at} k={sk} seed={sd} n={7} size={0.9 * P} />);
+      under.push(<DustRing key={`cr${key}`} at={at} k={sk} r={2.2 * P} seed={sd} />);
     } else {
       const col = fx === 'power' ? '#60a5fa' : fx === 'chain' ? '#ef4444' : fx === 'claw' ? '#93c5fd' : '#e5e7eb';
       over.push(
