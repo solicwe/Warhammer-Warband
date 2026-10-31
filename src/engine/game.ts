@@ -1162,6 +1162,8 @@ function startCommand(s: GameState) {
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
+  // campaign: both sides hold their Secondary cards from the start of the battle, not only from their own first turn
+  if (s.campaign && s.round === 1) drawUpTo(s, other(s.active));
   emitReact(s, other(s.active), 'enemyCommandStart', {});
   // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
   const terrors = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).forceShockAura > 0);

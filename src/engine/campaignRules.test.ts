@@ -6,7 +6,8 @@ import { autoList } from './autoList';
 import { afterBattle, applyCampaign, campaignMission, detachmentScrapCost, enter, enemyDetachmentCount, enemyDetachments, newRun, type Run } from './campaign';
 import { enemyTree, enemyTreePoints, treeFor } from './campaignTree';
 import { MISSIONS, primaryById } from './config';
-import { campaignRequisition, createGame } from './game';
+import { campaignRequisition, createGame, endPhase } from './game';
+import { botShouldAct, botStep } from '../ai/bot';
 import { applyMortalWounds, CAMPAIGN_KILL_VP } from './attack';
 import type { FactionData } from './types';
 
@@ -15,6 +16,20 @@ const SM = load('SM');
 const ORK = load('ORK');
 
 describe('campaign battles', () => {
+  it('both sides hold their Secondary cards from the start of round 1, the side going second too', () => {
+    const run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
+    const n = run.map.find((x) => x.enemy && x.layer === 0)!, m = campaignMission(n);
+    const s = createGame({ lists: [run.list, autoList(ORK, 500, 1)], factions: [SM, ORK], names: ['You', 'Orks'], dispositions: m.dispositions, secondaryMode: m.secondaryMode, maxRounds: m.maxRounds, seed: n.enemy!.seed });
+    applyCampaign(s, { ...run, fighting: n.id }, n.enemy!.rules);
+    s.bots = [0, 1];
+    for (let i = 0; i < 4000 && !(s.round === 1 && s.phase === 'movement'); i++) {
+      const p = s.window?.player ?? (s.phase === 'deploy' || s.phase === 'scouts' ? s.deployTurn : s.active);
+      if (botShouldAct(s, p)) botStep(s, p); else endPhase(s);
+    }
+    expect([s.round, s.phase]).toEqual([1, 'movement']);
+    expect(s.players.map((P) => P.secActive.length)).toEqual([2, 2]);
+  }, 120_000);
+
   it('each battle is a normal one: an official primary, Tactical secondaries, 5 rounds, the same for the same node', () => {
     const run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
     const fights = run.map.filter((n) => n.enemy);
