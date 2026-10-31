@@ -116,11 +116,16 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   Cults and Kabals for Drukhari, Hernkyn and Ironkin for the Votann...) sit around a start node, with an inner ring of
   bridges halfway out. Each shared spoke has three side clusters and, past its tip, a keystone that makes one keyword
   count as another; spoke ends are not joined, so a spoke's far nodes are reached only by walking that spoke (about
-  170 nodes in all). Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
+  210 nodes in all, many of them buffs for the whole army). Every node fits the army: a node for a keyword the army
+  cannot field (MONSTER for Space Marines, VEHICLE for Tyranids, INFANTRY for Knights) is swapped for an army-wide one.
+  Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
   enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. An army that can field
   titanic units or allied Knights unlocks them with the keystone at the end of its arsenal branch (Questor Oath,
   Gargant Mob, Monolith Phalanx...); Drukhari, Genestealer Cults and the Votann have none and get another keystone
   there, and Imperial and Chaos Knight armies need none for their own Knights. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
+- **Relics** are artefacts with special rules the tree never gives: invulnerable saves, -1 Damage, Critical Hits on
+  5+, mortal wounds, Fights First, [LANCE], [DEVASTATING WOUNDS], shooting or charging after Advancing... A relic you
+  already hold comes back as an upgrade while a level still improves it, and its text is written from what it does.
 - **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
 - **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
   battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.

@@ -3,8 +3,8 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botShouldAct, botStep } from '../ai/bot';
-import { addTimed, cond, defencesFor, modelDefence, ocOf, offenceFor, rollMods, unitFlags, unknownConds, type Effect } from '../rules-engine/effects';
-import { afterBattle, applyCampaign, campaignMission, enemyDetachments, newRun, type Run } from './campaign';
+import { addTimed, canDo, cond, defencesFor, fightOnDeathFor, modelDefence, ocOf, offenceFor, rollMods, unitFlags, unknownConds, type Effect } from '../rules-engine/effects';
+import { afterBattle, applyCampaign, campaignMission, enemyDetachments, newRun, RELICS, type Run } from './campaign';
 import { autoList } from './autoList';
 import { OWN_BRANCHES, treeFor, type TreeNode } from './campaignTree';
 import { createGame, endPhase } from './game';
@@ -103,6 +103,27 @@ describe('army tree in the rules engine', () => {
     expect(dead).toEqual([]);
     expect(checked).toBeGreaterThan(150);
   }, 240_000);
+
+  it('every relic changes what the engine works out for a unit it reaches', () => {
+    const dead: string[] = [];
+    for (const r of RELICS) {
+      // an army-wide relic is tried on a plain squad (a hero may already have the rule: Guilliman charges after Advancing)
+      const SM = load('SM');
+      const { f, d } = !r.units && !r.factionId ? { f: SM, d: SM.datasheets.find((x) => x.name === 'Intercessor Squad')! } : sheetFor(r.factionId ?? 'SM', { units: r.units, name: r.name } as TreeNode, r.e);
+      const before = game(f, d), after = game(f, d);
+      const ub = before.units.find((x) => x.owner === 0)!, ua = after.units.find((x) => x.owner === 0)!;
+      addTimed(after, ua, { e: { ...r.e }, label: r.name, until: 'battle', by: 0 });
+      // what the battle signature does not cover: what a unit may do after moving, fighting on death, OC while
+      // Battle-shocked (moving through terrain or models, Stratagems while Battle-shocked and a sure Deadly Demise are
+      // read by setThroughHook, setStratShockedHook and demiseSure in effects.ts, which need a battle in progress)
+      const more = (s: GameState, u: UnitState) => JSON.stringify([signature(s, u),
+        (['shootAfterAdvance', 'shootAfterFallBack', 'chargeAfterAdvance', 'chargeAfterFallBack'] as const).map((w) => canDo(s, u, w)),
+        fightOnDeathFor(s, u, u.models[0]), ((u.battleShocked = true), u.models.map(ocOf(s, u)))]);
+      const hooked = r.e.throughTerrain || r.e.chargeThroughModels || r.e.stratsWhileShocked || r.e.demiseSure;
+      if (!hooked && more(before, ub) === more(after, ua)) dead.push(`${r.id} ${JSON.stringify(r.e)} on ${d.name}`);
+    }
+    expect(dead).toEqual([]);
+  }, 120_000);
 
   it('in a combined unit, a CHARACTER node reaches the leader only', () => {
     const SM = load('SM');

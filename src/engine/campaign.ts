@@ -7,7 +7,7 @@ import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './a
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 import { hasPicture } from './state';
-import { applyTree, enemyTree, enemyTreePoints, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeFor, treeScrap } from './campaignTree';
+import { applyTree, enemyTree, enemyTreePoints, fitsArmy, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeFor, treeScrap } from './campaignTree';
 import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
@@ -57,7 +57,7 @@ export interface Run {
   renown?: number;
   /** army tree nodes taken, in order (the start is implicit) */
   tree?: string[];
-  /** 2: the tree with three army branches (older saves are pruned and refunded once) */
+  /** 3: the tree that fits the army (older saves are refunded once) */
   treeVersion?: number;
   /** tree nodes refunded this run (each refund costs more Scrap) */
   refunds?: number;
@@ -81,81 +81,87 @@ export interface Run {
   started: number;
 }
 
-/** Relics: rules on the player's whole army (or on units with a keyword), for every battle of the run. */
+/** Relics: artefacts for the whole army (or units with a keyword), for every battle of the run. They give special
+ *  rules only, never the numbers and re-rolls the army tree gives (docs/04-campaign-tree.md, rule 4); the text is
+ *  written from the effect, so it always says what the relic does at its level. */
 export interface Relic { id: string; name: string; text: string; units?: string; e: Effect; rare?: boolean; factionId?: string }
+const ELIGIBLE: Record<string, string> = { shootAfterAdvance: 'can shoot after Advancing', shootAfterFallBack: 'can shoot after Falling Back',
+  chargeAfterAdvance: 'can charge after Advancing', chargeAfterFallBack: 'can charge after Falling Back' };
+
+const relic = (r: Omit<Relic, 'text'>): Relic => ({ ...r, text: relicText(r.e, r.units) });
+const M = 'melee' as const, G = 'ranged' as const;
 export const RELICS: Relic[] = [
-  { id: 'litany', name: 'Litany of Hate', text: 'BATTLELINE units re-roll Hit rolls of 1.', units: 'BATTLELINE', e: { reroll: 'hits1' } },
-  { id: 'stimms', name: 'Combat Stimms', text: 'INFANTRY units have Feel No Pain 6+.', units: 'INFANTRY', e: { defend: { fnp: 6 } } },
-  { id: 'plating', name: 'Blessed Plating', text: 'VEHICLE units add 1 to their armour saves.', units: 'VEHICLE', e: { defend: { save: 1 } } },
-  { id: 'smoke', name: 'Smoke Launchers', text: 'Ranged attacks against your VEHICLE units subtract 1 from the Hit roll.', units: 'VEHICLE', e: { defend: { hit: -1, vs: 'ranged' } } },
-  { id: 'blade', name: 'Master-crafted Blade', text: 'CHARACTER units: +1 Damage in melee.', units: 'CHARACTER', e: { damage: 1, attack: 'melee' } },
-  { id: 'overdrive', name: 'Machine Spirit Overdrive', text: 'VEHICLE units: ranged attacks improve AP by 1.', units: 'VEHICLE', e: { ap: 1, attack: 'ranged' } },
-  { id: 'sandals', name: 'Fleet of Foot', text: 'Every unit: +1" Move.', e: { move: 1 } },
-  { id: 'banner', name: 'Ancient Banner', text: 'INFANTRY units: +1 Objective Control.', units: 'INFANTRY', e: { oc: 1 } },
-  { id: 'ledger', name: 'Grudge Ledger', text: 'Every unit re-rolls Wound rolls of 1.', e: { reroll: 'wounds1' } },
-  { id: 'barrels', name: 'Extended Barrels', text: 'Ranged weapons: +3" Range.', e: { rangeBonus: 3 } },
-  { id: 'zeal', name: 'Zealous Fervour', text: 'Every unit can re-roll its Charge roll.', e: { rerollCharge: true } },
-  { id: 'relentless', name: 'Relentless Advance', text: 'Every unit can re-roll its Advance roll.', e: { rerollAdvance: true } },
-  { id: 'lethal', name: 'Venom-tipped Rounds', text: 'Ranged attacks have [LETHAL HITS].', e: { abilities: ['lethal hits'], attack: 'ranged' }, rare: true },
-  { id: 'fury', name: 'Blessed Blades', text: 'Melee attacks have [SUSTAINED HITS 1].', e: { abilities: ['sustained hits 1'], attack: 'melee' }, rare: true },
-  { id: 'iron', name: 'Iron Halo', text: 'CHARACTER units have a 4+ invulnerable save.', units: 'CHARACTER', e: { defend: { inv: 4 } }, rare: true },
-  { id: 'cache', name: 'Command Cache', text: '+1 CP at the start of every battle.', e: {} },
-  { id: 'auspex', name: 'Targeting Auspex', text: 'Ranged attacks ignore cover.', e: { abilities: ['ignores cover'], attack: 'ranged' } },
-  { id: 'chains', name: 'Chain-blade Teeth', text: 'Melee attacks: +1 Strength.', e: { strength: 1, attack: 'melee' } },
-  { id: 'hymn', name: 'Battle Hymn', text: 'Every unit re-rolls Battle-shock tests.', e: { rerollShock: true } },
-  { id: 'servo', name: 'Servo-arm Repairs', text: 'VEHICLE units: incoming Damage −1.', units: 'VEHICLE', e: { defend: { damage: 1 } } },
-  { id: 'jump', name: 'Overcharged Thrusters', text: 'Every unit: +1 to Advance and Charge rolls.', e: { advanceBonus: 1, chargeBonus: 1 } },
-  { id: 'bulwark', name: 'Bulwark Doctrine', text: 'BATTLELINE units: attacks against them are −1 to Wound.', units: 'BATTLELINE', e: { defend: { wound: -1 } } },
-  { id: 'veterans', name: 'Veteran Marksmen', text: 'Ranged attacks re-roll Hit rolls of 1.', e: { reroll: 'hits1', attack: 'ranged' } },
-  { id: 'brutes', name: 'Brute Strength', text: 'MONSTER and WALKER units: +1 Attack in melee.', units: 'MONSTER|WALKER', e: { attacks: 1, attack: 'melee' } },
-  { id: 'mantle', name: 'Hero\'s Mantle', text: 'CHARACTER units: +1 Toughness and Feel No Pain 5+.', units: 'CHARACTER', e: { toughness: 1, defend: { fnp: 5 } } },
-  { id: 'rounds', name: 'Hellfire Rounds', text: 'Ranged attacks: +1 to Wound.', e: { wound: 1, attack: 'ranged' }, rare: true },
-  { id: 'firstblow', name: 'Lightning Reflexes', text: 'CHARACTER units have Fights First.', units: 'CHARACTER', e: { fightsFirst: true }, rare: true },
-  { id: 'reaper', name: 'Reaper\'s Edge', text: 'Melee attacks: +1 AP.', e: { ap: 1, attack: 'melee' }, rare: true },
-  { id: 'shield', name: 'Storm Shield Drills', text: 'INFANTRY units have a 5+ invulnerable save.', units: 'INFANTRY', e: { defend: { inv: 5 } }, rare: true },
-  { id: 'devastate', name: 'Executioner Shells', text: 'Ranged attacks have [DEVASTATING WOUNDS].', e: { abilities: ['devastating wounds'], attack: 'ranged' }, rare: true },
-  { id: 'grip', name: 'Iron Grip', text: 'Every unit: +1 Objective Control.', e: { oc: 1 }, rare: true },
-  // Additional expanded relics
-  { id: 'void_shield', name: 'Void Shield Generator', text: 'VEHICLE and MONSTER units have a 4+ invulnerable save.', units: 'VEHICLE|MONSTER', e: { defend: { inv: 4 } }, rare: true },
-  { id: 'digi_weapons', name: 'Digital Weapons', text: 'CHARACTER units: melee attacks score Critical Hits on an unmodified 5+.', units: 'CHARACTER', e: { critHitOn: 5, attack: 'melee' }, rare: true },
-  { id: 'plasma_coils', name: 'Supercharged Coils', text: 'Ranged weapons: +1 Strength and +1 Damage.', e: { strength: 1, damage: 1, attack: 'ranged' }, rare: true },
-  { id: 'teleport_beacon', name: 'Teleport Transponder', text: 'Every unit gains Deep Strike and Infiltrators.', e: { abilities: ['deep strike', 'infiltrators'] }, rare: true },
-  { id: 'shock_assault', name: 'Shock Assault Doctrine', text: 'Melee weapons: +1 Attack and +1 Strength on turns you charge.', e: { attacks: 1, strength: 1, attack: 'melee' } },
-  { id: 'adamantine_will', name: 'Adamantine Will', text: 'Every model has Feel No Pain 5+ against mortal wounds.', e: { defend: { fnp: 5, fnpVs: 'mortal' } } },
-  // Unique Faction Relics
-  { id: 'sm_indomitus', factionId: 'SM', name: 'Armor of the Indomitus', text: 'Space Marines: +1 Save and +1 Toughness.', units: 'INFANTRY', e: { defend: { save: 1 }, toughness: 1 }, rare: true },
-  { id: 'tyr_synaptic_chitin', factionId: 'TYR', name: 'Synaptic Chitin Weave', text: 'Tyranids: Melee attacks have [LETHAL HITS] and [SUSTAINED HITS 1].', e: { abilities: ['lethal hits', 'sustained hits 1'], attack: 'melee' }, rare: true },
-  { id: 'ork_cybork', factionId: 'ORK', name: 'Super-Cybork Body', text: 'Orks: Feel No Pain 5+ and +1 Attack in melee.', e: { defend: { fnp: 5 }, attacks: 1, attack: 'melee' }, rare: true },
-  { id: 'am_kurov_aquila', factionId: 'AM', name: 'Kurov\'s Aquila', text: 'Astra Militarum: +2 CP at start of battle and orders apply army-wide.', e: {}, rare: true },
-  { id: 'csm_liber', factionId: 'CSM', name: 'Liber Hereticus', text: 'Chaos Space Marines: Melee weapons have +1 AP and +1 Damage.', e: { ap: 1, damage: 1, attack: 'melee' }, rare: true },
-  { id: 'gc_ambush_banner', factionId: 'GC', name: 'Icon of the Cult Unveiled', text: 'Genestealer Cults: Every unit gains Infiltrators, +2" Move, and +1 to Wound on Charge.', e: { move: 2, abilities: ['infiltrators'], wound: 1 }, rare: true },
-  { id: 'nec_veil', factionId: 'NEC', name: 'Veil of Darkness', text: 'Necrons: INFANTRY units gain a 4+ invulnerable save.', units: 'INFANTRY', e: { defend: { inv: 4 } }, rare: true },
-  { id: 'tau_puretide', factionId: 'TAU', name: 'Puretide Engram Chip', text: 'T\'au Empire: Ranged weapons have +1 to Hit, [IGNORES COVER] and +6" Range.', e: { hit: 1, rangeBonus: 6, abilities: ['ignores cover'], attack: 'ranged' }, rare: true },
-  { id: 'ac_auramite', factionId: 'AC', name: 'Auramite Bastion', text: 'Adeptus Custodes: Incoming Damage reduced by 1 and 4+ Feel No Pain vs mortals.', e: { defend: { damage: 1, fnp: 4, fnpVs: 'mortal' } }, rare: true },
-  { id: 'gk_nemesis_soul', factionId: 'GK', name: 'Soul-warding Glaives', text: 'Grey Knights: Melee attacks have [DEVASTATING WOUNDS] and +1 Damage.', e: { abilities: ['devastating wounds'], damage: 1, attack: 'melee' }, rare: true },
-  { id: 'dru_crucible', factionId: 'DRU', name: 'Crucible of Agonies', text: 'Drukhari: Melee and ranged weapons gain [LETHAL HITS] and +1 AP.', e: { abilities: ['lethal hits'], ap: 1 }, rare: true },
-  { id: 'ae_phoenix_gem', factionId: 'AE', name: 'Phoenix Gem of Asuryan', text: 'Aeldari: Re-roll Hit rolls of 1 and units gain a 4+ invulnerable save.', e: { reroll: 'hits1', defend: { inv: 4 } }, rare: true },
-  { id: 'dg_plague_skull', factionId: 'DG', name: 'Plague Skull of Glothila', text: 'Death Guard: +1 Toughness, Feel No Pain 5+, and +1 to Wound.', e: { toughness: 1, defend: { fnp: 5 }, wound: 1 }, rare: true },
-  { id: 'ts_athanaean', factionId: 'TS', name: 'Athenaean Sorcery Scrolls', text: 'Thousand Sons: Ranged attacks have [DEVASTATING WOUNDS] and +2 AP.', e: { abilities: ['devastating wounds'], ap: 2, attack: 'ranged' }, rare: true },
-  { id: 'we_brazen_glaive', factionId: 'WE', name: 'Berzerker Glaive of Khorne', text: 'World Eaters: +2 Attacks and +2 Strength in melee, and Fights First.', e: { attacks: 2, strength: 2, fightsFirst: true, attack: 'melee' }, rare: true },
-  { id: 'lov_crest', factionId: 'LoV', name: 'Ancestral Hearth Crest', text: 'Leagues of Votann: +1 Toughness, +1 to Wound, and +1 Save.', e: { toughness: 1, wound: 1, defend: { save: 1 } }, rare: true },
-  { id: 'adm_autocaduceus', factionId: 'AdM', name: 'Autocaduceus of Arkhan Land', text: 'Adeptus Mechanicus: VEHICLES have 4+ invulnerable save and +1 to Hit.', e: { defend: { inv: 4 }, hit: 1, attack: 'ranged' }, rare: true },
-  { id: 'cd_argath', factionId: 'CD', name: 'A\'rgath, King of Blades', text: 'Chaos Daemons: Melee attacks score Critical Hits on 5+ and have +1 Damage.', e: { critHitOn: 5, damage: 1, attack: 'melee' }, rare: true },
-  { id: 'as_saint_lucius', factionId: 'AS', name: 'Book of Saint Lucius', text: 'Adepta Sororitas: Units have +1 OC, +1 to Hit, and 5+ invulnerable save.', e: { oc: 1, hit: 1, defend: { inv: 5 } }, rare: true },
-  { id: 'aoi_rosette', factionId: 'AoI', name: 'Rosette of the Inquisitor Lord', text: 'Imperial Agents: +2 CP, and ranged attacks have [LETHAL HITS] and [IGNORES COVER].', e: { abilities: ['lethal hits', 'ignores cover'], attack: 'ranged' }, rare: true },
-  { id: 'qi_sanctuary', factionId: 'QI', name: 'Sanctuary Ion Shield', text: 'Imperial Knights: 4+ invulnerable save in melee and ranged.', e: { defend: { inv: 4 } }, rare: true },
-  { id: 'qt_warpsight', factionId: 'QT', name: 'Helm of Warpsight', text: 'Chaos Knights: Ranged attacks ignore cover, +1 to Hit, and +1 AP.', e: { abilities: ['ignores cover'], hit: 1, ap: 1, attack: 'ranged' }, rare: true },
-  // Wild & Faction Synergies
-  { id: 'wild_phase_shift', name: 'Phase-Shift Distortion Drives', text: 'Every unit moves through terrain and models freely, and +3" Move.', e: { mobile: true, moveThroughModels: true, move: 3 }, rare: true },
-  { id: 'wild_chain_lightning', name: 'Arcing Lightning Munitions', text: 'Ranged attacks score Critical Hits on 5+, and each wound inflicts 1 mortal wound.', e: { critHitOn: 5, mortalPerWound: 1, attack: 'ranged' }, rare: true },
-  { id: 'wild_kinetic_deflector', name: 'Reactive Kinetic Deflectors', text: 'Every unit adds 1 to saving throws, and reflects 1 mortal wound on save rolls of 6.', e: { defend: { save: 1 }, retaliate: { on: 6, max: 6 } }, rare: true },
-  { id: 'wild_death_burst', name: 'Spiteful Plasma Overload Core', text: 'Friendly models destroyed within 6" detonate with Deadly Demise automatically.', e: { demiseSure: { range: 6 } }, rare: true },
-  { id: 'nec_hypercrypt', factionId: 'NEC', name: 'Hypercrypt Reanimation Matrix', text: 'Necrons: Every unit gains Feel No Pain 5+, +1 Toughness, and re-rolls Battle-shock tests.', e: { defend: { fnp: 5 }, toughness: 1, rerollShock: true }, rare: true },
-  { id: 'am_overlapping_vox', factionId: 'AM', name: 'Tactical Vox Relay Grid', text: 'Astra Militarum: Ranged weapons have [LETHAL HITS], +1 BS skill, and +2" Move.', e: { abilities: ['lethal hits'], skill: 1, move: 2, attack: 'ranged' }, rare: true },
-  { id: 'sm_artificer_plasma', factionId: 'SM', name: 'Artificer Plasma & Reflective Ceramite', text: 'Space Marines: Ranged weapons gain +1 Damage and [SUSTAINED HITS 1], and 4+ invulnerable save.', e: { damage: 1, abilities: ['sustained hits 1'], defend: { inv: 4 }, attack: 'ranged' }, rare: true },
-  { id: 'ork_endless_waaagh', factionId: 'ORK', name: 'Endless WAAAGH! Frenzy', text: 'Orks: Melee attacks have [SUSTAINED HITS 2], +2 Attacks, and units can re-roll Advance and Charge.', e: { abilities: ['sustained hits 2'], attacks: 2, rerollCharge: true, rerollAdvance: true, attack: 'melee' }, rare: true },
-  { id: 'csm_spiteful_daemon', factionId: 'CSM', name: 'Spiteful Daemonic Fury', text: 'Chaos Space Marines: Melee weapons have Critical Hits on 5+, +1 AP, and each wound deals 1 mortal wound.', e: { critHitOn: 5, ap: 1, mortalPerWound: 1, attack: 'melee' }, rare: true },
-  { id: 'tyr_hyper_evolution', factionId: 'TYR', name: 'Hyper-Evolution Feeding Tendrils', text: 'Tyranids: +2" Move, moves ignore terrain, and melee attacks have [LETHAL HITS].', e: { move: 2, mobile: true, abilities: ['lethal hits'], attack: 'melee' }, rare: true },
+  relic({ id: 'litany', name: 'Hymn of Hatred', units: 'BATTLELINE', e: { abilities: ['twin-linked'], attack: M } }),
+  relic({ id: 'stimms', name: 'Stimm Injectors', units: 'INFANTRY', e: { fightOnDeath: 5 } }),
+  relic({ id: 'plating', name: 'Sanctified Plating', units: 'VEHICLE', e: { defend: { ap: 1 } } }),
+  relic({ id: 'smoke', name: 'Smoke Dischargers', units: 'VEHICLE', e: { defend: { cover: true } } }),
+  relic({ id: 'blade', name: 'Master-crafted Blade', units: 'CHARACTER', e: { critWoundAp: 1, attack: M } }),
+  relic({ id: 'overdrive', name: 'Machine Spirit Overdrive', units: 'VEHICLE', e: { eligible: ['shootAfterFallBack'] } }),
+  relic({ id: 'sandals', name: 'Fleet of Foot', units: 'INFANTRY', e: { advanceSix: true } }),
+  relic({ id: 'banner', name: 'Ancient Banner', units: 'BATTLELINE', e: { shockedOc: -1 } }),
+  relic({ id: 'ledger', name: 'Grudge Ledger', e: { abilities: ['anti-vehicle 5+'], attack: G } }),
+  relic({ id: 'barrels', name: 'Gyro-stabilised Mounts', e: { abilities: ['heavy'], attack: G } }),
+  relic({ id: 'zeal', name: 'Zealous Fervour', e: { eligible: ['chargeAfterFallBack'] }, rare: true }),
+  relic({ id: 'relentless', name: 'Relentless Advance', e: { abilities: ['assault'], attack: G } }),
+  relic({ id: 'lethal', name: 'Venom-tipped Rounds', e: { abilities: ['anti-infantry 4+'], attack: G }, rare: true }),
+  relic({ id: 'fury', name: 'Blessed Blades', e: { abilities: ['sustained hits 2'], attack: M }, rare: true }),
+  relic({ id: 'iron', name: 'Iron Halo', units: 'CHARACTER', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'cache', name: 'Strategium Cache', e: { stratsWhileShocked: true } }),
+  relic({ id: 'auspex', name: 'Targeting Auspex', e: { ignoreHitMods: true, attack: G } }),
+  relic({ id: 'chains', name: 'Chain-blade Teeth', e: { abilities: ['anti-infantry 5+'], attack: M } }),
+  relic({ id: 'hymn', name: 'Battle Hymn', e: { pileIn: 5, consolidate: 5 } }),
+  relic({ id: 'servo', name: 'Servo-arm Repairs', units: 'VEHICLE', e: { defend: { damage: 1 } } }),
+  relic({ id: 'jump', name: 'Overcharged Thrusters', e: { chargeThroughModels: true } }),
+  relic({ id: 'bulwark', name: 'Bulwark Doctrine', units: 'BATTLELINE', e: { defend: { wound: -1 } } }),
+  relic({ id: 'veterans', name: 'Marksman\'s Honours', units: 'BATTLELINE', e: { critHitOn: 5, attack: G } }),
+  relic({ id: 'brutes', name: 'Brute Strength', units: 'MONSTER|WALKER', e: { abilities: ['devastating wounds'], attack: M } }),
+  relic({ id: 'mantle', name: 'Hero\'s Mantle', units: 'CHARACTER', e: { defend: { negateOnce: 'battle', negateUses: 1 } } }),
+  relic({ id: 'rounds', name: 'Hellfire Rounds', e: { abilities: ['anti-monster 4+'], attack: G }, rare: true }),
+  relic({ id: 'firstblow', name: 'Lightning Reflexes', units: 'CHARACTER', e: { fightsFirst: true }, rare: true }),
+  relic({ id: 'reaper', name: 'Reaper\'s Edge', e: { abilities: ['lance'], attack: M }, rare: true }),
+  relic({ id: 'shield', name: 'Storm Shield Drills', units: 'INFANTRY', e: { defend: { inv: 5 } }, rare: true }),
+  relic({ id: 'devastate', name: 'Executioner Shells', e: { abilities: ['devastating wounds'], attack: G }, rare: true }),
+  relic({ id: 'grip', name: 'Iron Grip', e: { eligible: ['shootAfterAdvance'] }, rare: true }),
+  relic({ id: 'void_shield', name: 'Void Shield Generator', units: 'VEHICLE|MONSTER', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'digi_weapons', name: 'Digital Weapons', units: 'CHARACTER', e: { critHitOn: 5, attack: M }, rare: true }),
+  relic({ id: 'plasma_coils', name: 'Supercharged Coils', e: { abilities: ['melta 2'], attack: G }, rare: true }),
+  relic({ id: 'teleport_beacon', name: 'Teleport Transponder', e: { throughTerrain: true }, rare: true }),
+  relic({ id: 'shock_assault', name: 'Shock Assault Doctrine', e: { eligible: ['chargeAfterAdvance'] } }),
+  relic({ id: 'adamantine_will', name: 'Adamantine Will', e: { defend: { inv: 4, invVs: 'psychic' } } }),
+  // the army's own relics
+  relic({ id: 'sm_indomitus', factionId: 'SM', name: 'Armor of the Indomitus', units: 'INFANTRY', e: { defend: { damage: 1 } }, rare: true }),
+  relic({ id: 'tyr_synaptic_chitin', factionId: 'TYR', name: 'Synaptic Chitin Weave', e: { critHitOn: 5, attack: M }, rare: true }),
+  relic({ id: 'ork_cybork', factionId: 'ORK', name: 'Super-Cybork Body', e: { defend: { inv: 5 } }, rare: true }),
+  relic({ id: 'am_kurov_aquila', factionId: 'AM', name: 'Kurov\'s Aquila', e: { stratsWhileShocked: true, ordersStayShocked: true }, rare: true }),
+  relic({ id: 'csm_liber', factionId: 'CSM', name: 'Liber Hereticus', e: { abilities: ['devastating wounds'], attack: M }, rare: true }),
+  relic({ id: 'gc_ambush_banner', factionId: 'GC', name: 'Icon of the Cult Unveiled', e: { eligible: ['chargeAfterAdvance'], advanceSix: true }, rare: true }),
+  relic({ id: 'nec_veil', factionId: 'NEC', name: 'Veil of Darkness', units: 'INFANTRY', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'tau_puretide', factionId: 'TAU', name: 'Puretide Engram Chip', e: { abilities: ['twin-linked'], ignoreHitMods: true, attack: G }, rare: true }),
+  relic({ id: 'ac_auramite', factionId: 'AC', name: 'Auramite Bastion', e: { defend: { damage: 1 } }, rare: true }),
+  relic({ id: 'gk_nemesis_soul', factionId: 'GK', name: 'Soul-warding Glaives', e: { abilities: ['devastating wounds', 'anti-psyker 4+'], attack: M }, rare: true }),
+  relic({ id: 'dru_crucible', factionId: 'DRU', name: 'Crucible of Agonies', e: { abilities: ['anti-infantry 4+'] }, rare: true }),
+  relic({ id: 'ae_phoenix_gem', factionId: 'AE', name: 'Phoenix Gem of Asuryan', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'dg_plague_skull', factionId: 'DG', name: 'Plague Skull of Glothila', e: { defend: { wound: -1 } }, rare: true }),
+  relic({ id: 'ts_athanaean', factionId: 'TS', name: 'Athenaean Sorcery Scrolls', e: { abilities: ['devastating wounds'], critHitOn: 5, attack: G }, rare: true }),
+  relic({ id: 'we_brazen_glaive', factionId: 'WE', name: 'Berzerker Glaive of Khorne', e: { fightsFirst: true, pileIn: 5, consolidate: 5 }, rare: true }),
+  relic({ id: 'lov_crest', factionId: 'LoV', name: 'Ancestral Hearth Crest', e: { defend: { ap: 1 } }, rare: true }),
+  relic({ id: 'adm_autocaduceus', factionId: 'AdM', name: 'Autocaduceus of Arkhan Land', units: 'VEHICLE', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'cd_argath', factionId: 'CD', name: 'A\'rgath, King of Blades', e: { critHitOn: 5, mortalPerWound: 1, attack: M }, rare: true }),
+  relic({ id: 'as_saint_lucius', factionId: 'AS', name: 'Book of Saint Lucius', e: { defend: { inv: 5 }, fightOnDeath: 5 }, rare: true }),
+  relic({ id: 'aoi_rosette', factionId: 'AoI', name: 'Rosette of the Inquisitor Lord', e: { critWoundAp: 1, ignoreHitMods: true, attack: G }, rare: true }),
+  relic({ id: 'qi_sanctuary', factionId: 'QI', name: 'Sanctuary Ion Shield', e: { defend: { inv: 4 } }, rare: true }),
+  relic({ id: 'qt_warpsight', factionId: 'QT', name: 'Helm of Warpsight', e: { critHitOn: 5, attack: G }, rare: true }),
+  // wild relics
+  relic({ id: 'wild_phase_shift', name: 'Phase-Shift Distortion Drives', e: { throughTerrain: true, moveThroughModels: true }, rare: true }),
+  relic({ id: 'wild_chain_lightning', name: 'Arcing Lightning Munitions', e: { critHitOn: 5, mortalPerWound: 1, attack: G }, rare: true }),
+  relic({ id: 'wild_kinetic_deflector', name: 'Reactive Kinetic Deflectors', e: { defend: { reflect6: true }, retaliate: { on: 6, max: 6 } }, rare: true }),
+  relic({ id: 'wild_death_burst', name: 'Spiteful Plasma Overload Core', e: { demiseSure: { range: 6 } }, rare: true }),
+  relic({ id: 'nec_hypercrypt', factionId: 'NEC', name: 'Hypercrypt Reanimation Matrix', e: { defend: { negateOnce: 'turn' } }, rare: true }),
+  relic({ id: 'am_overlapping_vox', factionId: 'AM', name: 'Tactical Vox Relay Grid', e: { eligible: ['shootAfterFallBack'], ignoreHitMods: true }, rare: true }),
+  relic({ id: 'sm_artificer_plasma', factionId: 'SM', name: 'Artificer Plasma', e: { abilities: ['sustained hits 2'], attack: G }, rare: true }),
+  relic({ id: 'ork_endless_waaagh', factionId: 'ORK', name: 'Endless WAAAGH! Frenzy', e: { abilities: ['sustained hits 2'], attack: M }, rare: true }),
+  relic({ id: 'csm_spiteful_daemon', factionId: 'CSM', name: 'Spiteful Daemonic Fury', e: { critHitOn: 5, mortalPerWound: 1, attack: M }, rare: true }),
+  relic({ id: 'tyr_hyper_evolution', factionId: 'TYR', name: 'Hyper-Evolution Feeding Tendrils', e: { throughTerrain: true, chargeThroughModels: true }, rare: true }),
 ];
 export const relicById = (id: unknown) => {
   const key = typeof id === 'string' ? id : (id && typeof id === 'object' ? String((id as any).id || (id as any).name || '') : String(id ?? ''));
@@ -167,62 +173,74 @@ export function relicLevel(run: Run, id: string): number {
   return run.relicLevels?.[id] ?? (run.relics.includes(id) ? 1 : 0);
 }
 
+/** A relic one level up: thresholds drop (4+ invulnerable becomes 3+, Critical Hits on 5+ become 4+), amounts grow.
+ *  A relic with nothing to grow stays at level 1 (relicMaxLevel). */
 export function scaleRelicEffect(e: Effect, lvl: number): Effect {
   if (lvl <= 1) return { ...e };
-  const out: Effect = { ...e };
-  if (out.move) out.move = out.move * lvl;
-  if (out.damage) out.damage = out.damage * lvl;
-  if (out.ap) out.ap = out.ap * lvl;
-  if (out.rangeBonus) out.rangeBonus = out.rangeBonus * lvl;
-  if (out.oc) out.oc = out.oc * lvl;
-  if (out.strength) out.strength = out.strength * lvl;
-  if (out.toughness) out.toughness = out.toughness * lvl;
-  if (out.attacks) out.attacks = out.attacks * lvl;
-  if (out.wound) out.wound = out.wound * lvl;
-  if (out.advanceBonus) out.advanceBonus = out.advanceBonus * lvl;
-  if (out.chargeBonus) out.chargeBonus = out.chargeBonus * lvl;
-  if (out.reroll === 'hits1' && lvl >= 2) out.reroll = 'hits';
-  if (out.reroll === 'wounds1' && lvl >= 2) out.reroll = 'wounds';
+  const up = lvl - 1, out: Effect = { ...e };
+  if (out.critHitOn) out.critHitOn = Math.max(4, out.critHitOn - up);
+  if (out.critWoundAp) out.critWoundAp += up;
+  if (out.mortalPerWound) out.mortalPerWound = Math.min(2, out.mortalPerWound + up);
+  if (out.fightOnDeath) out.fightOnDeath = Math.max(3, out.fightOnDeath - up);
+  if (out.pileIn) out.pileIn += up;
+  if (out.consolidate) out.consolidate += up;
+  if (out.retaliate) out.retaliate = { ...out.retaliate, on: Math.max(4, out.retaliate.on - up) };
+  if (out.demiseSure) out.demiseSure = { ...out.demiseSure, range: out.demiseSure.range + 3 * up };
   if (out.defend) {
-    out.defend = { ...out.defend };
-    if (out.defend.save) out.defend.save = out.defend.save * lvl;
-    if (out.defend.fnp) out.defend.fnp = Math.max(3, out.defend.fnp - (lvl - 1));
-    if (out.defend.inv) out.defend.inv = Math.max(3, out.defend.inv - (lvl - 1));
-    if (out.defend.damage) out.defend.damage = out.defend.damage * lvl;
-    if (out.defend.hit) out.defend.hit = out.defend.hit * lvl;
-    if (out.defend.wound) out.defend.wound = out.defend.wound * lvl;
+    const d = (out.defend = { ...out.defend });
+    if (d.inv) d.inv = Math.max(3, d.inv - up);
+    if (d.damage) d.damage = Math.min(2, d.damage + up);
+    if (d.ap) d.ap = Math.min(2, d.ap + up);
+    if (d.negateOnce === 'battle') d.negateUses = (d.negateUses ?? 1) + up;
   }
   if (out.abilities?.length) {
-    out.abilities = out.abilities.map((a) => {
-      if (a === 'sustained hits 1') return `sustained hits ${lvl}`;
-      return a;
-    });
+    out.abilities = out.abilities.map((a) => a.replace(/^(sustained hits) (\d)$/, (_, w, n) => `${w} ${Math.min(3, +n + up)}`)
+      .replace(/^(anti-[a-z ]+) (\d)\+$/, (_, w, n) => `${w} ${Math.max(2, +n - up)}+`)
+      .replace(/^melta (\d)$/, (_, n) => `melta ${+n * lvl}`));
   }
   return out;
 }
 
-export function relicDesc(r: Relic, lvl = 1): string {
-  if (lvl <= 1) return r.text;
-  let t = r.text;
-  if (r.e.move) t = t.replace(/\+1" Move/, `+${lvl}" Move`);
-  if (r.e.damage) t = t.replace(/\+1 Damage/, `+${lvl} Damage`);
-  if (r.e.ap) t = t.replace(/by 1/, `by ${lvl}`).replace(/\+1 AP/, `+${lvl} AP`);
-  if (r.e.rangeBonus) t = t.replace(/\+3" Range/, `+${3 * lvl}" Range`);
-  if (r.e.oc) t = t.replace(/\+1 Objective Control/, `+${lvl} Objective Control`);
-  if (r.e.strength) t = t.replace(/\+1 Strength/, `+${lvl} Strength`);
-  if (r.e.toughness) t = t.replace(/\+1 Toughness/, `+${lvl} Toughness`);
-  if (r.e.attacks) t = t.replace(/\+1 Attack/, `+${lvl} Attacks`);
-  if (r.e.wound) t = t.replace(/\+1 to Wound/, `+${lvl} to Wound`);
-  if (r.e.advanceBonus) t = t.replace(/\+1 to Advance/, `+${lvl} to Advance`);
-  if (r.e.defend?.fnp) t = t.replace(/Feel No Pain 6\+/, `Feel No Pain ${Math.max(3, 7 - lvl)}+`).replace(/Feel No Pain 5\+/, `Feel No Pain ${Math.max(3, 6 - lvl)}+`);
-  if (r.e.defend?.inv) t = t.replace(/4\+ invulnerable/, `${Math.max(3, 5 - lvl)}+ invulnerable`).replace(/5\+ invulnerable/, `${Math.max(3, 6 - lvl)}+ invulnerable`);
-  if (r.e.defend?.save) t = t.replace(/add 1 to/, `add ${lvl} to`);
-  if (r.e.reroll === 'hits1' && lvl >= 2) t = t.replace(/re-roll Hit rolls of 1/, 're-roll ALL Hit rolls');
-  if (r.e.reroll === 'wounds1' && lvl >= 2) t = t.replace(/re-roll Wound rolls of 1/, 're-roll ALL Wound rolls');
-  if (r.id === 'fury' && lvl >= 2) t = t.replace(/SUSTAINED HITS 1/, `SUSTAINED HITS ${lvl}`);
-  if (r.id === 'cache' && lvl >= 2) t = t.replace(/\+1 CP/, `+${lvl} CP`);
-  return t;
+/** how far a relic can level up: as long as a level still changes something (at most 3; Fights First or [LANCE] stay at 1) */
+export function relicMaxLevel(r: Relic): number {
+  let lvl = 1;
+  while (lvl < 3 && JSON.stringify(scaleRelicEffect(r.e, lvl + 1)) !== JSON.stringify(scaleRelicEffect(r.e, lvl))) lvl++;
+  return lvl;
 }
+
+/** What a relic does, from its effect: "CHARACTER units: 4+ invulnerable save." */
+export function relicText(e: Effect, units?: string): string {
+  const w = e.attack ? `${e.attack} ` : '', d = e.defend ?? {}, out: string[] = [];
+  if (e.abilities?.length) out.push(`${w}weapons have ${e.abilities.map((a) => `[${a.toUpperCase()}]`).join(' and ')}`);
+  if (e.critHitOn) out.push(`${w}Critical Hits on ${e.critHitOn}+`);
+  if (e.critWoundAp) out.push(`${w}Critical Wounds get +${e.critWoundAp} AP`);
+  if (e.mortalPerWound) out.push(`each ${w}attack that wounds also deals ${e.mortalPerWound} mortal wound${e.mortalPerWound > 1 ? 's' : ''}`);
+  if (e.ignoreHitMods) out.push(`${w}attacks ignore modifiers to the Hit roll`);
+  if (e.fightsFirst) out.push('Fights First');
+  if (e.fightOnDeath) out.push(`destroyed in melee before fighting: on a ${e.fightOnDeath}+ fights first`);
+  if (e.pileIn) out.push(`Pile-in and Consolidation moves of up to ${e.pileIn}"`);
+  for (const x of e.eligible ?? []) out.push(ELIGIBLE[x] ?? x);
+  if (e.advanceSix) out.push('Advance rolls count as 6');
+  if (e.throughTerrain) out.push('moves through terrain features');
+  if (e.moveThroughModels) out.push('moves through models');
+  if (e.chargeThroughModels) out.push('charges through models other than MONSTER and VEHICLE');
+  if (e.retaliate) out.push(`each melee attack allocated to it: on a ${e.retaliate.on}+ the attacker takes 1 mortal wound`);
+  if (e.demiseSure) out.push(`friendly models destroyed within ${e.demiseSure.range}" set off Deadly Demise without a roll`);
+  if (e.stratsWhileShocked) out.push('can be targeted by Stratagems while Battle-shocked');
+  if (e.ordersStayShocked) out.push('keeps its Orders while Battle-shocked');
+  if (e.shockedOc) out.push(e.shockedOc < 0 ? `keeps its OC (${e.shockedOc}) while Battle-shocked` : `OC ${e.shockedOc} while Battle-shocked`);
+  if (d.inv) out.push(`${d.inv}+ invulnerable save${d.invVs === 'psychic' ? ' against Psychic Attacks' : ''}`);
+  if (d.damage) out.push(`-${d.damage} Damage taken`);
+  if (d.wound) out.push(`attacks against it ${d.wound} to Wound`);
+  if (d.ap) out.push(`attacks against it worsen AP by ${d.ap}`);
+  if (d.cover) out.push('always has the Benefit of Cover');
+  if (d.reflect6) out.push('each saving throw of 6 against a ranged attack deals 1 mortal wound back');
+  if (d.negateOnce) out.push(`${(d.negateUses ?? 1) > 1 ? `${d.negateUses} times` : 'once'} per ${d.negateOnce}: a failed saving throw deals no damage`);
+  const body = out.join('; ');
+  return `${units ? `${units.split('|').join(' and ')} units` : 'Every unit'}: ${body}.`;
+}
+
+export const relicDesc = (r: Relic, lvl = 1): string => relicText(scaleRelicEffect(r.e, lvl), r.units);
 
 /** The enemy's special rules (elite battles have one, the boss two). */
 export interface BossRule { id: string; name: string; text: string; units?: string; e: Effect }
@@ -341,7 +359,7 @@ export function newRun(faction: FactionData, list: ArmyList, enemies: string[], 
   const filtered = pool.filter((e) => e !== faction.id && e !== 'TL');
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, filtered, 1, []),
-    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], treeVersion: 2, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], treeVersion: 3, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
     recentOpponentFactions: [],
   };
 }
@@ -385,12 +403,12 @@ const mainKeyword = (f: FactionData) => {
 /** Three rewards to pick one from after a win (an elite/boss battle offers relics; a supply drop a mix). */
 export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt = 0): Reward[] {
   const r = rng(run.seed + run.path.length * 101 + salt * 7 + 3);
-  const maxLvl = 3;
-  // Allow duplicate relics up to level 3 so they can level up (Vampire Survivors style)
-  // Filter relics to only generic relics or relics of this faction
+  // a relic held comes back as an upgrade until its top level (Vampire Survivors style); only relics of no army or of
+  // this one, and only for units the army can field
   const eligibleRelics = RELICS.filter((x) => {
     if (x.factionId && x.factionId !== faction.id) return false;
-    return (run.relicLevels?.[x.id] ?? (run.relics.includes(x.id) ? 1 : 0)) < maxLvl;
+    if (x.units && !fitsArmy(faction.id, { units: x.units })) return false;
+    return (run.relicLevels?.[x.id] ?? (run.relics.includes(x.id) ? 1 : 0)) < relicMaxLevel(x);
   });
   const count = (kind === 'boss' || kind === 'elite') ? 5 : 3;
   const factionRelics = eligibleRelics.filter((x) => x.factionId === faction.id);
@@ -512,7 +530,6 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
     next.relicLevels = { ...(run.relicLevels ?? {}), [rw.id]: newLvl };
     if (!run.relics.includes(rw.id)) next.relics = [...run.relics, rw.id];
     next.story.push(curLvl > 0 ? `Upgraded: ${relicById(rw.id)?.name} to Lv.${newLvl}` : `Relic: ${relicById(rw.id)?.name}`);
-    if (rw.id === 'cache') next.cp += 1;
   }
   if (rw.kind === 'cp') { next.cp = run.cp + 1; next.story.push('+1 CP every battle'); }
   if (rw.kind === 'scrap') { next.scrap = (run.scrap ?? 0) + rw.amount; next.story.push(`Salvaged +${rw.amount} Scrap`); }
@@ -630,7 +647,7 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
   for (const rawId of run.relics) {
     const r = relicById(rawId);
     const id = r?.id ?? (typeof rawId === 'string' ? rawId : String((rawId as any)?.id || ''));
-    if (!r || id === 'cache') continue;
+    if (!r) continue;
     const lvl = run.relicLevels?.[id] ?? 1;
     const eff = scaleRelicEffect(r.e, lvl);
     for (const u of s.units.filter((x) => x.owner === me && hasKwIn(x, r.units))) {
@@ -647,8 +664,7 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
       addTimed(s, u, { e: { ...b.e }, label: b.name, until: 'battle', by: foe });
     }
   }
-  const cacheLvl = run.relicLevels?.['cache'] ?? (run.relics.includes('cache') ? 1 : 0);
-  s.players[me].cp += run.cp + treeCp(run) + (cacheLvl > 1 ? cacheLvl - 1 : 0);
+  s.players[me].cp += run.cp + treeCp(run);
   s.campaign = { node: run.fighting ?? '', relics: [...run.relics.map((r: any) => typeof r === 'string' ? r : String(r?.id || r?.name || ''))], rules: cleanRules, relicLevels: { ...(run.relicLevels ?? {}) } };
 }
 
@@ -1031,19 +1047,13 @@ export function migrateRun(run: Run): Run {
   });
 }
 
-/** Tree v2 (three army branches, ten slots, Logistics no longer unlocks titans): taken nodes that no longer exist or no
- *  longer connect to the start are given back as Renown, and so is the old Titan Requisition (logistics-7). */
+/** Tree v3 (every node fits the army, docs/04-campaign-tree.md): the same node id can now hold a different node, so
+ *  every taken node of an older tree is given back as Renown once, to spend again. */
 export function pruneTree(run: Run): Run {
-  if ((run.treeVersion ?? 1) >= 2) return run;
-  const nodes = treeFor(run.factionId);
-  const byId = new Map(nodes.map((n) => [n.id, n]));
-  const keep = new Set((run.tree ?? []).filter((id) => byId.has(id) && id !== 'logistics-7'));
-  const seen = new Set(['start']), queue = ['start'];
-  while (queue.length) for (const l of byId.get(queue.pop()!)!.links) if (keep.has(l) && !seen.has(l)) { seen.add(l); queue.push(l); }
-  const tree = (run.tree ?? []).filter((id) => seen.has(id));
-  const back = (run.tree ?? []).length - tree.length;
-  return { ...run, treeVersion: 2, tree, renown: (run.renown ?? 0) + back,
-    story: back ? [...run.story, `The army tree was redrawn: ${back} node${back > 1 ? 's' : ''} refunded as Renown`] : run.story };
+  if ((run.treeVersion ?? 1) >= 3) return run;
+  const back = (run.tree ?? []).length;
+  return { ...run, treeVersion: 3, tree: [], renown: (run.renown ?? 0) + back,
+    story: back ? [...run.story, `The army tree was redrawn to fit the army: ${back} node${back > 1 ? 's' : ''} refunded as Renown`] : run.story };
 }
 
 /** A campaign battle's primary mission: one of the official ones (many are won with actions), the same for the same

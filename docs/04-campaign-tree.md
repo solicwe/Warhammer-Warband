@@ -14,7 +14,7 @@ that already applies to its keywords.
 
 - **Renown** is earned by the army, never by units: battle 3, elite 5, boss 6, a loss 1. A new run starts with 3.
   One sector (about 6 fights) gives about 25 Renown.
-- Each Renown point allocates one node. The tree has about 170 nodes, so one sector fills a seventh of it and each run
+- Each Renown point allocates one node. The tree has about 210 nodes, so one sector fills an eighth of it and each run
   has to pick a direction.
 - **Scrap** stays as it is: recruits, wargear, enhancements, detachments. The tree never costs Scrap.
 - **Respec**: at an armory or a medicae tent, refund one node for Scrap (20, then 10 more for each refund in the
@@ -25,9 +25,9 @@ that already applies to its keywords.
 A graph, not tiers. The start is the centre; a node can be taken once it links to a taken node.
 
 - **Ten slots** around the start: seven shared spokes and three branches of the army's own (army, corps, arsenal).
-- **Spoke**: a main line of 7 nodes (small, small, notable, small, small, notable, keystone) and side clusters of
-  3 nodes (two small and a notable) leaving at depth 2 and depth 5; a shared spoke has a third at depth 6 and its
-  conversion keystone past the tip. 17 nodes on a shared spoke.
+- **Spoke**: a main line of 7 nodes (small, small, notable, small, small, notable, keystone) and side clusters
+  leaving at depth 2 (3 nodes) and depth 5 (6 nodes, the last three army-wide); a shared spoke has a third at depth 6
+  (5 nodes) and its conversion keystone past the tip. 22 nodes on a shared spoke.
 - **Inner ring**: a bridge node between each pair of neighbouring slots at depth 4, so a build can cross into the
   next spoke halfway out instead of walking back to the centre.
 - **Spoke ends**: past each shared spoke's tip, a keystone joined to that spoke only. These keystones convert
@@ -62,7 +62,7 @@ Hybrid design: the big shared tree is the same for every army; three slots are t
 
 - **Army branch** (10 nodes): its own for Space Marines (Codex Astartes), Thousand Sons (Cult of Magic), Orks (Da Big
   Waaagh!), Necrons (Dynasty Awakened) and Tyranids (Hive Fleet); its family's for the rest.
-- **Corps and arsenal** (16 nodes each, every army, `campaignTreeArmies.ts`): on that army's own keywords (SM: TERMINATOR,
+- **Corps and arsenal** (19 nodes each, every army, `campaignTreeArmies.ts`): on that army's own keywords (SM: TERMINATOR,
   GRAVIS, DREADNOUGHT, then JUMP PACK, PHOBOS; DRU: WYCH CULT, HAEMONCULUS COVENS, then KABAL, SCOURGES; LoV:
   HERNKYN, KAPRICUS, IRONKIN STEELJACKS...). The depth-6 notable and the keystone are written for each army; the small
   nodes come from a style (guns, blades, walls, speed, war engines) so every branch is full.
@@ -77,14 +77,51 @@ Hybrid design: the big shared tree is the same for every army; three slots are t
 In battle a node reaches each model by that model's own keywords, so a CHARACTER node on a Captain leading a squad
 buffs the Captain's attacks and saves, not the squad's.
 
+## Tree v3: every node fits the army, relics never repeat the tree
+
+Design, written before the change.
+
+**Problem.** The shared spokes were written once for every army, so a Space Marine tree offered MONSTER nodes, a
+Knight army INFANTRY nodes, and conversion keystones from keywords the army never fields. Several relics did exactly
+what a tree node did (Combat Stimms was both), and some relic texts promised things their effect did not do.
+
+**Rule 1: a node only names keywords the army can field.** A keyword counts for an army when at least two
+datasheets of its campaign recruit pool carry it (the same pool the reward offers draw from). VETERAN always counts.
+`treeFor(army)` swaps every node whose keywords all fail for the next node of that spoke's army-wide pool, same
+place, same kind; a notable keeps its threshold bonus. A conversion keystone whose keywords fail becomes an army-wide
+trade-off keystone. The corps and arsenal kits are written per army, so a test checks them instead.
+
+**Rule 2: army-wide nodes are small or conditional.** A node with no keyword reaches every unit, so it is a re-roll
+of 1s, +1" or Leadership, or it needs a condition (on an objective, after charging, after Remaining Stationary,
+rounds 1-2 or 3+). Otherwise swapping a MONSTER node for an army-wide one would make a Space Marine tree stronger.
+
+**Rule 3: more to take.** Every branch gets longer side clusters (the depth-5 cluster 6 nodes, the depth-6 one 5),
+filled with army-wide nodes on shared spokes and the style's moves on army branches.
+
+**Rule 4: the tree trains, relics are artefacts.** The tree changes numbers and re-rolls: Hit, Wound, AP,
+Strength, Attacks, Damage, Skill, Range, Move, Toughness, OC, Leadership, armour save, Feel No Pain, -1 to be hit,
+Advance and Charge bonuses and re-rolls, Battle-shock re-rolls, [SUSTAINED HITS 1], [LETHAL HITS], [IGNORES COVER],
+[PRECISION], CP and Scrap. Relics give special rules only: invulnerable saves, -1 Damage taken, -1 to be wounded,
+Critical Hits on 5+, mortal wounds on wounding, Fights First, retaliation, moving through terrain or models,
+[DEVASTATING WOUNDS], [TWIN-LINKED], [LANCE], [ANTI-...], [SUSTAINED HITS 2] and the like. A test reads every
+built tree and every relic and fails if one effect key appears on both sides, or one name does. A relic's text is
+written from its effect, at every level, so it can never promise what it does not do.
+
+**Saves.** Tree v3 gives every taken node back as Renown once ("the army tree was redrawn"), because the same node id
+can now hold a different node for each army.
+
 ## How it is checked
 
+- `campaignTreeFit.test.ts` (tree v3): `treeFielded.ts` matches the data, no node names a keyword its army cannot
+  field, nodes keep their distance on every army's drawing, the tree uses only its own effect keys, every relic only
+  others, no relic shares a name with a node, relic texts at every level, and offers only fitting relics.
 - `campaignTree.test.ts`: the shape (every node reachable, no overlaps, every keyword real), Renown, allocate and
   refund rules, conversion keystones, thresholds, VETERAN, the titan keystone per army, old saves.
 - `campaignTreeEngine.test.ts`: every condition a node names is one the engine knows; every node of every branch
   changes what the engine works out for a unit it reaches (stats, rolls, OC, attack and defence modifiers), with a
   control that a no-op effect changes nothing; a leader-only node stays on the leader; and a whole 3-round campaign
-  battle with 106 nodes taken plays to the end, keeps the buffs all battle and pays Renown.
+  battle with 106 nodes taken plays to the end, keeps the buffs all battle and pays Renown. Every relic, too, changes
+  what the engine works out for a unit it reaches.
 
 ## VETERAN
 

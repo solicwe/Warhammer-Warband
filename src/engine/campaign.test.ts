@@ -57,7 +57,7 @@ describe('campaign', () => {
     run = { ...run, fighting: reachable(run)[0].id };
     applyCampaign(s, run, ['iron-will']);
     const inf = s.units.find((u) => u.owner === 0 && u.keywords.includes('INFANTRY'))!;
-    expect(effectsFor(s, inf).some((x) => x.label === 'Combat Stimms')).toBe(true);
+    expect(effectsFor(s, inf).some((x) => x.label === 'Stimm Injectors')).toBe(true);
     const foe = s.units.find((u) => u.owner === 1)!;
     expect(effectsFor(s, foe).some((x) => x.label === 'Iron Will')).toBe(true);
     expect(s.campaign?.relics).toContain('stimms');

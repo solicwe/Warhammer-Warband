@@ -5,6 +5,7 @@
 import { addTimed } from '../rules-engine/effects';
 import type { Effect } from '../rules-engine/effects';
 import { armyBranches } from './campaignTreeArmies';
+import { FIELDED } from './treeFielded';
 import type { ArmyUnitEntry, DatasheetData, GameState, PlayerId } from './types';
 
 export type TreeKind = 'start' | 'small' | 'notable' | 'keystone';
@@ -58,7 +59,7 @@ const SPOKES: Branch[] = [
       s('Iron Discipline', 'Keystone. Ranged attacks: +1 to Hit. Every unit: -2" Move.', undefined, [{ hit: 1, attack: 'ranged' }, { move: -2 }]),
     ],
     sideA: [
-      s('Hunter\'s Eye', 'Ranged attacks against MONSTER or VEHICLE units: +1 AP.', 'VEHICLE|MONSTER', { ap: 1, attack: 'ranged', if: ['targetMV'] }),
+      s('Hunter\'s Eye', 'Ranged attacks against MONSTER or VEHICLE units: +1 AP.', undefined, { ap: 1, attack: 'ranged', if: ['targetMV'] }),
       s('Spotters', 'INFANTRY ranged attacks re-roll Wound rolls of 1.', 'INFANTRY', { reroll: 'wounds1', attack: 'ranged' }),
       s('Overlapping Fields', 'Ranged weapons have [IGNORES COVER].', undefined, { abilities: ['ignores cover'], attack: 'ranged' }),
     ],
@@ -100,7 +101,7 @@ const SPOKES: Branch[] = [
       s('Bodyguard Plate', 'CHARACTER: Feel No Pain 6+.', 'CHARACTER', { defend: { fnp: 6 } }),
       s('Dig In', 'Units on an objective: +1 to saving throws.', undefined, { defend: { save: 1 }, if: ['onObjective'] }),
       { ...s('Unbreakable', 'Units below Half-strength: Feel No Pain 5+.', undefined, { defend: { fnp: 5 }, if: ['belowHalfStrength'] }),
-        bonus: { count: 6, text: 'With 6 Armour nodes: those units also take -1 Damage.', e: { defend: { damage: 1 }, if: ['belowHalfStrength'] } } },
+        bonus: { count: 6, text: 'With 6 Armour nodes: those units also get +1 Toughness.', e: { toughness: 1, if: ['belowHalfStrength'] } } },
       s('Fortress', 'Keystone. Every unit: +1 Toughness and -2" Move.', undefined, [{ toughness: 1 }, { move: -2 }]),
     ],
     sideA: [
@@ -246,7 +247,171 @@ const SIDE_C: Record<string, Spec[]> = {
     s('Grizzled', 'VETERAN melee attacks re-roll Wound rolls of 1.', 'VETERAN', { reroll: 'wounds1', attack: 'melee' }),
   ],
 };
-for (const b of SPOKES) b.sideC = SIDE_C[b.id];
+/** Tree v3: each shared spoke runs on past its old side clusters (sideB +3, sideC +2). These reach every unit, so
+ *  each is small or needs a condition (docs/04-campaign-tree.md, rule 2). */
+const MORE: Record<string, { b: Spec[]; c: Spec[] }> = {
+  fire: {
+    b: [
+      s('Volley Fire', 'Units that Remained Stationary re-roll ranged Wound rolls of 1.', undefined, { reroll: 'wounds1', attack: 'ranged', if: ['stationary'] }),
+      s('Covering Fire', 'Units in a terrain area re-roll ranged Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'ranged', if: ['inTerrain'] }),
+      s('Fire Discipline', 'Units that Remained Stationary: ranged weapons +1 Strength.', undefined, { strength: 1, attack: 'ranged', if: ['stationary'] }),
+    ],
+    c: [
+      s('Pick Them Off', 'Ranged attacks against a unit below its Starting Strength re-roll Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'ranged', if: ['targetBelowStarting'] }),
+      s('Weight of Fire', 'From round 3: ranged weapons +1 Strength.', undefined, R({ strength: 1, attack: 'ranged' }, 'late')),
+    ],
+  },
+  assault: {
+    b: [
+      s('Hammer of Wrath', 'Units that charged this turn: melee weapons +1 Strength.', undefined, { strength: 1, attack: 'melee', if: ['charged'] }),
+      s('Blood Frenzy', 'Units below their Starting Strength: +1 to Charge rolls.', undefined, { chargeBonus: 1, if: ['belowStartingStrength'] }),
+      s('Red Harvest', 'Melee attacks against a unit below its Starting Strength: +1 to Wound.', undefined, { wound: 1, attack: 'melee', if: ['targetBelowStarting'] }),
+    ],
+    c: [
+      s('Grinding Melee', 'From round 3: melee attacks re-roll Wound rolls of 1.', undefined, R({ reroll: 'wounds1', attack: 'melee' }, 'late')),
+      s('Unstoppable Charge', 'Units that charged this turn: melee weapons +1 AP.', undefined, { ap: 1, attack: 'melee', if: ['charged'] }),
+    ],
+  },
+  armour: {
+    b: [
+      s('Second Wind', 'Units below Half-strength: +1 to saving throws.', undefined, { defend: { save: 1 }, if: ['belowHalfStrength'] }),
+      s('Toughened', 'Units below Half-strength: +1 Toughness.', undefined, { toughness: 1, if: ['belowHalfStrength'] }),
+      s('Hold Fast', 'From round 3: Feel No Pain 6+.', undefined, R({ defend: { fnp: 6 } }, 'late')),
+    ],
+    c: [
+      s('Shrug It Off', 'Units below their Starting Strength: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['belowStartingStrength'] }),
+      s('Weathered', 'Rounds 1-2: +1 to saving throws against ranged attacks.', undefined, R({ defend: { save: 1, vs: 'ranged' } }, 'early')),
+    ],
+  },
+  speed: {
+    b: [
+      s('Fast Advance', 'Rounds 1-2: +1 to Advance rolls.', undefined, R({ advanceBonus: 1 }, 'early')),
+      s('Fleet', 'Units below Half-strength: +2" Move.', undefined, { move: 2, if: ['belowHalfStrength'] }),
+      s('Rapid Redeploy', 'From round 3: every unit +1" Move and re-rolls Advance rolls.', undefined, R({ move: 1, rerollAdvance: true }, 'late')),
+    ],
+    c: [
+      s('Pathfinders', 'Every unit: +1 to Advance rolls.', undefined, { advanceBonus: 1 }),
+      s('Charge Lanes', 'Units led by a CHARACTER: +1 to Charge rolls.', undefined, { chargeBonus: 1, if: ['attached'] }),
+    ],
+  },
+  command: {
+    b: [
+      s('Rally', 'Units below Half-strength: +1 Leadership.', undefined, { ld: 1, if: ['belowHalfStrength'] }),
+      s('Chain of Command', 'Units led by a CHARACTER: +1 Leadership.', undefined, { ld: 1, if: ['attached'] }),
+      s('Coordinated Strike', 'Units led by a CHARACTER re-roll Hit rolls of 1.', undefined, { reroll: 'hits1', if: ['attached'] }),
+    ],
+    c: [
+      s('Clear Orders', 'Rounds 1-2: every unit +1 Leadership.', undefined, R({ ld: 1 }, 'early')),
+      s('Command Uplink', 'Units led by a CHARACTER: ranged weapons +3" Range.', undefined, { rangeBonus: 3, attack: 'ranged', if: ['attached'] }),
+    ],
+  },
+  objectives: {
+    b: [
+      s('Watchmen', 'Units on an objective: ranged attacks against them -1 to Hit.', undefined, { defend: { hit: -1, vs: 'ranged' }, if: ['onObjective'] }),
+      s('Hold at All Costs', 'Units on an objective below Half-strength: +1 OC.', undefined, { oc: 1, if: ['onObjective', 'belowHalfStrength'] }),
+      s('Kill Zone', 'Units on an objective: ranged weapons +3" Range.', undefined, { rangeBonus: 3, attack: 'ranged', if: ['onObjective'] }),
+    ],
+    c: [
+      s('Banner Bearers', 'Units led by a CHARACTER on an objective: +1 OC.', undefined, { oc: 1, if: ['attached', 'onObjective'] }),
+      s('Territorial', 'Units on an objective re-roll Charge rolls.', undefined, { rerollCharge: true, if: ['onObjective'] }),
+    ],
+  },
+  logistics: {
+    b: [
+      { name: 'Field Repairs', text: '+5 Scrap after every won battle.', scrap: 5 },
+      s('Campaign Medals', 'VETERAN: +1 Leadership.', 'VETERAN', { ld: 1 }),
+      { name: 'War Chest', text: '+15 Scrap after every won battle.', scrap: 15 },
+    ],
+    c: [
+      { name: 'Quartermasters', text: '+5 Scrap after every won battle.', scrap: 5 },
+      s('Proven in Battle', 'VETERAN: +1 Strength.', 'VETERAN', { strength: 1 }),
+    ],
+  },
+};
+for (const b of SPOKES) { b.sideB = [...b.sideB!, ...MORE[b.id].b]; b.sideC = [...SIDE_C[b.id], ...MORE[b.id].c]; }
+
+/** Tree v3: a node naming only keywords the army cannot field is swapped for the next of these, in the same place
+ *  (docs/04-campaign-tree.md, rule 1). Army-wide, so small or conditional. */
+const SWAP: Record<string, Spec[]> = {
+  fire: [
+    s('Sharpshooters', 'Ranged attacks against INFANTRY units re-roll Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'ranged', if: ['targetInfantry'] }),
+    s('Armour Piercers', 'Ranged attacks against MONSTER or VEHICLE units re-roll Wound rolls of 1.', undefined, { reroll: 'wounds1', attack: 'ranged', if: ['targetMV'] }),
+    s('Patient Aim', 'Units that Remained Stationary: ranged weapons +3" Range.', undefined, { rangeBonus: 3, attack: 'ranged', if: ['stationary'] }),
+    s('Early Barrage', 'Rounds 1-2: ranged attacks re-roll Hit rolls of 1.', undefined, R({ reroll: 'hits1', attack: 'ranged' }, 'early')),
+    s('Objective Gunners', 'Units on an objective: ranged weapons +1 AP.', undefined, { ap: 1, attack: 'ranged', if: ['onObjective'] }),
+  ],
+  assault: [
+    s('Giant Killers', 'Melee attacks against MONSTER or VEHICLE units: +1 Strength.', undefined, { strength: 1, attack: 'melee', if: ['targetMV'] }),
+    s('Fierce Charge', 'Units that charged this turn re-roll melee Wound rolls of 1.', undefined, { reroll: 'wounds1', attack: 'melee', if: ['charged'] }),
+    s('Opening Strike', 'Rounds 1-2: melee attacks re-roll Hit rolls of 1.', undefined, R({ reroll: 'hits1', attack: 'melee' }, 'early')),
+    s('Hold Them There', 'Units on an objective: melee weapons +1 Strength.', undefined, { strength: 1, attack: 'melee', if: ['onObjective'] }),
+    s('Desperate Fury', 'Units below Half-strength: +1 Attack in melee.', undefined, { attacks: 1, attack: 'melee', if: ['belowHalfStrength'] }),
+    s('Crushing Charge', 'Units that charged this turn: +1 to Hit in melee against INFANTRY units.', undefined, { hit: 1, attack: 'melee', if: ['charged', 'targetInfantry'] }),
+    s('Last Rites', 'From round 3: melee weapons +1 Strength.', undefined, R({ strength: 1, attack: 'melee' }, 'late')),
+  ],
+  armour: [
+    s('Hunkered', 'Units that Remained Stationary: +1 to saving throws against ranged attacks.', undefined, { defend: { save: 1, vs: 'ranged' }, if: ['stationary'] }),
+    s('Steel Nerve', 'From round 3: ranged attacks against your units -1 to Hit.', undefined, R({ defend: { hit: -1, vs: 'ranged' } }, 'late')),
+    s('Rearguard', 'Units in a terrain area: +1 Toughness.', undefined, { toughness: 1, if: ['inTerrain'] }),
+    s('Close Guard', 'Units led by a CHARACTER: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['attached'] }),
+    s('Battle Ready', 'Rounds 1-2: Feel No Pain 6+ against mortal wounds.', undefined, R({ defend: { fnp: 6, fnpVs: 'mortal' } }, 'early')),
+    s('Stalwart', 'Units on an objective below Half-strength: Feel No Pain 5+.', undefined, { defend: { fnp: 5 }, if: ['onObjective', 'belowHalfStrength'] }),
+    s('Steady Under Fire', 'Units that Remained Stationary: Feel No Pain 6+ against mortal wounds.', undefined, { defend: { fnp: 6, fnpVs: 'mortal' }, if: ['stationary'] }),
+    s('Iron Constitution', 'From round 3: units on an objective +1 Toughness.', undefined, R({ toughness: 1, if: ['onObjective'] }, 'late')),
+  ],
+  speed: [
+    s('Double Time', 'Units below their Starting Strength: +1" Move.', undefined, { move: 1, if: ['belowStartingStrength'] }),
+    s('Outflank', 'Units led by a CHARACTER: +1" Move.', undefined, { move: 1, if: ['attached'] }),
+    s('Swift Recovery', 'Units below Half-strength re-roll Advance and Charge rolls.', undefined, { rerollAdvance: true, rerollCharge: true, if: ['belowHalfStrength'] }),
+    s('Scout Screen', 'From round 3: +1 to Charge rolls.', undefined, R({ chargeBonus: 1 }, 'late')),
+    s('Sprint Drills', 'Units on an objective: +1 to Advance rolls.', undefined, { advanceBonus: 1, if: ['onObjective'] }),
+    s('Quick Reactions', 'Rounds 1-2: units led by a CHARACTER re-roll Charge rolls.', undefined, R({ rerollCharge: true, if: ['attached'] }, 'early')),
+    s('Rapid Flank', 'Units in a terrain area re-roll Advance rolls.', undefined, { rerollAdvance: true, if: ['inTerrain'] }),
+    s('Hard Run', 'Units below Half-strength: +1 to Advance rolls.', undefined, { advanceBonus: 1, if: ['belowHalfStrength'] }),
+    s('Forward Scouts', 'Rounds 1-2: units on an objective +1" Move.', undefined, R({ move: 1, if: ['onObjective'] }, 'early')),
+  ],
+  command: [
+    s('Disciplined Ranks', 'From round 3: every unit re-rolls Battle-shock tests.', undefined, R({ rerollShock: true }, 'late')),
+    s('Steady Line', 'Units on an objective: +1 Leadership.', undefined, { ld: 1, if: ['onObjective'] }),
+    s('Commissariat', 'Units below their Starting Strength: +1 Leadership.', undefined, { ld: 1, if: ['belowStartingStrength'] }),
+    s('Field Promotions', 'Units led by a CHARACTER: +1 OC.', undefined, { oc: 1, if: ['attached'] }),
+    s('Battle Plans', 'Rounds 1-2: units led by a CHARACTER +1 to Hit.', undefined, R({ hit: 1, if: ['attached'] }, 'early')),
+  ],
+  objectives: [
+    s('Hold Position', 'Units that Remained Stationary: +1 OC.', undefined, { oc: 1, if: ['stationary'] }),
+    s('Linebreakers', 'Units that charged this turn: +1 OC.', undefined, { oc: 1, if: ['charged'] }),
+    s('Outposts', 'Units in a terrain area: +1 OC.', undefined, { oc: 1, if: ['inTerrain'] }),
+    s('Garrison Duty', 'Units in a terrain area on an objective: +1 to saving throws.', undefined, { defend: { save: 1 }, if: ['inTerrain', 'onObjective'] }),
+    s('Standard Bearers', 'From round 3: units led by a CHARACTER +1 OC.', undefined, R({ oc: 1, if: ['attached'] }, 'late')),
+    s('Picket Lines', 'Units that Remained Stationary on an objective: +1 to saving throws.', undefined, { defend: { save: 1 }, if: ['stationary', 'onObjective'] }),
+    s('Overrun', 'From round 3: units that charged this turn +1 OC.', undefined, R({ oc: 1, if: ['charged'] }, 'late')),
+  ],
+  logistics: [
+    { name: 'Spoils of War', text: '+5 Scrap after every won battle.', scrap: 5 },
+    { name: 'Munitions Dump', text: '+5 Scrap after every won battle.', scrap: 5 },
+  ],
+  ring: [
+    s('Crossroads', 'Units led by a CHARACTER re-roll Advance rolls.', undefined, { rerollAdvance: true, if: ['attached'] }),
+    s('Mutual Support', 'Units below their Starting Strength re-roll Hit rolls of 1.', undefined, { reroll: 'hits1', if: ['belowStartingStrength'] }),
+    s('Overwatch Posts', 'Units in a terrain area re-roll ranged Wound rolls of 1.', undefined, { reroll: 'wounds1', attack: 'ranged', if: ['inTerrain'] }),
+    s('Second Line', 'From round 3: every unit +1 Leadership.', undefined, R({ ld: 1 }, 'late')),
+    { name: 'Way Stations', text: '+5 Scrap after every won battle.', scrap: 5 },
+  ],
+  outer: [
+    s('Siege Mentality', 'Keystone. Units on an objective: +1 Toughness and +1 OC. Every unit: -1" Move.', undefined, [{ toughness: 1, oc: 1, if: ['onObjective'] }, { move: -1 }]),
+    s('Shock Troops', 'Keystone. Units that charged this turn: +1 to Hit in melee. Every unit: -1 Leadership.', undefined, [{ hit: 1, attack: 'melee', if: ['charged'] }, { ld: -1 }]),
+    s('Fire Base', 'Keystone. Units that Remained Stationary: ranged weapons +1 AP. Every unit: -1 to Charge rolls.', undefined, [{ ap: 1, attack: 'ranged', if: ['stationary'] }, { chargeBonus: -1 }]),
+    s('War of Attrition', 'Keystone. From round 3: Feel No Pain 5+. Rounds 1-2: every unit -1" Move.', undefined, [R({ defend: { fnp: 5 } }, 'late'), R({ move: -1 }, 'early')]),
+    s('Lightning War', 'Keystone. Rounds 1-2: +1 to Hit. From round 3: -1 to Hit.', undefined, [R({ hit: 1 }, 'early'), R({ hit: -1 }, 'late')]),
+    s('Elite Cadre', 'Keystone. Units led by a CHARACTER: +1 to Wound. Every unit: -1 OC.', undefined, [{ wound: 1, if: ['attached'] }, { oc: -1 }]),
+  ],
+  army: [
+    s('Old Ways', 'Units below their Starting Strength re-roll Wound rolls of 1.', undefined, { reroll: 'wounds1', if: ['belowStartingStrength'] }),
+    s('Oaths Sworn', 'Units led by a CHARACTER re-roll Battle-shock tests.', undefined, { rerollShock: true, if: ['attached'] }),
+    s('Battle Rites', 'Rounds 1-2: +1 Leadership and re-roll Charge rolls.', undefined, R({ ld: 1, rerollCharge: true }, 'early')),
+    s('Endure', 'Units in a terrain area re-roll Battle-shock tests.', undefined, { rerollShock: true, if: ['inTerrain'] }),
+  ],
+};
 
 /** Inner ring: one bridge between each pair of neighbouring slots (the army's branch is the eighth slot). */
 const BRIDGES: Spec[] = [
@@ -287,7 +452,7 @@ export function getFactionFamily(factionId: string): Family {
 
 const FAMILY_BRANCHES: Record<Family, Branch> = {
   IMPERIUM: {
-    id: 'army', name: 'Faith and Duty', about: 'Imperium: Feel No Pain for infantry and vehicles, [LETHAL HITS] in melee, CP. Keystone: Critical Hits on 5+.',
+    id: 'army', name: 'Faith and Duty', about: 'Imperium: Feel No Pain for infantry and vehicles, [LETHAL HITS] in melee, CP. Keystone Indomitus Mandate: [LETHAL HITS] on every weapon, -1 OC.',
     main: [
       s('Litany of Hate', 'BATTLELINE melee attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'melee' }),
       s('Blessed Plating', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
@@ -296,7 +461,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
       s('Righteous Zeal', 'CHARACTER melee weapons: +1 Strength.', 'CHARACTER', { strength: 1, attack: 'melee' }),
       { ...s('Righteous Vengeance', 'Melee weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'melee' }),
         bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 Strength.', e: { strength: 1, attack: 'melee' } } },
-      s('Indomitus Mandate', 'Keystone. Critical Hits on 5+. Every unit: -1 OC.', undefined, [{ critHitOn: 5 }, { oc: -1 }]),
+      s('Indomitus Mandate', 'Keystone. Melee and ranged weapons have [LETHAL HITS]. Every unit: -1 OC.', undefined, [{ abilities: ['lethal hits'] }, { oc: -1 }]),
     ],
     sideA: [
       { name: 'Munitorum Tithes', text: '+10 Scrap after every won battle.', scrap: 10 },
@@ -305,16 +470,16 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   CHAOS: {
-    id: 'army', name: 'The Dark Gods', about: 'Chaos: daemonic wards, melee AP and Attacks. Keystone Dark Pact: Critical Hits on 5+, -1 to saves.',
+    id: 'army', name: 'The Dark Gods', about: 'Chaos: daemonic wards, melee AP and Attacks. Keystone Dark Pact: +1 to Wound, -1 to saves.',
     main: [
       s('Dark Zeal', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       { name: 'Warp Tribute', text: '+10 Scrap after every won battle.', scrap: 10 },
-      s('Daemonic Ward', 'CHARACTER: 5+ invulnerable save.', 'CHARACTER', { defend: { inv: 5 } }),
+      s('Daemonic Ward', 'CHARACTER: Feel No Pain 5+ against mortal wounds.', 'CHARACTER', { defend: { fnp: 5, fnpVs: 'mortal' } }),
       s('Warpfire', 'INFANTRY ranged weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'ranged' }),
       s('Blood Offering', 'Units that charged this turn re-roll melee Wound rolls of 1.', undefined, { reroll: 'wounds1', attack: 'melee', if: ['charged'] }),
       { ...s('Warp Mutation', 'Melee weapons: +1 AP.', undefined, { ap: 1, attack: 'melee' }),
         bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 Attack.', e: { attacks: 1, attack: 'melee' } } },
-      s('Dark Pact', 'Keystone. Critical Hits on 5+. Every unit: -1 to saving throws.', undefined, [{ critHitOn: 5 }, { defend: { save: -1 } }]),
+      s('Dark Pact', 'Keystone. +1 to Wound. Every unit: -1 to saving throws.', undefined, [{ wound: 1 }, { defend: { save: -1 } }]),
     ],
     sideA: [
       s('Soul Siphon', 'INFANTRY: Feel No Pain 6+.', 'INFANTRY', { defend: { fnp: 6 } }),
@@ -377,11 +542,11 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   XENOS: {
-    id: 'army', name: 'Alien Ingenuity', about: 'Xenos: invulnerable saves for vehicles, ranged [LETHAL HITS], speed. Keystone: +1 Damage, -1 Toughness.',
+    id: 'army', name: 'Alien Ingenuity', about: 'Xenos: sturdier vehicles, ranged [LETHAL HITS], speed. Keystone: +1 Damage, -1 Toughness.',
     main: [
       s('Target Lock', 'INFANTRY ranged attacks re-roll Hit rolls of 1.', 'INFANTRY', { reroll: 'hits1', attack: 'ranged' }),
       { name: 'Black Market', text: '+10 Scrap after every won battle.', scrap: 10 },
-      s('Shield Matrices', 'VEHICLE: 5+ invulnerable save.', 'VEHICLE', { defend: { inv: 5 } }),
+      s('Shield Matrices', 'VEHICLE: +1 to saving throws against ranged attacks.', 'VEHICLE', { defend: { save: 1, vs: 'ranged' } }),
       s('Grav Skimmers', 'FLY and VEHICLE: +2" Move.', 'FLY|VEHICLE', { move: 2 }),
       s('Drone Routines', 'INFANTRY: +1 OC.', 'INFANTRY', { oc: 1 }),
       { ...s('Hyper-Frequency', 'Ranged weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'ranged' }),
@@ -497,6 +662,41 @@ const branchOf = (factionId: string) => FACTION_BRANCHES[factionId] ?? FAMILY_BR
 /** Armies with a branch of their own (the rest use their family's). */
 export const OWN_BRANCHES = Object.keys(FACTION_BRANCHES);
 
+// ---------- tree v3: what an army can field, and what the tree may change ----------
+
+/** every keyword a shared or army branch node names (the corps and arsenal kits are checked against the data instead);
+ *  `FIELDED` (treeFielded.ts, written by its test) lists, per army, the ones it can field */
+export const treeVocab = () => [...new Set([...SPOKES.flatMap((b) => [...b.main, ...b.sideA, ...(b.sideB ?? []), ...(b.sideC ?? [])]), ...BRIDGES, ...CONVERSIONS,
+  ...Object.values(FAMILY_BRANCHES).flatMap((b) => [...b.main, ...b.sideA, ...(b.sideB ?? []), ...(b.sideC ?? [])]),
+  ...Object.values(FACTION_BRANCHES).flatMap((b) => [...b.main, ...b.sideA, ...(b.sideB ?? []), ...(b.sideC ?? [])])]
+  .flatMap((n) => [...(n.units?.split('|') ?? []), ...(n.as ? [n.as.from, n.as.to] : [])]))].filter((k) => k !== 'VETERAN').sort();
+
+const fielded = (factionId: string, k: string) => k === 'VETERAN' || !FIELDED[factionId] || FIELDED[factionId].includes(k);
+/** a node fits an army when it names a keyword the army can field (or none), and a conversion both of its keywords */
+export const fitsArmy = (factionId: string, n: Pick<Spec, 'units' | 'as'>) =>
+  (!n.units || n.units.split('|').some((k) => fielded(factionId, k))) && (!n.as || (fielded(factionId, n.as.from) && fielded(factionId, n.as.to)));
+
+/** The effect keys the tree may use: numbers and re-rolls. Everything else (invulnerable saves, -1 Damage, critical
+ *  hits, mortal wounds, Fights First, other weapon abilities...) belongs to relics (docs/04-campaign-tree.md, rule 4). */
+export const TREE_KEYS = new Set(['hit', 'wound', 'ap', 'strength', 'attacks', 'damage', 'skill', 'rangeBonus', 'move', 'toughness', 'oc', 'ld',
+  'rerollShock', 'rerollAdvance', 'rerollCharge', 'advanceBonus', 'chargeBonus', 'reroll', 'defend.fnp', 'defend.save', 'defend.hit',
+  'abilities:sustained hits 1', 'abilities:lethal hits', 'abilities:ignores cover', 'abilities:precision']);
+/** keys that only say where or when an effect applies */
+const SCOPE_KEYS = new Set(['if', 'attack', 'scope', 'range', 'units', 'notSelf', 'weapon', 'defend.vs', 'defend.fnpVs', 'defend.invVs']);
+/** the keys an effect changes, flattened: defend.save, abilities:lethal hits... */
+export function effectKeys(e: Effect | Effect[] | undefined): string[] {
+  const out: string[] = [];
+  for (const x of e ? (Array.isArray(e) ? e : [e]) : []) {
+    for (const [k, v] of Object.entries(x)) {
+      if (v === undefined || SCOPE_KEYS.has(k)) continue;
+      if (k === 'defend') { for (const d of Object.keys(v as object)) if (!SCOPE_KEYS.has(`defend.${d}`)) out.push(`defend.${d}`); }
+      else if (k === 'abilities') for (const a of v as string[]) out.push(`abilities:${a.toLowerCase()}`);
+      else out.push(k);
+    }
+  }
+  return out;
+}
+
 // ---------- building the graph ----------
 
 /** distance between depths on the drawing */
@@ -520,14 +720,33 @@ export function treeFor(factionId: string): TreeNode[] {
     for (const f of from) { n.links.push(f); nodes.find((x) => x.id === f)!.links.push(n.id); }
   };
   const branches = branchesOf(factionId), SLOTS = branches.length, angleOf = angleIn(SLOTS);
+  // a node the army cannot use gives way to the next one of its pool (the kits are written per army: no pool)
+  const used = new Map<string, number>();
+  const fit = (sp: Spec, pool?: string): Spec => {
+    if (!pool) return sp;
+    if (fitsArmy(factionId, sp)) {
+      // a node for two keywords keeps the one the army fields: "VEHICLE and MONSTER" becomes "VEHICLE" for Space Marines
+      const ks = sp.units?.split('|') ?? [], keep = ks.filter((k) => fielded(factionId, k));
+      if (keep.length === ks.length) return sp;
+      const text = ks.filter((k) => !keep.includes(k)).reduce((t, k) => t.replace(new RegExp(`${k} (and|or) | (and|or) ${k}`), ''), sp.text);
+      return { ...sp, units: keep.join('|'), text };
+    }
+    const list = SWAP[pool], i = used.get(pool) ?? 0;
+    if (i >= list.length) throw new Error(`army tree: the ${pool} pool ran dry for ${factionId}`);
+    used.set(pool, i + 1);
+    return sp.bonus ? { ...list[i], bonus: sp.bonus } : list[i];
+  };
+  const poolOf = (b: Branch) => (b.id === 'corps' || b.id === 'arsenal' ? undefined : b.id);
   // side clusters lean off the main line, less when there are more slots to share the circle
   const lean = (0.3 * 8) / SLOTS;
   branches.forEach((b, i) => {
     const a = angleOf(i);
-    b.main.forEach((sp, d) => add({ ...sp, id: `${b.id}-${d + 1}`, kind: d === 6 ? 'keystone' : d === 2 || d === 5 ? 'notable' : 'small', slot: b.id, ...at(a, d + 1), links: [] }, [d ? `${b.id}-${d}` : 'start']));
+    const pool = poolOf(b);
+    b.main.forEach((sp0, d) => { const sp = fit(sp0, pool); add({ ...sp, id: `${b.id}-${d + 1}`, kind: d === 6 ? 'keystone' : d === 2 || d === 5 ? 'notable' : 'small', slot: b.id, ...at(a, d + 1), links: [] }, [d ? `${b.id}-${d}` : 'start']); });
     // side clusters: one off depth 2 to the left, one off depth 5 to the right
+    // a cluster's third node is a notable, and so is the last of a longer one
     const side = (list: Spec[] | undefined, from: number, dir: number, key: string) => list?.forEach((sp, k) => add(
-      { ...sp, id: `${b.id}-${key}${k + 1}`, kind: k === 2 ? 'notable' : 'small', slot: b.id, ...at(a + dir * lean, from + 0.5 * (k + 1)), links: [] },
+      { ...fit(sp, pool), id: `${b.id}-${key}${k + 1}`, kind: k === 2 || (k > 2 && k === list.length - 1) ? 'notable' : 'small', slot: b.id, ...at(a + dir * lean, from + 0.5 * (k + 1)), links: [] },
       [k ? `${b.id}-${key}${k}` : `${b.id}-${from}`]));
     side(b.sideA, 2, -1, 'a');
     side(b.sideB, 5, 1, 'b');
@@ -536,10 +755,10 @@ export function treeFor(factionId: string): TreeNode[] {
   // inner ring at depth 4; past each shared spoke's tip, its keyword keystone
   branches.forEach((b, i) => {
     const nb = branches[(i + 1) % SLOTS];
-    add({ ...BRIDGES[i], id: `ring-${b.id}`, kind: 'small', slot: 'ring', ...at(angleOf(i + 0.5), 4.15), links: [] }, [`${b.id}-4`, `${nb.id}-4`]);
+    add({ ...fit(BRIDGES[i], 'ring'), id: `ring-${b.id}`, kind: 'small', slot: 'ring', ...at(angleOf(i + 0.5), 4.15), links: [] }, [`${b.id}-4`, `${nb.id}-4`]);
     // the outer keystones hang off one spoke's tip: the ends of two spokes are not joined, so a spoke's end is reached
     // only by walking that spoke
-    if (i < CONVERSIONS.length) add({ ...CONVERSIONS[i], id: `outer-${b.id}`, kind: 'keystone', slot: b.id, ...at(angleOf(i), 8.4), links: [] }, [`${b.id}-7`]);
+    if (i < CONVERSIONS.length) add({ ...fit(CONVERSIONS[i], 'outer'), id: `outer-${b.id}`, kind: 'keystone', slot: b.id, ...at(angleOf(i), 8.4), links: [] }, [`${b.id}-7`]);
   });
   treeCache.set(key, nodes);
   return nodes;

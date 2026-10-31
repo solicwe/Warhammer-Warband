@@ -22,13 +22,13 @@ describe('army tree: shape', () => {
   const ids = fs.readdirSync('public/data/factions').map((f) => f.replace('.json', ''));
   const allKeywords = new Set(ids.flatMap((id) => load(id).datasheets.flatMap((d) => [...d.keywords, ...d.factionKeywords])));
 
-  it('every army gets a tree of about 180 nodes with three branches of its own, every node reachable, links both ways', () => {
+  it('every army gets a tree of about 210 nodes with three branches of its own, every node reachable, links both ways', () => {
     for (const id of ALL_PLAYABLE_FACTIONS) {
       const nodes = treeFor(id);
-      expect(nodes.length, id).toBeGreaterThanOrEqual(170);
-      expect(nodes.length, id).toBeLessThanOrEqual(190);
-      expect(nodes.filter((n) => n.slot === 'corps' || n.slot === 'arsenal').length, id).toBe(32);
-      expect(new Set(nodes.map((n) => n.name)).size, `${id}: node names are unique`).toBe(nodes.length);
+      expect(nodes.length, id).toBeGreaterThanOrEqual(185);
+      expect(nodes.length, id).toBeLessThanOrEqual(230);
+      expect(nodes.filter((n) => n.slot === 'corps' || n.slot === 'arsenal').length, id).toBe(38);
+      expect(nodes.map((n) => n.name).filter((x, i, a) => a.indexOf(x) !== i), `${id}: node names are unique`).toEqual([]);
       // a spoke's far end is not joined to another spoke: past depth 4 every link stays on the spoke
       for (const n of nodes) {
         const depth = Number(/-(\d)$/.exec(n.id)?.[1] ?? 0);
@@ -182,15 +182,16 @@ describe('old saved runs', () => {
     expect(migrateRun(m)).toBe(m);
   });
 
-  it('a run from the eight-slot tree: lost and cut-off nodes and the old Titan Requisition come back as Renown', () => {
+  it('an older tree (eight slots or v2) is given back as Renown once, with one story line', () => {
     const run = smRun();
-    // reached the army branch through the old bridge from fire-4 (that bridge now joins army-4 and corps-4)
-    const tree = ['fire-1', 'fire-2', 'fire-3', 'fire-4', 'ring-army', 'army-4', 'army-5', 'logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6', 'logistics-7', 'gone-1'];
-    const old = { ...run, treeVersion: undefined, renown: 2, tree } as unknown as Run;
-    const m = migrateRun(old);
-    expect(m.tree).toEqual(['fire-1', 'fire-2', 'fire-3', 'fire-4', 'logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6']);
-    expect(m.renown).toBe(2 + 5);
-    expect(m.story.at(-1)).toMatch(/5 nodes refunded/);
-    expect(migrateRun(m)).toBe(m);
+    const tree = ['fire-1', 'fire-2', 'fire-3', 'fire-4', 'ring-army', 'army-4', 'logistics-7', 'gone-1'];
+    for (const treeVersion of [undefined, 2]) {
+      const m = migrateRun({ ...run, treeVersion, renown: 2, tree } as unknown as Run);
+      expect(m.tree).toEqual([]);
+      expect(m.renown).toBe(2 + tree.length);
+      expect(m.treeVersion).toBe(3);
+      expect(m.story.at(-1)).toMatch(/8 nodes refunded/);
+      expect(migrateRun(m)).toBe(m);
+    }
   });
 });
