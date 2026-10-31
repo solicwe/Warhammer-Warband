@@ -111,12 +111,16 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
   big the unit is.
 - **Army tree.** One passive tree for the whole army, paid for with Renown (battle 3, elite 5, boss 6, a loss 1).
-  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and a branch for your army
-  (its own for Space Marines, Thousand Sons, Orks, Necrons and Tyranids; its family's for the rest) sit around a start node, with an inner ring of bridges halfway out. Each shared spoke has three side clusters
-  and, past its tip, a keystone that makes one keyword count as another; spoke ends are not joined, so a spoke's far
-  nodes are reached only by walking that spoke (about 135 nodes in all). Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
-  enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. The Logistics
-  keystone unlocks Knights, Titans and other titanic units. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
+  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and three branches of your army's
+  own (its army branch, a corps and an arsenal, on its real keywords: Terminators and Gravis for Space Marines, Wych
+  Cults and Kabals for Drukhari, Hernkyn and Ironkin for the Votann...) sit around a start node, with an inner ring of
+  bridges halfway out. Each shared spoke has three side clusters and, past its tip, a keystone that makes one keyword
+  count as another; spoke ends are not joined, so a spoke's far nodes are reached only by walking that spoke (about
+  170 nodes in all). Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
+  enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. An army that can field
+  titanic units or allied Knights unlocks them with the keystone at the end of its arsenal branch (Questor Oath,
+  Gargant Mob, Monolith Phalanx...); Drukhari, Genestealer Cults and the Votann have none and get another keystone
+  there, and Imperial and Chaos Knight armies need none for their own Knights. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
 - **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
 - **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
   battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.

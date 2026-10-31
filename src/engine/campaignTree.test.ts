@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { autoList } from './autoList';
-import { afterBattle, applyCampaign, canRecruitTitanOrKnight, migrateRun, newRun, type Run } from './campaign';
+import { allySources, withAllies } from './allies';
+import { afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, canRecruitTitanOrKnight, getFactionFamily, isFactionAllowedKnight, migrateRun, newRun, requiresTitanRequisition, type Run } from './campaign';
 import { allocate, canAllocate, canRefund, isVeteran, refund, RENOWN, treeCp, treeFor, treeScrap, unitsReached } from './campaignTree';
 import { createGame } from './game';
 import type { FactionData } from './types';
@@ -21,11 +22,13 @@ describe('army tree: shape', () => {
   const ids = fs.readdirSync('public/data/factions').map((f) => f.replace('.json', ''));
   const allKeywords = new Set(ids.flatMap((id) => load(id).datasheets.flatMap((d) => [...d.keywords, ...d.factionKeywords])));
 
-  it('every army gets a tree of about 135 nodes, every node reachable from the start, links both ways', () => {
-    for (const id of ['SM', 'TS', 'CSM', 'NEC', 'ORK', 'TYR', 'TAU', 'AM', 'GC']) {
+  it('every army gets a tree of about 180 nodes with three branches of its own, every node reachable, links both ways', () => {
+    for (const id of ALL_PLAYABLE_FACTIONS) {
       const nodes = treeFor(id);
-      expect(nodes.length).toBeGreaterThanOrEqual(130);
-      expect(nodes.length).toBeLessThanOrEqual(150);
+      expect(nodes.length, id).toBeGreaterThanOrEqual(170);
+      expect(nodes.length, id).toBeLessThanOrEqual(190);
+      expect(nodes.filter((n) => n.slot === 'corps' || n.slot === 'arsenal').length, id).toBe(32);
+      expect(new Set(nodes.map((n) => n.name)).size, `${id}: node names are unique`).toBe(nodes.length);
       // a spoke's far end is not joined to another spoke: past depth 4 every link stays on the spoke
       for (const n of nodes) {
         const depth = Number(/-(\d)$/.exec(n.id)?.[1] ?? 0);
@@ -41,8 +44,32 @@ describe('army tree: shape', () => {
   });
 
   it('nodes do not overlap on the drawing', () => {
-    const nodes = treeFor('SM');
-    for (const a of nodes) for (const b of nodes) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(24);
+    for (const id of ['SM', 'AM', 'DRU']) {
+      const nodes = treeFor(id);
+      for (const a of nodes) for (const b of nodes) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y), `${a.id} ${b.id}`).toBeGreaterThan(24);
+    }
+  });
+
+  it("an army's own branches name only keywords its own units have", () => {
+    for (const id of ALL_PLAYABLE_FACTIONS) {
+      const mine = new Set(load(id).datasheets.filter((d) => !d.ally).flatMap((d) => [...d.keywords, ...d.factionKeywords]));
+      for (const n of treeFor(id).filter((x) => x.slot === 'corps' || x.slot === 'arsenal')) {
+        for (const k of n.units?.split('|') ?? []) expect(mine.has(k), `${id} ${n.name}: ${k}`).toBe(true);
+      }
+    }
+  });
+
+  it('the titan keystone is there exactly for the armies that can recruit a titanic unit or a Knight', () => {
+    const idx = JSON.parse(fs.readFileSync('public/data/index.json', 'utf8')) as { factions: { id: string; group?: string }[] };
+    for (const id of ALL_PLAYABLE_FACTIONS) {
+      const f = load(id), family = getFactionFamily(id);
+      const allies = allySources(id, idx.factions.find((x) => x.id === id)?.group).flatMap((src) => (fs.existsSync(`public/data/factions/${src.id}.json`) ? [{ src, data: load(src.id) }] : []));
+      const run = newRun(f, autoList(f, 500, 1), ['ORK'], 1);
+      // the recruit screen's pool: the army's own units and the allies its family may take
+      const pool = withAllies(f, allies).datasheets.filter((d) => (!d.ally || (family === 'IMPERIUM' && (d.ally === 'QI' || d.ally === 'TL')) || (family === 'CHAOS' && (d.ally === 'QT' || d.ally === 'CD'))) && d.points?.[0]?.options?.length && isFactionAllowedKnight(id, d));
+      const locked = pool.filter((d) => requiresTitanRequisition(d) && !canRecruitTitanOrKnight(id, d, run));
+      expect(treeFor(id).some((n) => n.titan), `${id}: ${locked.length} units need a titan keystone`).toBe(locked.length > 0);
+    }
   });
 
   it('every keyword a node names exists in the data (VETERAN aside)', () => {
@@ -127,12 +154,17 @@ describe('army tree: in battle', () => {
     expect(s.players[0].cp - battle(smRun()).players[0].cp).toBe(3);
   });
 
-  it('Titan Requisition unlocks TITANIC units', () => {
-    const knight = SM.datasheets.find((d) => d.keywords.includes('TITANIC'));
-    if (!knight) return;
+  it("the army's titan keystone unlocks TITANIC units; a Knight army's own Knights need none", () => {
+    const knight = SM.datasheets.find((d) => d.keywords.includes('TITANIC'))!;
     const run = smRun();
     expect(canRecruitTitanOrKnight('SM', knight, run)).toBe(false);
-    expect(canRecruitTitanOrKnight('SM', knight, { ...run, tree: ['logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6', 'logistics-7'] })).toBe(true);
+    expect(canRecruitTitanOrKnight('SM', knight, { ...run, tree: ['logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6', 'logistics-7'] })).toBe(false);
+    const path = ['arsenal-1', 'arsenal-2', 'arsenal-3', 'arsenal-4', 'arsenal-5', 'arsenal-6', 'arsenal-7'];
+    expect(treeFor('SM').find((n) => n.id === 'arsenal-7')!.titan).toBe(true);
+    expect(canRecruitTitanOrKnight('SM', knight, { ...run, tree: path })).toBe(true);
+    const QI = load('QI');
+    const paladin = QI.datasheets.find((d) => d.name === 'Knight Paladin')!;
+    expect(canRecruitTitanOrKnight('QI', paladin, newRun(QI, autoList(QI, 500, 1), ['ORK'], 1))).toBe(true);
   });
 });
 
@@ -147,6 +179,18 @@ describe('old saved runs', () => {
     expect(m.techTree).toBeUndefined();
     expect(m.datasheetHonors).toBeUndefined();
     expect(m.list.units.every((u) => u.battles === 2 && !('xp' in u) && !('honors' in u))).toBe(true);
+    expect(migrateRun(m)).toBe(m);
+  });
+
+  it('a run from the eight-slot tree: lost and cut-off nodes and the old Titan Requisition come back as Renown', () => {
+    const run = smRun();
+    // reached the army branch through the old bridge from fire-4 (that bridge now joins army-4 and corps-4)
+    const tree = ['fire-1', 'fire-2', 'fire-3', 'fire-4', 'ring-army', 'army-4', 'army-5', 'logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6', 'logistics-7', 'gone-1'];
+    const old = { ...run, treeVersion: undefined, renown: 2, tree } as unknown as Run;
+    const m = migrateRun(old);
+    expect(m.tree).toEqual(['fire-1', 'fire-2', 'fire-3', 'fire-4', 'logistics-1', 'logistics-2', 'logistics-3', 'logistics-4', 'logistics-5', 'logistics-6']);
+    expect(m.renown).toBe(2 + 5);
+    expect(m.story.at(-1)).toMatch(/5 nodes refunded/);
     expect(migrateRun(m)).toBe(m);
   });
 });

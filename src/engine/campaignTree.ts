@@ -1,14 +1,15 @@
 // The campaign's army tree (docs/04-campaign-tree.md): one passive tree for the whole army, paid for with Renown.
-// Seven shared spokes and the army's own branch around a start node, an inner ring of bridges halfway out and,
+// Seven shared spokes and the army's three own branches around a start node, an inner ring of bridges halfway out and,
 // past each shared spoke's tip, a keystone that converts keywords. Nodes reach units through keywords and use the existing Effect
 // fields, so the engine and the bot need no new rules code.
 import { addTimed } from '../rules-engine/effects';
 import type { Effect } from '../rules-engine/effects';
+import { armyBranches } from './campaignTreeArmies';
 import type { ArmyUnitEntry, DatasheetData, GameState, PlayerId } from './types';
 
 export type TreeKind = 'start' | 'small' | 'notable' | 'keystone';
 
-interface Spec {
+export interface Spec {
   name: string;
   text: string;
   /** keywords the node reaches ("INFANTRY|MOUNTED"); none: every unit */
@@ -36,7 +37,7 @@ export interface TreeNode extends Spec {
   links: string[];
 }
 
-interface Branch { id: string; name: string; /** what the spoke is for, in one line */ about: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[]; sideC?: Spec[] }
+export interface Branch { id: string; name: string; /** what the spoke is for, in one line */ about: string; main: Spec[]; sideA: Spec[]; sideB?: Spec[]; sideC?: Spec[] }
 
 const s = (name: string, text: string, units: string | undefined, e: Effect | Effect[]): Spec => ({ name, text, units, e });
 const R = (e: Effect, ...rounds: ('early' | 'late')[]): Effect => ({ ...e, if: [...(e.if ?? []), ...rounds.map((r) => (r === 'early' ? '!roundAtLeast:3' : 'roundAtLeast:3'))] });
@@ -183,7 +184,7 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'logistics', name: 'Logistics', about: 'The campaign itself: more Scrap after each win, buffs for VETERAN units. Keystone Titan Requisition unlocks Knights and Titans.',
+    id: 'logistics', name: 'Logistics', about: 'The campaign itself: more Scrap after each win, buffs for VETERAN units. Keystone Living Legends: VETERAN +1 Attack and +1 Damage, less Scrap.',
     main: [
       { name: 'Salvage Crews', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Blooded', 'VETERAN: +1 OC.', 'VETERAN', { oc: 1 }),
@@ -192,7 +193,7 @@ const SPOKES: Branch[] = [
       s('Battle-scarred', 'VETERAN: Feel No Pain 6+.', 'VETERAN', { defend: { fnp: 6 } }),
       { name: 'Tithe Masters', text: '+25 Scrap after every won battle.', scrap: 25,
         bonus: { count: 6, text: 'With 6 Logistics nodes: +1 CP at the start of every battle.', cp: 1 } },
-      { name: 'Titan Requisition', text: 'Keystone. TITANIC units and Knights of your side can be recruited. -20 Scrap after every won battle.', titan: true, scrap: -20 },
+      { ...s('Living Legends', 'Keystone. VETERAN units: +1 Attack and +1 Damage. -15 Scrap after every won battle.', 'VETERAN', [{ attacks: 1 }, { damage: 1 }]), scrap: -15 },
     ],
     sideA: [
       s('Hardened Survivors', 'VETERAN: +1" Move.', 'VETERAN', { move: 1 }),
@@ -257,6 +258,8 @@ const BRIDGES: Spec[] = [
   { name: 'Supply Caches', text: '+10 Scrap after every won battle.', scrap: 10 },
   s('Trusted Hands', 'VETERAN: +1 OC.', 'VETERAN', { oc: 1 }),
   s('Sighting Lens', 'VEHICLE ranged attacks re-roll Hit rolls of 1.', 'VEHICLE', { reroll: 'hits1', attack: 'ranged' }),
+  s('Battle Brothers', 'BATTLELINE: +1 Leadership.', 'BATTLELINE', { ld: 1 }),
+  s('Field Surgeons', 'INFANTRY below Half-strength: Feel No Pain 6+.', 'INFANTRY', { defend: { fnp: 6 }, if: ['belowHalfStrength'] }),
 ];
 
 /** Outer ring: keystones between the tips of neighbouring shared spokes. They convert keywords. */
@@ -498,15 +501,17 @@ export const OWN_BRANCHES = Object.keys(FACTION_BRANCHES);
 
 /** distance between depths on the drawing */
 const STEP = 60;
-const SLOTS = 8;
-const angleOf = (slot: number) => -Math.PI / 2 + (slot * 2 * Math.PI) / SLOTS;
+/** the shared spokes, then the army's branch, corps and arsenal */
+const branchesOf = (factionId: string) => [...SPOKES, branchOf(factionId), ...armyBranches(factionId)];
+const slotsOf = (factionId: string) => branchesOf(factionId).length;
+const angleIn = (slots: number) => (slot: number) => -Math.PI / 2 + (slot * 2 * Math.PI) / slots;
 const at = (a: number, r: number) => ({ x: Math.round(Math.cos(a) * r * STEP), y: Math.round(Math.sin(a) * r * STEP) });
 
 const treeCache = new Map<string, TreeNode[]>();
 
 /** The whole tree for an army: the shared spokes and rings, and its own branch. */
 export function treeFor(factionId: string): TreeNode[] {
-  const key = FACTION_BRANCHES[factionId] ? factionId : getFactionFamily(factionId);
+  const key = factionId;
   const hit = treeCache.get(key);
   if (hit) return hit;
   const nodes: TreeNode[] = [{ id: 'start', name: 'Strike Force', kind: 'start', text: 'Where the tree starts. Always taken.', slot: 'start', x: 0, y: 0, links: [] }];
@@ -514,13 +519,15 @@ export function treeFor(factionId: string): TreeNode[] {
     nodes.push(n);
     for (const f of from) { n.links.push(f); nodes.find((x) => x.id === f)!.links.push(n.id); }
   };
-  const branches = [...SPOKES, branchOf(factionId)];
+  const branches = branchesOf(factionId), SLOTS = branches.length, angleOf = angleIn(SLOTS);
+  // side clusters lean off the main line, less when there are more slots to share the circle
+  const lean = (0.3 * 8) / SLOTS;
   branches.forEach((b, i) => {
     const a = angleOf(i);
     b.main.forEach((sp, d) => add({ ...sp, id: `${b.id}-${d + 1}`, kind: d === 6 ? 'keystone' : d === 2 || d === 5 ? 'notable' : 'small', slot: b.id, ...at(a, d + 1), links: [] }, [d ? `${b.id}-${d}` : 'start']));
     // side clusters: one off depth 2 to the left, one off depth 5 to the right
     const side = (list: Spec[] | undefined, from: number, dir: number, key: string) => list?.forEach((sp, k) => add(
-      { ...sp, id: `${b.id}-${key}${k + 1}`, kind: k === 2 ? 'notable' : 'small', slot: b.id, ...at(a + dir * 0.3, from + 0.5 * (k + 1)), links: [] },
+      { ...sp, id: `${b.id}-${key}${k + 1}`, kind: k === 2 ? 'notable' : 'small', slot: b.id, ...at(a + dir * lean, from + 0.5 * (k + 1)), links: [] },
       [k ? `${b.id}-${key}${k}` : `${b.id}-${from}`]));
     side(b.sideA, 2, -1, 'a');
     side(b.sideB, 5, 1, 'b');
@@ -540,7 +547,7 @@ export function treeFor(factionId: string): TreeNode[] {
 
 export const branchName = (factionId: string) => branchOf(factionId).name;
 /** The eight slots in drawing order: name, what it is for, and where its label goes on the map. */
-export const slotGuide = (factionId: string) => [...SPOKES, branchOf(factionId)].map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleOf(i), 9.3) }));
+export const slotGuide = (factionId: string) => branchesOf(factionId).map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleIn(slotsOf(factionId))(i), 9.3) }));
 export const SLOT_NAMES: Record<string, string> = Object.fromEntries([...SPOKES.map((b) => [b.id, b.name]), ['ring', 'Ring'], ['start', 'Start']]);
 
 // ---------- Renown, allocating and refunding ----------
@@ -624,6 +631,8 @@ export function treeScrap(run: TreeOwner): number {
 }
 
 export const titanUnlocked = (run: TreeOwner) => takenNodes(run).some((n) => n.titan);
+/** the army's titan keystone (its name for the recruit screen); none for an army without titanic units or Knights */
+export const titanKeystone = (factionId: string) => treeFor(factionId).find((n) => n.titan);
 
 // ---------- VETERAN and keywords ----------
 

@@ -14,7 +14,7 @@ import {
   removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
   type MapNode, type Reward, type Run,
 } from '../engine/campaign';
-import { enemyTreePoints, isVeteran, VETERAN_BATTLES } from '../engine/campaignTree';
+import { enemyTreePoints, isVeteran, titanKeystone, VETERAN_BATTLES } from '../engine/campaignTree';
 import { ArmyTree } from './ArmyTree';
 import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
@@ -1474,7 +1474,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                             {needsTier4 && (
                                               <span className="chip subtle small" style={{ marginLeft: 6, color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
-                                                Requires Titan Requisition
+                                                Requires {titanKeystone(fac.id)?.name ?? 'a titan keystone'}
                                               </span>
                                             )}
                                           </span>
@@ -1487,7 +1487,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                             {needsTier4 ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f59e0b', fontWeight: 600 }}>
-                                                (Locked: Requires Titan Requisition)
+                                                (Locked: requires {titanKeystone(fac.id)?.name ?? 'a titan keystone'})
                                               </span>
                                             ) : isUnaffordable ? (
                                               <span className="tiny" style={{ marginLeft: 6, color: '#f87171', fontWeight: 600 }}>
@@ -1499,7 +1499,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             {alreadyInForce
                                               ? 'Already Recruited (Limit 1)'
                                               : needsTier4
-                                              ? 'Super-Heavy Support · take Titan Requisition in the army tree'
+                                              ? `Super-Heavy Support · take ${titanKeystone(fac.id)?.name ?? 'the titan keystone'} in the army tree`
                                               : d.role || (d.keywords ? d.keywords.slice(0, 3).join(', ') : '')}
                                           </span>
                                         </span>
@@ -1508,7 +1508,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                         type="button"
                                         className="ab-add dark"
                                         aria-label={`Recruit ${d.name}`}
-                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : needsTier4 ? 'Requires Titan Requisition (army tree, Logistics keystone)' : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
+                                        title={alreadyInForce ? 'Limit 1 (Already recruited)' : needsTier4 ? `Requires ${titanKeystone(fac.id)?.name ?? 'a titan keystone'} (army tree)` : !canAffordAny ? `Need ${minCost} Scrap` : `Recruit ${d.name}`}
                                         disabled={alreadyInForce || !canAffordAny || needsTier4}
                                         onClick={(e) => {
                                           e.stopPropagation();

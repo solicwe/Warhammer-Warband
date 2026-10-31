@@ -7,7 +7,7 @@ import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './a
 import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
 import { hasPicture } from './state';
-import { applyTree, enemyTree, enemyTreePoints, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeScrap } from './campaignTree';
+import { applyTree, enemyTree, enemyTreePoints, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeFor, treeScrap } from './campaignTree';
 import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
@@ -57,6 +57,8 @@ export interface Run {
   renown?: number;
   /** army tree nodes taken, in order (the start is implicit) */
   tree?: string[];
+  /** 2: the tree with three army branches (older saves are pruned and refunded once) */
+  treeVersion?: number;
   /** tree nodes refunded this run (each refund costs more Scrap) */
   refunds?: number;
   /** Idle auto-battle toggle */
@@ -339,7 +341,7 @@ export function newRun(faction: FactionData, list: ArmyList, enemies: string[], 
   const filtered = pool.filter((e) => e !== faction.id && e !== 'TL');
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, filtered, 1, []),
-    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], treeVersion: 2, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
     recentOpponentFactions: [],
   };
 }
@@ -1009,6 +1011,8 @@ export function requiresTitanRequisition(targetDatasheet: DatasheetData): boolea
 /** Check if a unit is permitted to be recruited under the strict Knight/Titan faction lock */
 export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: DatasheetData, run: Run): boolean {
   if (!isFactionAllowedKnight(factionId, targetDatasheet)) return false;
+  // a Knight army's own Knights are its core, not a requisition
+  if (!targetDatasheet.ally && ((factionId === 'QI' && targetDatasheet.factionKeywords?.includes('IMPERIAL KNIGHTS')) || (factionId === 'QT' && targetDatasheet.factionKeywords?.includes('CHAOS KNIGHTS')))) return true;
   return !requiresTitanRequisition(targetDatasheet) || titanUnlocked(run);
 }
 
@@ -1017,14 +1021,29 @@ export function canRecruitTitanOrKnight(factionId: string, targetDatasheet: Data
 export function migrateRun(run: Run): Run {
   const old = run as Run & { techTree?: string[]; datasheetHonors?: unknown };
   const units = run.list.units as (ArmyUnitEntry & { xp?: number; honors?: string[] })[];
-  if (run.renown !== undefined && !old.techTree && !old.datasheetHonors && !units.some((u) => u.xp !== undefined || u.honors)) return run;
+  if (run.renown !== undefined && !old.techTree && !old.datasheetHonors && !units.some((u) => u.xp !== undefined || u.honors)) return pruneTree(run);
   const { techTree: _t, datasheetHonors: _d, ...rest } = old;
-  return {
+  return pruneTree({
     ...rest,
     renown: run.renown ?? run.wins * RENOWN.battle + RENOWN.start,
     tree: run.tree ?? [],
     list: { ...run.list, units: units.map(({ xp, honors: _h, ...u }) => ({ ...u, battles: u.battles ?? xp ?? 0 })) },
-  };
+  });
+}
+
+/** Tree v2 (three army branches, ten slots, Logistics no longer unlocks titans): taken nodes that no longer exist or no
+ *  longer connect to the start are given back as Renown, and so is the old Titan Requisition (logistics-7). */
+export function pruneTree(run: Run): Run {
+  if ((run.treeVersion ?? 1) >= 2) return run;
+  const nodes = treeFor(run.factionId);
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const keep = new Set((run.tree ?? []).filter((id) => byId.has(id) && id !== 'logistics-7'));
+  const seen = new Set(['start']), queue = ['start'];
+  while (queue.length) for (const l of byId.get(queue.pop()!)!.links) if (keep.has(l) && !seen.has(l)) { seen.add(l); queue.push(l); }
+  const tree = (run.tree ?? []).filter((id) => seen.has(id));
+  const back = (run.tree ?? []).length - tree.length;
+  return { ...run, treeVersion: 2, tree, renown: (run.renown ?? 0) + back,
+    story: back ? [...run.story, `The army tree was redrawn: ${back} node${back > 1 ? 's' : ''} refunded as Renown`] : run.story };
 }
 
 /** A campaign battle's primary mission: one of the official ones (many are won with actions), the same for the same

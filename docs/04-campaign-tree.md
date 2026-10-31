@@ -14,7 +14,7 @@ that already applies to its keywords.
 
 - **Renown** is earned by the army, never by units: battle 3, elite 5, boss 6, a loss 1. A new run starts with 3.
   One sector (about 6 fights) gives about 25 Renown.
-- Each Renown point allocates one node. The tree has about 135 nodes, so one sector fills a fifth of it and each run
+- Each Renown point allocates one node. The tree has about 170 nodes, so one sector fills a seventh of it and each run
   has to pick a direction.
 - **Scrap** stays as it is: recruits, wargear, enhancements, detachments. The tree never costs Scrap.
 - **Respec**: at an armory or a medicae tent, refund one node for Scrap (20, then 10 more for each refund in the
@@ -24,7 +24,7 @@ that already applies to its keywords.
 
 A graph, not tiers. The start is the centre; a node can be taken once it links to a taken node.
 
-- **Eight slots** around the start: seven shared spokes and the army's own branch.
+- **Ten slots** around the start: seven shared spokes and three branches of the army's own (army, corps, arsenal).
 - **Spoke**: a main line of 7 nodes (small, small, notable, small, small, notable, keystone) and side clusters of
   3 nodes (two small and a notable) leaving at depth 2 and depth 5; a shared spoke has a third at depth 6 and its
   conversion keystone past the tip. 17 nodes on a shared spoke.
@@ -41,7 +41,7 @@ A graph, not tiers. The start is the centre; a node can be taken once it links t
 | Speed | move, advance, charge re-rolls |
 | Command | CP, Leadership, battle-shock, CHARACTER |
 | Objectives | OC, BATTLELINE, holding ground |
-| Logistics | Scrap income, VETERAN units, titanic requisition |
+| Logistics | Scrap income, VETERAN units (keystone Living Legends) |
 
 ## Node kinds
 
@@ -56,17 +56,23 @@ A graph, not tiers. The start is the centre; a node can be taken once it links t
 Every effect uses the existing `Effect` fields, so the engine and the bot need no new rules code. CP and Scrap
 nodes are read by the campaign code.
 
-## The army's own branch
+## The army's own branches
 
-Hybrid design: the big shared tree is the same for every army; the eighth slot is a branch of 10 nodes for the
-army itself, using its real keywords and leaning on its army rule.
+Hybrid design: the big shared tree is the same for every army; three slots are the army's own.
 
-- Built: a branch of its own for Space Marines (Codex Astartes: TACTICUS, GRAVIS, PHOBOS, TERMINATOR, Combat
-  Doctrines), Thousand Sons (Cult of Magic: RUBRICAE, SORCERER, psychic weapons), Orks (Da Big Waaagh!: SPEED FREEKS,
-  BEAST SNAGGA, MEGA ARMOUR, bonuses while the Waaagh! is on), Necrons (Dynasty Awakened: CANOPTEK, DESTROYER CULT,
-  CRYPTEK, TRIARCH) and Tyranids (Hive Fleet: Synapse range, VANGUARD INVADER, HARVESTER, BURROWER).
-- Every other army uses its family's branch (Imperium, Chaos, Tyranids, other Xenos). Next: more armies, three or four
-  at a time.
+- **Army branch** (10 nodes): its own for Space Marines (Codex Astartes), Thousand Sons (Cult of Magic), Orks (Da Big
+  Waaagh!), Necrons (Dynasty Awakened) and Tyranids (Hive Fleet); its family's for the rest.
+- **Corps and arsenal** (16 nodes each, every army, `campaignTreeArmies.ts`): on that army's own keywords (SM: TERMINATOR,
+  GRAVIS, DREADNOUGHT, then JUMP PACK, PHOBOS; DRU: WYCH CULT, HAEMONCULUS COVENS, then KABAL, SCOURGES; LoV:
+  HERNKYN, KAPRICUS, IRONKIN STEELJACKS...). The depth-6 notable and the keystone are written for each army; the small
+  nodes come from a style (guns, blades, walls, speed, war engines) so every branch is full.
+- **Titans**: the arsenal's keystone unlocks titanic units and Knights, named for the army (Questor Oath, Dread Pact,
+  Super-heavy Requisition, Wraithknight Awakening, Monolith Phalanx, Gargant Mob, Supremacy Clearance, Bio-titan
+  Spawning, Lord of Skulls Pact, Legio Pact), only for armies whose recruit pool has such a unit. Drukhari, Genestealer
+  Cults, Leagues of Votann and Chaos Knights get an ordinary keystone there instead; Imperial and Chaos Knight armies
+  recruit their own Knights without one. A test checks the keystone against each army's real recruit pool.
+- Old saves (tree v1, eight slots): nodes that no longer exist or no longer connect to the start, and the old Titan
+  Requisition, are given back as Renown once.
 
 In battle a node reaches each model by that model's own keywords, so a CHARACTER node on a Captain leading a squad
 buffs the Captain's attacks and saves, not the squad's.
@@ -74,7 +80,7 @@ buffs the Captain's attacks and saves, not the squad's.
 ## How it is checked
 
 - `campaignTree.test.ts`: the shape (every node reachable, no overlaps, every keyword real), Renown, allocate and
-  refund rules, conversion keystones, thresholds, VETERAN, Titan Requisition, old saves.
+  refund rules, conversion keystones, thresholds, VETERAN, the titan keystone per army, old saves.
 - `campaignTreeEngine.test.ts`: every condition a node names is one the engine knows; every node of every branch
   changes what the engine works out for a unit it reaches (stats, rolls, OC, attack and defence modifiers), with a
   control that a no-op effect changes nothing; a leader-only node stays on the leader; and a whole 3-round campaign
@@ -88,7 +94,7 @@ VETERAN reach it. A unit led by a VETERAN character, or leading a VETERAN squad,
 ## What is removed
 
 - `BATTLE_HONORS` and everything that buys or shows them, `xp`, `honors`, the ranks and `rankCombatBonus`, the
-  auto-upgrade, and `FACTION_TECH_TREES`. Titanic units are unlocked by the Logistics keystone instead of tier 4.
+  auto-upgrade, and `FACTION_TECH_TREES`. Titanic units are unlocked by the army's titan keystone instead of tier 4.
 - Old saved runs: honors and experience are dropped, the old tech nodes too; the run gets Renown equal to its wins
   x 3 plus 3, and each unit keeps its battles count from its old experience.
 

@@ -49,7 +49,8 @@ export function ArmyTree({ run, onRun, onInfo }: { run: Run; onRun: (r: Run) => 
   const got = taken(run);
   const node = nodes.find((n) => n.id === sel);
   const guide = slotGuide(run.factionId);
-  const ext = Math.max(...[...nodes, ...guide].map((n) => Math.max(Math.abs(n.x), Math.abs(n.y)))) + PAD;
+  // the slot labels are centred on their spot, so half a label's width (15px uppercase, about 0.7em a letter) must fit too
+  const ext = Math.max(...nodes.map((n) => Math.max(Math.abs(n.x), Math.abs(n.y))), ...guide.map((g) => Math.max(Math.abs(g.x) + g.name.length * 5.5, Math.abs(g.y)))) + PAD;
   const fitK = dim.w && dim.h ? Math.min(dim.w, dim.h) / (ext * 2) : 1;
   const counts = useMemo(() => nodes.filter((n) => got.has(n.id)).reduce<Record<string, number>>((a, n) => ({ ...a, [n.slot]: (a[n.slot] ?? 0) + 1 }), {}), [run.tree]);
 
