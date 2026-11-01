@@ -68,3 +68,12 @@ target), Twist of Fate (a spiral winds in), Temporal Surge (a clock face, hands 
 Render a sheet: a page under src/zz (never committed) that draws `FxView` for each effect at two or three moments,
 with the board at `viewW={44}` (a phone zoomed out), screenshot it with Playwright, and look at it. Compare every
 effect against the principles above, and send the sheet to the user.
+
+## Pitfalls seen before
+
+- Blasts twice too big: `Explosion` scaled by `VIS` and then passed the scaled size to helpers that scale by `VIS`
+  again. Pass `big / VIS` to the helpers; scale once.
+- A new module-level name clashed with an existing record (`SHOT`); the shot scale is `TRACE`. Grep a name before
+  adding it to `BattleFx.tsx`.
+- The owner judges effects at phone zoom on a real board; a sheet at `viewW={44}` shows size problems that a close-up
+  hides.

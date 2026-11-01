@@ -42,3 +42,18 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 - Lag: measure, do not guess. Effects: time a frame (`verify`). The board: React re-renders per state change
   (`useMemo` on `s` in `GameScreen.tsx`); the bot: the worst step (`bot`).
 - `npx vitest run src/ui` for the UI tests.
+
+## Pitfalls seen before
+
+- Ghost copies of the army-buff cards (stacked slivers of the card's left border and the header line) while the map
+  zooms, desktop only: the cards are HTML in a `foreignObject` (`Board.tsx`, `.table-cards`), and a CSS `transform`
+  on the HTML inside it makes Chrome clip and repaint the wrong area. Scale on the SVG side (`<g transform>`) and keep
+  CSS transforms out of `foreignObject` content.
+- The army-buff cards are not drawn on phones (`isMobileScreen` in `GameScreen.tsx`): iOS Safari draws HTML in an SVG
+  as empty boxes. A phone screenshot cannot show a bug in them; use a desktop viewport (1366 x 768).
+- Paint bugs (ghosts, trails) often do not show in headless Chromium, which repaints everything. Check the layout
+  there, then look for the cause in the code (transforms, filters, `will-change` inside SVG) rather than waiting for a
+  screenshot to show it.
+- Getting to a battle screen quickly: in a Playwright page on the dev server, write armies from
+  `await import('/src/ui/presets.ts')` into `localStorage['w40k11-armies']`, start a **Bot vs Bot** battle and press
+  Fast. Editing the save during deployment can leave the battle stuck.

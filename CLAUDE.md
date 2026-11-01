@@ -15,6 +15,8 @@ Load the `start-here` skill (`.claude/skills/start-here/SKILL.md`) and follow it
 4. **Build** the smallest complete change (the `ponytail` skill).
 5. **Verify for real** (the `verify` skill): the checks that prove this change, with numbers, not "should work".
 6. **Update the docs** the change touches (the `docs-sync` skill), then commit and push.
+7. **Learn.** Write what this task taught (a trap, a fix to a wrong skill line, a faster check, an owner correction)
+   into the skill of that area, so the skills get better with every session (`start-here`, step 7).
 
 ## Skills (in `.claude/skills/`)
 

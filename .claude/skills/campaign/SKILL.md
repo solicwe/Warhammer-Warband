@@ -49,3 +49,9 @@ Player view: the README's Campaign section.
 `npx vitest run src/engine/campaign*.test.ts` (fit, tree, rules, relics, engine, a full campaign battle). After a
 tree change also check the drawing: nodes keep 24 px apart on every army's tree (tested), and look at the tree screen
 at phone width.
+
+## Pitfalls seen before
+
+- A relic test that checks eligibility with `eligibleByRule` misses relics that work through `canDo`; probe what the
+  engine actually allows. Test army-wide relics on a unit that does not already have the rule (Intercessors, not
+  Guilliman).

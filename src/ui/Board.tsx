@@ -2139,9 +2139,11 @@ function BoardImpl(props: BoardProps) {
       {sides.map(({ p, at, cards }) => {
         const x = at === 'right' ? W + 1 : -SIDE - 0.5, y = at === 'bottom' ? H / 2 + 0.5 : 0, h = at === 'top' || at === 'bottom' ? H / 2 - 0.5 : H;
         return (
-          <g key={p}>
-            <foreignObject x={x} y={y} width={SIDE - 0.5} height={h}>
-              <div className={`table-cards ${at}`} style={{ width: (SIDE - 0.5) * PX, height: h * PX, transform: `scale(${1 / PX})` }}>
+          // scaled on the SVG side, not with a CSS transform inside the foreignObject: Chrome clips and repaints that
+          // wrongly, leaving ghost copies of the cards while the map zooms
+          <g key={p} transform={`translate(${x} ${y}) scale(${1 / PX})`}>
+            <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX}>
+              <div className={`table-cards ${at}`}>
                 <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>
                 {cards}
               </div>

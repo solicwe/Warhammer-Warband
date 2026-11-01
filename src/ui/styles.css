@@ -2266,7 +2266,7 @@ b.em { font-weight: 700; color: var(--text); }
 .dice-face { transition: transform 0.15s ease, filter 0.15s ease; cursor: default; }
 .dice-face:hover { transform: translateY(-1.5px) scale(1.08); }
 /* army-wide buffs lie on the table beside the battlefield (inside the map's SVG, so they zoom and pan with it) */
-.table-cards { transform-origin: 0 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.table-cards { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 .table-cards.bottom { justify-content: flex-end; }
 .table-head { flex: none; font: 700 15px var(--font-cond); letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in srgb, var(--p0) 65%, #fff); padding: 0 2px 4px; border-bottom: 2px solid var(--p0); }
 .table-head.p1 { color: color-mix(in srgb, var(--p1) 65%, #fff); border-bottom-color: var(--p1); }

@@ -16,6 +16,8 @@ another name. Every task therefore starts with an inventory, and nothing is buil
 - If a word can mean two things (a "skill" can be a hero ability or a Claude skill; "idle" is the auto-play mode),
   pick the meaning that fits the recent conversation and say which one you took.
 - Ask only when the answer changes what you build and nothing in the repo or the conversation decides it.
+- When the owner sends a screenshot, look at the image itself and describe what is literally in it before guessing a
+  cause; a summary of the picture loses the detail that matters.
 
 ## 2. Inventory before building (never skip)
 
@@ -72,12 +74,39 @@ Load `docs-sync` and update every doc the change makes wrong. Then commit (messa
 player or a developer; the trailer lines the session gives), push the branch, run the full suite, and fast-forward
 `main` only when it passes. Before pushing, run `git remote set-url origin https://github.com/solicwe/Warhammer-Warband`.
 
+## 7. Learn: make the skills better (every task)
+
+The skills are this project's memory between sessions. A session that learns something and does not write it down
+makes the next one pay for it again. Before the final commit, ask: what cost me time, what did the owner correct,
+what worked that I would want to know next time? Then write it where the next session will read it:
+
+| What you learned | Where it goes |
+|---|---|
+| A trap: a symptom whose cause was not where it looked | the area skill's "Pitfalls seen before" |
+| A skill told you something wrong, or left out a step you needed | fix that line of the skill itself (do not add a pitfall next to a wrong rule) |
+| A faster way to reproduce or check something (a harness, a command, a setup) | the `verify` skill, or the area skill's Verify section |
+| The owner corrected you or chose between two ways | "Owner decisions" below, if it is a decision; else the area's pitfalls |
+| Where something lives that was hard to find | the "Where things are" table, or the area skill's "How it is built" |
+
+How a lesson is written:
+
+- One entry, two or three lines: **the symptom** as the owner or a test shows it, **the cause**, **what to do**.
+  Name the file and function. Example: "Ghost copies of the army-buff cards while the map zooms (desktop): a CSS
+  transform inside a `foreignObject`; scale on the SVG side (`<g transform>`) instead."
+- Only what was checked. A guess that was never confirmed is not a lesson.
+- Keep each list short (about 12 entries). When one fills up, merge entries that say the same thing, and delete those
+  a test or the code now prevents (the test is the better memory). Delete a lesson that turned out wrong.
+- The lesson goes in the same commit as the change that taught it, and the reply says which skill got it.
+
+If nothing new was learned, say so in one line; do not invent a lesson.
+
 ## Definition of done
 
 - Every item of the ask is done or named as skipped.
 - The inventory was made and the decision is stated.
 - Checks that prove the change ran and their numbers are in the reply.
 - Docs match the code. The branch is pushed; `main` is fast-forwarded after the full suite passed.
+- What the task taught is in the skills (step 7), or the reply says nothing new was learned.
 - The reply (in Thai) ends with what was skipped or not checked, and the risks.
 
 ## Owner decisions (do not reverse without asking)

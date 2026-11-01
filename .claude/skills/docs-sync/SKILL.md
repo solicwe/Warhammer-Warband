@@ -22,6 +22,7 @@ and change it. A doc that describes something that no longer works is worse than
 | Battle effects | the `vfx` skill (styles table, parts list) |
 | A new way to verify something, a new scratch harness | the `verify` skill |
 | The workflow, the owner's rules | `CLAUDE.md`, the `start-here` skill |
+| Something learned the hard way (a trap, a skill line that was wrong, a faster check) | the area skill: "Pitfalls seen before", or fix the wrong line (`start-here`, step 7) |
 | New screenshots of a changed screen | `docs/images/*.jpg` referenced from the README table |
 
 ## How the docs are written
