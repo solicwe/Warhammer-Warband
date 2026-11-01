@@ -2939,26 +2939,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         >
           {thinking ? `${pName(s, actingBot)} is weighing its turn… (tap to move)` : `${pName(s, actingBot)} is playing…`}
         </span>
-        <div className="seg small" role="radiogroup" aria-label="Idle Mode Tactic" style={{ margin: '0 4px' }}>
-          <button
-            type="button"
-            className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
-            onClick={() => { act((g) => { g.idleTactic = 'objectives'; }); flash('Idle: Objectives & Missions'); }}
-            title="Objectives: hold VP and complete missions"
-            style={{ fontSize: 11, padding: '2px 8px' }}
-          >
-            <Icon name="objective" size={12} /> Obj
-          </button>
-          <button
-            type="button"
-            className={s.idleTactic === 'assault' ? 'on' : ''}
-            onClick={() => { act((g) => { g.idleTactic = 'assault'; }); flash('Idle: Pure Assault & Hunt All'); }}
-            title="Assault: hunt and eliminate all enemies"
-            style={{ fontSize: 11, padding: '2px 8px' }}
-          >
-            <Icon name="fight" size={12} /> Assault
-          </button>
-        </div>
         {thinking && (
           <button
             className="btn small primary"
@@ -3135,10 +3115,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span className="tb-ico"><Icon name="bot" size={20} /></span>
             <span className="tb-lbl">{autoPlay ? (s.idleTactic === 'assault' ? 'IDLE ASSAULT' : 'IDLE OBJ') : 'IDLE'}</span>
           </button>
-          {(autoPlay || !!s.campaign) && (
-            <button
-              className="tb-tool"
-              onClick={() => {
+          <button
+            className="tb-tool"
+            onClick={() => {
                 const next = s.idleTactic === 'assault' ? 'objectives' : 'assault';
                 act((g) => { g.idleTactic = next; });
                 flash(next === 'assault' ? 'Idle: Pure Assault & Hunt All' : 'Idle: Objectives & Missions');
@@ -3150,7 +3129,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <span className="tb-ico"><Icon name={s.idleTactic === 'assault' ? 'fight' : 'objective'} size={18} /></span>
               <span className="tb-lbl" style={{ fontSize: 9 }}>{s.idleTactic === 'assault' ? 'Assault' : 'Obj'}</span>
             </button>
-          )}
           {canUndo && (
             <button
               className="tb-tool undo-tool"
@@ -3166,64 +3144,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         </div>
         {s.phase !== 'deploy' && <AdvantageBar share={advantage(s)} names={[s.players[0].name, s.players[1].name]} colors={[getPlayerFactionTheme(s, 0).primary, getPlayerFactionTheme(s, 1).primary]} />}
-        {(!!s.campaign || autoPlay) && (
-          <div
-            className="idle-strategy-bar"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '6px 12px',
-              background: 'rgba(15, 23, 42, 0.95)',
-              borderBottom: '1px solid var(--line)',
-              position: 'relative',
-              zIndex: 15,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-              <span style={{ fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.02em' }}>
-                Idle Strategy:
-              </span>
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: s.idleTactic === 'assault' ? '#f87171' : '#60a5fa',
-                  fontSize: 12,
-                }}
-              >
-                {s.idleTactic === 'assault' ? 'Assault' : 'Objectives'}
-              </span>
-            </div>
-            <div className="seg small" role="radiogroup" aria-label="Idle Strategy Selector" style={{ margin: 0 }}>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={(s.idleTactic ?? 'objectives') === 'objectives'}
-                className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
-                onClick={() => {
-                  act((g) => { g.idleTactic = 'objectives'; });
-                  flash('Idle: Objectives & Missions');
-                }}
-                style={{ padding: '3px 10px', fontSize: 11.5, fontWeight: 600 }}
-              >
-                <Icon name="objective" size={13} /> Objectives
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={s.idleTactic === 'assault'}
-                className={s.idleTactic === 'assault' ? 'on' : ''}
-                onClick={() => {
-                  act((g) => { g.idleTactic = 'assault'; });
-                  flash('Idle: Pure Assault & Hunt All');
-                }}
-                style={{ padding: '3px 10px', fontSize: 11.5, fontWeight: 600 }}
-              >
-                <Icon name="fight" size={13} /> Assault
-              </button>
-            </div>
-          </div>
-        )}
         {['command', 'movement', 'shooting', 'charge', 'fight'].includes(s.phase) && (
           <div className={`phasebar a${s.active}`}>
             {(['command', 'movement', 'shooting', 'charge', 'fight'] as const).map((ph) => (
