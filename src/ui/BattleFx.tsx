@@ -90,7 +90,6 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
         {f < 0.2 && <Glow at={e.at} r={0.6 + f * 4} color="white" op={1 - f / 0.2} />}
         <Glow at={e.at} r={1 + f} color="purple" op={0.7 * (1 - f)} />
         <Shockwave at={e.at} r={1.8} k={f / 0.5} color="#c084fc" />
-        <Arcs at={e.at} r={1.6} k={f / 0.6} seed={e.seq} color="#c084fc" n={5} />
         <text x={e.at.x} y={e.at.y - 1 - f * 1.6} opacity={1 - f} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
       </g>
     );
