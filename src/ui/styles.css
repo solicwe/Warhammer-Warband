@@ -1660,27 +1660,6 @@ b.em { font-weight: 700; color: var(--text); }
 .atk-result.none { color: #a5adb5; }
 .atk-report.fast .atk-n { font-size: 14px; }
 
-/* the bot's commander: emblem, title, what it says, and the ways of playing the turn it is weighing */
-.commander { flex: none; display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; background: var(--surface-2); border-top: 1px solid var(--line); }
-.commander.s0 { box-shadow: inset 3px 0 0 var(--p0); }
-.commander.s1 { box-shadow: inset 3px 0 0 var(--p1); }
-.cmd-emblem { flex: none; width: 40px; height: 40px; }
-.cmd-emblem .ab-emblem { width: 40px; height: 40px; }
-.cmd-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.cmd-name { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font: 600 14px var(--font-cond); letter-spacing: 0.04em; }
-.cmd-name .muted { font: 500 13px var(--font-ui); letter-spacing: 0; }
-.cmd-thinking { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; padding: 1px 7px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font: 600 11.5px var(--font-ui); letter-spacing: 0; }
-.cmd-thinking .icon { animation: spin 1.4s linear infinite; }
-.cmd-thinking.quiet { background: transparent; color: var(--text-3); }
-@keyframes spin { to { transform: rotate(360deg); } }
-.cmd-says { font: italic 500 14.5px/1.35 var(--font-ui); color: var(--text); animation: says-in 0.3s ease-out; }
-@keyframes says-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.cmd-styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 4px 10px; margin-top: 2px; }
-.cmd-style { display: flex; flex-direction: column; gap: 2px; font: 600 11px var(--font-ui); color: var(--text-2); }
-.cmd-style.best { color: var(--accent); }
-.cmd-style-bar { height: 4px; border-radius: 2px; background: var(--sunk); overflow: hidden; }
-.cmd-style-bar > i { display: block; height: 100%; background: var(--text-3); transition: width 0.4s ease-out; }
-.cmd-style.best .cmd-style-bar > i { background: var(--accent); }
 
 /* the bot's turn in the panel: what it just did */
 .bot-act { display: flex; align-items: center; gap: 8px; min-height: 40px; font: 500 14.5px/1.35 var(--font-ui); }
@@ -1696,8 +1675,6 @@ b.em { font-weight: 700; color: var(--text); }
 .board-wrap .bot-caption { bottom: 10px; }
 
 /* the enemy's likely attacks next turn */
-.plan-toggle { position: absolute; left: 10px; bottom: 10px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid rgba(248, 113, 113, 0.6); border-radius: 18px; background: rgba(14, 16, 19, 0.85); color: #fecaca; font: 600 13px var(--font-ui); cursor: pointer; }
-.plan-toggle.on { background: #b3261e; border-color: #b3261e; color: #fff; }
 
 /* phase end: what is left undone under the label */
 .end-btn { flex-direction: column; gap: 1px; }
@@ -1838,12 +1815,6 @@ b.em { font-weight: 700; color: var(--text); }
 .menu-item .icon { width: 36px; height: 36px; padding: 7px; background: var(--accent-soft); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
 @media (min-width: 600px) { .menu-grid { grid-template-columns: 1fr 1fr; column-gap: 16px; } }
 
-/* the commander: a vox strip, emblem in a cut frame, the line set off like a transmission */
-.commander { gap: 12px; padding: 8px 12px 8px 10px; background: var(--surface-2); }
-.cmd-emblem { width: 44px; height: 44px; padding: 2px; background: linear-gradient(160deg, #d7b06a, #a88443 40%, #4a3a1e); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
-.cmd-emblem .ab-emblem { width: 40px; height: 40px; border-radius: 0; background: #15181c; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
-.cmd-says { padding-left: 10px; border-left: 2px solid var(--accent); font-style: normal; }
-.cmd-thinking { border-radius: 2px; }
 .atk-report.slate { position: absolute; }
 .bot-act .ff { flex: none; gap: 4px; }
 .bot-act .ff.on { background: var(--accent); border-color: var(--accent); color: var(--on-fill); }
@@ -2169,7 +2140,7 @@ b.em { font-weight: 700; color: var(--text); }
     padding: 6px 12px 16px !important;
   }
   /* Enforce minimum touch target sizes: 44x44px */
-  button, .btn, .icon-btn, .action-btn, .seg button, .unit-pill, .tb-tool, .plan-toggle {
+  button, .btn, .icon-btn, .action-btn, .seg button, .unit-pill, .tb-tool {
     min-width: 44px !important;
     min-height: 44px !important;
     touch-action: manipulation;

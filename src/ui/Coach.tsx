@@ -35,8 +35,6 @@ export interface CoachView {
   /** … and it can shoot / declare a charge now */
   selCanShoot: boolean;
   selCanCharge: boolean;
-  /** the "Enemy plan" button is on screen */
-  planReady: boolean;
 }
 
 /** Tips that fit this moment, most pressing first: the first one not yet seen is shown. */
@@ -72,7 +70,6 @@ export function tipsNow(v: CoachView): Tip[] {
       if (mode?.k === 'move') out.push({ id: 'move-drag', at: '[data-coach="joy"]', title: 'Move it', text: 'Push the stick (or drag a model on the board). The count shows how far it has gone. Then Confirm.' });
       else if (v.selFresh) out.push({ id: 'move-kind', at: '[data-coach="normal"]', title: 'How to move', text: 'Normal: up to its Move. Advance: further by a dice roll, but then it cannot shoot (except Assault weapons) or charge.' });
       else {
-        if (v.planReady && s.round >= 2) out.push({ id: 'plan', at: '.plan-toggle', title: 'The bot\'s plan', text: 'While you played, the bot planned its next turn. Tap to see which of your units it means to attack.' });
         if (own.some((u) => u.move)) out.push({ id: 'move-end', at: '.end-btn', title: 'Done moving?', text: 'Units you leave stay where they are. Tap End Movement when you are ready.' });
         out.push({ id: 'move', at: '.unit-strip', title: 'Your turn: move', text: 'Tap a unit here or on the board. Head for the objectives (the circles): holding them scores VP.' });
       }

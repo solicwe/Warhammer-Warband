@@ -106,6 +106,7 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - **Scrap** is the currency. A win pays 70 (100 for an elite battle, 160 for the boss), a loss still pays 30 plus
   three quarters of what you picked up in the battle (25 a round, +20 and +1 CP while you hold the centre objective).
+  The Scrap card among the rewards after a win pays 80 to 120.
   Spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs 60, 110 or 170 Scrap
   for 1, 2 or 3 Detachment Points. The second copy of a unit costs the same as the first, later copies more (x1.5,
   x2, x3); BATTLELINE and DEDICATED TRANSPORT units, which have twice the copy limit, stay at the base price for four
@@ -133,7 +134,6 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Relics** are artefacts with special rules the tree never gives: invulnerable saves, -1 Damage, Critical Hits on
   5+, mortal wounds, Fights First, [LANCE], [DEVASTATING WOUNDS], shooting or charging after Advancing... A relic you
   already hold comes back as an upgrade while a level still improves it, and its text is written from what it does.
-  An elite battle lets you take two of the relics it offers, the boss three.
 - **Enemy reinforcements.** While you are ahead in round 3 or 4 (10 VP up, or a quarter more army left and not
   behind on VP), there is a 40% chance each of those rounds that an enemy unit arrives by Deep Strike, at most once a
   battle. It never happens while you are behind.

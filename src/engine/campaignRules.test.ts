@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { autoList } from './autoList';
-import { afterBattle, applyCampaign, campaignMission, detachmentScrapCost, enter, enemyDetachmentCount, enemyDetachments, newRun, type Run } from './campaign';
+import { afterBattle, applyCampaign, campaignMission, makeOffer, detachmentScrapCost, enter, enemyDetachmentCount, enemyDetachments, newRun, type Run } from './campaign';
 import { enemyTree, enemyTreePoints, treeFor } from './campaignTree';
 import { MISSIONS, primaryById } from './config';
 import { campaignRequisition, createGame, endPhase, triggerCampaignReinforcements } from './game';
@@ -190,16 +190,16 @@ describe('campaign events and spoils', () => {
     expect(ahead).toBeLessThan(30);
   });
 
-  it('a won battle pays more Scrap, and elite and boss battles give more than one pick', () => {
+  it('a won battle pays more Scrap, and the Scrap reward card pays 80 to 120', () => {
     let run = newRun(SM, autoList(SM, 500, 3), ['ORK'], 3);
     const node = run.map.find((n) => n.enemy && n.kind === 'battle')!;
     run = enter(run, node.id, SM);
     const won = afterBattle(run, 0, SM, 'Orks', 0);
     expect(won.scrap - (run.scrap ?? 0)).toBe(70); // was 45
-    const elite = run.map.find((n) => n.kind === 'elite');
-    if (elite) {
-      const e = afterBattle({ ...run, fighting: elite.id }, 0, SM, 'Orks', 0);
-      expect(e.picksLeft).toBe(2);
+    let cards = 0;
+    for (let salt = 0; salt < 30; salt++) {
+      for (const o of makeOffer(run, SM, 'battle', salt)) if (o.kind === 'scrap') { cards++; expect(o.amount).toBeGreaterThanOrEqual(80); expect(o.amount).toBeLessThanOrEqual(120); }
     }
+    expect(cards).toBeGreaterThan(0);
   });
 });

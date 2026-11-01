@@ -64,8 +64,6 @@ export interface BoardProps {
   onDraft?: (p: Paths) => void;
   /** a drag of the draft finished (the screen settles models into legal spots) */
   onDragEnd?: (p: Paths) => void;
-  /** the enemy's likely attacks next turn (its look ahead): an arrow from each attacker to its target */
-  plan?: { from: Pt; to: Pt; melee: boolean; label: string }[];
   /** cards laid on the table beside the battlefield, next to each army's deployment zone (army-wide buffs) */
   side?: { p: PlayerId; at: 'left' | 'right' | 'top' | 'bottom'; cards: React.ReactNode[] }[];
   /** quick floating contextual action menu above selected unit */
@@ -1376,7 +1374,6 @@ function BoardImpl(props: BoardProps) {
     >
       <defs>
         <clipPath id="board-clip"><rect x={0} y={0} width={W} height={H} /></clipPath>
-        <marker id="plan-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f87171" /></marker>
         {ground && <pattern id="ground" width="11" height="11" patternUnits="userSpaceOnUse"><image href={ground} width="11" height="11" preserveAspectRatio="none" /></pattern>}
         <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
           <path d="M 6 0 L 0 0 0 6" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.04" />
@@ -2101,18 +2098,6 @@ function BoardImpl(props: BoardProps) {
           </circle>
         </g>
       ))}
-      {props.plan?.map((a, i) => {
-        // stop the arrow short of the target's centre, and bend it a little so two arrows at one target stay apart
-        const dx = a.to.x - a.from.x, dy = a.to.y - a.from.y, L = Math.hypot(dx, dy) || 1;
-        const end = { x: a.to.x - (dx / L) * 1.4, y: a.to.y - (dy / L) * 1.4 };
-        const mid = { x: (a.from.x + end.x) / 2 - (dy / L) * (1 + (i % 3)), y: (a.from.y + end.y) / 2 + (dx / L) * (1 + (i % 3)) };
-        return (
-          <g key={`plan${i}`} className="plan-arrow" pointerEvents="none">
-            <path d={`M${a.from.x},${a.from.y} Q${mid.x},${mid.y} ${end.x},${end.y}`} fill="none" stroke="#f87171" strokeWidth={a.melee ? 0.32 : 0.22} strokeDasharray={a.melee ? undefined : '0.7 0.4'} markerEnd="url(#plan-head)" opacity={0.9} />
-            <text x={mid.x} y={mid.y} fontSize={0.75} textAnchor="middle" fill="#fecaca" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={800}>{a.label}</text>
-          </g>
-        );
-      })}
       {props.measure?.a && (
         <g pointerEvents="none">
           <circle cx={props.measure.a.x} cy={props.measure.a.y} r={0.35} fill="#fde68a" stroke="#000" strokeWidth={0.08} />

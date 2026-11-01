@@ -119,7 +119,7 @@ Made in conversation, so they are not all visible in the code. A change that wou
   or monster, at most 12 a battle).
 - **Campaign battles are normal battles**: an official primary, Tactical secondaries, five rounds; won on points.
 - **Campaign events never pile on a losing player**: enemy reinforcements only while the player is ahead, on a roll,
-  at most once a battle. A loss still pays Scrap; elite and boss battles give more than one relic pick; BATTLELINE and
+  at most once a battle. A loss still pays Scrap; the Scrap reward card pays 80-120 ("more relic" meant that card); BATTLELINE and
   DEDICATED TRANSPORT copies stay cheaper for longer (their copy limit is doubled in the rules).
 - **The bot plays for points in the campaign and in idle mode** (`pointsFirst`); normal games against the bot keep
   the usual plan.

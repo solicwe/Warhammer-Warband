@@ -11,7 +11,7 @@ const game = () => {
   s.bots = [1];
   return s;
 };
-const view = (over: Partial<CoachView>): CoachView => ({ s: game(), me: 0, botActing: false, mode: null, selFresh: false, selCanShoot: false, selCanCharge: false, planReady: false, ...over });
+const view = (over: Partial<CoachView>): CoachView => ({ s: game(), me: 0, botActing: false, mode: null, selFresh: false, selCanShoot: false, selCanCharge: false, ...over });
 
 describe('coach tips', () => {
   it('deployment, movement and shooting each point at their control', () => {

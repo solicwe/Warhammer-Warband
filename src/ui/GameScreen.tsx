@@ -34,7 +34,7 @@ import { botPledge, setPledge } from '../factions/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../rules-engine/detachments';
 import { autoActions, botAct, botShouldAct, botStep } from '../ai/bot';
-import { advantage, applyStyle, boardSig, lookBudget, lookSig, setLookahead, styleChosen, type Intent } from '../ai/botLook';
+import { advantage, applyStyle, lookBudget, setLookahead, styleChosen, type Intent } from '../ai/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
@@ -66,7 +66,7 @@ import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/
 import { UnitView } from './Sheet';
 import { useGame } from './store';
 import { AttackReport } from './AttackReport';
-import { AdvantageBar, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
+import { AdvantageBar, RoundSummary, SideScore, tally, type RoundTally } from './Hud';
 import { play, setSoundOn, soundOn } from './sfx';
 import { type VoiceEvent } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
@@ -108,8 +108,8 @@ const pName = (s: GameState, p: PlayerId) => {
   if (pl.name && !/^Player [12]$/i.test(pl.name) && !/^(Red|Blue) Bot$/i.test(pl.name)) return pl.name.replace(/ \(Bot\)$/, '').replace(/ Bot$/, '');
   return pl.factionName || (p === 0 ? 'Side 1' : 'Side 2');
 };
-/** What the look worker answers: progress while it plays the ways out, then the style (and, pondering, the board it starts from). */
-type LookMsg = { id: number; sig?: string | null; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
+/** What the look worker answers: progress while it plays the ways out, then the style. */
+type LookMsg = { id: number; name?: string; values?: Record<string, number>; intents?: Intent[]; progress?: { name: string; value: number; done: number; total: number } };
 
 const sg = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
 /** Short "+1 Hit" tags for an effect on a unit, and whether it helps that unit. */
@@ -180,8 +180,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
   const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
   // what the bot means to attack in its coming turn (from thinking during the player's turn), shown on request
-  const [plan, setPlan] = useState<{ turn: number; p: PlayerId; intents: Intent[] } | null>(null);
-  const [showPlan, setShowPlan] = useState(false);
   // Faction voice lines / barks disabled to eliminate clutter and unwanted re-renders
   const speak = (_p?: PlayerId, _ev?: VoiceEvent, _names?: { u?: string; t?: string }) => {};
 
@@ -209,46 +207,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     try { return new LookWorker(); } catch { return null; }
   }, []);
   useEffect(() => () => worker?.terminate(), [worker]);
-  // thinking during the player's turn: a second worker plays the board on to where the bot's next turn starts and looks
-  // ahead from there; when the real board gets there the same, the bot's turn starts at once instead of thinking again
-  const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; intents?: Intent[]; view?: ThinkView; wait?: (name: string) => void } | null>(null);
-  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; };
-  useEffect(() => stopPonder, []);
   const isMobileScreen = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches;
-  const ponderFor = null;
-  useEffect(() => {
-    if (ponderFor === null || lookBudget(s, ponderFor) <= 0) return;
-    // the same board as the thinking started from (the player only ended a phase): it stands
-    const board = boardSig(s);
-    if (ponder.current && ponder.current.turn === s.turn && ponder.current.board === board) return;
-    // the board settled for a moment: start again from it (a busy worker can't be told to stop, so it is replaced)
-    const t = window.setTimeout(() => {
-      stopPonder();
-      let w: Worker;
-      try { w = new LookWorker(); } catch { return; }
-      const id = Math.random();
-      const job: NonNullable<typeof ponder.current> = { w, id, p: ponderFor, turn: s.turn, board };
-      ponder.current = job;
-      w.onmessage = (e: MessageEvent<LookMsg>) => {
-        if (e.data.id !== id || ponder.current !== job) return;
-        if (e.data.sig !== undefined) job.sig = e.data.sig;
-        if (e.data.progress) {
-          const pr = e.data.progress;
-          job.view = { values: { ...job.view?.values, [pr.name]: pr.value }, done: pr.done, total: pr.total };
-        }
-        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; }
-        if (e.data.name) {
-          job.name = e.data.name;
-          job.intents = e.data.intents ?? [];
-          setPlan({ turn: job.turn, p: job.p, intents: job.intents });
-          job.wait?.(e.data.name);
-        }
-      };
-      w.onerror = () => { w.terminate(); job.w = null; job.wait?.('steady'); };
-      try { w.postMessage({ kind: 'ponder', state: s, p: ponderFor, id }); } catch { stopPonder(); }
-    }, 800);
-    return () => window.clearTimeout(t);
-  }, [s, ponderFor]); // eslint-disable-line react-hooks/exhaustive-deps
   // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
   const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
   useEffect(() => {
@@ -267,29 +226,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (first) window.setTimeout(() => speak(who, 'target', { t: unitById(sRef.current, first.targetId).name }), 2400);
       };
       abortThinkingRef.current = () => {
-        stopPonder();
         if (worker) worker.onmessage = null;
         done('steady');
       };
       const effectiveBudget = rush || s.campaign || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 250);
       if (effectiveBudget <= 0) {
-        stopPonder();
         done(s.campaign ? 'rogue' : 'steady');
         return;
       }
-      // it thought this turn out during the player's: the same board, so the same answer (or wait for it to finish)
-      const pre = ponder.current;
-      if (pre && pre.p === who && pre.sig && pre.sig === lookSig(s)) {
-        if (pre.name) { const it = pre.intents; stopPonder(); done(pre.name, it); return; }
-        if (pre.w) {
-          setThinking(true);
-          speak(who, 'think');
-          const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, effectiveBudget + 600);
-          pre.wait = (name) => { window.clearTimeout(fallback); const it = pre.intents; stopPonder(); done(name, it); };
-          return;
-        }
-      }
-      stopPonder();
       if (!worker) { done('steady'); return; }
       setThinking(true);
       speak(who, 'think');
@@ -3038,29 +2982,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     : s.phase === 'scouts' ? 'Scouts'
     : s.phase === 'gameover' ? 'Battle over'
     : `${armyName(s.active)} Turn`;
-  // the enemy's likely attacks next turn, drawn on request while it is the player's turn
-  const planArrows = useMemo(() => {
-    if (!showPlan || !plan || plan.turn !== s.turn || s.active === plan.p) return [];
-    const done = new Set<string>();
-    const out: { from: Pt; to: Pt; melee: boolean; label: string }[] = [];
-    for (const x of plan.intents) {
-      const key = `${x.attackerId}>${x.targetId}`;
-      if (done.has(key)) continue;
-      done.add(key);
-      const a = s.units.find((u) => u.id === x.attackerId), tg = s.units.find((u) => u.id === x.targetId);
-      if (!a || !tg || !onBoard(tg) || !alive(a).length) continue;
-      out.push({ from: onBoard(a) ? polyCentroid(alive(a)) : x.from, to: polyCentroid(alive(tg)), melee: x.kind === 'fight', label: x.kind === 'fight' ? 'charge' : 'shoot' });
-    }
-    return out.slice(0, 10);
-  }, [showPlan, plan, s]);
-  const planReady = !!plan && plan.turn === s.turn && s.active !== plan.p && plan.intents.length > 0;
-  if (showPlan && planReady) for (const a of plan!.intents) if (onBoard(U(a.targetId)) && U(a.targetId).owner !== plan!.p) (badges[a.targetId] ??= []).includes('Threatened') || (badges[a.targetId] ??= []).push('Threatened');
   const final = s.phase === 'gameover' && !finalSeen;
   // first battles against the bot: a tip at each new thing to do, with the control to use ringed
   const ownSel = !!selUnit && selUnit.owner === human && onBoard(selUnit);
   const tip = human !== null && !coach.off && !viewing && !sheet && !showStrats && !reporting && !rolling && !final && !tape.on
     ? tipsNow({
-      s, me: human, botActing: actingBot !== null, planReady,
+      s, me: human, botActing: actingBot !== null,
       mode: mode ? { k: mode.k, kind: 'kind' in mode ? String(mode.kind) : undefined, target: 'target' in mode ? (mode.target as string | null) : undefined } : null,
       selFresh: ownSel && (s.phase !== 'movement' || !selUnit!.move) && (s.phase !== 'shooting' || !selUnit!.selectedToShoot),
       selCanShoot: ownSel && s.phase === 'shooting' && shootingModes(s, selUnit!).length > 0,
@@ -3267,7 +3194,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               flash('Deathstrike target marker selected — drag marker or tap board to relocate');
             }}
             onDragEnd={onDragEnd}
-            plan={planArrows}
             side={sideCards}
           />
         </InlineErrorBoundary>
@@ -3293,11 +3219,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span style={{ color: '#fdba74', fontWeight: 700 }}>Tap anywhere on battlefield to place Deathstrike target marker (6" blast)</span>
             <button className="btn small" onClick={() => setMode(null)}>Cancel</button>
           </div>
-        )}
-        {planReady && !mode && (
-          <button className={`plan-toggle ${showPlan ? 'on' : ''}`} aria-pressed={showPlan} onClick={() => setShowPlan((v) => !v)}>
-            <Icon name="bot" size={16} /> {showPlan ? 'Hide enemy plan' : 'Enemy plan'}
-          </button>
         )}
       </div>
       {isMobileScreen && <MapCam s={s} focus={camFocus(s, modeUnit ?? selUnit)} />}

@@ -558,25 +558,6 @@ describe('looking ahead', () => {
     } finally { setLookahead(false); }
   });
 
-  it('thinking during the opponent\'s turn: the copy reaches the same board the real game does', async () => {
-    const { lookSig, playToMovement } = await import('./botLook');
-    const s = createGame({ lists: [list('SM', [['Intercessor Squad', 10, 150], ['Hellblaster Squad', 5, 110]]), list('ORK', [['Boyz', 20, 180], ['Deff Dread', 1, 130]])], factions: [SM, ORK], names: ['A', 'B'], seed: 4 });
-    s.bots = [0, 1];
-    let steps = 0;
-    // into the first player's Shooting phase: the other side (the bot) thinks about its coming turn from here
-    while (!(s.phase === 'shooting' && s.round === 1) && steps++ < 3000) botAct(s);
-    const me = s.active, bot = (1 - me) as 0 | 1;
-    const ahead = playToMovement(s, bot)!;
-    expect(ahead.phase).toBe('movement');
-    expect(ahead.active).toBe(bot);
-    // the player ends their phases without doing more; the real game gets to the same board (the same dice), so the
-    // style thought out meanwhile is used at once
-    while (!(s.phase === 'movement' && s.active === bot) && steps++ < 6000) {
-      if (s.active === me && !s.window && !s.attack && (s.phase === 'shooting' || s.phase === 'charge')) endPhase(s); else botAct(s);
-    }
-    expect(lookSig(s)).toBe(lookSig(ahead));
-  });
-
   it('a look reports its progress and the attacks the chosen way of playing makes (the enemy plan)', async () => {
     const { lookAhead, setLookahead, resetLookahead } = await import('./botLook');
     const s = game([['Intercessor Squad', 10, 160], ['Hellblaster Squad', 5, 110]], [['Boyz', 20, 170], ['Flash Gitz', 5, 80]]);

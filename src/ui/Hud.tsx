@@ -1,15 +1,13 @@
 // What sits round the board and tells the player how the battle stands, at a glance and as it changes:
 // each side's VP (a "+5 VP" rises when they score) and CP as gems (a gem pops in when gained, shatters when spent),
-// who has the upper hand (the advantage bar), the bot's commander speaking, and the summaries between rounds.
+// who has the upper hand (the advantage bar), and the summaries between rounds.
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState, PlayerId } from '../engine/types';
 import { lastRound } from '../engine/state';
 import { flowAreas, isThousandSonsArmy } from '../factions/flow';
-import { Emblem } from './ArmyBuilder';
 import { DiceFace } from './DiceFace';
 import { Icon } from './Icon';
 import { play } from './sfx';
-import { voiceOf } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
 
 /** A number that counts up to its new value instead of jumping. */
@@ -151,47 +149,6 @@ export const AdvantageBar = memo(function AdvantageBar({ share, names, colors }:
     <div className="adv" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`Advantage: ${text}`} title={`Advantage (VP, objectives held, army left): ${text}`}>
       <i className="adv-0" style={{ width: `${pct}%`, background: colors?.[0] }} />
       <i className="adv-1" style={{ width: `${100 - pct}%`, background: colors?.[1] }} />
-    </div>
-  );
-});
-
-export interface ThinkView { values: Record<string, number>; done: number; total: number }
-
-const STYLE_NAME: Record<string, string> = { steady: 'As planned', aggressive: 'Aggressive', careful: 'Careful', objectives: 'Objectives', hunt: 'Hunt' };
-
-/**
- * The bot's commander: its army's emblem, a title, and what it says. While it thinks, the ways of playing the turn it
- * is weighing fill in as each is played out on copies of the game (the best one leads).
- */
-export const Commander = memo(function Commander({ s, p, think, planning, quiet }: { s: GameState; p: PlayerId; think: ThinkView | null; planning?: { done: number; total: number } | null; quiet?: boolean }) {
-  const P = s.players[p];
-  const v = voiceOf(P.factionId);
-  const warlordUnit = s.units.find((u) => u.owner === p && u.isWarlordUnit)
-    ?? s.units.find((u) => u.owner === p && u.keywords.includes('CHARACTER'));
-  const speakerTitle = warlordUnit?.warlordSource ?? warlordUnit?.name ?? v.title;
-  const entries = think ? Object.entries(think.values) : [];
-  const lo = Math.min(...entries.map(([, x]) => x), 0), hi = Math.max(...entries.map(([, x]) => x), 1);
-  const best = entries.length ? entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : null;
-  return (
-    <div className={`commander s${p} ${quiet ? 'quiet' : ''}`} aria-live="polite">
-      <span className="cmd-emblem"><Emblem factionId={P.factionId} sub={P.subfaction} /></span>
-      <div className="cmd-body">
-        <div className="cmd-name">
-          <b>{speakerTitle}</b> <span className="muted">· {warlordUnit ? 'Warlord' : P.name}</span>
-          {think && <span className="cmd-thinking"><Icon name="wait" size={13} /> thinking{think.total ? ` ${think.done}/${think.total}` : '…'}</span>}
-          {!think && planning && <span className="cmd-thinking quiet" title="The bot works out its next turn while you play yours"><Icon name="wait" size={13} /> planning its turn {planning.done}/{planning.total}</span>}
-        </div>
-        {think && entries.length > 0 && (
-          <div className="cmd-styles">
-            {entries.map(([name, x]) => (
-              <span key={name} className={`cmd-style ${name === best ? 'best' : ''}`}>
-                <span className="cmd-style-l">{STYLE_NAME[name] ?? name}</span>
-                <span className="cmd-style-bar"><i style={{ width: `${8 + ((x - lo) / Math.max(1, hi - lo)) * 92}%` }} /></span>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 });

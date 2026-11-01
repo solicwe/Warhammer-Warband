@@ -668,7 +668,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         {run.offer && fac && (
           <section className="cmp-offer" aria-label="Choose a reward">
             <div className="cmp-kicker center" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontWeight: 800 }}>{(run.picksLeft ?? 1) > 1 ? `Spoils: ${run.picksLeft} picks left` : 'Choose one reward'}</span>
+              <span style={{ fontWeight: 800 }}>{(run.picksLeft ?? 1) > 1 ? `Boss Spoils: Choose 2 (${run.picksLeft} picks left)` : 'Choose one reward'}</span>
               <button
                 type="button"
                 className="btn small"

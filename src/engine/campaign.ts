@@ -489,7 +489,8 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
     return list;
   }
   const cap = 140 + run.path.length * 25;
-  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(40 + r() * 30) };
+  // the Scrap card has to be worth passing up a unit or a relic for: more than a battle's own pay
+  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(80 + r() * 40) };
   if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), detReward && r() < 0.5 ? detReward : scrapReward];
   // the depot: pick one of two bigger reinforcements or a relic (a relic already held levels up)
   if (kind === 'armory') return [...units(2, cap + 60), ...relics(false).slice(0, 1)];
@@ -620,8 +621,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     list: { ...run.list, units: updatedUnits },
     story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''}${scrapTechBonus ? ` ${scrapTechBonus > 0 ? '+' : '-'} ${Math.abs(scrapTechBonus)} army tree` : ''}, +${renownGain} Renown)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
-  // relics are hard to come by: an elite battle gives two of its five, the boss three
-  next.picksLeft = node.kind === 'boss' ? 3 : node.kind === 'elite' ? 2 : 1;
+  next.picksLeft = node.kind === 'boss' ? 2 : 1;
   next.offer = makeOffer(next, faction, node.kind);
   return next;
 }
