@@ -104,9 +104,12 @@ one gets its own heading.
 The campaign is a roguelite run with one faction. You start with a small army and travel across a branching map of
 battles, elite fights (enemies with a special rule), supply drops, armories, medicae tents and a boss at the end.
 
-- **Scrap** is the currency. You earn it by winning (and 25 a round in battle, +20 and +1 CP while you hold the
-  centre objective) and spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs
-  60, 110 or 170 Scrap for 1, 2 or 3 Detachment Points.
+- **Scrap** is the currency. A win pays 70 (100 for an elite battle, 160 for the boss), a loss still pays 30 plus
+  three quarters of what you picked up in the battle (25 a round, +20 and +1 CP while you hold the centre objective).
+  Spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs 60, 110 or 170 Scrap
+  for 1, 2 or 3 Detachment Points. The second copy of a unit costs the same as the first, later copies more (x1.5,
+  x2, x3); BATTLELINE and DEDICATED TRANSPORT units, which have twice the copy limit, stay at the base price for four
+  copies and climb half as fast.
 - **Missions.** Each battle is a normal battle: one of the official primary missions (many are won with actions),
   Tactical secondaries and five rounds, shown on the map before you fight. Only the Force Dispositions are drawn at
   random.
@@ -130,6 +133,10 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Relics** are artefacts with special rules the tree never gives: invulnerable saves, -1 Damage, Critical Hits on
   5+, mortal wounds, Fights First, [LANCE], [DEVASTATING WOUNDS], shooting or charging after Advancing... A relic you
   already hold comes back as an upgrade while a level still improves it, and its text is written from what it does.
+  An elite battle lets you take two of the relics it offers, the boss three.
+- **Enemy reinforcements.** While you are ahead in round 3 or 4 (10 VP up, or a quarter more army left and not
+  behind on VP), there is a 40% chance each of those rounds that an enemy unit arrives by Deep Strike, at most once a
+  battle. It never happens while you are behind.
 - **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
 - **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
   battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.

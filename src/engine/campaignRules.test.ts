@@ -6,7 +6,7 @@ import { autoList } from './autoList';
 import { afterBattle, applyCampaign, campaignMission, detachmentScrapCost, enter, enemyDetachmentCount, enemyDetachments, newRun, type Run } from './campaign';
 import { enemyTree, enemyTreePoints, treeFor } from './campaignTree';
 import { MISSIONS, primaryById } from './config';
-import { campaignRequisition, createGame, endPhase } from './game';
+import { campaignRequisition, createGame, endPhase, triggerCampaignReinforcements } from './game';
 import { botShouldAct, botStep } from '../ai/bot';
 import { applyMortalWounds, CAMPAIGN_KILL_VP } from './attack';
 import type { FactionData } from './types';
@@ -118,8 +118,8 @@ describe('campaign nodes and defeats', () => {
     const lost = afterBattle(run, 1, SM, 'Orks', 80);
     expect(lost.fate).toBe(run.fate - 1);
     expect(lost.renown).toBe((run.renown ?? 0) + 1);
-    expect(lost.scrap).toBe((run.scrap ?? 0) + 40);
-    expect(lost.story.at(-1)).toMatch(/-1 Fate, \+1 Renown, \+40 Scrap/);
+    expect(lost.scrap).toBe((run.scrap ?? 0) + 90); // 30 + 75% of the 80 battle loot
+    expect(lost.story.at(-1)).toMatch(/-1 Fate, \+1 Renown, \+90 Scrap/);
   });
 });
 
@@ -163,5 +163,43 @@ describe('mission actions for the player', () => {
     expect(actionOptions(s, 0).some((a) => a.unitId === u.id)).toBe(true);
     expect(autoActions(s, 0)).toBeGreaterThan(0);
     expect(s.pendingActions.some((a) => a.unitId === u.id) || s.players[0].mission.done.some((d) => d.unitId === u.id)).toBe(true);
+  });
+});
+
+describe('campaign events and spoils', () => {
+  const battle = (seed: number) => {
+    const run = newRun(SM, autoList(SM, 1000, 5), ['ORK'], 5);
+    const node = run.map.find((n) => n.enemy)!;
+    const s = createGame({ lists: [run.list, autoList(ORK, 1000, 5)], factions: [SM, ORK], names: ['You', 'Orks'], secondaryMode: 'none', seed, dispositions: campaignMission(node).dispositions });
+    applyCampaign(s, { ...run, fighting: node.id }, []);
+    for (const u of s.units) { u.status = 'board'; u.models.forEach((m, i) => { m.x = u.owner ? 34 : 10; m.y = 5 + (s.units.indexOf(u) % 10) * 3 + i * 0.1; }); }
+    s.round = 3;
+    return s;
+  };
+
+  it('enemy reinforcements never come while the player is behind, and only some of the time while ahead', () => {
+    let behind = 0, ahead = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const b = battle(seed); b.players[0].vp = 10; b.players[1].vp = 25;
+      if (triggerCampaignReinforcements(b)) behind++;
+      const a = battle(seed); a.players[0].vp = 30; a.players[1].vp = 10;
+      if (triggerCampaignReinforcements(a)) ahead++;
+    }
+    expect(behind).toBe(0);
+    expect(ahead).toBeGreaterThan(5);
+    expect(ahead).toBeLessThan(30);
+  });
+
+  it('a won battle pays more Scrap, and elite and boss battles give more than one pick', () => {
+    let run = newRun(SM, autoList(SM, 500, 3), ['ORK'], 3);
+    const node = run.map.find((n) => n.enemy && n.kind === 'battle')!;
+    run = enter(run, node.id, SM);
+    const won = afterBattle(run, 0, SM, 'Orks', 0);
+    expect(won.scrap - (run.scrap ?? 0)).toBe(70); // was 45
+    const elite = run.map.find((n) => n.kind === 'elite');
+    if (elite) {
+      const e = afterBattle({ ...run, fighting: elite.id }, 0, SM, 'Orks', 0);
+      expect(e.picksLeft).toBe(2);
+    }
   });
 });

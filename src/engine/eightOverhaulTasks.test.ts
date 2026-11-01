@@ -211,35 +211,22 @@ describe('Comprehensive Validation of All 8 Overhaul Categories', () => {
 
   // Category 6: Duplicate Scrap Cost Escalation & Detachment Pricing
   describe('Category 6: Duplicate Unit Cost Escalation & Detachment Tiers', () => {
-    it('scales scrap cost when recruiting duplicate copies of the same datasheet', () => {
+    it('scales scrap cost when recruiting duplicate copies of the same datasheet; Battleline climbs half as fast', () => {
       let run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
-      run.scrap = 2000;
-      // Remove all intercessors for baseline
-      run.list.units = run.list.units.filter((u) => u.datasheet !== 'Intercessor Squad');
-
-      const basePts = 80;
-      // 1st copy (0 in army): 1.0x = 80
-      expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(80);
-
-      // Add 1st copy
-      run = recruitUnit(run, SM, 'Intercessor Squad', 5);
-      // 2nd copy (1 in army): 1.0x = 80
-      expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(80);
-
-      // Add 2nd copy
-      run = recruitUnit(run, SM, 'Intercessor Squad', 5);
-      // 3rd copy (2 in army): 1.5x = 120 (+50%)
-      expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(120);
-
-      // Add 3rd copy
-      run = recruitUnit(run, SM, 'Intercessor Squad', 5);
-      // 4th copy (3 in army): 2.0x = 160 (+100%)
-      expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(160);
-
-      // Add 4th copy
-      run = recruitUnit(run, SM, 'Intercessor Squad', 5);
-      // 5th copy (4 in army): 3.0x = 240 (+200%)
-      expect(recruitScrapCost(run, 'Intercessor Squad', basePts)).toBe(240);
+      run.scrap = 5000;
+      run.list.units = run.list.units.filter((u) => u.datasheet !== 'Intercessor Squad' && u.datasheet !== 'Hellblaster Squad');
+      const sheet = (n: string) => SM.datasheets.find((d) => d.name === n)!;
+      const inter = sheet('Intercessor Squad'), hell = sheet('Hellblaster Squad');
+      expect(inter.keywords).toContain('BATTLELINE');
+      expect(hell.keywords).not.toContain('BATTLELINE');
+      // Battleline: copies 1-4 at the base price, then x1.5, x1.5, x2
+      const seenI: number[] = [];
+      for (let i = 0; i < 7; i++) { seenI.push(recruitScrapCost(run, inter, 80)); run = recruitUnit(run, SM, inter.name, 5); }
+      expect(seenI).toEqual([80, 80, 80, 80, 120, 120, 160]);
+      // any other unit: copies 1-2 at the base price, then x1.5, x2, x3
+      const seenH: number[] = [];
+      for (let i = 0; i < 5; i++) { seenH.push(recruitScrapCost(run, hell, 100)); run = recruitUnit(run, SM, hell.name, 5); }
+      expect(seenH).toEqual([100, 100, 150, 200, 300]);
     });
 
     it('prices detachments by their Detachment Points', () => {

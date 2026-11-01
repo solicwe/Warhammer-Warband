@@ -118,6 +118,9 @@ Made in conversation, so they are not all visible in the code. A change that wou
   both sides drawing their Secondary cards at round 1, the small kill bonus (1 VP a unit, 2 for a character, vehicle
   or monster, at most 12 a battle).
 - **Campaign battles are normal battles**: an official primary, Tactical secondaries, five rounds; won on points.
+- **Campaign events never pile on a losing player**: enemy reinforcements only while the player is ahead, on a roll,
+  at most once a battle. A loss still pays Scrap; elite and boss battles give more than one relic pick; BATTLELINE and
+  DEDICATED TRANSPORT copies stay cheaper for longer (their copy limit is doubled in the rules).
 - **The bot plays for points in the campaign and in idle mode** (`pointsFirst`); normal games against the bot keep
   the usual plan.
 - **The army tree fits each army** (no node for a keyword it cannot field), **tree and relics never overlap** (the tree

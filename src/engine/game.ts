@@ -2750,22 +2750,23 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
   });
 }
 
-/** Random reinforcement events in Rogue-like campaign mode (at most once per battle, round >= 3, strictly when player has advantage) */
+/** Enemy reinforcements in a campaign battle: at most once, in round 3 or 4, only while the player is ahead, and then
+ *  only on a 40% roll each of those rounds (it used to come in every battle, even one the player was losing). */
 export function triggerCampaignReinforcements(s: GameState): boolean {
   if (!s.campaign) return false;
   if (s.campaign.battleEventTriggered) return false;
   s.campaign.reinforcementsTriggered ??= [];
   // Limit to at most once per battle to avoid repeated reinforcement spam
   if (s.campaign.reinforcementsTriggered.length > 0) return false;
-  // Guaranteed dynamic event in rounds 2, 3, or 4
-  if (s.round < 2 || s.round > 4) return false;
+  if (s.round < 3 || s.round > 4) return false;
 
   const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
   const enemyUnits = s.units.filter((u) => u.owner === 1 && onBoard(u) && alive(u).length > 0);
   if (!playerUnits.length || !enemyUnits.length) return false;
 
-  // On round 2: 70% chance to trigger; on round 3 or 4: 100% guaranteed if not yet triggered
-  if (s.round === 2 && nextRandom(s) > 0.70) return false;
+  const vpLead = s.players[0].vp - s.players[1].vp;
+  const ahead = vpLead >= 10 || (vpLead >= 0 && fightingArmyPoints(s, 0) >= fightingArmyPoints(s, 1) * 1.25);
+  if (!ahead || nextRandom(s) >= 0.4) return false;
 
   s.campaign.reinforcementsTriggered.push(s.round);
   s.campaign.battleEventTriggered = true;

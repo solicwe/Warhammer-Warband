@@ -5,7 +5,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
 import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
-import { adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService, campaignMission, enemyDetachmentCount, enemyDetachments, bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight, changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, enhancementScrapCost, enter, getFactionFamily, isFactionAllowedKnight, newRun, reachable, recruitScrapCost, recruitUnit, relicById, relicDesc, removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward, type MapNode, type Reward, type Run } from '../engine/campaign';
+import { adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService, campaignMission, enemyDetachmentCount, enemyDetachments, bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight, changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, dupeMultiplier, enhancementScrapCost, enter, getFactionFamily, isFactionAllowedKnight, newRun, reachable, recruitScrapCost, recruitUnit, relicById, relicDesc, removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward, type MapNode, type Reward, type Run } from '../engine/campaign';
 import { enemyTreePoints, isVeteran, titanKeystone, VETERAN_BATTLES } from '../engine/campaignTree';
 import { ArmyTree } from './ArmyTree';
 import { detachmentAllyOf } from '../engine/allies';
@@ -668,7 +668,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         {run.offer && fac && (
           <section className="cmp-offer" aria-label="Choose a reward">
             <div className="cmp-kicker center" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontWeight: 800 }}>{(run.picksLeft ?? 1) > 1 ? `Boss Spoils: Choose 2 (${run.picksLeft} picks left)` : 'Choose one reward'}</span>
+              <span style={{ fontWeight: 800 }}>{(run.picksLeft ?? 1) > 1 ? `Spoils: ${run.picksLeft} picks left` : 'Choose one reward'}</span>
               <button
                 type="button"
                 className="btn small"
@@ -1423,7 +1423,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   const isChar = (d.keywords || []).includes('CHARACTER') && !isEpicHero;
                                   const alreadyInForce = isEpicHero && count > 0;
                                   const basePts = cheapest(d)?.pts ?? opts[0]?.pts ?? 0;
-                                  const minCost = recruitScrapCost(run, d.name, basePts);
+                                  const minCost = recruitScrapCost(run, d, basePts);
                                   const canAffordAny = (run.scrap ?? 0) >= minCost;
                                   const needsTier4 = requiresTitanRequisition(d) && !canRecruitTitanOrKnight(fac.id, d, run);
                                   const isOpenPeek = recruitView === d.name;
@@ -1446,7 +1446,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                       <button
                                         type="button"
                                         className="ab-row-main"
-                                        onClick={() => setRecruitView(isOpenPeek ? null : d.name)}
+                                        onClick={() => { setRecruitView(isOpenPeek ? null : d.name); setRecruitSize(null); }}
                                       >
                                         <span className="ab-art-wrap"><UnitArt sheet={d} /></span>
                                         <span className="ab-row-text">
@@ -1470,10 +1470,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                             )}
                                           </span>
                                           <span className="ab-pts" style={isUnaffordable ? { color: '#94a3b8' } : undefined}>
-                                            {opts.map((o) => `${o.models}: ${recruitScrapCost(run, d.name, o.pts)}`).join(' / ')} Scrap
-                                            {count >= 2 && (
+                                            {opts.map((o) => `${o.models}: ${recruitScrapCost(run, d, o.pts)}`).join(' / ')} Scrap
+                                            {dupeMultiplier(run, d) > 1 && (
                                               <span className="chip subtle small" style={{ marginLeft: 6, color: '#f59e0b', borderColor: '#f59e0b', fontSize: '11px', padding: '1px 5px' }}>
-                                                +{count === 2 ? '50%' : count === 3 ? '100%' : '200%'} Dupe Cost
+                                                +{Math.round((dupeMultiplier(run, d) - 1) * 100)}% Dupe Cost
                                               </span>
                                             )}
                                             {needsTier4 ? (
@@ -1506,6 +1506,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                           if (alreadyInForce) return;
                                           if (opts.length > 1) {
                                             setRecruitSize(isOpenSize ? null : d.name);
+                                            if (recruitView !== d.name) setRecruitView(null);
                                           } else if (canAffordAny) {
                                             const next = recruitUnit(run, fac, d.name, opts[0].models);
                                             if (next !== run) {
@@ -1524,7 +1525,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                       <div key={`size-${d.name}`} className="ab-add-size">
                                         <div className="ab-pop-head">Unit size · {d.name}</div>
                                         {opts.map((o) => {
-                                          const cost = recruitScrapCost(run, d.name, o.pts);
+                                          const cost = recruitScrapCost(run, d, o.pts);
                                           const canAfford = (run.scrap ?? 0) >= cost;
                                           const disabled = !canAfford || alreadyInForce;
                                           return (

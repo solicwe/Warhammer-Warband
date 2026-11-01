@@ -55,3 +55,8 @@ at phone width.
 - A relic test that checks eligibility with `eligibleByRule` misses relics that work through `canDo`; probe what the
   engine actually allows. Test army-wide relics on a unit that does not already have the rule (Intercessors, not
   Guilliman).
+- A comment can promise a guard the code does not have: `triggerCampaignReinforcements` said "strictly when player
+  has advantage" while it fired in every battle at round 3, losing or not, and the owner felt it every run. Read the
+  condition, not the comment, and test the case the comment promises (`campaignRules.test.ts`, campaign events).
+- Changing a price can break a test that relied on running out of Scrap (`campaign.test.ts`, combining squads): fix
+  the test to ask for what it means, not for the old price.

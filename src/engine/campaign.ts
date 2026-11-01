@@ -489,7 +489,7 @@ export function makeOffer(run: Run, faction: FactionData, kind: NodeKind, salt =
     return list;
   }
   const cap = 140 + run.path.length * 25;
-  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(25 + r() * 25) };
+  const scrapReward: Reward = { kind: 'scrap', amount: Math.round(40 + r() * 30) };
   if (kind === 'supply') return [...units(1, cap), ...relics(false).slice(0, 1), detReward && r() < 0.5 ? detReward : scrapReward];
   // the depot: pick one of two bigger reinforcements or a relic (a relic already held levels up)
   if (kind === 'armory') return [...units(2, cap + 60), ...relics(false).slice(0, 1)];
@@ -591,7 +591,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
   const node = run.map.find((n) => n.id === run.fighting)!;
   if (winner === 1) {
     const fate = run.fate - 1;
-    const salvage = Math.floor((battleScrap || 0) * 0.5);
+    const salvage = 30 + Math.floor((battleScrap || 0) * 0.75);
     return {
       ...run,
       fighting: undefined,
@@ -603,7 +603,7 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
       story: [...run.story, `Defeated by ${enemyName} (-1 Fate, +${RENOWN.loss} Renown${salvage > 0 ? `, +${salvage} Scrap salvaged` : ''})${fate > 0 ? ` · ${fate} Fate left` : ''}`],
     };
   }
-  const baseGain = node.kind === 'boss' ? 120 : node.kind === 'elite' ? 70 : 45;
+  const baseGain = node.kind === 'boss' ? 160 : node.kind === 'elite' ? 100 : 70;
   const scrapTechBonus = treeScrap(run);
   const scrapGain = Math.max(0, baseGain + (battleScrap || 0) + scrapTechBonus);
   const renownGain = node.kind === 'boss' ? RENOWN.boss : node.kind === 'elite' ? RENOWN.elite : RENOWN.battle;
@@ -620,7 +620,8 @@ export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction:
     list: { ...run.list, units: updatedUnits },
     story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''}${scrapTechBonus ? ` ${scrapTechBonus > 0 ? '+' : '-'} ${Math.abs(scrapTechBonus)} army tree` : ''}, +${renownGain} Renown)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
-  next.picksLeft = node.kind === 'boss' ? 2 : 1;
+  // relics are hard to come by: an elite battle gives two of its five, the boss three
+  next.picksLeft = node.kind === 'boss' ? 3 : node.kind === 'elite' ? 2 : 1;
   next.offer = makeOffer(next, faction, node.kind);
   return next;
 }
@@ -759,14 +760,19 @@ export function removeEnhancementFromUnit(
   };
 }
 
-/** Calculate escalating duplicate recruitment scrap cost */
-export function recruitScrapCost(run: Run, datasheetName: string, basePts: number): number {
-  const count = run.list.units.filter((u) => u.datasheet === datasheetName).length;
-  if (count <= 1) return basePts;
-  if (count === 2) return Math.round(basePts * 1.5);
-  if (count === 3) return Math.round(basePts * 2.0);
-  return Math.round(basePts * 3.0);
+/** What one more copy of a datasheet costs, as a multiple of its points: two copies at the base price, then x1.5,
+ *  x2, x3. BATTLELINE and DEDICATED TRANSPORT units have twice the copy limit in the rules, so their price climbs
+ *  half as fast (four at the base price, then two at each step). */
+export function dupeMultiplier(run: Run, d: Pick<DatasheetData, 'name' | 'keywords'>): number {
+  const count = run.list.units.filter((u) => u.datasheet === d.name).length;
+  const doubled = (d.keywords ?? []).some((k) => k === 'BATTLELINE' || k === 'DEDICATED TRANSPORT');
+  const n = doubled ? Math.floor(count / 2) : count;
+  return n <= 1 ? 1 : n === 2 ? 1.5 : n === 3 ? 2 : 3;
 }
+
+/** The Scrap price of recruiting one more copy of a datasheet at this size (see dupeMultiplier). */
+export const recruitScrapCost = (run: Run, d: Pick<DatasheetData, 'name' | 'keywords'>, basePts: number): number =>
+  Math.round(basePts * dupeMultiplier(run, d));
 
 /** Buy and recruit a new unit into the campaign roster using Scrap */
 export function recruitUnit(run: Run, faction: FactionData, datasheetName: string, chosenModels?: number): Run {
@@ -784,7 +790,7 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
   const opts = pointsOptions(d);
   const o = (chosenModels ? opts.find((x) => x.models === chosenModels) : undefined) ?? cheapest(d);
   if (!o) return run;
-  const cost = recruitScrapCost(run, d.name, o.pts);
+  const cost = recruitScrapCost(run, d, o.pts);
   if ((run.scrap ?? 0) < cost) return run;
   const uid = newUid('c');
   const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, {

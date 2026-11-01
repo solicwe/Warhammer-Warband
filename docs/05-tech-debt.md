@@ -15,6 +15,7 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | Dead code | 33 exported functions nobody called (the removed Sync/Backup and photo export, `RelicStrip`, three engine aliases, an unused allied-reinforcement builder), 49 unused imports, 20 unused locals | Removed (about 490 lines) |
 | Stale bot "thinking" state | The commander panel was removed on 21 Oct, but the battle screen still stored the bot's thinking progress and re-rendered on every update | State removed |
 | Bot level notes on the setup screen | They promised thinking "during your turn" and "up to ~20 s / ~40 s" and the wrong number of ways; the app has not pondered since 9181a17 and caps a turn's look at 0.25 s | Notes now say what each level tries (`BattleSetup.tsx`) |
+| Campaign reinforcements every battle | The code fired at round 3 in every campaign battle, though its comment said only when the player was ahead | The guard now exists, with a 40% roll; tested (`campaignRules.test.ts`) |
 | A stale comment | `fitFormation` said objective markers block a model; they do not (`pathing.ts`) | Comment corrected, unused filter removed |
 
 ## Open, by priority
