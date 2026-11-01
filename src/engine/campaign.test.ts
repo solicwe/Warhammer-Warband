@@ -277,5 +277,29 @@ describe('campaign', () => {
       }
     }
   });
-});
+it('campaign battles default to Idle mode (s.idleBots defined, s.bots [0, 1]), but player can toggle off and on', () => {
+    const sm = load('SM');
+    const ork = load('ORK');
+    const run = newRun(sm, autoList(sm, 500, 3), ['ORK'], 42);
+    const s = createGame({ lists: [run.list, autoList(ork, 500, 1)], factions: [sm, ork], names: ['You', 'Orks'], seed: 4, maxRounds: 3 });
 
+    // When campaign applies, Idle mode defaults to ON
+    applyCampaign(s, run, []);
+    expect(s.idleBots).toEqual([1]);
+    expect(s.bots).toEqual([0, 1]);
+    expect(s.autoDeploy).toEqual([0, 1]);
+    expect(s.deployAllOnField).toEqual([0, 1]);
+
+    // Player toggles Idle OFF
+    s.bots = s.idleBots;
+    delete s.idleBots;
+    expect(s.idleBots).toBeUndefined();
+    expect(s.bots).toEqual([1]);
+
+    // Player toggles Idle back ON
+    s.idleBots = s.bots;
+    s.bots = [0, 1];
+    expect(s.idleBots).toEqual([1]);
+    expect(s.bots).toEqual([0, 1]);
+  });
+});

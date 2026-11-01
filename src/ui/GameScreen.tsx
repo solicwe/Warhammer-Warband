@@ -161,9 +161,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const bots: PlayerId[] = useMemo(() => s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []), [s.bots, s.botPlayer]);
   const spectate = bots.length === 2;
   const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
-  const [speed, setSpeed] = useState<0 | 1 | 2>(1); // bot-vs-bot: pause / normal / fast
+  const [speed, setSpeed] = useState<0 | 1 | 2>(autoPlay ? 2 : 1); // bot-vs-bot: pause / normal / fast
   // the player hurries the bot's turn along: shorter pauses between its steps, results-only reports
-  const [rush, setRush] = useState(false);
+  const [rush, setRush] = useState(autoPlay);
   const abortThinkingRef = useRef<(() => void) | null>(null);
   const [coach, setCoachRaw] = useState(loadCoach);
   const setCoach = (c: ReturnType<typeof loadCoach>) => { setCoachRaw(c); saveCoach(c); };

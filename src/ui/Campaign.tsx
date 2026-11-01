@@ -148,7 +148,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         dispositions: m.dispositions,
       });
       s.botPlayer = 1;
-      s.bots = [1];
+      s.idleBots = [1];
+      s.bots = [0, 1];
+      if (s.phase === 'deploy') {
+        s.autoDeploy = [0, 1];
+        s.deployAllOnField = [0, 1];
+      }
       s.botLevel = node.enemy.level;
       applyCampaign(s, r, node.enemy.rules || []);
       setRun(r);

@@ -665,6 +665,15 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
   s.players[me].cp += run.cp + treeCp(run);
   s.idleTactic = run.idleTactic ?? 'objectives';
   s.campaign = { node: run.fighting ?? '', relics: [...run.relics.map((r: any) => typeof r === 'string' ? r : String(r?.id || r?.name || ''))], rules: cleanRules, relicLevels: { ...(run.relicLevels ?? {}) } };
+  // Campaign battles default to Idle mode (player can toggle it off/on during battle)
+  if (s.idleBots === undefined) {
+    s.idleBots = s.bots ?? (s.botPlayer != null ? [s.botPlayer] : [1]);
+    s.bots = [0, 1];
+    if (s.phase === 'deploy') {
+      s.autoDeploy = [0, 1];
+      s.deployAllOnField = [0, 1];
+    }
+  }
 }
 
 /** Calculate the Scrap cost of an Enhancement (points * 3, minimum 40), scaling +50% compounding per existing slot */
