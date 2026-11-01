@@ -651,7 +651,7 @@ export type FxEvent =
   | { seq: number; kind: 'skill'; unitId: string; owner: PlayerId; at: Pt; name: string; who: string; style: SkillStyle; epic: boolean; grand?: boolean };
 
 import type { WeaponFx } from './weaponFx';
-export type SkillStyle = 'holy' | 'psychic' | 'fury' | 'waaagh' | 'tech' | 'shield';
+export type SkillStyle = 'holy' | 'psychic' | 'fury' | 'waaagh' | 'tech' | 'shield' | 'command' | 'chaos' | 'plague' | 'necron';
 
 export type Window =
   | { kind: 'fireOverwatch'; player: PlayerId }

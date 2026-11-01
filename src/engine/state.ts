@@ -41,13 +41,20 @@ export function extractToReserves(s: GameState, u: UnitState, source?: string) {
   u.move = null;
 }
 
-/** The look of a hero's ability effect: from what it does and who uses it. */
+/** The look of a hero's ability effect (.claude/skills/vfx): from what it does and who uses it, so abilities of
+ *  different armies and kinds never look alike. */
 export function skillStyle(u: UnitState, name: string, defensive = false): SkillStyle {
   const kw = (k: string) => hasKw(u, k);
+  const fk = (k: string) => u.factionKeywords.includes(k) || kw(k);
   if (defensive) return 'shield';
   if (kw('PSYKER') || /psych|warp|smite|witch|null|soul/i.test(name)) return 'psychic';
-  if (u.factionKeywords.includes('ORKS') || kw('ORKS')) return /waaagh/i.test(name) ? 'waaagh' : 'fury';
-  if (kw('TECHMARINE') || kw('VEHICLE') || /servo|machine|forge|tech/i.test(name)) return 'tech';
+  if (fk('ORKS')) return 'waaagh';
+  if (fk('NECRONS')) return 'necron';
+  if (fk('NURGLE') || fk('DEATH GUARD') || /plague|contagion|rot|blight|pox/i.test(name)) return 'plague';
+  if (fk('KHORNE') || fk('WORLD EATERS') || /blood|rage|fury|berserk|skull/i.test(name)) return 'fury';
+  if (fk('CHAOS') || fk('HERETIC ASTARTES')) return 'chaos';
+  if (kw('TECHMARINE') || kw('VEHICLE') || fk('ADEPTUS MECHANICUS') || fk('T’AU EMPIRE') || fk("T'AU EMPIRE") || fk('LEAGUES OF VOTANN') || /servo|machine|forge|tech|markerlight|protocol/i.test(name)) return 'tech';
+  if (/order|command|oath|rites|tactic|doctrine|voice|strateg|plan|lead|banner|warlord|honour/i.test(name)) return 'command';
   return 'holy';
 }
 
