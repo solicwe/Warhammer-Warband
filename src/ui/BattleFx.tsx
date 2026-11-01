@@ -971,38 +971,49 @@ function missDirt(key: string, at: Pt, ik: number, sd: number, under: React.Reac
 
 /** one melee blow: blade arcs, chainsword teeth, crackling power fields, claws, or a crushing hammer */
 function meleeHit(fx: WeaponFx, key: string, at: Pt, hit: boolean, t: number, sd: number, over: React.ReactNode[], under: React.ReactNode[], P = 1) {
-  const sk = t / (fx === 'crush' ? 0.3 : 0.2);
+  const sk = t / (fx === 'crush' ? 0.3 : 0.22);
   const a = noise(sd, 21) * 360;
+  const col = fx === 'power' ? '#60a5fa' : fx === 'chain' ? '#ef4444' : fx === 'claw' ? '#93c5fd' : fx === 'crush' ? '#fbbf24' : '#f1f5f9';
+  const glow: GlowColor = fx === 'power' ? 'blue' : fx === 'chain' ? 'red' : fx === 'claw' ? 'cyan' : 'amber';
   // a swing reads as a motion smear: a crescent thick in the middle and thinning to points, fading behind the blade
-  const smear = (dy: number, thick: number, col: string, op: number) => (
-    <path d={`M -1.1 ${-0.45 + dy} Q 0 ${-1.55 - thick + dy} 1.1 ${-0.45 + dy} Q 0 ${-1.55 + thick * 0.4 + dy} -1.1 ${-0.45 + dy} Z`} fill={col} opacity={op} />
+  const smear = (dy: number, thick: number, c: string, op: number) => (
+    <path d={`M -1.1 ${-0.45 + dy} Q 0 ${-1.55 - thick + dy} 1.1 ${-0.45 + dy} Q 0 ${-1.55 + thick * 0.4 + dy} -1.1 ${-0.45 + dy} Z`} fill={c} opacity={op} />
   );
   if (sk > 0 && sk < 1) {
     if (fx === 'crush') {
-      over.push(
-        <g key={`c${key}`}>
-          <Glow at={at} r={(0.4 + sk * 0.8) * P} color={hit ? 'amber' : 'white'} op={(1 - sk) * 0.8} />
-        </g>,
-      );
+      // a hammer comes down: the ground cracks, a ring of force and dust, rubble thrown out
+      over.push(<Glow key={`c${key}`} at={at} r={(0.5 + sk * 0.9) * P} color={hit ? 'amber' : 'white'} op={(1 - sk) * 0.9} />);
+      over.push(<Shockwave key={`cw${key}`} at={at} r={1.6 * Math.sqrt(P)} k={sk / 0.7} color="#fde68a" />);
       under.push(<Debris key={`cd${key}`} at={at} k={sk} seed={sd} n={7} size={0.9 * P} />);
-      under.push(<DustRing key={`cr${key}`} at={at} k={sk} r={2.2 * P} seed={sd} />);
+      under.push(<DustRing key={`cr${key}`} at={at} k={sk} r={2 * P} seed={sd} />);
     } else {
-      const col = fx === 'power' ? '#60a5fa' : fx === 'chain' ? '#ef4444' : fx === 'claw' ? '#93c5fd' : '#e5e7eb';
+      // the blade sweeps across the target: the smear turns as it goes, in three layers (a glow, the colour, a white edge)
+      const sw = a - 40 + easeOut(clamp01(sk * 1.6)) * 80, sc = Math.sqrt(P) * VIS * 1.25;
       over.push(
-        <g key={`s${key}`} transform={`translate(${at.x} ${at.y}) rotate(${a}) scale(${Math.sqrt(P) * VIS})`} opacity={1 - sk}>
-          {fx === 'claw' ? [-0.3, 0, 0.3].map((dy, j) => <g key={j}>{smear(dy, 0.12, col, 0.3)}{smear(dy, 0.04, '#fff', 0.55)}</g>)
-            : <>{smear(0, fx === 'power' ? 0.35 : 0.28, col, 0.3)}{smear(0, 0.1, '#fff', 0.5)}</>}
+        <g key={`s${key}`} transform={`translate(${at.x} ${at.y}) rotate(${sw}) scale(${sc})`} opacity={1 - sk * sk}>
+          {fx === 'claw' ? [-0.32, 0, 0.32].map((dy, j) => <g key={j}>{smear(dy, 0.22, col, 0.3)}{smear(dy, 0.1, col, 0.75)}{smear(dy, 0.04, '#fff', 0.9)}</g>)
+            : <>{smear(0, fx === 'power' ? 0.5 : 0.42, col, 0.3)}{smear(0, 0.2, col, 0.8)}{smear(0, 0.07, '#fff', 0.95)}</>}
         </g>,
       );
-      // a power field discharges where it bites
-      if (fx === 'power') over.push(<Wisp key={`pg${key}`} at={at} r={1.1 * P} color="#60a5fa" op={0.9 * (1 - sk)} rot={sd * 53 + sk * 90} v={sd} />);
     }
   }
   if (hit) {
-    const hk = (t - 0.08) / 0.25;
-    over.push(<Sparks key={`k${key}`} at={at} seed={sd} k={hk} color={fx === 'power' ? '#bfdbfe' : fx === 'chain' ? '#fdba74' : '#fecaca'} size={fx === 'chain' ? 1.2 : 0.9} />);
+    const hk = (t - 0.08) / 0.28;
+    if (hk > 0 && hk < 1) {
+      // the blow lands: a white flash, a burst in the weapon's colour and a small shockwave
+      if (hk < 0.25) over.push(<Glow key={`hf${key}`} at={at} r={(0.4 + hk * 2.4) * Math.sqrt(P)} color="white" op={1 - hk / 0.25} />);
+      over.push(<Glow key={`hg${key}`} at={at} r={(0.6 + hk * 0.8) * Math.sqrt(P)} color={glow} op={0.8 * (1 - hk)} />);
+      if (fx !== 'crush') over.push(<Shockwave key={`hw${key}`} at={at} r={1.1 * Math.sqrt(P)} k={hk / 0.6} color={col} />);
+      // a power field crackles where it bites
+      if (fx === 'power') over.push(<Arcs key={`pa${key}`} at={at} r={1.1 * Math.sqrt(P)} k={hk / 0.7} seed={sd} color="#93c5fd" n={4} />);
+    }
+    over.push(<Sparks key={`k${key}`} at={at} seed={sd} k={hk} color={fx === 'power' ? '#bfdbfe' : fx === 'chain' ? '#fdba74' : fx === 'crush' ? '#fde68a' : '#fecaca'} size={(fx === 'chain' ? 1.5 : 1.2) * Math.sqrt(P)} />);
     // blades and teeth throw out a spray of blood and gore
-    if (fx !== 'power' && hk > 0 && hk < 1) under.push(<Debris key={`cb${key}`} at={at} k={hk} seed={sd + 5} n={fx === 'chain' ? 6 : 3} color="#7f1d1d" size={0.5} />);
+    if (fx !== 'power' && fx !== 'crush' && hk > 0 && hk < 1) under.push(<Debris key={`cb${key}`} at={at} k={hk} seed={sd + 5} n={fx === 'chain' ? 7 : 4} color="#7f1d1d" size={0.6} />);
+  } else {
+    // parried or dodged: a dull clang of grey sparks
+    const mk = (t - 0.08) / 0.2;
+    if (mk > 0 && mk < 1) over.push(<Sparks key={`km${key}`} at={at} seed={sd} k={mk} color="#cbd5e1" size={0.6} />);
   }
 }
 
