@@ -40,7 +40,8 @@ related names, rules text and imagery belong to Games Workshop.
    re-rolls and modifiers, and resolves abilities at the right moment. Each roll is shown with the number it needed
    and why.
 4. **Or let the bot play for you.** The Idle button in the top bar hands your side to the bot, in a normal battle
-   or in the campaign, and you watch. Tap it again to take back control.
+   or in the campaign, and you watch. Tap it again to take back control. In idle mode and in the campaign the bot plays for points:
+   every objective gets a unit to hold it before the rest go hunting.
 
 The bot plays the same rules you do, including stratagems and faction abilities, and has several difficulty levels.
 
@@ -62,6 +63,8 @@ The game follows the 11th edition core rules. A summary of what is modelled, wit
   hidden, and can only be seen by enemies within 15".
 - **Objectives.** An objective on terrain covers the whole plate (or both plates, when the marker sits where two meet).
   The plate is tinted in the colour of the army that holds it.
+- **Effects.** Every kind of weapon, melee blow and hero ability has a look of its own (a Librarian's warp bolt,
+  a Captain's halo, a Chaos star, an Ork stomp, a Necron glyph ring...), sized to the models on the board.
 - **Missions.** All 45 official layouts, every primary mission and the secondary deck (tactical or fixed) are
   scored automatically. Bigger games (3000 points and up) use a larger table.
 
@@ -177,6 +180,28 @@ All paths in the app are relative, so it works at `https://<user>.github.io/<rep
 publishes a copy of the page as `404.html`, so a refresh never lands on an error page.
 
 ## For developers
+
+Working on the code (by hand or with an AI assistant)? Start with [CLAUDE.md](CLAUDE.md). It sets the order every
+change follows:
+1. Check what already exists before building.
+2. Decide whether to extend it, replace it or add something new.
+3. Make the smallest complete change.
+4. Prove it with real checks.
+5. Update these docs.
+
+Each area has a skill in [.claude/skills/](.claude/skills/), a short file that says what exists there, what to
+check and how to verify it:
+
+| Skill | For |
+|---|---|
+| [start-here](.claude/skills/start-here/SKILL.md) | every task: the workflow, the inventory step, where things are |
+| [verify](.claude/skills/verify/SKILL.md) | proving a change works: tests, games, screenshots, measurements |
+| [docs-sync](.claude/skills/docs-sync/SKILL.md) | which doc to update for which change |
+| [rules-data](.claude/skills/rules-data/SKILL.md) | abilities, stratagems, detachments, faction data |
+| [bot](.claude/skills/bot/SKILL.md) | the bot: roles, styles, speed, measuring its strength |
+| [campaign](.claude/skills/campaign/SKILL.md) | the campaign, army tree, relics, old saves |
+| [ui](.claude/skills/ui/SKILL.md) | screens, touch, accessibility, lag |
+| [vfx](.claude/skills/vfx/SKILL.md) | battle effects |
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) explains the layers (`engine`, `rules-engine`, `factions`, `ai`, `ui`,
   `services`), the turn loop and the hooks that let faction rules plug in without touching the core.

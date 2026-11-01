@@ -26,6 +26,20 @@ under a second, at a glance, on a small screen, without slowing the game.
    sprites. Under ~250 elements for a big attack frame.
 7. **Readable label**: an ability shows its name in the effect's colour with a dark outline, above the effect.
 
+## Inventory first (start-here applies)
+
+Before adding an effect, list what exists and reuse it:
+
+- Weapon looks: `WeaponFx` in `src/engine/weaponFx.ts` (bolt, heavyBolt, gatling, shoota, shotgun, sniper, pulse,
+  plasma, las, melta, volkite, grav, lightning, psychic, flame, missile, shell, gauss, shuriken, bio, sonic, cryo;
+  melee slash, power, chain, claw, crush). `weaponFx(weapon, profile)` picks one from the name and abilities;
+  `weaponPow` sizes it; `flameTint` colours warp and daemon fire. Each kind is a `case` in `AttackFx` (BattleFx.tsx).
+- Board events: `FxView` in BattleFx.tsx routes each `FxEvent` kind (attack, mortal, explosion, place = deep strike,
+  shock, heal, move = charge, roll, ritual, extract, skill).
+- Abilities: `SkillFx` (big, once per battle) and `SkillLite` (often used) both draw `styleLayers(style, ...)`.
+- Scale: `VIS` (board zoom, set by `FxLayer` from `viewW`) and `TRACE` (shots, a little thinner). Use these; never a
+  second scale.
+
 ## The parts available (BattleFx.tsx)
 
 Glow (soft light), Sparks, Debris, DustRing, Puff (smoke), Sprite (fire, smoke, flash textures), Wisp (energy haze,
@@ -49,7 +63,7 @@ use sparingly), Arcs (forked crackling energy), Shockwave (hard ring snapping ou
 Rituals (Thousand Sons) each have their own: Doombolt (a bolt and a blast), Destiny's Ruin (an eye closes on the
 target), Twist of Fate (a spiral winds in), Temporal Surge (a clock face, hands spinning backwards).
 
-## How to check a change
+## How to check a change (see also the verify skill)
 
 Render a sheet: a page under src/zz (never committed) that draws `FxView` for each effect at two or three moments,
 with the board at `viewW={44}` (a phone zoomed out), screenshot it with Playwright, and look at it. Compare every

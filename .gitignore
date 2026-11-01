@@ -10,3 +10,6 @@ tsconfig.tsbuildinfo
 .env
 .env.*
 !.env.example
+
+# scratch: effect sheets, benches, one-off games (never committed)
+src/zz/

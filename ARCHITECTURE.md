@@ -139,20 +139,50 @@ rules run and which are still text only.
 ## The bot
 
 `bot.ts` is the entry (`botAct` plays one step, `botStep` one step for one side). Movement and positions are
-scored in `botMove.ts` with weights from `data/bot-weights.json` (tuned by `scripts/tune.mjs`); `botPlan.ts` gives
-the army a plan per phase, `botLook.ts` tries a few lines of play ahead, `botStrats.ts` spends CP, `botPlus.ts`
-handles choices (doctrines, abilities with a decision). In the browser the bot thinks in a Web Worker
-(`ui/lookWorker.ts`) so the screen stays live.
+scored in `botMove.ts` with weights from `data/bot-weights.json` (tuned by `scripts/tune.mjs`); on a big board (more
+than 150 models brought) it plans with a quicker search so a 2000-point game does not freeze. `botPlan.ts` gives
+every unit a role for the turn (home, anchor on an objective, hammer that hunts, screen, firebase, support, taxi);
+in a battle won on points (the campaign, idle mode) each objective gets a holder before units go hunting
+(`pointsFirst`). `botLook.ts` plays a few copies of the turn in different styles and keeps the best (the campaign
+always plays the objective-first `rogue` style). `botStrats.ts` spends CP, `botPlus.ts` handles choices (doctrines,
+abilities with a decision). In the browser the bot thinks in a Web Worker (`ui/lookWorker.ts`) so the screen stays
+live; a step the worker has not answered in 90 s is played on the main thread. Idle mode hands the player's side to
+the same code. The live bot is measured against a frozen copy in `src/ai/baseline/` (`arena.test.ts`,
+`scripts/elo.mjs`).
+
+## The campaign
+
+`campaign.ts` holds a run: the map (`makeMap`), each battle (`campaignMission`: an official primary, Tactical
+secondaries, five rounds, random Force Dispositions), rewards (`makeOffer`, `takeReward`), recruiting, relics
+(`RELICS`, text written by `relicText`) and what is put on the armies before a battle (`applyCampaign`). The army tree
+is `campaignTree.ts` (shared spokes, ring, keystones; `treeFor(army)` swaps nodes an army cannot use) with each
+army's own branches in `campaignTreeArmies.ts` and the keywords each army can field in `treeFielded.ts` (written by its
+test). The tree only changes numbers and re-rolls; relics only give special rules; tests keep the two apart. Old saves
+go through `migrateRun`. Design: `docs/04-campaign-tree.md`.
+
+## Battle effects
+
+`ui/BattleFx.tsx` draws every effect in SVG over the board (`FxLayer`, about 30 frames a second): one look per weapon
+kind (`engine/weaponFx.ts` picks it from the weapon), melee blows, Deep Strike, Deadly Demise, Rituals, and a style
+per kind of ability (`skillStyle` in `engine/state.ts`: holy, command, psychic, chaos, fury, waaagh, tech, shield,
+plague, necron), each with a wind-up, a release and an aftermath. Sizes follow the board zoom through one factor
+(`VIS`). Principles and the parts to build from: the `vfx` skill.
 
 ## UI
 
 `App.tsx` routes between Home (army library), the army builder, battle setup, the campaign map and
-`GameScreen.tsx` (the battle). `Board.tsx` draws the battlefield in SVG. Saved data is in `localStorage`:
-`w40k11-armies` (army lists), `w40k11-save` (the battle in progress), `w40k11-battle` (last setup),
-`w40k11-portraits` (custom photos).
+`GameScreen.tsx` (the battle). `Board.tsx` draws the battlefield in SVG. Saved data is in `localStorage`
+(`KEYS` in `services/storage.ts`): `w40k11-armies` (army lists), `w40k11-save` (the battle in progress),
+`w40k11-battle` (last setup), `w40k11-portraits` (custom photos), `campaign-run` (the campaign), and settings.
+
+## Working on this project
+
+`CLAUDE.md` and the skills in `.claude/skills/` (start with `start-here`) give the workflow every change follows:
+inventory what exists, decide to extend, replace or add, build the smallest complete change, verify with real
+checks, update the docs.
 
 ## Tests
 
-`npm test` runs everything (about 30 minutes: many tests play whole bot-vs-bot games). Per-faction rules have
+`npm test` runs everything (about 20 to 30 minutes: many tests play whole bot-vs-bot games). Per-faction rules have
 their own test files (`knights.test.ts`, `drukhari.test.ts` ...). CI (`.github/workflows/ci.yml`) builds and runs
 the full suite on every push to `main` and every pull request.

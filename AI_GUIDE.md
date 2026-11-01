@@ -1,6 +1,9 @@
 # Guide for changing this project
 
-Read `ARCHITECTURE.md` first. This file is the checklist for the common changes.
+Start with `CLAUDE.md` and the `start-here` skill (`.claude/skills/start-here/SKILL.md`): every task begins with an
+inventory of what already exists, a written decision (extend, replace or new) and ends with real checks (`verify`)
+and true docs (`docs-sync`). Read `ARCHITECTURE.md` for how the code fits together. This file is the checklist for the
+common changes; each area also has a skill in `.claude/skills/` (`rules-data`, `bot`, `campaign`, `ui`, `vfx`).
 
 ## Ground rules
 
@@ -61,7 +64,25 @@ Put files in `public/images/units/<ID>/` named after the datasheet in lower case
 (`Intercessor Squad` -> `intercessor-squad.webp`), then `npm run images` to rebuild the manifest. See
 `public/images/README.md`.
 
+## Change the campaign tree or relics
+
+Read the "Tree v3" section of `docs/04-campaign-tree.md` and the `campaign` skill first. A tree node changes numbers
+and re-rolls only (`TREE_KEYS` in `campaignTree.ts`); a relic gives special rules only. Run
+`npx vitest run src/engine/campaign*.test.ts`; after changing which keywords nodes name, regenerate the table with
+`UPDATE_FIELDED=1 npx vitest run src/engine/campaignTreeFit.test.ts`. A change to what a saved id means needs a
+migration (`treeVersion`) and a test that loads the old save.
+
+## Add or change a battle effect
+
+Load the `vfx` skill: it lists every effect that exists, the parts to build from and the style of each ability.
+Check the result on a rendered sheet at phone board scale, not only in the code.
+
+## Change the bot
+
+Load the `bot` skill. Measure before and after (mirror games, the arena or `scripts/elo.mjs`) and report the numbers.
+
 ## Before you push
 
 `npx tsc --noEmit -p .`, the tests of what you touched, and for engine changes a seeded bot-vs-bot game for the
-factions involved. CI runs the full suite.
+factions involved. Run the full suite (`npx vitest run`, about 20 minutes) before anything reaches `main`; CI runs it
+too. Update the docs the change touches (`docs-sync`).
