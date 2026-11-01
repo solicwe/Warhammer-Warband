@@ -27,9 +27,10 @@ const SEC_MODES: { id: BattlePrefs['secMode']; label: string; note: string }[] =
 
 const LEVELS: { id: BattlePrefs['level']; label: string; note: string }[] = [
   { id: 'easy', label: 'Easy', note: 'Plays each unit on its own and slips now and then. Good for learning the rules.' },
-  { id: 'normal', label: 'Normal', note: 'Tries its turn three ways before playing it, and plans while you play yours.' },
-  { id: 'hard', label: 'Hard', note: 'Tries each way on two rolls of the dice. Thinks up to ~20 s, mostly during your turn.' },
-  { id: 'expert', label: 'Expert', note: 'Five ways, three rolls each. The strongest, and the longest thinking (up to ~40 s).' },
+  // the app caps the bot's look at a quarter of a second a turn (GameScreen) and does not think during yours
+  { id: 'normal', label: 'Normal', note: 'Tries its turn two ways before playing it.' },
+  { id: 'hard', label: 'Hard', note: 'Tries three ways, each on two rolls of the dice.' },
+  { id: 'expert', label: 'Expert', note: 'Four ways, three rolls each. The strongest.' },
 ];
 
 const LENGTHS: { id: BattlePrefs['rounds']; label: string; note: string }[] = [

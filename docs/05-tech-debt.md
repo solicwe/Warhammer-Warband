@@ -14,6 +14,7 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | `Math.random` in the campaign engine | Unit ids and the next sector's seed came from `Math.random`, against the project's determinism rule | ids from `newUid`; the next sector's seed from the run's seed (`campaign.ts`) |
 | Dead code | 33 exported functions nobody called (the removed Sync/Backup and photo export, `RelicStrip`, three engine aliases, an unused allied-reinforcement builder), 49 unused imports, 20 unused locals | Removed (about 490 lines) |
 | Stale bot "thinking" state | The commander panel was removed on 21 Oct, but the battle screen still stored the bot's thinking progress and re-rendered on every update | State removed |
+| Bot level notes on the setup screen | They promised thinking "during your turn" and "up to ~20 s / ~40 s" and the wrong number of ways; the app has not pondered since 9181a17 and caps a turn's look at 0.25 s | Notes now say what each level tries (`BattleSetup.tsx`) |
 | A stale comment | `fitFormation` said objective markers block a model; they do not (`pathing.ts`) | Comment corrected, unused filter removed |
 
 ## Open, by priority
@@ -38,6 +39,5 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 - A script listing exports no other file uses: 35, 33 removed (2 in the frozen bot baseline stay).
 - `grep Math.random src/engine`: 5, now 1 (item 11).
 - `npm outdated`, `npm audit --omit=dev`.
-- The README, ARCHITECTURE and the skills read against the code for removed features (none claimed). The bot level
-  notes on the setup screen claimed thinking "during your turn" and "up to ~40 s"; see the commit that fixed them.
+- The README, ARCHITECTURE and the skills read against the code for removed features (none claimed).
 - A bot-vs-bot battle in the browser at desktop size: no page errors; the army-buff cards render whole.
