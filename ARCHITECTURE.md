@@ -179,7 +179,8 @@ plague, necron), each with a wind-up, a release and an aftermath. Sizes follow t
 
 `CLAUDE.md` and the skills in `.claude/skills/` (start with `start-here`) give the workflow every change follows:
 inventory what exists, decide to extend, replace or add, build the smallest complete change, verify with real
-checks, update the docs.
+checks, update the docs, and write what the task taught into the area's skill (its "Pitfalls seen before"), so
+the skills improve with every session.
 
 ## Tests
 

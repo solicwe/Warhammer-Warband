@@ -188,6 +188,7 @@ change follows:
 3. Make the smallest complete change.
 4. Prove it with real checks.
 5. Update these docs.
+6. Write what the change taught into the skill of that area, so the skills improve with every task.
 
 Each area has a skill in [.claude/skills/](.claude/skills/), a short file that says what exists there, what to
 check and how to verify it:

@@ -2,7 +2,7 @@
 
 Start with `CLAUDE.md` and the `start-here` skill (`.claude/skills/start-here/SKILL.md`): every task begins with an
 inventory of what already exists, a written decision (extend, replace or new) and ends with real checks (`verify`)
-and true docs (`docs-sync`). Read `ARCHITECTURE.md` for how the code fits together. This file is the checklist for the
+and true docs (`docs-sync`), and leaves what it taught in the area's skill. Read `ARCHITECTURE.md` for how the code fits together. This file is the checklist for the
 common changes; each area also has a skill in `.claude/skills/` (`rules-data`, `bot`, `campaign`, `ui`, `vfx`).
 
 ## Ground rules

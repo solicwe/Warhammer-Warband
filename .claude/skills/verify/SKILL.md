@@ -58,3 +58,11 @@ or run it on the old code), then pass.
 - Give the numbers: "893 tests passed", "8 of 12 games won, 369 VP to 304", "worst step 3.0 s to 1.9 s".
 - Say what was not checked (a phone, a faction not covered, few games) and what could still go wrong.
 - Never write "should work" or "probably fixed" for something you could have run.
+
+## Pitfalls seen before
+
+- `kill $(pgrep -f "vite --port 5179")` is a kill by pattern: it also matched the shell running it. List the processes
+  (`ps -eo pid,args | grep "vite --port"`), then kill the exact PIDs. Start one vite at a time; an old one may still
+  hold the port.
+- A run of the full suite started while files were changing gave a wrong result. Do not edit `src/` while it runs;
+  docs and skills are safe to edit.

@@ -91,9 +91,10 @@ what worked that I would want to know next time? Then write it where the next se
 How a lesson is written:
 
 - One entry, two or three lines: **the symptom** as the owner or a test shows it, **the cause**, **what to do**.
-  Name the file and function. Example: "Ghost copies of the army-buff cards while the map zooms (desktop): a CSS
-  transform inside a `foreignObject`; scale on the SVG side (`<g transform>`) instead."
-- Only what was checked. A guess that was never confirmed is not a lesson.
+  Name the file and function. Example: "The army-buff cards were clipped wrongly (desktop): a CSS transform scaling
+  the HTML inside a `foreignObject`; scale on the SVG side (`<g transform>`) instead."
+- Only what was checked. Mark what is inferred but not yet seen ("fix inferred, owner to confirm"), and update the
+  entry when it is confirmed or proved wrong.
 - Keep each list short (about 12 entries). When one fills up, merge entries that say the same thing, and delete those
   a test or the code now prevents (the test is the better memory). Delete a lesson that turned out wrong.
 - The lesson goes in the same commit as the change that taught it, and the reply says which skill got it.
