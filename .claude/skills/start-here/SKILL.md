@@ -80,6 +80,35 @@ player or a developer; the trailer lines the session gives), push the branch, ru
 - Docs match the code. The branch is pushed; `main` is fast-forwarded after the full suite passed.
 - The reply (in Thai) ends with what was skipped or not checked, and the risks.
 
+## Owner decisions (do not reverse without asking)
+
+Made in conversation, so they are not all visible in the code. A change that would undo one needs the owner's yes.
+
+- **Normal games follow the official rules.** House changes live in the campaign only: random Force Dispositions,
+  both sides drawing their Secondary cards at round 1, the small kill bonus (1 VP a unit, 2 for a character, vehicle
+  or monster, at most 12 a battle).
+- **Campaign battles are normal battles**: an official primary, Tactical secondaries, five rounds; won on points.
+- **The bot plays for points in the campaign and in idle mode** (`pointsFirst`); normal games against the bot keep
+  the usual plan.
+- **The army tree fits each army** (no node for a keyword it cannot field), **tree and relics never overlap** (the tree
+  changes numbers and re-rolls, relics give special rules, no shared names), relic text is written from the effect.
+- **Effects**: fire only for torrent weapons (a psychic power is a psychic bolt, plasma is plasma); no drifting smoke
+  or haze as the main event; every effect sized to the model and the zoom through the one scale (`VIS`, `TRACE`);
+  blasts about the size of the unit hit; Deep Strike keeps the old lightning arrival the owner liked; mortal wounds
+  are a flash and a shockwave, no lightning; Sonic is not drawn as rings; every ability style keeps its own shape.
+- **Big games must not freeze**: the bot's quick planning on big boards and the worker fallback stay.
+- No emoji anywhere; replies in Thai.
+
+When the owner makes a new decision of this kind, add it here in the same change.
+
+## Docs that are history, not specs
+
+- `docs/02-game-design.md` is the original MVP plan (October 2026, in Thai): its roadmap and open questions are old.
+  Read it for intent, not as the current design.
+- `docs/unit-audit.md` is a dated snapshot (11 Oct 2026).
+- The current truth is the code, the tests, README, ARCHITECTURE.md, AI_GUIDE.md, docs/RULES_STATUS.md,
+  docs/04-campaign-tree.md and these skills.
+
 ## Where things are
 
 | Area | Code | Data | Doc / skill |

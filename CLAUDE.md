@@ -39,9 +39,11 @@ The reference docs those skills point to: `ARCHITECTURE.md` (layers, hooks, rule
 - Reply in Thai. Plain words; no emoji anywhere (code, docs, commits, replies).
 - Smallest complete change; end every reply with what was skipped or not checked, and the risks.
 - Do not rewrite rules, docs or features beyond what was asked.
-- Branch `claude/warhammer-11e-mobile-sim-njcblr`. Before every push run
+- Work on the branch the session names. Before every push run
   `git remote set-url origin https://github.com/solicwe/Warhammer-Warband`. Push the branch; fast-forward `main`
-  (`git push origin <branch>:main`) only after the full test suite passes.
+  (`git push origin <branch>:main`) only after the full test suite passes on that code.
+- The owner's earlier decisions are listed in the `start-here` skill ("Owner decisions"). Do not reverse one without
+  asking.
 - Commit messages end with the Co-Authored-By and Claude-Session lines the session gives; no model names in commits.
 - `src/zz/` is scratch (sheets, benches, one-off games): it is git-ignored, never committed, deleted when done.
 - Kill a process by its PID, never by a name pattern. Never disable TLS. Do not `git stash` while tests run.
