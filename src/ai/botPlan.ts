@@ -100,6 +100,9 @@ export function followedJob(plan: ArmyPlan, unitId: string): Job | undefined {
   return undefined;
 }
 
+/** battles the bot plays for the score above all: the campaign (won on points) and idle mode */
+export const pointsFirst = (s: GameState) => !!s.campaign || !!s.idleBots;
+
 const cache = new WeakMap<GameState, Map<PlayerId, { key: string; plan: ArmyPlan }>>();
 
 export function armyPlan(s: GameState, p: PlayerId): ArmyPlan {
@@ -173,6 +176,19 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
       // already out in the field is doing a job there, so it is not called back
       const keep = !c0.brawler && c0.value <= 80 && dist(centre(c0.u), hp) <= c0.M + 3;
       jobs.set(c0.u.id, { role: 'home', post: hp, why: keep ? 'kept on home all game' : 'holds home', keep });
+    }
+  }
+
+  // a battle won on points (campaign, idle): every field objective gets a holder before anything hunts, and only the
+  // army's one or two hardest hitters stay hunters
+  if (pointsFirst(s)) {
+    const hitters = mine.filter(free).map((u) => info.get(u.id)!).sort((a, b) => b.punch - a.punch).slice(0, mine.length >= 6 ? 2 : 1);
+    for (const h of hitters) if (h.punch > 0) jobs.set(h.u.id, { role: 'hammer', why: `hunts: ${Math.round(h.punch)} pts of damage a turn` });
+    const field = s.objectives.filter((o) => o.type !== 'home' && o.secured !== p).map((o) => ({ o, at: objPoint(s, o) }));
+    for (const f of field) {
+      const c = mine.filter(free).map((u) => info.get(u.id)!).filter((i) => i.oc > 0 && !isEngaged(s, i.u))
+        .map((i) => ({ i, d: dist(centre(i.u), f.at) / Math.max(4, i.M) })).sort((a, b) => a.d - b.d)[0];
+      if (c && c.d <= 5) jobs.set(c.i.u.id, { role: 'anchor', post: f.at, why: `scores objective ${s.objectives.indexOf(f.o) + 1}` });
     }
   }
 

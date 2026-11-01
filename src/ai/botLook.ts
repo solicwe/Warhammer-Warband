@@ -17,15 +17,16 @@ const STYLES: Record<string, Partial<BotW>> = {
   // the expert also tries playing the turn for the objectives, and for the kill
   objectives: { objective: 55, pullHolder: 2.6, pullObjective: 0.9, claimPull: 3.2, homeExpensive: 0.1 },
   hunt: { pullHammer: 1.2, pullBrawler: 1.2, chargeNonBrawler: 0.9, cautionOther: 0.6, cautionBrawler: 0.25 },
+  // the campaign is won on points: objectives first, the kill second
   rogue: {
-    objective: 65,
-    pullObjective: 1.0,
-    pullHolder: 2.5,
-    claimBonus: 25,
-    claimPull: 2.8,
-    pullBrawler: 1.25,
+    objective: 75,
+    pullObjective: 1.1,
+    pullHolder: 2.8,
+    claimBonus: 30,
+    claimPull: 3.2,
+    pullBrawler: 1.05,
     pullRange: 0.85,
-    pullHammer: 1.2,
+    pullHammer: 1.0,
     chargeNonBrawler: 0.85,
     cautionOther: 0.35,
     cautionBrawler: 0.2,
@@ -191,7 +192,7 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   own[p] ??= W(p);
   s.botTried = [...(s.botTried ?? []), styleKey(s)];
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
-  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill', rogue: 'aggressively for objectives and the kill' };
+  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill', rogue: 'for the objectives first, then the kill' };
   if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${how[name] ?? name} (looked ahead: it plays out better)` });
 }
 
