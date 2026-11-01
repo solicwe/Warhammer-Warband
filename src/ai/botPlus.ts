@@ -158,9 +158,6 @@ export function reactWorth(s: GameState, u: UnitState, st: StratagemData, kind: 
   return !isBrawler(s, u) && moveGain(s, u, 4) > unitValue(u) * 0.05;
 }
 
-/** The choice index a stratagem with options should take for this unit (first usable). */
-export const firstChoice = (s: GameState, rule: ReturnType<typeof stratRule>, u: UnitState) => stratChoices(s, rule, u)[0]?.i;
-
 /** "After this unit has shot, it can make a Normal move" (Tactical Fluidity, Purgation Run …): move on when it pays. */
 export function botAfterShootMove(s: GameState, u: UnitState) {
   for (const m of manualActs(s, u.owner)) {

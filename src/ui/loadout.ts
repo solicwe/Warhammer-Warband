@@ -4,15 +4,6 @@ import type { ArmyList, DatasheetData, FactionData, ModelState, UnitState, Warge
 import { buildUnits } from '../engine/army';
 import { kitOf, modelPortraitKey, modelVariantKey } from './portraits';
 
-const FILLER = /^(astartes|master-crafted|archeotech|relic|artificer)\s+/i;
-
-/** "Master-crafted Power Weapon" → "Power Weapon", long names cut to fit under a token. */
-export function shortItem(name: string, max = 13): string {
-  let n = name.replace(FILLER, '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
-  if (n.length > max) n = n.slice(0, max - 1).trimEnd() + '…';
-  return n;
-}
-
 const items = (m: ModelState) => [...new Set([...m.weapons.map((w) => w.name), ...(m.gear ?? [])])];
 const isGun = (m: ModelState, name: string) => m.weapons.some((w) => w.name === name && w.profiles.some((p) => p.range !== 'Melee'));
 const isPistol = (name: string) => /pistol/i.test(name);
@@ -98,7 +89,6 @@ export function pictureVariants(source: string, models: ModelState[]): PictureVa
   const groups = new Map<string, { name: string; kit: string[]; m: ModelState }>();
   for (const m of ms) { const kit = kitOf(m); groups.set(`${m.name}|${kit.join('+')}`, { name: m.name, kit, m }); }
   const all = [...groups.values()];
-  const names = [...new Set(all.map((g) => g.name))];
   if (all.length < 2) return [];
 
   const isMelee = (w: string) => /chainsword|power\s+(weapon|sword|axe|fist|lance)|thunder hammer|force\s+|claws|blade|halberd|spear|relic weapon|eviscerator|talons|maul/i.test(w);

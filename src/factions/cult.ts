@@ -3,7 +3,6 @@
 // are data (data/abilities/GC.json, data/detachment-rules.json).
 import { setBackUp } from '../rules-engine/activations';
 import { addTimed } from '../rules-engine/effects';
-import { RULES } from '../engine/config';
 import { dist } from '../engine/geometry';
 import { rollN } from '../engine/dice';
 import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem, tableH, tableW } from '../engine/state';

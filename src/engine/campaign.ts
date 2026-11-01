@@ -3,11 +3,11 @@
 // medicae tents, and a boss at the end.
 import { addTimed } from '../rules-engine/effects';
 import type { Effect } from '../rules-engine/effects';
-import { canLeaderAttach, defaultWargear, pointsOptions, syncWargear } from './army';
+import { canLeaderAttach, defaultWargear, newUid, pointsOptions, syncWargear } from './army';
 import { AUX_EXCLUSIONS } from './autoList';
-import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState, WargearPick } from './types';
+import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState } from './types';
 import { hasPicture } from './state';
-import { applyTree, enemyTree, enemyTreePoints, fitsArmy, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeFor, treeScrap } from './campaignTree';
+import { applyTree, enemyTree, enemyTreePoints, fitsArmy, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeScrap } from './campaignTree';
 import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
@@ -168,10 +168,6 @@ export const relicById = (id: unknown) => {
   const upper = key.toUpperCase();
   return RELICS.find((r) => r.id === key || r.id.toUpperCase() === upper || r.name.toUpperCase() === upper);
 };
-
-export function relicLevel(run: Run, id: string): number {
-  return run.relicLevels?.[id] ?? (run.relics.includes(id) ? 1 : 0);
-}
 
 /** A relic one level up: thresholds drop (4+ invulnerable becomes 3+, Critical Hits on 5+ become 4+), amounts grow.
  *  A relic with nothing to grow stays at level 1 (relicMaxLevel). */
@@ -536,12 +532,12 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
   if (rw.kind === 'fate') { next.fate = Math.min(3, run.fate + rw.amount); next.story.push(`Gained +${rw.amount} Fate`); }
   if (rw.kind === 'unit') {
     const d = faction.datasheets.find((x) => x.name === rw.datasheet);
-    const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
+    const uid = newUid('c');
     const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, { uid, datasheet: rw.datasheet, models: rw.models, pts: rw.pts }));
     let newUnits = [...run.list.units, e];
     if (rw.bonusLeader) {
       const ld = faction.datasheets.find((x) => x.name === rw.bonusLeader!.datasheet);
-      const lUid = `l${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
+      const lUid = newUid('l');
       const lEntry: ArmyUnitEntry = syncWargear(ld, defaultWargear(ld, {
         uid: lUid,
         datasheet: rw.bonusLeader.datasheet,
@@ -790,7 +786,7 @@ export function recruitUnit(run: Run, faction: FactionData, datasheetName: strin
   if (!o) return run;
   const cost = recruitScrapCost(run, d.name, o.pts);
   if ((run.scrap ?? 0) < cost) return run;
-  const uid = `c${run.path.length}${Math.floor(Math.random() * 1e6).toString(36)}`;
+  const uid = newUid('c');
   const e: ArmyUnitEntry = syncWargear(d, defaultWargear(d, {
     uid,
     datasheet: d.name,
@@ -931,17 +927,6 @@ export function dismissUnit(run: Run, unitUid: string): Run {
   };
 }
 
-/** Modify wargear picks for a unit in the campaign roster */
-export function updateRosterWargear(run: Run, faction: FactionData, unitUid: string, wargear: WargearPick[]): Run {
-  const units = run.list.units.map((u) => {
-    if (u.uid !== unitUid) return u;
-    const d = faction.datasheets.find((x) => x.name === u.datasheet);
-    const updated = { ...u, wargear };
-    return d ? syncWargear(d, updated) : updated;
-  });
-  return { ...run, list: { ...run.list, units } };
-}
-
 /** Use Medicae Tent services */
 export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
   if (service === 'fate') {
@@ -973,7 +958,8 @@ export function adoptDetachment(run: Run, detachmentName: string, cost: number):
 /** Continue a won campaign run into the next sector with harder enemies (Endless Rogue Mode) */
 export function continueNextLoop(run: Run, faction: FactionData): Run {
   const nextLoop = (run.loop ?? 1) + 1;
-  const newSeed = Math.floor(Math.random() * 1e9);
+  // the next sector follows from this run's seed, so the same campaign plays the same way
+  const newSeed = Math.floor(rng(run.seed * 31 + nextLoop)() * 1e9);
   const nextEnemies = ALL_PLAYABLE_FACTIONS.filter((id) => id !== faction.id && id !== 'TL');
   const newMap = makeMap(newSeed, nextEnemies, nextLoop, run.recentOpponentFactions ?? []);
   const isEndless = nextLoop > 5;

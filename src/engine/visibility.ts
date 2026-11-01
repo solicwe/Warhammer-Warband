@@ -1,7 +1,7 @@
 // Line of sight on a 2D board (06.01, 13.07-13.11).
 // Terrain areas with light/dense features are obscuring; dense walls are Solid at ground level.
 import { RULES } from './config';
-import { baseDist, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segLengthInPoly, segSegDist, segsTouch } from './geometry';
+import { baseDist, bodyTouchesPoly, bodyWhollyInPoly, pointInPoly, pointSegDist, samplePoints, segCrossesPoly, segSegDist, segsTouch } from './geometry';
 import { alive, everyModelKw } from './state';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 
@@ -118,7 +118,6 @@ function bridgesOf(s: GameState): Bridge[] {
 type Wall = { a: Pt; b: Pt };
 interface WallGrid { cells: Map<number, Wall[]> }
 const CELL = 2;
-const emptyWallGrid: WallGrid = { cells: new Map() };
 const gridByList = new WeakMap<TerrainPiece[], WallGrid>();
 const cellKey = (cx: number, cy: number) => cy * 1000 + cx;
 function wallGridOf(s: GameState): WallGrid {
@@ -301,9 +300,6 @@ export function hasLos(s: GameState, a: ModelState, b: ModelState): boolean {
   const pa = lookPoints(a, bl), pb = lookPoints(b, bl);
   return pa.some((p) => pb.some((q) => lineClear(p, q, bl)));
 }
-
-/** Check line of sight from shooter model to target model (Absolute Footprint Obscuring Rule). */
-export const checkLineOfSight = hasLos;
 
 /** A quick sight check for planning (deployment): from `a`'s centre to `b`'s centre and four points of its rim. */
 export function roughLos(s: GameState, a: ModelState, b: ModelState): boolean {

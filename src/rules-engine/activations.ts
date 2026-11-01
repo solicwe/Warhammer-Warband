@@ -13,7 +13,7 @@ import {
   abilityOff, abilityRule, abilitySheet, activeRules, addTimed, cond, DET_RULES, fightOnDeathFor, grantsOf, isRiled, retaliateFor, type AbilityRule, type Effect, type FreeDieSpec,
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
-import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
+import { baseDist, bodyAt, bodyTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
 import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
@@ -1850,8 +1850,6 @@ export const fireFor = (s: GameState, trigger: Trigger, p: PlayerId | 'both', ct
 /** Triggers that also cover units in Reserves / not yet deployed (start of the battle or battle round, Declare Battle Formations). */
 export const fireAll = (s: GameState, trigger: Trigger, p: PlayerId | 'both') =>
   fire(s, trigger, s.units.filter((u) => (p === 'both' || u.owner === p) && u.status !== 'destroyed' && alive(u).length > 0));
-
-export const rulePresent = (u: UnitState, a: AbilityData) => !!abilityRule(u, a);
 
 // All Is Rot: each wound lost by an enemy unit engaged with that Plague Legions unit: 5+ = 1 mortal wound to it
 onAttackFinished((s, at) => {

@@ -127,9 +127,6 @@ export const getModelPortrait = (m: { source: string; name: string; weapons?: { 
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
 export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);
 export const ownPortraitCount = (): number => Object.keys(cache).length;
-/** photos to export: this browser's and the web page's */
-export const exportablePortraitCount = (): number => new Set([...Object.keys(cache), ...Object.keys(cloud)]).size;
-export const servedPortraitCount = (): number => Object.keys(served).length;
 
 export function setPortrait(datasheet: string, dataUrl: string | null): boolean {
   if (dataUrl) cache[datasheet] = dataUrl; else delete cache[datasheet];
@@ -138,11 +135,6 @@ export function setPortrait(datasheet: string, dataUrl: string | null): boolean 
   if (dataUrl) void uploadToCloud(datasheet, dataUrl);
   else void removeFromCloud(datasheet);
   return portraitsPersisted;
-}
-
-export function clearAllLocalPortraits(): void {
-  cache = {};
-  save();
 }
 
 // ---- photos kept on the web page itself (claude.ai artifact: `assets` for the files, `db` for which is which) ----
@@ -320,11 +312,7 @@ export async function removeUnusedCloudFiles(known?: Set<string>): Promise<{ pho
   return out;
 }
 
-/** Names of photos on the site that are not in `known` (units no longer in any army). */
-export const cloudPhotosNotIn = (known: Set<string>): string[] => Object.keys(cloud).filter((n) => !known.has(n) && !n.startsWith('emblem:'));
-
 export const cloudPortraitCount = (): number => Object.keys(cloud).length;
-export const cloudErrorNow = (): string | null => cloudError;
 
 /** Re-render when portraits change; returns a version number usable as a memo key. */
 export function usePortraitsVersion() {
@@ -447,46 +435,8 @@ function dataUrlBytes(url: string): { bytes: Uint8Array; ext: string } {
   return { bytes, ext: mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg' };
 }
 
-/**
- * The player's photos as a zip laid out like the server folder: `units/<FACTION>/<slug>.jpg` + `manifest.json`.
- * `factionOf` tells which faction folder a datasheet goes in (unknown ones go in `units/other/`).
- */
-export async function exportPortraitsZip(factionOf: (datasheet: string) => string | undefined): Promise<Uint8Array> {
-  const files: { name: string; data: Uint8Array }[] = [];
-  const units: ImageManifest['units'] = {};
-  const all = new Map<string, () => Promise<{ bytes: Uint8Array; ext: string }>>();
-  for (const [name, c] of Object.entries(cloud)) {
-    all.set(name, async () => {
-      const r = await fetch(`/_blob/${c.asset}`);
-      const type = r.headers.get('content-type') ?? '';
-      return { bytes: new Uint8Array(await r.arrayBuffer()), ext: type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg' };
-    });
-  }
-  for (const [name, url] of Object.entries(cache)) all.set(name, async () => dataUrlBytes(url));
-  for (const [name, read] of [...all].sort(([a], [b]) => a.localeCompare(b))) {
-    const got = await read().catch(() => null);
-    if (!got) continue;
-    const faction = factionOf(name.split('::')[0]) ?? 'other';
-    const path = `units/${faction}/${imageSlug(name)}.${got.ext}`;
-    files.push({ name: path, data: got.bytes });
-    (units[faction] ??= {})[name] = path;
-  }
-  files.push({ name: 'manifest.json', data: new TextEncoder().encode(JSON.stringify({ version: 1, units }, null, 2) + '\n') });
-  return makeZip(files);
-}
-
 /** A backup of the player's photos ({ datasheet: dataURL }), to move them to another browser. */
 export const exportPortraitsJson = (): string => JSON.stringify({ kind: 'w40k11-portraits', version: 1, portraits: cache });
-
-/** Load a backup made by exportPortraitsJson; returns how many photos were added. */
-export function importPortraitsJson(text: string): number {
-  const j = JSON.parse(text);
-  const src: Record<string, unknown> = j?.portraits ?? j;
-  let n = 0;
-  for (const [name, url] of Object.entries(src)) if (typeof url === 'string' && url.startsWith('data:image/')) { cache[name] = url; n++; }
-  if (n) save();
-  return n;
-}
 
 type SaveFn = (r: { filename: string; data: Blob }) => Promise<unknown>;
 type ClaudeHost = { use?: (name: string) => Promise<{ save: SaveFn } | null> };

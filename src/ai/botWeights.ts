@@ -34,4 +34,3 @@ export const W = (p: PlayerId): BotW => per[p] ?? BASE;
 /** Parts of the bot switched off by name (BOT_OFF=plan,share in the environment), to measure what each is worth. */
 const OFF = new Set(((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.BOT_OFF ?? '').split(',').filter(Boolean));
 export const botOff = (name: string) => OFF.has(name);
-export const baseWeights = (): BotW => ({ ...BASE });

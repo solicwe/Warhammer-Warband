@@ -36,7 +36,6 @@ export function rollExpr(s: { rng: number }, expr: string | number | null | unde
   return { total: dice.reduce((a, b) => a + b, 0) + e.add, dice };
 }
 
-export const isRandom = (expr: string | number | null | undefined) => parseDice(expr).n > 0;
 export const exprAverage = (expr: string | number | null | undefined) => {
   const e = parseDice(expr);
   return e.n * ((e.sides === 3 ? 2 : (e.sides + 1) / 2)) + e.add;

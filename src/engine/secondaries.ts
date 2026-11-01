@@ -1,6 +1,6 @@
 // Chapter Approved 2026-27 secondary missions, scored automatically from the board state.
 import { MISSIONS, secondaryById, toPoly, deploymentById, type SecondaryRule } from './config';
-import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, ptGap } from './geometry';
+import { bodyTouchesPoly, bodyWhollyInPoly, dist, gap, pointInPoly, ptGap } from './geometry';
 import { territoryPoly, unitInRange, zonePoly } from './missions';
 import { pushFx, alive, boardUnits, hasKw, log, onBoard, other, tableH, tableW, unitById } from './state';
 import type { GameState, PlayerId, UnitState } from './types';

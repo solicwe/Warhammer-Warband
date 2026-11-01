@@ -4,7 +4,7 @@ import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from '../engine/attack';
 import { RULES } from '../engine/config';
 import { smartPlacement } from './deploy';
-import { dist, gap } from '../engine/geometry';
+import { dist } from '../engine/geometry';
 import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import {
   autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
@@ -18,7 +18,7 @@ import { botPlague, PLAGUE_IDS } from '../factions/deathGuard';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from '../rules-engine/activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, lookBudget, styleChosen } from './botLook';
-import { roughLos, unitVisibleTo } from '../engine/visibility';
+import { roughLos } from '../engine/visibility';
 import './botUtility';
 import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';

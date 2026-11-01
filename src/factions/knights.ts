@@ -11,7 +11,6 @@ import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const CODE = 'Code Chivalric';
 export const DREAD = 'Harbingers of Dread';
-const DREADS = ['despair', 'doom', 'darkness', 'dismay', 'delirium', 'dominion'];
 
 const hasAb = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
 const hasEnh = (u: UnitState, name: string) => u.enhancements.some((e) => e.name === name);

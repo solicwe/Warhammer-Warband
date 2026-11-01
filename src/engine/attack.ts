@@ -9,7 +9,7 @@ import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEne
 import type { AttackReport, AttackSession, Die, GameState, ModelState, Pool, Pt, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
-import { checkPhaseCache, getUnitLoneOpRange, hasCover, isHidden, losUnitPairCache, modelVisible, unitSig, unitVisibleTo } from './visibility';
+import { hasCover, modelVisible, unitVisibleTo } from './visibility';
 
 /** A free "re-roll one hit, wound or damage roll" still unused (set by activations.ts): takes it and returns true. */
 let freeDamageHook: ((s: GameState) => boolean) | null = null;
@@ -1233,70 +1233,6 @@ export function finishAttack(s: GameState) {
     killedCharacter: T.models.some((m) => m.dead && (at.aliveBefore ?? []).includes(m.id) && (m.isCharacter || m.keywords.includes('CHARACTER'))),
   };
   for (const h of attackHooks) h(s, at, info);
-}
-
-export function canShootTarget(s: GameState, a: UnitState, t: UnitState): boolean {
-  if (!onBoard(t) || t.owner === a.owner) return false;
-  const aAlive = alive(a);
-  const tAlive = alive(t);
-  if (!aAlive.length || !tAlive.length) return false;
-
-  // 1. Distance & Bounding Box Pre-Filter:
-  let ax0 = Infinity, ax1 = -Infinity, ay0 = Infinity, ay1 = -Infinity;
-  for (const m of aAlive) {
-    if (m.x < ax0) ax0 = m.x; if (m.x > ax1) ax1 = m.x;
-    if (m.y < ay0) ay0 = m.y; if (m.y > ay1) ay1 = m.y;
-  }
-  let tx0 = Infinity, tx1 = -Infinity, ty0 = Infinity, ty1 = -Infinity;
-  for (const m of tAlive) {
-    if (m.x < tx0) tx0 = m.x; if (m.x > tx1) tx1 = m.x;
-    if (m.y < ty0) ty0 = m.y; if (m.y > ty1) ty1 = m.y;
-  }
-  const dx = Math.max(0, Math.max(ax0 - tx1, tx0 - ax1));
-  const dy = Math.max(0, Math.max(ay0 - ty1, ty0 - ay1));
-  const roughDist = Math.hypot(dx, dy);
-
-  // Maximum ranged weapon reach of unit A
-  let maxWepRange = 0;
-  for (const m of aAlive) {
-    for (const w of m.weapons) {
-      const prof = w.profiles[0];
-      if (!isMelee(prof)) {
-        const r = typeof prof.range === 'number' ? prof.range : 24;
-        if (r > maxWepRange) maxWepRange = r;
-      }
-    }
-  }
-  if (maxWepRange > 0 && roughDist > maxWepRange + 3) return false;
-
-  // 2. Lone Operative and Hidden Pre-Filter
-  const loRange = getUnitLoneOpRange(s, t);
-  if (loRange !== null && roughDist > loRange) {
-    if (aAlive.every((am) => tAlive.every((tm) => baseDist(am, tm) > loRange))) return false;
-  }
-  if (tAlive.every((tm) => isHidden(s, t, tm)) && roughDist > 15) {
-    if (aAlive.every((am) => tAlive.every((tm) => baseDist(am, tm) > 15))) return false;
-  }
-
-  // 3. LoS Cache Matrix check within shooting phase
-  if (s.phase === 'shooting') {
-    checkPhaseCache(s);
-    const key = `${a.id}:${unitSig(a)}->${t.id}:${unitSig(t)}`;
-    const cached = losUnitPairCache.get(key);
-    if (cached !== undefined) return cached;
-    const canSee = aAlive.some((m) => unitVisibleTo(s, m, t));
-    losUnitPairCache.set(key, canSee);
-    return canSee;
-  }
-
-  return aAlive.some((m) => unitVisibleTo(s, m, t));
-}
-
-export const opponentOf = (s: GameState, u: UnitState) => other(u.owner);
-
-/** Names of all ranged weapons still carried by living models. */
-export function rangedWeaponNames(u: UnitState): string[] {
-  return [...new Set(alive(u).flatMap((m) => m.weapons.filter((w) => !isMelee(w.profiles[0])).map((w) => w.name)))];
 }
 
 /** Ranged weapons the unit can still fire this phase: not fired yet, and of the kind its models chose (a model that

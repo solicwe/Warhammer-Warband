@@ -182,6 +182,8 @@ inventory what exists, decide to extend, replace or add, build the smallest comp
 checks, update the docs, and write what the task taught into the area's skill (its "Pitfalls seen before"), so
 the skills improve with every session.
 
+Known bugs and technical debt, by priority, are in `docs/05-tech-debt.md`.
+
 ## Tests
 
 `npm test` runs everything (about 20 to 30 minutes: many tests play whole bot-vs-bot games). Per-faction rules have

@@ -63,7 +63,6 @@ let inRollout = false;
 let enabled = true;
 /** Switch lookahead off (tests that need the plain bot, quick games). */
 export const setLookahead = (on: boolean) => { enabled = on; };
-export const lookaheadOn = () => enabled && !inRollout;
 
 /** Each side's own weights before any style was mixed in (styles are applied on top of these, not compounded). */
 const own: Partial<Record<PlayerId, BotW>> = {};

@@ -28,18 +28,11 @@ import { rollExpr, rollN } from '../engine/dice';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
 import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './activations';
 import { kwPhrase } from '../engine/army';
-import { applyMortalWounds, buildShootPools, expectedDamage, finishAttack, onAttackFinished, onAttackStart, onModelKilled, resolveAll, startAttack } from '../engine/attack';
+import { applyMortalWounds, buildShootPools, expectedDamage, onAttackFinished, onAttackStart, onModelKilled } from '../engine/attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
-import {
-  afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, formationAt, validateDisembark,
-} from '../engine/game';
+import { afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, validateDisembark } from '../engine/game';
 import { baseDist, bodyAt, dist, gap, ptGap } from '../engine/geometry';
-import {
-  alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance,
-  type ReactCtx, type ReactOn,
-  heroFx,
-  phaseKey, playsItself,
-} from '../engine/state';
+import { alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance, type ReactCtx, type ReactOn, heroFx, playsItself } from '../engine/state';
 import type { BuffKind, GameState, Phase, PlayerId, Pt, StratagemData, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 

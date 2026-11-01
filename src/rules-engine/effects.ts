@@ -32,7 +32,7 @@ import detData from '../../data/detachment-rules.json';
 import { parseAbilityText } from './abilityText';
 import { deploymentById, RULES, toPoly } from '../engine/config';
 import { d6, exprAverage } from '../engine/dice';
-import { baseDist, bodyTouchesPoly, circleTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
+import { baseDist, bodyTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
 import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, tableH, tableW, unitDistance, withinTerrain } from '../engine/state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';

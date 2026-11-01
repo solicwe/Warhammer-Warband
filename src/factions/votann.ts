@@ -28,10 +28,6 @@ export function isVotannArmy(s: GameState, p: PlayerId): boolean {
   return !!s.players[p]?.armyRules?.some((r) => r.name === 'Prioritised Efficiency');
 }
 
-export function hasVotannFaction(u: UnitState): boolean {
-  return u.factionKeywords?.includes('LEAGUES OF VOTANN') || u.keywords?.includes('LEAGUES OF VOTANN');
-}
-
 export function getYieldPoints(s: GameState, p: PlayerId): number {
   return s.players[p]?.yieldPoints ?? 0;
 }

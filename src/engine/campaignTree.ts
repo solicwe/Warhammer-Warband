@@ -764,10 +764,8 @@ export function treeFor(factionId: string): TreeNode[] {
   return nodes;
 }
 
-export const branchName = (factionId: string) => branchOf(factionId).name;
 /** The eight slots in drawing order: name, what it is for, and where its label goes on the map. */
 export const slotGuide = (factionId: string) => branchesOf(factionId).map((b, i) => ({ id: b.id, name: b.name, about: b.about, ...at(angleIn(slotsOf(factionId))(i), 9.3) }));
-export const SLOT_NAMES: Record<string, string> = Object.fromEntries([...SPOKES.map((b) => [b.id, b.name]), ['ring', 'Ring'], ['start', 'Start']]);
 
 // ---------- Renown, allocating and refunding ----------
 

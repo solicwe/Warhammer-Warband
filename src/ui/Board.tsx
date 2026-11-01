@@ -1,17 +1,17 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RULES, MISSIONS, deploymentById, toPoly } from '../engine/config';
+import { RULES, MISSIONS, deploymentById } from '../engine/config';
 import { baseDist, bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../factions/flow';
 import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../factions/daemons';
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel, objectivePolys, scaledPoly } from '../engine/game';
-import { loneOperativeNow, unitFlags } from '../rules-engine/effects';
+import { unitFlags } from '../rules-engine/effects';
 import { getUnitLoneOpRange, isHidden, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 
-import { Icon, SvgIcon } from './Icon';
+import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
@@ -878,7 +878,7 @@ function BoardImpl(props: BoardProps) {
     }
     const dg = drag.current;
     if (dg && dg.pointerId === pointerId) {
-      const { draft: curDraft, onDraft: curOnDraft, walk: curWalk, maxFor: curMaxFor, toBoard: curToBoard } = propsRef.current;
+      const { draft: curDraft, onDraft: curOnDraft, maxFor: curMaxFor, toBoard: curToBoard } = propsRef.current;
       const p = curToBoard(clientX, clientY);
       const dx = p.x - dg.start.x, dy = p.y - dg.start.y;
       if (!dg.moved && Math.hypot(dx, dy) < 0.25) return;
@@ -1742,7 +1742,6 @@ function BoardImpl(props: BoardProps) {
         const st = unitStatusMap.get(u.id);
         const hasFlowOfMagic = st?.hasFlowOfMagic ?? false;
         const unitInFlow = st?.unitInFlow ?? false;
-        const isDaemon = st?.isDaemon ?? false;
         const unitInShadow = st?.unitInShadow ?? false;
         const enemyInShadow = st?.enemyInShadow ?? false;
         const hasPsychicWep = st?.hasPsychicWep ?? false;
@@ -2142,6 +2141,9 @@ function BoardImpl(props: BoardProps) {
           // scaled on the SVG side, not with a CSS transform inside the foreignObject: Chrome clips and repaints that
           // wrongly, leaving ghost copies of the cards while the map zooms
           <g key={p} transform={`translate(${x} ${y}) scale(${1 / PX})`}>
+            {/* a painted strip under the cards: it moves with every pan, so Chrome repaints where the cards were
+                (with nothing under them, old copies of the cards stayed on screen beside the board) */}
+            <rect x={-PX} y={0} width={(SIDE + 1.5) * PX} height={h * PX} fill="var(--board)" />
             <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX}>
               <div className={`table-cards ${at}`}>
                 <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>

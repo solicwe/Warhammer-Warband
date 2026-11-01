@@ -21,7 +21,6 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
   const [choice, setChoice] = useState<number | undefined>(undefined);
   const [enemyId, setEnemyId] = useState<string>('');
   const [extra, setExtra] = useState<string[]>([]);
-  const [fullTextOpen, setFullTextOpen] = useState(false);
 
   const unit = units.find((u) => u.id === unitId);
   const why = stratagemBlock(s, p, st, unit, { react, ctx });

@@ -1,6 +1,6 @@
 import { RULES } from './config';
 import { d6 } from './dice';
-import { baseDist, bodyTouchesPoly, circleTouchesPoly } from './geometry';
+import { baseDist, bodyTouchesPoly } from './geometry';
 import type { FxEvent, GameState, LogEntry, ModelState, PlayerId, SkillStyle, UnitState } from './types';
 
 export const unitById = (s: GameState, id: string) => s.units.find((u) => u.id === id)!;

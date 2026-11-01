@@ -181,7 +181,6 @@ export function baseShape(sheet: DatasheetData, profileIdx: number): { r: number
   if (sheet.keywords.includes('MONSTER')) return w >= 20 ? { ...oval(10, 7), hull: true } : { r: 1.8 };
   return { r: w >= 6 ? 1.2 : 0.63 };
 }
-export const baseRadius = (sheet: DatasheetData, profileIdx: number) => baseShape(sheet, profileIdx).r;
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
 const singular = (s: string) => norm(s).replace(/\*+/g, '').replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
@@ -220,8 +219,6 @@ function loadoutKey(k: string): { n: number; base: string } {
   const m = QUAL.exec(k.trim())!;
   return { n: m[1] ? NUM[m[1].toLowerCase()] ?? Number(m[1]) : 0, base: singular(m[2]) };
 }
-
-const keyMatches = (base: string, cand: string[]) => base === 'model' || cand.some((c) => base === c || base.includes(c) || c.includes(base));
 
 function itemsOf(sheet: DatasheetData, key: string | undefined): string[] {
   const out: string[] = [];

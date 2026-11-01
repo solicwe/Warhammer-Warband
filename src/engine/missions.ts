@@ -1,7 +1,7 @@
 // Chapter Approved 2026-27 primary missions: Force Disposition matchups, objective actions,
 // operation markers and the scoring conditions of all 25 primary cards.
 import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
-import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
+import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById } from './state';
 import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
@@ -134,10 +134,6 @@ export function condemnCandidates(s: GameState, p: PlayerId): UnitState[] {
   return boardUnits(s, other(p))
     .filter((u) => killers.has(u.id) || s.objectives.some((o) => unitInRange(s, u, o)))
     .sort((a, b) => b.pts - a.pts);
-}
-
-export function setCondemned(s: GameState, p: PlayerId, ids: string[]) {
-  s.players[p].mission.condemned = ids.slice(0, 3);
 }
 
 /** Record who destroyed a unit (Consecrate, Purge and Secure). */

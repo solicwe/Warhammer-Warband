@@ -3,11 +3,11 @@ import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deep
 import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
-import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, toPoly, type DispositionId } from './config';
+import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
 import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
-import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, circleWhollyInPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body , bodyBox } from './geometry';
+import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body, bodyBox } from './geometry';
 import {
   alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
   emitReact, type ReactOn,
@@ -18,7 +18,7 @@ import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 import { isMelee } from './weapons';
-import { endSpotBlocked, isMV, OBJECTIVE_MARKER_R, pathBlocked, pathDistance, pathLength, settleMove } from './pathing';
+import { endSpotBlocked, isMV, pathBlocked, pathLength, settleMove } from './pathing';
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
@@ -500,11 +500,6 @@ export const zoneOf = (s: GameState, p: PlayerId) => {
   return scaledPoly(deploymentById(s.deploymentId).zones[s.players[p].role], w, h);
 };
 setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => bodyWhollyInPoly(m, zoneOf(s, owner))));
-export const territoryOf = (s: GameState, p: PlayerId) => {
-  const w = s.table?.width ?? RULES.battlefield.width;
-  const h = s.table?.height ?? RULES.battlefield.height;
-  return scaledPoly(deploymentById(s.deploymentId).territory[s.players[p].role], w, h);
-};
 
 // ---------- placement / movement validation ----------
 
@@ -808,7 +803,7 @@ export function ringFormation(u: UnitState, tm: ModelState, angle: number, maxAr
 }
 
 /**
- * Getting out next to a hull with something in the way (walls, objective markers, other units, the enemy): the same
+ * Getting out next to a hull with something in the way (walls, other units, the enemy; objective markers do not block): the same
  * packing as ringFormation, but each model only takes a spot it may end on. Null when the unit doesn't fit that side.
  */
 export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Map<string, Pt> | null {
@@ -817,7 +812,6 @@ export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: 
   const others = s.units.filter((x) => x.id !== u.id && onBoard(x)).flatMap((x) => alive(x).map((m) => ({ m, foe: x.owner !== u.owner && !hasKw(x, 'AIRCRAFT') })))
     .filter(({ m }) => ptGap(m, tm) <= reach + 1);
   const walls = s.terrain.flatMap((t) => t.walls).filter((w) => pointSegDist(tm, w) <= reach + 1);
-  const objectives = s.objectives.filter((o) => dist(o, tm) <= reach + 3);
   const boxes = s.terrain.filter((t) => (t.box || t.kind === 'container') && t.poly.some((q) => dist(q, tm) <= reach + 12));
   const free = (m: ModelState, p: Pt) => {
     if (!onTable(bodyAt(m, p), W, H)) return false;
@@ -1653,7 +1647,6 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
 /** Drop Pod Assault: the units inside get out at once, more than 8" from every enemy model (done by itself: they
  *  must). Tried all round the pod; the side away from the enemy first. */
 function dropPodAssault(s: GameState, pod: UnitState) {
-  const W = tableW(s), H = tableH(s);
   const hull = alive(pod)[0];
   if (!hull) return;
   const enemies = boardUnits(s, other(pod.owner)).flatMap(alive);
@@ -2231,8 +2224,6 @@ export function scoreTiming(s: GameState, timing: 'endOfYourCommandPhase' | 'end
   scorePrimary(s, timing, player);
 }
 
-export const terrainOfObjective = objectiveTerrain;
-
 /** Find a legal spot for a whole unit (used by "auto place" during deployment / ingress). */
 export function findPlacement(s: GameState, u: UnitState, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', near?: Pt, accept?: (pos: Map<string, Pt>) => boolean): Map<string, Pt> | null {
   const W = tableW(s), H = tableH(s);
@@ -2759,189 +2750,6 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
   });
 }
 
-export function createAlliedReinforcement(playerFactionId: string, playerName: string, s: GameState): UnitState {
-  const fid = safeUpper(playerFactionId);
-  const id = newUid('ally-reinf');
-  let name = 'Venerable Dreadnought Heavy Support';
-  let modelName = 'Venerable Dreadnought';
-  let kws = ['VEHICLE', 'WALKER', 'SMOKE', 'ELITE', 'CHARACTER'];
-  let T = 9, W = 8, Sv = 2, InSv = 4, OC = 4, M = 6;
-  let core: { fnp?: number } = {};
-  let abilities: { name: string; text: string; type: 'datasheet' }[] = [
-    { name: 'Unyielding Ancient', text: '4+ Invulnerable save. Each time this model makes an attack, re-roll a Hit roll of 1.', type: 'datasheet' },
-  ];
-  let weapons: any[] = [
-    {
-      name: 'Twin Lascannon',
-      profiles: [{ name: 'Anti-Tank', range: 48, A: 2, skill: 3, S: 12, AP: -3, D: 'D6+1', abilities: [] }],
-    },
-    {
-      name: 'Dreadnought Combat Weapon',
-      profiles: [{ name: 'Crush', range: 0, A: 5, skill: 3, S: 12, AP: -2, D: '3', abilities: [] }],
-    },
-  ];
-
-  if (fid === 'AM') {
-    name = 'Leman Russ Battle Tank';
-    modelName = 'Leman Russ';
-    kws = ['VEHICLE', 'SMOKE', 'ELITE', 'HEAVY SUPPORT'];
-    T = 11; W = 13; Sv = 2; InSv = 5; OC = 5; M = 9;
-    abilities = [{ name: 'Armoured Fist', text: '5+ Invulnerable save. Re-roll Hit rolls of 1 against targets on objectives.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Battle Cannon',
-        profiles: [{ name: 'High Explosive', range: 48, A: 'D6+3', skill: 4, S: 10, AP: -1, D: '3', abilities: ['blast'] }],
-      },
-      {
-        name: 'Lascannon',
-        profiles: [{ name: 'Beam', range: 48, A: 1, skill: 4, S: 12, AP: -3, D: 'D6+1', abilities: [] }],
-      },
-    ];
-  } else if (fid === 'NEC') {
-    name = 'Canoptek Doomstalker Heavy Support';
-    modelName = 'Canoptek Doomstalker';
-    kws = ['VEHICLE', 'WALKER', 'ELITE', 'HEAVY SUPPORT'];
-    T = 8; W = 12; Sv = 3; InSv = 4; OC = 4; M = 7;
-    abilities = [{ name: 'Containment Field', text: '4+ Invulnerable save.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Doomsday Blaster',
-        profiles: [{ name: 'High Power', range: 48, A: 'D6+1', skill: 4, S: 14, AP: -3, D: 'D6', abilities: ['blast', 'heavy'] }],
-      },
-      {
-        name: 'Twin Gauss Flayer',
-        profiles: [{ name: 'Rapid', range: 24, A: 2, skill: 4, S: 5, AP: -1, D: '1', abilities: ['lethal hits'] }],
-      },
-    ];
-  } else if (fid === 'ORK') {
-    name = 'Deff Dread Heavy Walker';
-    modelName = 'Deff Dread';
-    kws = ['VEHICLE', 'WALKER', 'ELITE'];
-    T = 9; W = 8; Sv = 3; InSv = 5; OC = 4; M = 8;
-    abilities = [{ name: 'Ere We Go', text: '5+ Invulnerable save. Re-roll Charge rolls.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Dread Klaw',
-        profiles: [{ name: 'Snip', range: 0, A: 6, skill: 3, S: 10, AP: -2, D: '3', abilities: [] }],
-      },
-      {
-        name: 'Rokkit Launcha',
-        profiles: [{ name: 'Barrage', range: 24, A: 'D3', skill: 5, S: 9, AP: -2, D: '3', abilities: ['blast'] }],
-      },
-    ];
-  } else if (fid === 'TYR') {
-    name = 'Carnifex Heavy Bio-Monster';
-    modelName = 'Carnifex';
-    kws = ['MONSTER', 'GREAT DEVOURER', 'ELITE'];
-    T = 9; W = 8; Sv = 2; InSv = 5; OC = 4; M = 8;
-    core = { fnp: 5 };
-    abilities = [{ name: 'Living Battering Ram', text: '5+ Invulnerable save and 5+ Feel No Pain.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Heavy Venom Cannon',
-        profiles: [{ name: 'Bio-Blast', range: 36, A: 'D3', skill: 3, S: 9, AP: -2, D: '3', abilities: ['blast'] }],
-      },
-      {
-        name: 'Carnifex Scything Talons',
-        profiles: [{ name: 'Rend', range: 0, A: 6, skill: 3, S: 9, AP: -2, D: '3', abilities: [] }],
-      },
-    ];
-  } else if (['CSM', 'WE', 'DG', 'TS', 'EC'].includes(fid)) {
-    name = 'Helbrute Heavy Dreadnought';
-    modelName = 'Helbrute';
-    kws = ['VEHICLE', 'WALKER', 'CHAOS', 'ELITE'];
-    T = 9; W = 8; Sv = 2; InSv = 5; OC = 4; M = 6;
-    abilities = [{ name: 'Frenzied Retaliation', text: '5+ Invulnerable save.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Multi-melta',
-        profiles: [{ name: 'Melta', range: 18, A: 2, skill: 3, S: 9, AP: -4, D: 'D6', abilities: ['melta 2'] }],
-      },
-      {
-        name: 'Helbrute Fist',
-        profiles: [{ name: 'Smash', range: 0, A: 5, skill: 3, S: 12, AP: -2, D: '3', abilities: [] }],
-      },
-    ];
-  } else if (fid === 'TAU') {
-    name = 'XV88 Broadside Battlesuit';
-    modelName = 'Broadside Battlesuit';
-    kws = ['VEHICLE', 'WALKER', 'BATTLESUIT', 'ELITE'];
-    T = 6; W = 8; Sv = 2; InSv = 4; OC = 3; M = 5;
-    abilities = [{ name: 'Heavy Support System', text: '4+ Invulnerable save.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Heavy Rail Rifle',
-        profiles: [{ name: 'Kinetic Piercer', range: 48, A: 2, skill: 4, S: 12, AP: -4, D: 'D6+1', abilities: ['devastating wounds', 'heavy'] }],
-      },
-      {
-        name: 'Twin Smart Missile System',
-        profiles: [{ name: 'Indirect', range: 30, A: 3, skill: 4, S: 5, AP: 0, D: '1', abilities: ['indirect fire'] }],
-      },
-    ];
-  } else if (['AE', 'CW', 'DRU'].includes(fid)) {
-    name = 'Wraithlord Heavy Construct';
-    modelName = 'Wraithlord';
-    kws = ['MONSTER', 'WRAITH CONSTRUCT', 'ELITE'];
-    T = 11; W = 10; Sv = 2; InSv = 5; OC = 4; M = 7;
-    abilities = [{ name: 'Wraithbone Resilience', text: '5+ Invulnerable save.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Bright Lance',
-        profiles: [{ name: 'Lance', range: 36, A: 1, skill: 3, S: 12, AP: -3, D: 'D6+2', abilities: [] }],
-      },
-      {
-        name: 'Ghostglaive',
-        profiles: [{ name: 'Strike', range: 0, A: 5, skill: 3, S: 10, AP: -3, D: 'D6', abilities: [] }],
-      },
-    ];
-  } else if (fid === 'AC') {
-    name = 'Allarus Custodians Elite Guard';
-    modelName = 'Allarus Custodian';
-    kws = ['INFANTRY', 'CHARACTER', 'ELITE', 'TERMINATOR'];
-    T = 7; W = 8; Sv = 2; InSv = 4; OC = 4; M = 6;
-    core = { fnp: 5 };
-    abilities = [{ name: 'From Golden Light', text: '4+ Invulnerable save and 5+ Feel No Pain vs mortals.', type: 'datasheet' }];
-    weapons = [
-      {
-        name: 'Castellan Axe',
-        profiles: [{ name: 'Strike', range: 0, A: 6, skill: 2, S: 9, AP: -2, D: '3', abilities: [] }],
-      },
-      {
-        name: 'Balistus Grenade Launcher',
-        profiles: [{ name: 'Burst', range: 18, A: 'D6', skill: 2, S: 5, AP: -1, D: '1', abilities: ['blast'] }],
-      },
-    ];
-  }
-
-  return makeUnitState({
-    id,
-    owner: 0,
-    name,
-    sources: [name],
-    keywords: kws,
-    factionKeywords: [fid],
-    pts: 220,
-    status: 'board',
-    abilities,
-    core,
-    models: [{
-      id: `${id}-m0`,
-      name: modelName,
-      source: modelName,
-      isCharacter: kws.includes('CHARACTER'),
-      isBodyguard: false,
-      keywords: kws,
-      weapons,
-      x: 10,
-      y: 15,
-      r: 1.5,
-      wounds: W,
-      dead: false,
-      profile: { name: modelName, M, T, Sv, W, Ld: 6, OC, InSv, base: { w: 60, h: 60, text: '60mm' } },
-    }],
-  });
-}
-
 /** Random reinforcement events in Rogue-like campaign mode (at most once per battle, round >= 3, strictly when player has advantage) */
 export function triggerCampaignReinforcements(s: GameState): boolean {
   if (!s.campaign) return false;
@@ -3225,9 +3033,6 @@ export function triggerDynamicDramaEngine(s: GameState): boolean {
  */
 export function expandRoguelikeMap(s: GameState): boolean {
   if (!s.campaign) return false;
-  const playerPts = fightingArmyPoints(s, 0);
-  const aiPts = fightingArmyPoints(s, 1);
-  const maxPts = Math.max(playerPts, aiPts);
   // Dynamic mid-battle expansion is only permitted if explicitly enabled by campaign flag
   if (!(s.campaign as { allowDynamicExpansion?: boolean })?.allowDynamicExpansion) return false;
 
@@ -3325,9 +3130,6 @@ export function expandRoguelikeMap(s: GameState): boolean {
   s.terrain = [...s.terrain, ...addedPieces];
   return true;
 }
-
-/** Alias for map expansion */
-export const expandMap = expandRoguelikeMap;
 
 /** Sanitize GameState to ensure all arrays and properties are initialized and never throw undefined length */
 export function sanitizeGameState(s: GameState): GameState {

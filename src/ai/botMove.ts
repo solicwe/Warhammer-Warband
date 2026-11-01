@@ -5,7 +5,7 @@
 import { buildShootPools, expectedDamage, shootingModes } from '../engine/attack';
 import { primaryById, RULES } from '../engine/config';
 import { chargeEligibility, findPlacement, formationAt, hasDeepStrike, levelOfControl, validateMove, validatePlacement, zoneOf } from '../engine/game';
-import { bodyTouchesPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
+import { bodyTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
 import { blockingWalls, distanceField, pathLength, pointAt, routeAround } from '../engine/pathing';
 import { alive, boardUnits, hasKw, isEngaged, other, pace, tableH, tableW, unitDistance } from '../engine/state';
 import { hasLos } from '../engine/visibility';

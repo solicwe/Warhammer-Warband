@@ -2,11 +2,9 @@ import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToS
 import { pathBlocked, routeAround } from '../engine/pathing';
 import { KEYS, readText, writeText } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { chapterRules } from '../engine/army';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
-import { getPortrait, modelPortraitKey } from './portraits';
-import { loadoutSummary } from './loadout';
+import { modelPortraitKey } from './portraits';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
@@ -28,9 +26,9 @@ import {
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit } from '../engine/game';
 import {
-  abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, unitSelected, useActByKey, useFreeDie, type Trigger,
+  abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
-import { activeLabels, effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../rules-engine/effects';
+import { effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../rules-engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../factions/blessings';
 import { botPledge, setPledge } from '../factions/emperorsChildren';
 import { BlessingsPanel } from './Blessings';
@@ -50,14 +48,13 @@ import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/second
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
-import { isOfficer, officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
-import { isTauArmy } from '../factions/tau';
+import { officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
 import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
+import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
@@ -71,9 +68,9 @@ import { useGame } from './store';
 import { AttackReport } from './AttackReport';
 import { AdvantageBar, RoundSummary, SideScore, tally, type RoundTally, type ThinkView } from './Hud';
 import { play, setSoundOn, soundOn } from './sfx';
-import { line, type VoiceEvent } from './voice';
+import { type VoiceEvent } from './voice';
 import { getPlayerFactionTheme } from './factionColors';
-import { bestDeathstrikeSpot, canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget, fireDeathstrikeWarhead, hasDeathstrikeMissile } from '../factions/deathstrike';
+import { canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget, fireDeathstrikeWarhead, hasDeathstrikeMissile } from '../factions/deathstrike';
 
 type FxLevel = 'full' | 'short' | 'off';
 const loadFxLevel = (): FxLevel => { const v = readText(KEYS.fx); return v === 'short' || v === 'off' ? v : 'full'; };
@@ -182,8 +179,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [shake, setShake] = useState(0);
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
   const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
-  const [think, setThink] = useState<ThinkView | null>(null); // the bot weighing its ways of playing the turn
-  const [ponderProg, setPonderProg] = useState<{ done: number; total: number } | null>(null); // … during the player's turn
   // what the bot means to attack in its coming turn (from thinking during the player's turn), shown on request
   const [plan, setPlan] = useState<{ turn: number; p: PlayerId; intents: Intent[] } | null>(null);
   const [showPlan, setShowPlan] = useState(false);
@@ -217,7 +212,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // thinking during the player's turn: a second worker plays the board on to where the bot's next turn starts and looks
   // ahead from there; when the real board gets there the same, the bot's turn starts at once instead of thinking again
   const ponder = useRef<{ w: Worker | null; id: number; p: PlayerId; turn: number; board: string; sig?: string | null; name?: string; intents?: Intent[]; view?: ThinkView; wait?: (name: string) => void } | null>(null);
-  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; setPonderProg(null); };
+  const stopPonder = () => { ponder.current?.w?.terminate(); ponder.current = null; };
   useEffect(() => stopPonder, []);
   const isMobileScreen = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches;
   const ponderFor = null;
@@ -240,9 +235,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (e.data.progress) {
           const pr = e.data.progress;
           job.view = { values: { ...job.view?.values, [pr.name]: pr.value }, done: pr.done, total: pr.total };
-          if (job.wait) setThink(job.view); else setPonderProg({ done: pr.done, total: pr.total });
         }
-        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; setPonderProg(null); }
+        if (e.data.sig === null || e.data.name) { w.terminate(); job.w = null; }
         if (e.data.name) {
           job.name = e.data.name;
           job.intents = e.data.intents ?? [];
@@ -264,7 +258,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
       const done = (name: string, intents: Intent[] = []) => {
         abortThinkingRef.current = null;
-        setThinking(false); setThink(null);
+        setThinking(false);
         styleRef.current = { p: who, name };
         act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
         // the commander says how it plays the turn, then what it goes for first
@@ -290,7 +284,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (pre.w) {
           setThinking(true);
           speak(who, 'think');
-          if (pre.view) setThink(pre.view);
           const fallback = window.setTimeout(() => { stopPonder(); done('steady'); }, effectiveBudget + 600);
           pre.wait = (name) => { window.clearTimeout(fallback); const it = pre.intents; stopPonder(); done(name, it); };
           return;
@@ -307,7 +300,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         if (e.data.id !== id) return;
         if (e.data.progress) {
           const pr = e.data.progress;
-          setThink((v) => ({ values: { ...v?.values, [pr.name]: pr.value }, done: pr.done, total: pr.total }));
           play('think', pr.done % 6);
           return;
         }
@@ -465,7 +457,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [check, setCheck] = useState<MoveCheck | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<string | null>(null);
-  const [sheetModel, setSheetModel] = useState<string | undefined>();
+  const [sheetModel] = useState<string | undefined>();
   const taps = useRef<{ unitId?: string; modelId?: string; t: number[] }>({ t: [] });
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
@@ -675,7 +667,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // who may fire overwatch, worked out once per game state (the board redraws many times per state while it animates)
   const owNow = useMemo(() => (s.window?.kind === 'fireOverwatch' ? overwatchCandidates(s, s.window.player) : []), [s]);
   const heroicWindow = !mode && s.window?.kind === 'heroicIntervention' ? s.window : null;
-  const heroicSelection = heroicWindow !== null;
   const heroicPick = heroicWindow ? heroicCandidates(s, heroicWindow.player) : [];
   const heroicNumbers = Object.fromEntries(heroicPick.map((u, i) => [u.id, i + 1]));
   const actTargets = actPick ? (manualActs(s, actor).find((m) => `${m.def.holder.id}|${m.def.key}` === actPick)?.targets.map((t) => t.id) ?? []) : [];
@@ -2845,13 +2836,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       );
     }
     const cands = fc!;
-    const pick = (u: UnitState) => {
-      setSel(u.id);
-      act((g) => unitSelected(g, unitById(g, u.id), 'fight'));
-      const eng = engagedEnemies(s, u);
-      if (eng.length) setMode({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0].id : null, epic: false });
-      else setMode({ k: 'pile', unitId: u.id, kind: 'pileIn', overrun: true }, startPaths(u));
-    };
     const overrunReady = selUnit && cands.units.includes(selUnit) && !isEngaged(s, selUnit);
     return (
       <>
@@ -3046,7 +3030,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return null;
   };
 
-  const layoutName = deploymentById(s.deploymentId).name;
   const draftUnit = mode && (mode.k === 'move' || mode.k === 'place' || mode.k === 'charge' || mode.k === 'pile') ? mode.unitId : null;
   // the sides as the player thinks of them: army name
   const armyName = (p: PlayerId) => pName(s, p);

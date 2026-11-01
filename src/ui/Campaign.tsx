@@ -3,23 +3,15 @@
 // and in-campaign roster customization.
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { loadRun, saveRun } from '../services/storage';
-import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, unitPoints, wargearSummary } from '../engine/army';
+import { buildUnits, loadoutLines, attachOptions, autoAttach, canLeaderAttach, defaultWargear, embarkCheck, enhancementFits, enhancementOptions, listPoints, parseTransport, pointsOptions, supportIn, syncList, syncWargear, transportLoads, wargearSummary } from '../engine/army';
 import { autoList, playable } from '../engine/autoList';
-import {
-  adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService, campaignMission, enemyDetachmentCount, enemyDetachments,
-  bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight,
-  changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, enhancementScrapCost, enter,
-  getFactionFamily, isFactionAllowedKnight, makeOffer, newRun,
-  reachable, recruitScrapCost, recruitUnit, relicById, relicDesc,
-  removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward,
-  type MapNode, type Reward, type Run,
-} from '../engine/campaign';
+import { adoptDetachment, afterBattle, ALL_PLAYABLE_FACTIONS, applyCampaign, applyMedicaeService, campaignMission, enemyDetachmentCount, enemyDetachments, bossRuleById, buyEnhancementForUnit, canRecruitTitanOrKnight, changeSquadSize, cheapest, continueNextLoop, detachmentScrapCost, enhancementScrapCost, enter, getFactionFamily, isFactionAllowedKnight, newRun, reachable, recruitScrapCost, recruitUnit, relicById, relicDesc, removeEnhancementFromUnit, requiresTitanRequisition, rerollOffer, sellUnit, sellValue, START_POINTS, takeReward, type MapNode, type Reward, type Run } from '../engine/campaign';
 import { enemyTreePoints, isVeteran, titanKeystone, VETERAN_BATTLES } from '../engine/campaignTree';
 import { ArmyTree } from './ArmyTree';
 import { detachmentAllyOf } from '../engine/allies';
 import { hasFactionRules } from '../rules-engine/effects';
 import { createGame } from '../engine/game';
-import type { ArmyUnitEntry, DatasheetData, FactionData, GameState, WargearPick } from '../engine/types';
+import type { ArmyUnitEntry, DatasheetData, FactionData, GameState } from '../engine/types';
 import { Emblem, KINDS, SECTIONS, sectionOf, UnitArt, unitKind, WargearEditor } from './ArmyBuilder';
 import { armyColor, DatasheetView, weaponCounts } from './Sheet';
 import { loadFaction, type FactionIndex } from './data';
@@ -928,7 +920,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   const canTakeEnh = enhOpts.length > 0 || Boolean(u.enhancement);
 
                   const isSheetOpen = isSectionOpen(u.uid, 'sheet', false);
-                  const isHonorsOpen = isSectionOpen(u.uid, 'honors', false);
                   const isWargearOpen = isSectionOpen(u.uid, 'wargear', false);
                   const isEnhOpen = isSectionOpen(u.uid, 'enh', false);
 

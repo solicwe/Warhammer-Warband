@@ -3,7 +3,7 @@
 import { woundNeed } from '../engine/attack';
 import { exprAverage } from '../engine/dice';
 import { isRiled } from '../rules-engine/effects';
-import { bodyTouchesPoly, circleTouchesPoly, polyCentroid } from '../engine/geometry';
+import { bodyTouchesPoly, polyCentroid } from '../engine/geometry';
 import { levelOfControl, objectiveTerrain } from '../engine/game';
 import { alive, boardUnits, other } from '../engine/state';
 import { isMelee } from '../engine/weapons';

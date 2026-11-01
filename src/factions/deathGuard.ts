@@ -10,7 +10,6 @@ import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance } from '../
 import type { GameState, ModelState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const GIFT = 'Nurgle’s Gift (Aura)';
-const CHAMPIONS = 'Champions of Contagion';
 
 /** The Plagues of Nurgle's Gift: what an Afflicted unit suffers besides -1 Toughness. Listed in the bot's order of preference. */
 export const PLAGUES: Record<string, { name: string; effects: Effect[] }> = {

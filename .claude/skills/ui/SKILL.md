@@ -45,11 +45,13 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 
 ## Pitfalls seen before
 
-- The army-buff cards are HTML in a `foreignObject` (`Board.tsx`, `.table-cards`). Do not scale that HTML with a CSS
-  `transform`: confirmed in Chromium, it clips the cards wrongly (right edge cut off). Scale on the SVG side
-  (`<g transform>`), as the code does now. The owner also saw ghost copies of the cards (slivers of the left border
-  and the header line) while zooming; the same change is the inferred fix, not yet confirmed on the owner's machine
-  (November 2026).
+- The army-buff cards are HTML in a `foreignObject` (`Board.tsx`, `.table-cards`). Two traps, both seen:
+  a CSS `transform` scaling that HTML clips the cards wrongly (confirmed in Chromium; scale on the SVG side with
+  `<g transform>`), and with nothing painted under the cards Chrome left their old positions on screen while the map
+  panned (the owner's screenshots: slivers of the card's coloured left border and the header line, only beside the
+  board, never on it, because the board's own picture moves with the camera and gets repainted). A strip of the board
+  colour under each card column fixes the second (November 2026, fix inferred from the screenshots; headless
+  Chromium repaints everything and cannot show it).
 - The army-buff cards are not drawn on phones (`isMobileScreen` in `GameScreen.tsx`): iOS Safari draws HTML in an SVG
   as empty boxes. A phone screenshot cannot show a bug in them; use a desktop viewport (1366 x 768).
 - Paint bugs (ghosts, trails) often do not show in headless Chromium, which repaints everything. Check the layout

@@ -40,7 +40,6 @@ export function getAbility(p: WeaponProfileData, key: string, targetKeywords: st
 export const hasAbility = (p: WeaponProfileData, key: string, targetKeywords: string[] = []) => !!getAbility(p, key, targetKeywords);
 
 export const isMelee = (p: WeaponProfileData) => p.range === 'Melee';
-export const isRanged = (p: WeaponProfileData) => p.range !== 'Melee';
 
 const LABEL: Record<string, string> = {
   'close-quarters': 'Close-quarters', 'rapid-fire': 'Rapid Fire', 'lethal-hits': 'Lethal Hits', 'sustained-hits': 'Sustained Hits',

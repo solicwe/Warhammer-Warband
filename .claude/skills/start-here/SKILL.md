@@ -137,7 +137,8 @@ When the owner makes a new decision of this kind, add it here in the same change
   Read it for intent, not as the current design.
 - `docs/unit-audit.md` is a dated snapshot (11 Oct 2026).
 - The current truth is the code, the tests, README, ARCHITECTURE.md, AI_GUIDE.md, docs/RULES_STATUS.md,
-  docs/04-campaign-tree.md and these skills.
+  docs/04-campaign-tree.md and these skills. `docs/05-tech-debt.md` lists known bugs and debt by priority: read it
+  before a cleanup, and update it when you fix or find one.
 
 ## Where things are
 

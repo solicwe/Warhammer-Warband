@@ -29,20 +29,6 @@ export function saveArmies(armies: Army[]) {
   writeJSON(KEYS.armies, armies);
 }
 
-export const exportArmiesJson = (armies: Army[]): string => JSON.stringify({ kind: 'w40k11-armies', version: 1, armies }, null, 2);
-
-export function importArmiesJson(text: string): Army[] | null {
-  try {
-    const j = JSON.parse(text);
-    const list = Array.isArray(j) ? j : j?.armies;
-    if (Array.isArray(list)) {
-      const validArmies = list.filter(valid).map(withId);
-      if (validArmies.length) return validArmies;
-    }
-  } catch { /* parse error */ }
-  return null;
-}
-
 /** A side's army in a battle: one of the player's lists (id '' until they have one). */
 export type ArmyRef = { kind: 'list'; id: string };
 export type BattleMode = 'bot' | 'hotseat' | 'botbot';

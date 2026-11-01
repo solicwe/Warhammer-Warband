@@ -4,11 +4,10 @@ import type { GameState } from '../engine/types';
 import { ArmyBuilder } from './ArmyBuilder';
 import { BattleSetup } from './BattleSetup';
 import { CampaignScreen } from './Campaign';
-import { resetCoach } from './Coach';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
 import { Home } from './Home';
-import { loadArmies, loadBattlePrefs, saveArmies, saveBattlePrefs, withAutoRules, type Army } from './library';
+import { loadArmies, saveArmies, withAutoRules, type Army } from './library';
 import { clearSaved, loadSaved } from './store';
 import { TokenSprites } from './Tokens';
 

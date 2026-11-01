@@ -2,7 +2,7 @@
 // phase, abilities and stratagems, re-rolls, saves, battle-shock, charge rolls, the whole Fight phase, reactions in the
 // opponent's turn) is taken by the bot's own logic, at the moment it comes up.
 import { buildShootPools, finishAttack, resolveAll, startAttack, type ShootOptions } from '../engine/attack';
-import { botChargeOne, botCommand, botDeploy, botFightStep, botPickFixed, botScouts, botWindow } from './bot';
+import { botChargeOne, botCommand, botDeploy, botFightStep, botPickFixed, botWindow } from './bot';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botChargeBonusStratagem, botDoctrineActs, botEndOfMovement, botShootActs, botTeleportActs } from './botPlus';
 import { botOffensiveStratagem } from './botStrats';
 import { isBrawler, p2d6 } from './botEval';

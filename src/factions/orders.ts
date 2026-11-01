@@ -250,7 +250,6 @@ function autoIssueFor(s: GameState, officer: UnitState, keep = 0) {
   const p = officer.owner;
   {
     while (ordersRemaining(s, officer) > keep) {
-      const allowed = officerAllowedOrders(officer, s);
       const targets = boardUnits(s, p).filter((t) => canOfficerTarget(officer, t, s));
       // prioritize targets that don't have an order yet
       const unissued = targets.filter((t) => currentOrders(t).length === 0);
