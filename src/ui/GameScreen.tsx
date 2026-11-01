@@ -168,7 +168,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [coach, setCoachRaw] = useState(loadCoach);
   const setCoach = (c: ReturnType<typeof loadCoach>) => { setCoachRaw(c); saveCoach(c); };
   const [showMenu, setShowMenu] = useState(false);
-  const [showIdleSheet, setShowIdleSheet] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
@@ -210,7 +209,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   useEffect(() => () => worker?.terminate(), [worker]);
   const isMobileScreen = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)')?.matches;
   // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
-  const viewing = showCards || showMissions || showMenu || !!explain || !!summary || showIdleSheet;
+  const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
   useEffect(() => {
     if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
@@ -2944,20 +2943,20 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <button
             type="button"
             className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
-            onClick={() => { act((g) => { g.idleTactic = 'objectives'; }); flash('โหมด Idle: เฝ้าจุด ทำภารกิจ'); }}
-            title="เฝ้าจุด ทำภารกิจ"
+            onClick={() => { act((g) => { g.idleTactic = 'objectives'; }); flash('Idle: Objectives & Missions'); }}
+            title="Objectives: hold VP and complete missions"
             style={{ fontSize: 11, padding: '2px 8px' }}
           >
-            <Icon name="objective" size={12} /> จุด
+            <Icon name="objective" size={12} /> Obj
           </button>
           <button
             type="button"
             className={s.idleTactic === 'assault' ? 'on' : ''}
-            onClick={() => { act((g) => { g.idleTactic = 'assault'; }); flash('โหมด Idle: บุกล้วน สังหารศัตรูทั้งหมด'); }}
-            title="บุกล้วน สังหารทั้งหมด"
+            onClick={() => { act((g) => { g.idleTactic = 'assault'; }); flash('Idle: Pure Assault & Hunt All'); }}
+            title="Assault: hunt and eliminate all enemies"
             style={{ fontSize: 11, padding: '2px 8px' }}
           >
-            <Icon name="fight" size={12} /> บุก
+            <Icon name="fight" size={12} /> Assault
           </button>
         </div>
         {thinking && (
@@ -3123,7 +3122,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   }
                 });
                 flash('Idle: the bot plays for you');
-                setShowIdleSheet(true);
               } else {
                 setRush(false);
                 act((g) => { g.bots = g.idleBots; delete g.idleBots; });
@@ -3135,7 +3133,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             style={autoPlay ? { color: '#4ade80' } : undefined}
           >
             <span className="tb-ico"><Icon name="bot" size={20} /></span>
-            <span className="tb-lbl">{autoPlay ? (s.idleTactic === 'assault' ? 'IDLE บุก' : 'IDLE จุด') : 'IDLE'}</span>
+            <span className="tb-lbl">{autoPlay ? (s.idleTactic === 'assault' ? 'IDLE ASSAULT' : 'IDLE OBJ') : 'IDLE'}</span>
           </button>
           {(autoPlay || !!s.campaign) && (
             <button
@@ -3143,14 +3141,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               onClick={() => {
                 const next = s.idleTactic === 'assault' ? 'objectives' : 'assault';
                 act((g) => { g.idleTactic = next; });
-                flash(next === 'assault' ? 'Idle: บุกล้วน สังหารศัตรูทั้งหมด' : 'Idle: เฝ้าจุด ทำภารกิจ');
+                flash(next === 'assault' ? 'Idle: Pure Assault & Hunt All' : 'Idle: Objectives & Missions');
               }}
               aria-label="Toggle Idle Tactic"
-              title={s.idleTactic === 'assault' ? 'โหมด Idle: บุกล้วน สังหารศัตรูทั้งหมด' : 'โหมด Idle: เฝ้าจุด ทำภารกิจ'}
+              title={s.idleTactic === 'assault' ? 'Idle Strategy: Assault (hunt all enemies)' : 'Idle Strategy: Objectives (hold VP & missions)'}
               style={{ color: s.idleTactic === 'assault' ? '#f87171' : '#60a5fa' }}
             >
               <span className="tb-ico"><Icon name={s.idleTactic === 'assault' ? 'fight' : 'objective'} size={18} /></span>
-              <span className="tb-lbl" style={{ fontSize: 9 }}>{s.idleTactic === 'assault' ? 'บุกสังหาร' : 'เฝ้าจุด'}</span>
+              <span className="tb-lbl" style={{ fontSize: 9 }}>{s.idleTactic === 'assault' ? 'Assault' : 'Obj'}</span>
             </button>
           )}
           {canUndo && (
@@ -3184,7 +3182,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
               <span style={{ fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.02em' }}>
-                โหมด Idle:
+                Idle Strategy:
               </span>
               <span
                 style={{
@@ -3193,7 +3191,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   fontSize: 12,
                 }}
               >
-                {s.idleTactic === 'assault' ? 'บุกล้วน สังหารทั้งหมด' : 'เฝ้าจุด ทำภารกิจ'}
+                {s.idleTactic === 'assault' ? 'Assault' : 'Objectives'}
               </span>
             </div>
             <div className="seg small" role="radiogroup" aria-label="Idle Strategy Selector" style={{ margin: 0 }}>
@@ -3204,11 +3202,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
                 onClick={() => {
                   act((g) => { g.idleTactic = 'objectives'; });
-                  flash('โหมด Idle: เฝ้าจุด ทำภารกิจ');
+                  flash('Idle: Objectives & Missions');
                 }}
                 style={{ padding: '3px 10px', fontSize: 11.5, fontWeight: 600 }}
               >
-                <Icon name="objective" size={13} /> เฝ้าจุด ทำภารกิจ
+                <Icon name="objective" size={13} /> Objectives
               </button>
               <button
                 type="button"
@@ -3217,11 +3215,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 className={s.idleTactic === 'assault' ? 'on' : ''}
                 onClick={() => {
                   act((g) => { g.idleTactic = 'assault'; });
-                  flash('โหมด Idle: บุกล้วน สังหารศัตรูทั้งหมด');
+                  flash('Idle: Pure Assault & Hunt All');
                 }}
                 style={{ padding: '3px 10px', fontSize: 11.5, fontWeight: 600 }}
               >
-                <Icon name="fight" size={13} /> บุกล้วน สังหารทั้งหมด
+                <Icon name="fight" size={13} /> Assault
               </button>
             </div>
           </div>
@@ -3453,77 +3451,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         );
       })()}
-      {showIdleSheet && (
-        <div className="tray-backdrop" onClick={() => setShowIdleSheet(false)}>
-          <div className="tray" onClick={(e) => e.stopPropagation()}>
-            <div className="tray-head">
-              <span className="sheet-title grow">โหมด Idle (บอทเล่นแทน)</span>
-              <button className="icon-btn" aria-label="Close" onClick={() => setShowIdleSheet(false)}>
-                <Icon name="close" />
-              </button>
-            </div>
-            <div className="field">
-              <span>เลือกรูปแบบการเล่นของบอท:</span>
-              <div className="seg" role="radiogroup" aria-label="Idle Strategy Selection">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={(s.idleTactic ?? 'objectives') === 'objectives'}
-                  className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
-                  onClick={() => {
-                    act((g) => { g.idleTactic = 'objectives'; });
-                    flash('โหมด Idle: เฝ้าจุด ทำภารกิจ');
-                  }}
-                >
-                  <Icon name="objective" size={16} /> เฝ้าจุด ทำภารกิจ
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={s.idleTactic === 'assault'}
-                  className={s.idleTactic === 'assault' ? 'on' : ''}
-                  onClick={() => {
-                    act((g) => { g.idleTactic = 'assault'; });
-                    flash('โหมด Idle: บุกล้วน สังหารศัตรูทั้งหมด');
-                  }}
-                >
-                  <Icon name="fight" size={16} /> บุกล้วน สังหารทั้งหมด
-                </button>
-              </div>
-              <span className="field-note" style={{ lineHeight: 1.4, marginTop: 4 }}>
-                {s.idleTactic === 'assault'
-                  ? 'บุกล้วน: บอทจะไล่ล่าและทำลายยูนิตศัตรูทั้งหมด ไม่ค้างยูนิตไว้เฝ้าบ้านหรือยึดจุด'
-                  : 'เฝ้าจุด: บอทจะกระจายยูนิตไปครองจุดวัตถุประสงค์ ทำภารกิจรอง และคุมพื้นที่'}
-              </span>
-            </div>
-            <div className="row" style={{ marginTop: 14, gap: 8, display: 'flex' }}>
-              {autoPlay && (
-                <button
-                  type="button"
-                  className="btn ghost small"
-                  style={{ color: 'var(--bad)' }}
-                  onClick={() => {
-                    setRush(false);
-                    act((g) => { g.bots = g.idleBots; delete g.idleBots; });
-                    setShowIdleSheet(false);
-                    flash('ปิดโหมด Idle: กลับมาเล่นเอง');
-                  }}
-                >
-                  ปิดโหมด Idle
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn primary small"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => setShowIdleSheet(false)}
-              >
-                เริ่มต่อ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {showMenu && (
         <div className="tray-backdrop" onClick={() => setShowMenu(false)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -3559,7 +3486,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </div>
             )}
             <div className="field">
-              <span id="idle-tactic-menu">โหมดการเล่นของบอท (Idle Strategy)</span>
+              <span id="idle-tactic-menu">Idle Mode Strategy</span>
               <div className="seg" role="radiogroup" aria-labelledby="idle-tactic-menu">
                 <button
                   type="button"
@@ -3568,10 +3495,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
                   onClick={() => {
                     act((g) => { g.idleTactic = 'objectives'; });
-                    flash('โหมด Idle: เฝ้าจุด ทำภารกิจ');
+                    flash('Idle: Objectives & Missions');
                   }}
                 >
-                  <Icon name="objective" size={14} /> เฝ้าจุด ทำภารกิจ
+                  <Icon name="objective" size={14} /> Objectives
                 </button>
                 <button
                   type="button"
@@ -3580,16 +3507,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   className={s.idleTactic === 'assault' ? 'on' : ''}
                   onClick={() => {
                     act((g) => { g.idleTactic = 'assault'; });
-                    flash('โหมด Idle: บุกล้วน สังหารศัตรูทั้งหมด');
+                    flash('Idle: Pure Assault & Hunt All');
                   }}
                 >
-                  <Icon name="fight" size={14} /> บุกล้วน สังหารทั้งหมด
+                  <Icon name="fight" size={14} /> Assault
                 </button>
               </div>
               <span className="field-note">
                 {s.idleTactic === 'assault'
-                  ? 'บุกล้วน: บอทจะไล่ล่าและทำลายยูนิตศัตรูทั้งหมด ไม่ค้างยูนิตไว้เฝ้าบ้านหรือยึดจุด'
-                  : 'เฝ้าจุด: บอทจะกระจายยูนิตไปครองจุดวัตถุประสงค์ ทำภารกิจรอง และคุมพื้นที่'}
+                  ? 'Assault: hunts and eliminates all enemy units; does not keep units holding home.'
+                  : 'Objectives: distributes units to control field objectives and score missions.'}
               </span>
             </div>
             <div className="field">

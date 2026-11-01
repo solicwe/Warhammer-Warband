@@ -219,7 +219,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           </section>
           {err && <div className="err" role="alert">{err}</div>}
           <div className="card" style={{ margin: '14px 16px', padding: 12 }}>
-            <div className="card-title" style={{ fontSize: 13, marginBottom: 6 }}>โหมดการเล่นของบอท (Idle Mode):</div>
+            <div className="card-title" style={{ fontSize: 13, marginBottom: 6 }}>Idle Mode Strategy:</div>
             <div className="seg" role="radiogroup" aria-label="Starting Idle Mode Strategy">
               <button
                 type="button"
@@ -228,7 +228,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 className={startIdleTactic === 'objectives' ? 'on' : ''}
                 onClick={() => setStartIdleTactic('objectives')}
               >
-                <Icon name="objective" size={14} /> เฝ้าจุด ทำภารกิจ
+                <Icon name="objective" size={14} /> Objectives
               </button>
               <button
                 type="button"
@@ -237,13 +237,13 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 className={startIdleTactic === 'assault' ? 'on' : ''}
                 onClick={() => setStartIdleTactic('assault')}
               >
-                <Icon name="fight" size={14} /> บุกล้วน สังหารทั้งหมด
+                <Icon name="fight" size={14} /> Assault
               </button>
             </div>
             <div className="field-note" style={{ marginTop: 6, fontSize: 12 }}>
               {startIdleTactic === 'assault'
-                ? 'บุกล้วน: บอทจะมุ่งสังหารศัตรูทั้งหมด ไม่ค้างยูนิตไว้เฝ้าจุด'
-                : 'เฝ้าจุด: บอทจะเน้นคะแนนวัตถุประสงค์ ภารกิจรอง และคุมพื้นที่'}
+                ? 'Assault: hunts and eliminates all enemy units; no unit guards home.'
+                : 'Objectives: prioritizes holding VP markers, guarding home, and completing missions.'}
             </div>
           </div>
           <div className="cta-bar"><button className="btn primary big wide" disabled={busy || !index} onClick={begin}>{busy ? 'Mustering…' : `Begin Campaign with ${nameOf(pickId)}`}</button></div>
@@ -629,10 +629,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <div className="cmp-idle-banner" style={{ marginTop: 10, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ font: '600 12.5px var(--font-cond)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>
-                โหมดการเล่นของบอท (Idle):
+                Idle Strategy:
               </span>
               <span style={{ fontSize: 12, color: (run.idleTactic ?? 'objectives') === 'assault' ? '#f87171' : '#60a5fa', fontWeight: 600 }}>
-                {(run.idleTactic ?? 'objectives') === 'assault' ? 'บุกล้วน สังหารศัตรูทั้งหมด' : 'เฝ้าจุด ทำภารกิจ'}
+                {(run.idleTactic ?? 'objectives') === 'assault' ? 'Assault' : 'Objectives'}
               </span>
             </div>
             <div className="seg" role="radiogroup" aria-label="Idle Tactic Selector">
@@ -643,7 +643,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 className={(run.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
                 onClick={() => setRun({ ...run, idleTactic: 'objectives' })}
               >
-                <Icon name="objective" size={14} /> เฝ้าจุด ทำภารกิจ
+                <Icon name="objective" size={14} /> Objectives
               </button>
               <button
                 type="button"
@@ -652,7 +652,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 className={run.idleTactic === 'assault' ? 'on' : ''}
                 onClick={() => setRun({ ...run, idleTactic: 'assault' })}
               >
-                <Icon name="fight" size={14} /> บุกล้วน สังหารทั้งหมด
+                <Icon name="fight" size={14} /> Assault
               </button>
             </div>
           </div>
@@ -932,10 +932,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               <div style={{ marginTop: 10, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ font: '600 12px var(--font-cond)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>
-                    โหมดการเล่นของบอท (Idle):
+                    Idle Strategy:
                   </span>
                   <span style={{ fontSize: 11.5, color: (run.idleTactic ?? 'objectives') === 'assault' ? '#f87171' : '#60a5fa', fontWeight: 600 }}>
-                    {(run.idleTactic ?? 'objectives') === 'assault' ? 'บุกล้วน สังหารศัตรูทั้งหมด' : 'เฝ้าจุด ทำภารกิจ'}
+                    {(run.idleTactic ?? 'objectives') === 'assault' ? 'Assault' : 'Objectives'}
                   </span>
                 </div>
                 <div className="seg small" role="radiogroup" aria-label="Idle Tactic Selector">
@@ -946,7 +946,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     className={(run.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
                     onClick={() => setRun({ ...run, idleTactic: 'objectives' })}
                   >
-                    <Icon name="objective" size={13} /> เฝ้าจุด ทำภารกิจ
+                    <Icon name="objective" size={13} /> Objectives
                   </button>
                   <button
                     type="button"
@@ -955,7 +955,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     className={run.idleTactic === 'assault' ? 'on' : ''}
                     onClick={() => setRun({ ...run, idleTactic: 'assault' })}
                   >
-                    <Icon name="fight" size={13} /> บุกล้วน สังหารทั้งหมด
+                    <Icon name="fight" size={13} /> Assault
                   </button>
                 </div>
               </div>
