@@ -8,7 +8,7 @@ import { RULES } from '../engine/config';
 import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from '../engine/game';
 import { circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from '../engine/geometry';
 import { canLeave } from './botMove';
-import { isBrawler, maxRange, moveOf, oc, unitValue } from './botEval';
+import { isBrawler, maxRange, moveOf, oc, securesObjectives, unitValue } from './botEval';
 import { alive, onBoard, other, tableH, tableW, withinTerrain } from '../engine/state';
 import { homeScoresVp } from './botPlan';
 import type { GameState, ModelState, Pt, UnitState } from '../engine/types';
@@ -104,7 +104,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   const middle = objs.filter(({ p }) => !pointInPoly(p, zone) && !pointInPoly(p, enemyZone));
   const friends = s.units.filter((f) => f.owner === u.owner && f.id !== u.id && onBoard(f));
   // held by a unit that stays there: a mob of Boyz standing on it now charges off in the first turn
-  const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && !isBrawler(s, f) && alive(f).some((m) => ptGap(m, p) <= 3));
+  const homeHeld = (p: Pt) => friends.some((f) => oc(f) > 0 && (securesObjectives(s, f) || !isBrawler(s, f)) && alive(f).some((m) => ptGap(m, p) <= 3));
   const zoneDepth = Math.max(1, ...samplePoly(zone, 4).map((p) => dist(p, ec))) - Math.min(...samplePoly(zone, 4).map((p) => dist(p, ec)));
   const frontDist = Math.min(...samplePoly(zone, 4).map((p) => dist(p, ec)));
 
@@ -144,7 +144,14 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       // somebody with OC on the home objective
       // (worth more than being forward or in cover: a unit placed wrong at the start plays the whole battle wrong)
       if (homeScoresVp(s, u.owner)) {
-        for (const { p } of home) if (holdsGround && cheap && !homeHeld(p) && ms.some((m) => ptGap(m, p) <= 3)) score += 14;
+        const canSecure = oc(u) > 0 && securesObjectives(s, u);
+        const myStickyAvailable = s.units.some((f) => f.owner === u.owner && f.id !== u.id && f.status === 'pending' && oc(f) > 0 && securesObjectives(s, f));
+        for (const { p } of home) {
+          if (!homeHeld(p) && ms.some((m) => ptGap(m, p) <= 3)) {
+            if (canSecure) score += 35;
+            else if (holdsGround && cheap && !myStickyAvailable) score += 14;
+          }
+        }
       }
 
       // spread out: no packing next to other units

@@ -17,7 +17,7 @@ import { unitFlags } from '../rules-engine/effects';
 import { botOff, W as BW, type BotW } from './botWeights';
 import { armyPlan, followedJob, homeScoresVp, unitPunch, type Role } from './botPlan';
 import {
-  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, shotValue, unitValue,
+  centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, securesObjectives, shotValue, unitValue,
 } from './botEval';
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 
@@ -180,11 +180,7 @@ export interface Ctx {
   perInch?: number;
 }
 
-/** Can this unit make objectives stay ours after it leaves them? */
-export function securesObjectives(s: GameState, u: UnitState): boolean {
-  const f = unitFlags(s, u);
-  return f.secureAtMovementEnd || f.secureAtCommandEnd || actsOfUnit(s, u).some((d) => d.spec.do?.some((a) => a.secure));
-}
+export { securesObjectives };
 
 /**
  * Who the unit's abilities are for: "friendly … VEHICLE model within 3"" (Techmarine), "while a friendly … INFANTRY unit
@@ -657,6 +653,7 @@ function positionScore(s: GameState, u: UnitState): number {
 
 /** How much holding objectives matters to this unit: less for an expensive damage dealer (cheap units hold, it fights). */
 function objectiveWeight(s: GameState, u: UnitState, ctx: Ctx): number {
+  if (ctx.role === 'home') return 1;
   if (s.idleTactic === 'assault') return 0.15;
   if (ctx.deliver) return 0.3;
   if (ctx.escort && ctx.escort.weight >= 3) return 0.3; // a Techmarine's job is its vehicle, not holding ground

@@ -2,7 +2,8 @@
 // Planning estimates only — the real attacks always go through attack.ts.
 import { woundNeed } from '../engine/attack';
 import { exprAverage } from '../engine/dice';
-import { isRiled } from '../rules-engine/effects';
+import { actsOfUnit } from '../rules-engine/activations';
+import { isRiled, unitFlags } from '../rules-engine/effects';
 import { bodyTouchesPoly, polyCentroid } from '../engine/geometry';
 import { levelOfControl, objectiveTerrain } from '../engine/game';
 import { alive, boardUnits, other } from '../engine/state';
@@ -185,3 +186,16 @@ function killCardVp(id: string, t: UnitState, onObj: boolean): number {
 }
 
 export const riledUp = (s: GameState, u: UnitState) => isRiled(s, u);
+
+/** Can this unit make objectives stay ours after it leaves them (sticky objectives)? */
+export function securesObjectives(s: GameState, u: UnitState): boolean {
+  const f = unitFlags(s, u);
+  if (f.secureAtMovementEnd || f.secureAtCommandEnd) return true;
+  if (actsOfUnit(s, u).some((d) => d.spec.do?.some((a) => a.secure || a.wardObjective || (a as any).mutate))) return true;
+  for (const a of u.abilities ?? []) {
+    const t = (a.text ?? '').toLowerCase();
+    const n = (a.name ?? '').toLowerCase();
+    if (t.includes('remains under your control') || t.includes('objective remains under') || n.includes('objective secured') || n.includes("thievin' scavengers")) return true;
+  }
+  return false;
+}

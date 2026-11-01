@@ -5,7 +5,7 @@
 // the rest.
 import { dist } from '../engine/geometry';
 import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace } from '../engine/state';
-import { centre, isBrawler, maxRange, moveOf, objPoint, oc, unitPunch, unitValue } from './botEval';
+import { centre, isBrawler, maxRange, moveOf, objPoint, oc, securesObjectives, unitPunch, unitValue } from './botEval';
 import { hasAbility } from '../engine/weapons';
 import { botOff } from './botWeights';
 import { primaryById } from '../engine/config';
@@ -109,7 +109,7 @@ const cache = new WeakMap<GameState, Map<PlayerId, { key: string; plan: ArmyPlan
 export function armyPlan(s: GameState, p: PlayerId): ArmyPlan {
   if (botOff('plan')) return { stance: 'open', risk: 1, jobs: new Map() };
   const mine = boardUnits(s, p).filter((u) => !hasKw(u, 'AIRCRAFT'));
-  const key = `${s.turn}|${s.phase}|${mine.map((u) => `${u.id}:${alive(u).length}`).join(',')}`;
+  const key = `${s.turn}|${s.phase}|${s.objectives.map((o) => `${o.secured}:${o.controller}`).join(',')}|${mine.map((u) => `${u.id}:${alive(u).length}`).join(',')}`;
   let per = cache.get(s);
   if (!per) { per = new Map(); cache.set(s, per); }
   const hit = per.get(p);
@@ -158,25 +158,39 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     if (!i.brawler && i.range >= 30 && (i.M <= 6 || heavy) && i.value < 260) jobs.set(u.id, { role: 'firebase', why: `${i.range}" guns` });
   }
   // home: the unit that loses the least by standing still there — cheap, scores OC, shoots well enough from it
-  const home = (homeScoresVp(s, p) && s.idleTactic !== 'assault') ? s.objectives.find((o) => o.type === 'home' && o.owner === p) : undefined;
-  if (home) {
+    const scoresHome = homeScoresVp(s, p);
+  const home = scoresHome ? s.objectives.find((o) => o.type === 'home' && o.owner === p) : undefined;
+  const homeSecured = !!home && (home.secured === p || (home as any).corrupted === p || (home as any).mutated === p);
+  if (home && (!homeSecured || s.idleTactic !== 'assault')) {
     const hp = objPoint(s, home);
     const cands = mine.filter((u) => (free(u) || jobs.get(u.id)!.role === 'firebase') && info.get(u.id)!.oc > 0 && !isEngaged(s, u))
       .map((u) => {
         const i = info.get(u.id)!;
         const far = Math.max(0, dist(centre(u), hp) - 3);
+        const sticky = securesObjectives(s, u);
         // a melee unit sitting at home wastes its points; a long gun there loses nothing
-        const waste = i.brawler ? i.value * 1.6 : jobs.get(u.id)?.role === 'firebase' ? i.value * 0.35 : i.value;
-        return { u, cost: waste + far * 4 + (i.oc < 2 ? 40 : 0) };
+        let waste = i.brawler ? i.value * 1.6 : jobs.get(u.id)?.role === 'firebase' ? i.value * 0.35 : i.value;
+        if (sticky) waste *= 0.2;
+        return { u, sticky, cost: waste + far * 4 + (i.oc < 2 ? 40 : 0) };
       }).sort((a, b) => a.cost - b.cost);
     // never the army's hammer: 200 points of Dreadnought guarding home is a wasted unit (better nobody, until a cheap one comes)
     const c0 = cands[0] && info.get(cands[0].u.id)!;
+    const c0Sticky = c0 && securesObjectives(s, c0.u);
     // a gun line unit too: only a cheap one (a 250-point tank parked on home all game is the same waste)
-    if (c0 && c0.value <= 160 && !(c0.brawler && c0.value > 120)) {
-      // a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there); one
+    if (c0 && (c0.value <= 160 || c0Sticky || (s.idleTactic === 'assault' && cands.length >= 2 && c0.value <= 220)) && (!(c0.brawler && c0.value > 120) || c0Sticky)) {
+      // in assault mode, keep this unit holding home until home is secured;
+      // in standard mode, a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there); one
       // already out in the field is doing a job there, so it is not called back
-      const keep = !c0.brawler && c0.value <= 80 && dist(centre(c0.u), hp) <= c0.M + 3;
-      jobs.set(c0.u.id, { role: 'home', post: hp, why: keep ? 'kept on home all game' : 'holds home', keep });
+      const near = dist(centre(c0.u), hp) <= c0.M + 3;
+      const keep = s.idleTactic === 'assault'
+        ? true
+        : (!c0.brawler && c0.value <= 80 && near);
+      jobs.set(c0.u.id, {
+        role: 'home',
+        post: hp,
+        why: c0Sticky ? 'secures home objective' : (keep ? 'kept on home all game' : 'holds home'),
+        keep,
+      });
     }
   }
 
