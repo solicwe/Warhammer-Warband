@@ -3473,7 +3473,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       {s.reinforcementAlert && (
         // enemy reinforcements: the screen edge flashes red and they land; nothing to tap
         <div className="reinf-edge" key={`${s.reinforcementAlert.unitName}-${s.reinforcementAlert.round}`}>
-          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName} · battle now 5 rounds</span>
+          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName}</span>
         </div>
       )}
       {s.titanAlert && (

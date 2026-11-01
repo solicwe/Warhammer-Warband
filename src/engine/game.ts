@@ -2808,7 +2808,6 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     });
   }
   s.units.push(cloned);
-  s.maxRounds = 5;
 
   pushFx(s, {
     kind: 'place',
@@ -2820,7 +2819,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
   });
   s.screenShake = Date.now();
 
-  const alertText = `WARNING: STRATEGIC EVENT! Enemy heavy reinforcements (${cloned.name}, ${cloned.models.length} models) arrived via Deep Strike! Battle extended to Round 5!`;
+  const alertText = `WARNING: STRATEGIC EVENT! Enemy heavy reinforcements (${cloned.name}, ${cloned.models.length} models) arrived via Deep Strike!`;
   log(s, alertText, 'kill', 1);
 
   s.reinforcementAlert = {
@@ -2828,7 +2827,7 @@ export function triggerCampaignReinforcements(s: GameState): boolean {
     factionName: s.players[1].name,
     round: s.round,
     count: cloned.models.length,
-    text: 'STRATEGIC EVENT: ENEMY REINFORCEMENTS DETECTED (5 ROUNDS)',
+    text: 'STRATEGIC EVENT: ENEMY REINFORCEMENTS DETECTED',
   };
 
   return true;
