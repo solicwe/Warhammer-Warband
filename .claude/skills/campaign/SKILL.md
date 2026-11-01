@@ -13,7 +13,7 @@ Player view: the README's Campaign section.
 | Part | Where | Notes |
 |---|---|---|
 | A run, the map, rewards, recruiting, relics | `src/engine/campaign.ts` | `Run`, `makeMap`, `makeOffer`, `takeReward`, `afterBattle`, `applyCampaign`, `RELICS`, `relicText`, `relicMaxLevel` |
-| Battles | `campaignMission(node)` in `campaign.ts`, started in `src/ui/Campaign.tsx` | a normal battle: official primary, Tactical secondaries, 5 rounds, random Force Dispositions by the node's seed; both sides hold their secondary cards from round 1 |
+| Battles | `campaignMission(node)` in `campaign.ts`, started in `src/ui/Campaign.tsx` | a normal battle: official primary, Tactical secondaries, 5 rounds, random Force Dispositions by the node's seed; both sides hold their secondary cards from round 1; idle tactic (`run.idleTactic`: 'objectives' or 'assault') selectable on the node and in battle |
 | The army tree | `src/engine/campaignTree.ts` | 7 shared spokes, the army's branch, ring bridges, conversion keystones; `treeFor(army)`; swap pools (`SWAP`); `TREE_KEYS` / `effectKeys` |
 | The army's own branches | `src/engine/campaignTreeArmies.ts` | `ARMY_KITS` per army (corps, arsenal, titan keystone); move lists per style; `WIDE` army-wide nodes |
 | Keywords an army can field | `src/engine/treeFielded.ts` | written by `campaignTreeFit.test.ts` (`UPDATE_FIELDED=1`); never edit by hand |

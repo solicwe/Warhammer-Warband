@@ -32,6 +32,21 @@ const STYLES: Record<string, Partial<BotW>> = {
     cautionHolder: 0.2,
     advanceMargin: 0.5,
   },
+  assault: {
+    objective: 5,
+    pullObjective: 0.05,
+    pullHolder: 0.1,
+    claimBonus: 5,
+    claimPull: 0.2,
+    pullHammer: 1.5,
+    pullBrawler: 1.4,
+    pullRange: 0.9,
+    chargeNonBrawler: 1.0,
+    cautionOther: 0.25,
+    cautionBrawler: 0.1,
+    cautionHolder: 0.1,
+    advanceMargin: 0.2,
+  },
 };
 
 /** What each level tries: the ways of playing the turn, how many rolls of the dice each is played on (the dice are
@@ -130,8 +145,9 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
 export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
   const b = budgetMs ?? lookBudget(s, p);
-  if (!enabled || inRollout || s.phase === 'gameover' || b <= 0) return 'steady';
-  if (s.campaign || (s as any).idleMode) return 'rogue';
+  if (s.phase === 'gameover') return 'steady';
+  if (s.campaign || (s as any).idleMode) return s.idleTactic === 'assault' ? 'assault' : 'rogue';
+  if (!enabled || inRollout || b <= 0) return 'steady';
   let best = { name: 'steady', v: -Infinity };
   for (const [name, v] of Object.entries(styleValues(s, p, b))) if (v > best.v + 1e-6) best = { name, v };
   return best.name;
@@ -190,7 +206,7 @@ export function applyStyle(s: GameState, p: PlayerId, name: string) {
   own[p] ??= W(p);
   s.botTried = [...(s.botTried ?? []), styleKey(s)];
   setBotWeights(p, { ...own[p]!, ...(STYLES[name] ?? {}) });
-  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill', rogue: 'for the objectives first, then the kill' };
+  const how: Record<string, string> = { aggressive: 'aggressively', careful: 'carefully', objectives: 'for the objectives', hunt: 'for the kill', rogue: 'for the objectives first, then the kill', assault: 'in an all-out assault to eliminate all enemies' };
   if (name !== 'steady') s.log.push({ turn: s.turn, round: s.round, player: p, kind: 'info', text: `${s.players[p].name}: plays this turn ${how[name] ?? name} (looked ahead: it plays out better)` });
 }
 

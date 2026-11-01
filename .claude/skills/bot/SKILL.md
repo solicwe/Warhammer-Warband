@@ -11,8 +11,8 @@ description: Change, measure or debug Warhammer Warband's bot (movement, roles, 
 |---|---|---|
 | Entry | `src/ai/bot.ts` | `botStep(s, p)` plays one step for side p; `botShouldAct`; shooting order (`botShootOne`) |
 | Movement | `src/ai/botMove.ts` | scores places to move with weights from `data/bot-weights.json`; quick planning on big boards (`bigBoard`: more than 150 models brought; `isFastPlanning`) |
-| Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)` (campaign or idle): objectives get holders before units hunt |
-| Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue); `chooseTurnStyle` plays copies of the turn to pick one; the campaign always plays `rogue` (objectives first) |
+| Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)` (campaign or idle): objectives get holders before units hunt unless `s.idleTactic === 'assault'` |
+| Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue, assault); `chooseTurnStyle` plays copies of the turn to pick one; the campaign plays `rogue` (objectives first) or `assault` (seek and destroy) |
 | CP and stratagems | `src/ai/botStrats.ts` | which stratagem, when; re-rolls |
 | Choices | `src/ai/botPlus.ts`, `botRituals.ts` | doctrines, abilities with a decision, Rituals |
 | Deployment | `src/ai/deploy.ts` | where units start |

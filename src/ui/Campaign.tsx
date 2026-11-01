@@ -51,6 +51,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [armed, setArmed] = useState(false);
+  const [startIdleTactic, setStartIdleTactic] = useState<'objectives' | 'assault'>('objectives');
 
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
@@ -122,7 +123,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       const list = { ...autoList(f, START_POINTS, seed, true), name: `${f.name} Strike Force` };
       const enemies = ALL_PLAYABLE_FACTIONS.filter((id) => id !== f.id && id !== 'TL');
       setFac(f);
-      setRun(newRun(f, list, enemies, seed));
+      const nr = newRun(f, list, enemies, seed);
+      nr.idleTactic = startIdleTactic;
+      setRun(nr);
       play('turn');
     } catch (e) { setErr(`Could not start: ${e instanceof Error ? e.message : String(e)}`); } finally { setBusy(false); }
   };
@@ -215,6 +218,34 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             ))}
           </section>
           {err && <div className="err" role="alert">{err}</div>}
+          <div className="card" style={{ margin: '14px 16px', padding: 12 }}>
+            <div className="card-title" style={{ fontSize: 13, marginBottom: 6 }}>โหมดการเล่นของบอท (Idle Mode):</div>
+            <div className="seg" role="radiogroup" aria-label="Starting Idle Mode Strategy">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={startIdleTactic === 'objectives'}
+                className={startIdleTactic === 'objectives' ? 'on' : ''}
+                onClick={() => setStartIdleTactic('objectives')}
+              >
+                <Icon name="objective" size={14} /> เฝ้าจุด ทำภารกิจ
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={startIdleTactic === 'assault'}
+                className={startIdleTactic === 'assault' ? 'on' : ''}
+                onClick={() => setStartIdleTactic('assault')}
+              >
+                <Icon name="fight" size={14} /> บุกล้วน สังหารทั้งหมด
+              </button>
+            </div>
+            <div className="field-note" style={{ marginTop: 6, fontSize: 12 }}>
+              {startIdleTactic === 'assault'
+                ? 'บุกล้วน: บอทจะมุ่งสังหารศัตรูทั้งหมด ไม่ค้างยูนิตไว้เฝ้าจุด'
+                : 'เฝ้าจุด: บอทจะเน้นคะแนนวัตถุประสงค์ ภารกิจรอง และคุมพื้นที่'}
+            </div>
+          </div>
           <div className="cta-bar"><button className="btn primary big wide" disabled={busy || !index} onClick={begin}>{busy ? 'Mustering…' : `Begin Campaign with ${nameOf(pickId)}`}</button></div>
         </main>
       </div>
@@ -595,6 +626,36 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               <Icon name="swords" size={15} /> Roster & Armory
             </button>
           </div>
+          <div className="cmp-idle-banner" style={{ marginTop: 10, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ font: '600 12.5px var(--font-cond)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>
+                โหมดการเล่นของบอท (Idle):
+              </span>
+              <span style={{ fontSize: 12, color: (run.idleTactic ?? 'objectives') === 'assault' ? '#f87171' : '#60a5fa', fontWeight: 600 }}>
+                {(run.idleTactic ?? 'objectives') === 'assault' ? 'บุกล้วน สังหารศัตรูทั้งหมด' : 'เฝ้าจุด ทำภารกิจ'}
+              </span>
+            </div>
+            <div className="seg" role="radiogroup" aria-label="Idle Tactic Selector">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={(run.idleTactic ?? 'objectives') === 'objectives'}
+                className={(run.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
+                onClick={() => setRun({ ...run, idleTactic: 'objectives' })}
+              >
+                <Icon name="objective" size={14} /> เฝ้าจุด ทำภารกิจ
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={run.idleTactic === 'assault'}
+                className={run.idleTactic === 'assault' ? 'on' : ''}
+                onClick={() => setRun({ ...run, idleTactic: 'assault' })}
+              >
+                <Icon name="fight" size={14} /> บุกล้วน สังหารทั้งหมด
+              </button>
+            </div>
+          </div>
           {run.relics.length > 0 && (
             <div className="cmp-relics">{run.relics.map((id) => <RelicToken key={id} id={id} lvl={run.relicLevels?.[id] ?? 1} big onInfo={setInfo} />)}</div>
           )}
@@ -867,6 +928,38 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
             {focused.enemy && <div className="tiny muted">{KIND[focused.kind].note}</div>}
             {err && <div className="err" role="alert">{err}</div>}
+            {focused.enemy && (
+              <div style={{ marginTop: 10, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ font: '600 12px var(--font-cond)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-2)' }}>
+                    โหมดการเล่นของบอท (Idle):
+                  </span>
+                  <span style={{ fontSize: 11.5, color: (run.idleTactic ?? 'objectives') === 'assault' ? '#f87171' : '#60a5fa', fontWeight: 600 }}>
+                    {(run.idleTactic ?? 'objectives') === 'assault' ? 'บุกล้วน สังหารศัตรูทั้งหมด' : 'เฝ้าจุด ทำภารกิจ'}
+                  </span>
+                </div>
+                <div className="seg small" role="radiogroup" aria-label="Idle Tactic Selector">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={(run.idleTactic ?? 'objectives') === 'objectives'}
+                    className={(run.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
+                    onClick={() => setRun({ ...run, idleTactic: 'objectives' })}
+                  >
+                    <Icon name="objective" size={13} /> เฝ้าจุด ทำภารกิจ
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={run.idleTactic === 'assault'}
+                    className={run.idleTactic === 'assault' ? 'on' : ''}
+                    onClick={() => setRun({ ...run, idleTactic: 'assault' })}
+                  >
+                    <Icon name="fight" size={13} /> บุกล้วน สังหารทั้งหมด
+                  </button>
+                </div>
+              </div>
+            )}
             <button className="btn primary big wide" style={{ marginTop: 10 }} disabled={busy || !fac} onClick={() => go(focused)}>
               {busy ? 'Deploying…' : focused.kind === 'supply' ? 'Open Supply Drop' : focused.kind === 'armory' ? 'Enter Armory Depot' : focused.kind === 'medicae' ? 'Enter Medicae Camp' : run.fighting === focused.id ? 'Fight Again' : 'Engage Battle'}
             </button>

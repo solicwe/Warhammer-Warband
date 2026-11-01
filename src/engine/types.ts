@@ -752,6 +752,8 @@ export interface GameState {
   bots?: PlayerId[];
   /** idle: the bot plays the player's side too; who the bots were before (restored when idle ends) */
   idleBots?: PlayerId[];
+  /** idle strategy: 'objectives' (hold points & missions) or 'assault' (seek & destroy all enemies) */
+  idleTactic?: 'objectives' | 'assault';
   /** players who only move and pick shooting targets: every other decision (stratagems, abilities, re-rolls, saves,
    *  battle-shock, fights, reactions) is taken for them by the bot's logic */
   autoRules?: PlayerId[];

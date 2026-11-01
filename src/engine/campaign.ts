@@ -65,6 +65,7 @@ export interface Run {
   autoBattle?: boolean;
   /** Idle speed multiplier (1x, 2x, 4x) */
   autoSpeed?: 1 | 2 | 4;
+  idleTactic?: 'objectives' | 'assault';
   /** the battle being fought */
   fighting?: string;
   /** rewards to pick one from */
@@ -662,6 +663,7 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
     }
   }
   s.players[me].cp += run.cp + treeCp(run);
+  s.idleTactic = run.idleTactic ?? 'objectives';
   s.campaign = { node: run.fighting ?? '', relics: [...run.relics.map((r: any) => typeof r === 'string' ? r : String(r?.id || r?.name || ''))], rules: cleanRules, relicLevels: { ...(run.relicLevels ?? {}) } };
 }
 

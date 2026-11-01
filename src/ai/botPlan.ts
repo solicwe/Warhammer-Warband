@@ -73,6 +73,7 @@ export function homeScoresVp(s: GameState, p: PlayerId): boolean {
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
   if (lastTurn(s, p) && !botOff('allin')) return { stance: 'all-in', risk: 0.3 };
+  if (s.idleTactic === 'assault') return { stance: 'push', risk: 0.35 };
   // an aggressive army at every level: it goes forward from the first turn and keeps pressing (the home objective
   // keeps its one guard, the missions their objectives); only a big late lead makes it a little more careful
   if (s.round <= 1) return { stance: 'open', risk: 0.7 };
@@ -101,7 +102,7 @@ export function followedJob(plan: ArmyPlan, unitId: string): Job | undefined {
 }
 
 /** battles the bot plays for the score above all: the campaign (won on points) and idle mode */
-export const pointsFirst = (s: GameState) => !!s.campaign || !!s.idleBots;
+export const pointsFirst = (s: GameState) => (s.idleTactic === 'assault' ? false : (!!s.campaign || !!s.idleBots));
 
 const cache = new WeakMap<GameState, Map<PlayerId, { key: string; plan: ArmyPlan }>>();
 
@@ -157,7 +158,7 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     if (!i.brawler && i.range >= 30 && (i.M <= 6 || heavy) && i.value < 260) jobs.set(u.id, { role: 'firebase', why: `${i.range}" guns` });
   }
   // home: the unit that loses the least by standing still there — cheap, scores OC, shoots well enough from it
-  const home = homeScoresVp(s, p) ? s.objectives.find((o) => o.type === 'home' && o.owner === p) : undefined;
+  const home = (homeScoresVp(s, p) && s.idleTactic !== 'assault') ? s.objectives.find((o) => o.type === 'home' && o.owner === p) : undefined;
   if (home) {
     const hp = objPoint(s, home);
     const cands = mine.filter((u) => (free(u) || jobs.get(u.id)!.role === 'firebase') && info.get(u.id)!.oc > 0 && !isEngaged(s, u))
@@ -190,6 +191,13 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
         .map((i) => ({ i, d: dist(centre(i.u), f.at) / Math.max(4, i.M) })).sort((a, b) => a.d - b.d)[0];
       if (c && c.d <= 5) jobs.set(c.i.u.id, { role: 'anchor', post: f.at, why: `scores objective ${s.objectives.indexOf(f.o) + 1}` });
     }
+  }
+
+  if (s.idleTactic === 'assault') {
+    for (const u of mine.filter(free)) {
+      jobs.set(u.id, { role: 'hammer', why: 'assault: hunt and eliminate enemies' });
+    }
+    return { stance, risk, jobs };
   }
 
   // hammers: the units that do the most damage, and every expensive one

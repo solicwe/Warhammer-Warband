@@ -8,6 +8,8 @@ import {
   enhancementScrapCost, enter, makeMap, newRun, reachable, recruitUnit, removeEnhancementFromUnit, takeReward
 } from './campaign';
 import { effectsFor } from '../rules-engine/effects';
+import { pointsFirst, armyPlan } from '../ai/botPlan';
+import { chooseTurnStyle } from '../ai/botLook';
 import { createGame } from './game';
 import type { FactionData } from './types';
 
@@ -242,6 +244,38 @@ describe('campaign', () => {
     expect(refundedChar.enhancement).toBeUndefined();
     expect(refundedChar.enhancementPts).toBeUndefined();
     expect(run.scrap).toBe(initialScrap);
+  });
+
+  it('supports selecting idle mode tactic: pure assault vs holding objectives', () => {
+    const sm = load('SM');
+    const ork = load('ORK');
+    const run = newRun(sm, autoList(sm, 500, 3), ['ORK'], 42);
+
+    // Default or objectives mode
+    run.idleTactic = 'objectives';
+    const sObj = createGame({ lists: [run.list, autoList(ork, 500, 1)], factions: [sm, ork], names: ['You', 'Orks'], seed: 4, maxRounds: 3 });
+    applyCampaign(sObj, run, []);
+    expect(sObj.idleTactic).toBe('objectives');
+    expect(pointsFirst(sObj)).toBe(true);
+    expect(chooseTurnStyle(sObj, 0)).toBe('rogue');
+
+    // Pure assault mode: eliminates all enemies without camping objectives
+    run.idleTactic = 'assault';
+    const sAssault = createGame({ lists: [run.list, autoList(ork, 500, 1)], factions: [sm, ork], names: ['You', 'Orks'], seed: 4, maxRounds: 3 });
+    applyCampaign(sAssault, run, []);
+    expect(sAssault.idleTactic).toBe('assault');
+    expect(pointsFirst(sAssault)).toBe(false);
+    expect(chooseTurnStyle(sAssault, 0)).toBe('assault');
+
+    // Plan assigns units to hammer roles hunting prey
+    const plan = armyPlan(sAssault, 0);
+    expect(plan.stance).toBe('push');
+    expect(plan.risk).toBe(0.35);
+    for (const [, job] of plan.jobs) {
+      if (job.role !== 'taxi' && job.role !== 'support') {
+        expect(job.role).toBe('hammer');
+      }
+    }
   });
 });
 
