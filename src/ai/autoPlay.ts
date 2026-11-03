@@ -64,7 +64,8 @@ export function autoStep(s: GameState, p: PlayerId): boolean {
 /** The player picked a unit to shoot with: abilities and stratagems "when this unit is selected to shoot". */
 export function autoSelectToShoot(s: GameState, u: UnitState) {
   unitSelected(s, u, 'shoot');
-  if (!onAuto(s, u.owner)) return;
+  // a player who decides presses the unit's ability buttons themselves (a once-per-battle one too)
+  if (!onAuto(s, u.owner) || decides(s, u.owner)) return;
   botShootActs(s, u);
   botUseActs(s, u.owner, ['selectedToShoot', 'shooting'], u.id);
 }
@@ -87,7 +88,7 @@ export function autoShoot(s: GameState, attackerId: string, targetId: string, op
 
 /** End of the player's Movement phase: stratagems that act on objectives held now (Secure / Snares …). */
 export function autoEndMovement(s: GameState, p: PlayerId) {
-  if (onAuto(s, p)) botEndOfMovement(s, p);
+  if (onAuto(s, p) && !decides(s, p)) botEndOfMovement(s, p); // a player who decides spends their own CP
 }
 
 /** Declare a charge for the player: a bonus stratagem for a long charge first, then a re-roll when it fails and is worth it. */

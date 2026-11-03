@@ -11,7 +11,8 @@ import { createGame, formationAt, placeUnit } from './game';
 import { inFlow } from '../factions/flow';
 import { attemptRitual, casters, ritualsPending, testOdds } from '../factions/rituals';
 import { botRituals } from '../ai/botRituals';
-import { autoDue, autoStep } from '../ai/autoPlay';
+import { autoDue, autoSelectToShoot, autoStep } from '../ai/autoPlay';
+import { manualActs } from '../rules-engine/activations';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
@@ -236,6 +237,23 @@ describe('Thousand Sons stratagems', () => {
     applyDetachmentStratagem(s, 0, strat('IMPLACABLE GUARDIANS'), rm.id);
     expect((rm.timed ?? []).some((t) => t.e.defend?.damage === -1)).toBe(true);
   });
+});
+
+describe('Twisted Sorceries (once per battle)', () => {
+  const offered = (s: GameState) => manualActs(s, 0).some((m) => m.def.name.startsWith('Twisted Sorceries') && m.def.spec.when === 'selectedToShoot');
+  for (const decides of [true, false]) {
+    it(decides ? 'a player who decides keeps it for the button when the Sorcerer is picked to shoot' : 'automatic rules still use it for the player', () => {
+      const s = game([['Sorcerer', 1, 95]], [['Boyz', 20, 180]]);
+      const u = put(s, 'p0-x0', { x: 20, y: 25 });
+      put(s, 'p1-x0', { x: 20, y: 33 });
+      s.phase = 'shooting';
+      s.autoRules = [0];
+      s.decides = decides ? [0] : [];
+      expect(offered(s)).toBe(true);
+      autoSelectToShoot(s, u);
+      expect(offered(s)).toBe(decides);
+    });
+  }
 });
 
 describe('Scintillating Legions: Split', () => {

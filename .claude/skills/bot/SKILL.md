@@ -45,3 +45,6 @@ look-ahead tries; the campaign and phones skip the look-ahead.
 - Too many hunters, too few objective holders: the campaign is won on points, so `pointsFirst` exists; keep it.
 - Big games froze: line of sight from every candidate spot was the cost. Keep the quick path for big boards.
 - A behaviour change for the enemy also changes idle (the same code); say which sides it applies to.
+- Every person is on auto rules and also in `s.decides` (`withAutoRules`). Any `autoPlay.ts` helper that presses a
+  button or spends CP for them must check `decides(s, p)` first: `autoSelectToShoot` once spent a Sorcerer's
+  once-per-battle Twisted Sorceries the moment it was picked to shoot.
