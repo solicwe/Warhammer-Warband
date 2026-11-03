@@ -10,7 +10,7 @@ import {
   autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
   openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
-  sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
+  sendToReserves, declareReserves, armyPoints, reservesPoints, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, nextDeployer, startConsolidate } from '../engine/game';
 import { applyPick } from '../factions/blessings';
 import { botPledge, setPledge } from '../factions/emperorsChildren';
@@ -91,14 +91,27 @@ export function botDeploy(s: GameState) {
       .sort((a, b) => Number(isBrawler(s, b)) - Number(isBrawler(s, a)) || unitValue(b) - unitValue(a));
     if (riders.length && !embarkUnit(s, riders[0], t, true)) return;
   }
+  // Battle formation, once, before setting anything up: deep strikers start in Reserves while there is room (none
+  // when every unit is to deploy on the field)
+  if (!(s.reservesDeclared ?? []).includes(p)) {
+    const cap = armyPoints(s, p) * RULES.reserves.maxPointsFraction;
+    let used = reservesPoints(s, p);
+    const ids: string[] = [];
+    if (!(s.deployAllOnField ?? []).includes(p)) {
+      for (const x of s.units.filter((y) => y.owner === p && y.status === 'pending' && hasDeepStrike(s, y))) {
+        if (used + x.pts > cap) continue;
+        used += x.pts; ids.push(x.id);
+      }
+    }
+    declareReserves(s, p, ids);
+    if (!s.units.some((x) => x.owner === p && x.status === 'pending')) return;
+  }
   const u = s.units.find((x) => x.owner === p && x.status === 'pending');
   if (!u) return;
   // the plan for the whole army, said once
   if (!s.log.some((l) => l.player === p && /deploys (open|closed)/.test(l.text))) {
     log(s, `${s.players[p].name} deploys closed: every unit as far out of sight of the enemy as it can be`, 'info', p);
   }
-  // deep strikers go to reserves when there is room, the rest deploy towards the most central objective
-  if (!(s.deployAllOnField ?? []).includes(p) && hasDeepStrike(s, u) && sendToReserves(s, u.id) === null) return;
   // a vehicle must not be set up where ruin walls box it in for the whole game
   // Infiltrators set up forward, on an objective or in cover near one
   if (u.core.infiltrators) {

@@ -707,10 +707,9 @@ function BoardImpl(props: BoardProps) {
     const w = Math.min(v.w, Math.max(hm.w * 2, (hm.h * v.w) / v.h)), h = (w / v.w) * v.h;
     // the view may hang half off the table, so any corner (and the part under a phone's bottom sheet) can be
     // dragged into view at every zoom; zooming out still stops at the whole table
-    // zoomed out past the table: it sits centred across and at the top (a phone's sheet covers the bottom), not adrift
-    const x = w >= hm.w ? hm.x + (hm.w - w) / 2 : Math.min(hm.x + hm.w - w / 2, Math.max(hm.x - w / 2, v.x));
-    const y = h >= hm.h ? hm.y : Math.min(hm.y + hm.h - h / 2, Math.max(hm.y - h / 2, v.y));
-    return { x, y, w, h };
+    // the view may hang half off the table at every zoom, so the table can always be dragged around (locking it in
+    // place once zoomed out past the table made it impossible to pan)
+    return { x: Math.min(hm.x + hm.w - w / 2, Math.max(hm.x - w / 2, v.x)), y: Math.min(hm.y + hm.h - h / 2, Math.max(hm.y - h / 2, v.y)), w, h };
   }, []);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   // during a pinch, pan or wheel zoom the view box is set on the SVG directly and handed to React once the gesture

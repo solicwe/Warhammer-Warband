@@ -44,7 +44,7 @@ import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
-import { secondaryDead, secondaryGoal, secondaryPreview } from '../engine/secondaries';
+import { beaconCandidates, secondaryDead, secondaryGoal, secondaryPreview, setBeacon } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
@@ -1814,6 +1814,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button key={e.id} className={`unit-pill ${s.players[s.active].oathBackup === e.id ? 'sel' : ''}`} onClick={() => act((g) => setOathBackup(g, g.active, e.id))}>
                   <span className={`side-dot s${e.owner}`} aria-hidden="true" /> {e.name}
                 </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {!bots.includes(s.active) && beaconCandidates(s, s.active).length > 0 && (
+          <div className="card" style={{ padding: 8 }}>
+            <div className="small"><b>Beacon</b> — select the beacon unit (3VP outside your deployment zone, 5VP outside your territory)</div>
+            <div className="unit-strip">
+              {beaconCandidates(s, s.active).map((u) => (
+                <button key={u.id} className={`unit-pill ${s.players[s.active].sec.beacon === u.id ? 'sel' : ''}`} aria-pressed={s.players[s.active].sec.beacon === u.id}
+                  onClick={() => { const e = act((g) => setBeacon(g, g.active, u.id)); if (e) flash(e); }}>{u.name}</button>
               ))}
             </div>
           </div>

@@ -294,7 +294,11 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
       terrain.push(tp);
     }
     tp.objectiveId = id;
-    const plates = [tp, ...platesUnder(terrain, at).filter((t) => t !== tp)];
+    // every plate the marker stands on or touches, and every plate it sat between before separatePlates pulled
+    // touching plates apart (at most 2.5"): a centre objective between two halves of a ruin counts both halves. On
+    // the official layouts those halves end 1.7-2.1" from the marker, any other plate 3.8" or more
+    const near = terrain.filter((t) => t.kind !== 'objective-area' && t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 2.5));
+    const plates = [tp, ...new Set([...platesUnder(terrain, at), ...near].filter((t) => t !== tp))];
     for (const t of plates) t.objectiveId = id;
     return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, terrainIds: plates.map((t) => t.id), controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });

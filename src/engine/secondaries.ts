@@ -169,7 +169,8 @@ function onDrawn(s: GameState, p: PlayerId, id: string): boolean {
   if (def.whenDrawn === 'beacon') {
     const cands = s.units.filter((u) => u.owner === p && (onBoard(u) || u.status === 'embarked'));
     const best = cands.sort((a, b) => (alive(b)[0]?.profile.M ?? 0) - (alive(a)[0]?.profile.M ?? 0))[0];
-    if (best) { P.sec.beacon = best.id; log(s, `Beacon: ${best.name}`, 'info', p); }
+    // the fastest unit by default; the player may pick another during the turn the card is drawn (beaconCandidates)
+    if (best) { P.sec.beacon = best.id; P.sec.beaconTurn = s.turn; log(s, `Beacon: ${best.name}`, 'info', p); }
   }
   if (def.whenDrawn === 'tempting-target') {
     // the opponent picks the No Man's Land objective hardest for us to reach
@@ -322,4 +323,20 @@ export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
     case 'defend-stronghold': return s.objectives.some((o) => o.type === 'home' && o.owner === p && o.controller === p) ? 0.85 : 0.3;
     default: return 0.5;
   }
+}
+
+/** Beacon: the units that may be selected, while the card was drawn this turn (empty otherwise). */
+export function beaconCandidates(s: GameState, p: PlayerId): UnitState[] {
+  const P = s.players[p];
+  if (!P.secActive.includes('beacon') || P.sec.beaconTurn !== s.turn) return [];
+  return s.units.filter((u) => u.owner === p && (onBoard(u) || u.status === 'embarked'));
+}
+
+/** Beacon: select the beacon unit ("when drawn, select one unit from your army"). */
+export function setBeacon(s: GameState, p: PlayerId, unitId: string): string | null {
+  const u = beaconCandidates(s, p).find((x) => x.id === unitId);
+  if (!u) return 'That unit cannot be the Beacon now';
+  s.players[p].sec.beacon = u.id;
+  log(s, `Beacon: ${u.name}`, 'info', p);
+  return null;
 }

@@ -69,6 +69,8 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   `selUnit.owner !== s.active` (the quick actions in `GameScreen.tsx`) hid the Fight button from the defender; check
   `fightCandidates(s).player` there instead.
 - The live map (`MapCam.tsx`) went through three designs in one week (cover >55%, follow the action, then this one);
-  the owner's current wish: shown while the sheet hides most of the board (or the picked unit), zoomed on the picked
-  unit else the whole board, no caption, never over the dice tray, no panning or pinching inside it (dragging moves
-  the window). Ask before changing it again.
+  the owner's current wish: a picked unit is shown zoomed whenever a sheet is up; nothing picked, the whole board
+  while the sheet hides most of it; no caption, never over the dice tray, no panning or pinching inside it (dragging
+  moves the window). Ask before changing it again.
+- The board's zoom-out must never lock panning: when the view outgrew the table I pinned the table in place and the
+  owner could not drag it any more. The clamp in `Board.tsx` lets the view hang half off the table at every zoom.

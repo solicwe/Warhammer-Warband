@@ -34,12 +34,9 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
       if (svg && m && !document.querySelector('.tray')) {
         const box = svg.getBoundingClientRect();
         const sheetTop = Math.min(box.bottom, document.querySelector('.game-side')?.getBoundingClientRect().top ?? Infinity);
-        // shown while the sheet hides most of the board, and also while it hides the picked unit
-        now = box.bottom - sheetTop > box.height * 0.5;
-        if (f && !now) {
-          const at = new DOMPoint(f.x, f.y).matrixTransform(m);
-          now = at.x < box.left || at.x > box.right || at.y < box.top || at.y > sheetTop - 24;
-        }
+        // a picked unit: shown, zoomed on it, whenever a sheet is up; nothing picked: the whole board, while the sheet
+        // hides most of the board
+        now = f ? box.bottom - sheetTop > 24 : box.bottom - sheetTop > box.height * 0.5;
       }
       setCovered(now);
       if (!now) setClosed(false);

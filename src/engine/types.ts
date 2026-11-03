@@ -496,6 +496,8 @@ export interface TimedEffect {
 export interface SecondaryState {
   temptingTarget?: string; // objective id
   beacon?: string; // unit id
+  /** the turn the Beacon card was drawn: its unit may be re-selected until that turn ends */
+  beaconTurn?: number;
   guards: { objId: string; unitId: string }[];
   cleansed: { objId: string; turn: number }[];
   plundered: { terrainId: string; turn: number }[];

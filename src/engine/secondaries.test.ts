@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct } from '../ai/bot';
 import { createGame } from './game';
+import { alive } from './state';
 import type { ArmyList, FactionData } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -39,4 +40,38 @@ describe('tactical secondaries', () => {
     expect(drawn).toBeGreaterThan(12);
     expect(scored).toBeGreaterThan(0);
   }, 360_000); // three whole games with lookahead
+});
+
+describe('Plunder and Beacon', () => {
+  const setup = () => {
+    const s = createGame({ lists: armies(), factions: [SM, ORK], names: ['A', 'B'], seed: 7, secondaryMode: 'tactical' });
+    s.units.forEach((u) => { u.status = 'board'; });
+    s.round = 2; s.turn = 3; s.active = 0;
+    return s;
+  };
+  it('Plunder is offered to a unit standing in a terrain area outside its territory', async () => {
+    const { actionOptions, territoryPoly } = await import('./missions');
+    const { formationAt, placeUnit } = await import('./game');
+    const { pointInPoly, polyCentroid } = await import('./geometry');
+    const s = setup();
+    s.players[0].secActive = ['plunder'];
+    s.phase = 'shooting';
+    const t = s.terrain.find((x) => x.kind !== 'objective-area' && !pointInPoly(polyCentroid(x.poly), territoryPoly(s, 0)) && x.poly.length > 3)!;
+    const u = s.units.find((x) => x.owner === 0 && alive(x).length === 1) ?? s.units.find((x) => x.owner === 0)!;
+    placeUnit(s, u, formationAt(u, polyCentroid(t.poly)));
+    u.move = null; u.shotTurn = -10;
+    expect(actionOptions(s, 0).some((o) => o.action === 'plunder' && o.unitId === u.id)).toBe(true);
+  });
+  it('Beacon: the player may select the beacon unit during the turn the card is drawn', async () => {
+    const { beaconCandidates, setBeacon } = await import('./secondaries');
+    const s = setup();
+    s.players[0].secActive = ['beacon'];
+    s.players[0].sec.beaconTurn = s.turn;
+    const mine = beaconCandidates(s, 0);
+    expect(mine.length).toBeGreaterThan(1);
+    expect(setBeacon(s, 0, mine[1].id)).toBeNull();
+    expect(s.players[0].sec.beacon).toBe(mine[1].id);
+    s.turn += 1;
+    expect(beaconCandidates(s, 0)).toEqual([]);
+  });
 });
