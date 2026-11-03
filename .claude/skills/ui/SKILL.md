@@ -74,3 +74,5 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   moves the window). Ask before changing it again.
 - The board's zoom-out must never lock panning: when the view outgrew the table I pinned the table in place and the
   owner could not drag it any more. The clamp in `Board.tsx` lets the view hang half off the table at every zoom.
+- `ModelToken` in `Board.tsx` has a hand-written memo comparator: a new field that changes how a model is drawn
+  (its facing `rot` was missing, so turning a vehicle in place showed nothing until it moved) must be added there.
