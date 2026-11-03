@@ -1459,6 +1459,11 @@ function BoardImpl(props: BoardProps) {
       {/* Detachment Territory Auras: Thousand Sons Flow of Magic & Chaos Daemons Shadow of Chaos */}
       {territoryAuras}
       <polygon points={scaledPoly(dep.territory.attacker, W, H).map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth={0.1} strokeDasharray="0.5 0.4" pointerEvents="none" clipPath="url(#board-clip)" />
+      {/* the four table quarters (missions and secondaries score by quarter): the two centre lines, faint */}
+      <g pointerEvents="none" stroke="rgba(255,255,255,0.32)" strokeWidth={0.08} strokeDasharray="1 0.6">
+        <line x1={W / 2} y1={0} x2={W / 2} y2={H} />
+        <line x1={0} y1={H / 2} x2={W} y2={H / 2} />
+      </g>
       {Array.from({ length: Math.floor(H / 6) + 1 }, (_, i) => (
         <text key={`ty${i}`} x={0.2} y={i * 6 + 0.5} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
@@ -1515,7 +1520,10 @@ function BoardImpl(props: BoardProps) {
       ))}
       {s.objectives.map((o, i) => {
         const [a, b] = control[i];
-        const ctrl = o.controller;
+        // the colour follows the models standing there now (the game fixes control at the end of each phase, so
+        // o.controller lags while units move); a secured objective stays its holder's until the other side has more
+        const sec = o.secured;
+        const ctrl: PlayerId | null = sec != null && (sec === 0 ? b <= a : a <= b) ? sec : a > b ? 0 : b > a ? 1 : null;
         // the objective's area: the terrain baseplate it stands on, or a 3" circle round a marker in the open
         const polys = objectivePolys(s, o);
         const xs = polys.flat().map((p) => p.x), ys = polys.flat().map((p) => p.y);
@@ -1526,7 +1534,7 @@ function BoardImpl(props: BoardProps) {
         const effects = getObjectiveEffects(s, o);
 
         const pendingAction = s.pendingActions?.find((x) => x.objId === o.id);
-        const isContested = a > 0 && b > 0;
+        const isContested = a > 0 && a === b && ctrl === null;
         const isInProgress = !!pendingAction || isContested;
         const pendingActionDef = pendingAction ? MISSIONS.actions[pendingAction.action] : null;
         const pendingTheme = pendingAction ? getPlayerFactionTheme(s, pendingAction.player) : null;

@@ -21,7 +21,7 @@ export function camFocus(s: GameState, picked: UnitState | null): Pt | null {
 
 const VIEW = 20; // inches across when following the action
 
-/** Phone: while a sheet, the dice or a menu covers most of the screen, a small live view of the battlefield where the action is,
+/** Phone: while a sheet or the dice cover the unit or the attack being followed, a small live view of the battlefield where the action is,
  *  with one line saying what just happened. It mirrors the board itself (an SVG <use>), so it costs no extra rendering
  *  of units. Drag the picture to look around, pinch it to zoom, drag the caption to move the window; close it and it stays away until the board is uncovered again. */
 export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
@@ -39,11 +39,22 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
   const pinch = useRef<{ d: number; z: number } | null>(null);
   const setZ = (z: number) => setZoom(Math.min(4, Math.max(0.5, z)));
 
+  const focusRef = useRef(focus);
+  focusRef.current = focus;
   useEffect(() => {
+    // shown only while the thing being followed is under a sheet (or off the visible board): never just because a
+    // sheet is open, and never with nothing to follow
     const check = () => {
-      const h = window.innerHeight;
-      const cover = (sel: string) => { const el = document.querySelector(sel); return el ? h - el.getBoundingClientRect().top : 0; };
-      const now = Math.max(cover('.game-side'), cover('.tray')) > h * 0.55;
+      const svg = document.querySelector('.board-wrap > svg:not(.fx-overlay)') as SVGSVGElement | null;
+      const f = focusRef.current, m = svg?.getScreenCTM();
+      let now = false;
+      if (f && svg && m) {
+        const at = new DOMPoint(f.x, f.y).matrixTransform(m);
+        const box = svg.getBoundingClientRect();
+        const sheetTop = Math.min(...['.game-side', '.tray'].map((sel) => document.querySelector(sel)?.getBoundingClientRect().top ?? Infinity));
+        const bottom = Math.min(box.bottom, sheetTop) - 24;
+        now = at.x < box.left || at.x > box.right || at.y < box.top || at.y > bottom;
+      }
       setCovered(now);
       if (!now) { setClosed(false); setOff({ x: 0, y: 0 }); setZoom(1); }
       const board = document.querySelector('.board-wrap');

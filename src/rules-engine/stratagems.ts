@@ -932,6 +932,11 @@ export function stratagemShortSummary(st: StratagemData, rule?: StratRule): stri
     if (b.includes('hit+1')) return '+1 to Hit rolls';
     if (b.includes('wound+1')) return '+1 to Wound rolls';
     if (b.includes('cover')) return 'Gain Benefit of Cover';
+    // otherwise say every buff plainly: what the unit gains, and what attacks against it lose
+    const lab = (k: BuffKind) => EFFECT_LABEL[k] ?? k;
+    const ours = b.filter((k) => !k.startsWith('enemy')).map(lab);
+    const theirs = b.filter((k) => k.startsWith('enemy')).map((k) => lab(k).replace(/^enemy /, ''));
+    return [ours.length ? `Your unit: ${ours.join(', ')}` : '', theirs.length ? `Attacks against it: ${theirs.join(', ')}` : ''].filter(Boolean).join(' · ');
   }
 
   if (rule?.effects?.length) {
@@ -950,11 +955,14 @@ export function stratagemShortSummary(st: StratagemData, rule?: StratRule): stri
 
   if (rule?.note && rule.note.length <= 60) return rule.note;
 
-  const m = /EFFECT:\s*([^.\n]+(?:\.[^.\n]+)?)/i.exec(st.text);
+  // the EFFECT, without its "Until ..., " timing clause (the card says the timing elsewhere): what it actually does
+  const m = /EFFECT:\s*([^\n]+)/i.exec(st.text);
   if (m && m[1]) {
-    const eff = m[1].trim();
-    if (eff.length <= 60) return eff;
-    return eff.slice(0, 57) + '…';
+    let eff = m[1].trim().replace(/^until [^,]+,\s*/i, '');
+    eff = eff.charAt(0).toUpperCase() + eff.slice(1);
+    const first = /^[^.]+\./.exec(eff)?.[0] ?? eff;
+    if (first.length <= 120) return first;
+    return first.slice(0, 117).replace(/\s+\S*$/, '') + '…';
   }
 
   return st.type || 'Tactical Stratagem';

@@ -212,8 +212,6 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
       ? { pick: (d: Die) => rerollable(p, d), picked: pending.picks, onPick: (i: number) => onPick(i) }
       : null;
 
-  if (done) return null;
-
   // bot auto-rolling
   const [hold, setHold] = useState(false);
   const stepRef = useRef(onStep);
@@ -258,6 +256,9 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
     }
     lastRolled.current = rolled;
   }, [rolled, st, p, at.kind, weaponAbilities]);
+
+  // after every hook: returning before them changed the number of hooks when an attack finished (React error #300)
+  if (done) return null;
 
   const hitCls = (d: Die) => d.o;
   const woundCls = (d: Die) => d.o;
@@ -322,7 +323,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
 
           {!done && (
-            <button className="btn small primary" onClick={guarded(onSkip)} style={{ marginLeft: 6, background: '#d99b26', borderColor: '#f59e0b', color: '#0f172a', fontWeight: 800 }} title="Instantly resolve all rolls and calculate damage">
+            <button className="btn small primary" onClick={guarded(onSkip)} style={{ background: '#d99b26', borderColor: '#f59e0b', color: '#0f172a', fontWeight: 800 }} title="Instantly resolve all rolls and calculate damage">
               1-Click Resolve
             </button>
           )}

@@ -17,6 +17,8 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | Bot level notes on the setup screen | They promised thinking "during your turn" and "up to ~20 s / ~40 s" and the wrong number of ways; the app has not pondered since 9181a17 and caps a turn's look at 0.25 s | Notes now say what each level tries (`BattleSetup.tsx`) |
 | Campaign reinforcements every battle | The code fired at round 3 in every campaign battle, though its comment said only when the player was ahead | The guard now exists, with a 40% roll; tested (`campaignRules.test.ts`) |
 | Thinking during the player's turn, switched off since 9181a17 | The worker code, its helpers (`playToMovement`, `lookSig`, `boardSig`), the Commander panel and the Enemy plan button (fed only by that thinking, so it never appeared) were still in the code | Removed with their CSS and their one test |
+| Battle screen crash after an attack (React error #300) | `DiceTray` returned before two of its hooks | Return moved below the hooks; `hooksOrder.test.ts` guards every component |
+| `UnitActionBar.tsx` | A whole component and its CSS that nothing rendered | Removed |
 | A stale comment | `fitFormation` said objective markers block a model; they do not (`pathing.ts`) | Comment corrected, unused filter removed |
 
 ## Open, by priority

@@ -147,10 +147,12 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - The battlefield fills the screen. Tap a unit on the map to act with it. The bottom sheet lists only what isn't on
   the table (reserves and embarked units) and can be folded down to its handle.
-- When a sheet, the dice or a menu covers most of the screen, a small live map window appears under the phase tabs.
-  It follows the action (the attack under way, the unit you picked, or the last unit that acted) and shows a line
-  about what just happened. Drag the picture to look around, pinch it to zoom, drag its caption to move it, or close it.
-- Pinch to zoom and drag to pan. The view stays on the table.
+- When a sheet or the dice cover what you are following (the attack under way, the unit you picked, or the last unit
+  that acted), a small live map window appears under the phase tabs, following it, with a line about what just
+  happened. It stays away while that spot is in sight. Drag the picture to look around, pinch it to zoom, drag its caption to move it, or close it.
+- Pinch to zoom and drag to pan. The view stays on the table. Two faint dashed lines split the table into its four
+  quarters, for the missions that score by quarter. An objective's outline takes the colour of whoever has more OC
+  on it right now; the game settles control at the end of each phase.
 - **Moving and setting up.** Drag a model or use the stick, then press Confirm. Cancel, Reset and Confirm sit at the
   top of the sheet, above the stick, so they stay on screen. Bikes and vehicles get turn buttons (45 degrees a press)
   while they move or set up, and keep the facing you gave them. A facing within 20 degrees of straight snaps straight.

@@ -2032,7 +2032,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {u && onBoard(u) && (() => {
           const canFly = hasKw(u, 'FLY') && !unitFlags(s, u).grounded;
           const flyNow = fly && canFly;
+          // the Advance dice were rolled (and the move then cancelled): the unit is committed to that Advance, with that
+          // roll; no Normal move, no staying put, and no fresh roll by pressing Advance again
+          const advanced = u.advanceRoll != null;
           const start = (kind: 'normal' | 'advance' | 'fallback') => {
+            if (advanced) { setMode({ k: 'move', unitId: u.id, kind: 'advance', fly: flyNow }, startPaths(u)); return; }
             const ok = act((g) => {
               const gu = unitById(g, u.id);
               if (!beginMove(g, gu, kind)) return false;
@@ -2045,10 +2049,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           return (
             <>
               <div className="row acts sticky-action-bar">
-                {!isEngaged(s, u) && <button className="btn primary" data-coach="normal" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
-                {!isEngaged(s, u) && <button className="btn" onClick={() => start('advance')}><Icon name="advance" /> Advance</button>}
-                {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}><Icon name="fallback" /> Fall back</button>}
-                <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}><Icon name="hold" /> Remain Stationary</button>
+                {advanced ? (
+                  <button className="btn primary" onClick={() => start('advance')}><Icon name="advance" /> Advance (M + {u.advanceRoll}")</button>
+                ) : (
+                  <>
+                    {!isEngaged(s, u) && <button className="btn primary" data-coach="normal" onClick={() => start('normal')}><Icon name="move" /> Normal {(alive(u)[0].profile.M ?? 0) + unitFlags(s, u).move}"</button>}
+                    {!isEngaged(s, u) && <button className="btn" onClick={() => start('advance')}><Icon name="advance" /> Advance</button>}
+                    {isEngaged(s, u) && <button className="btn" onClick={() => start('fallback')}><Icon name="fallback" /> Fall back</button>}
+                    <button className="btn" onClick={() => { act((g) => remainStationary(g, unitById(g, u.id))); setSel(null); }}><Icon name="hold" /> Remain Stationary</button>
+                  </>
+                )}
                 {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
                 {alive(u).some((m) => m.hl) && (
                   <>
@@ -2113,7 +2123,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {left.map((x) => (
               <button key={x.id} className={`rit-opt ${rit.ritual === x.id ? 'on' : ''}`} onClick={() => setRit({ ...rit, ritual: x.id, target: undefined })}>
                 <span className="rit-opt-head"><b>{x.name}</b><span className="rit-wc">WC {x.wc}</span></span>
-                {rit.ritual === x.id && <small>{x.text}</small>}
+                <small>{x.text}</small>
               </button>
             ))}
           </div>

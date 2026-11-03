@@ -13,7 +13,7 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 | Home (army library) | `src/ui/Home.tsx`, `library.ts` |
 | Army builder | `src/ui/ArmyBuilder.tsx`, `loadout.ts` |
 | Battle setup | `src/ui/BattleSetup.tsx` |
-| Battle | `src/ui/GameScreen.tsx` (phases, sheets, bot driving, idle), `Board.tsx` (SVG battlefield), `Hud.tsx`, `UnitActionBar.tsx`, `DiceTray.tsx`, `AttackReport.tsx`, `MapCam.tsx` |
+| Battle | `src/ui/GameScreen.tsx` (phases, sheets, bot driving, idle), `Board.tsx` (SVG battlefield), `Hud.tsx`, `DiceTray.tsx`, `AttackReport.tsx`, `MapCam.tsx` |
 | Effects | `src/ui/BattleFx.tsx` (load `vfx`) |
 | Campaign | `src/ui/Campaign.tsx`, `ArmyTree.tsx`, `Relics.tsx` |
 | Rule text | `src/ui/RuleText.tsx`, `RuleTable.tsx`, `AbilityBadgePopover.tsx` |
@@ -60,3 +60,8 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 - Getting to a battle screen quickly: in a Playwright page on the dev server, write armies from
   `await import('/src/ui/presets.ts')` into `localStorage['w40k11-armies']`, start a **Bot vs Bot** battle and press
   Fast. Editing the save during deployment can leave the battle stuck.
+- A hook after an early return (`if (done) return null;` above a `useState`) crashed the battle screen with React
+  error #300 the moment the condition changed (`DiceTray.tsx`, when an attack finished). Put every early return
+  below the last hook; `src/ui/hooksOrder.test.ts` checks every component in `src/ui`.
+- A component file nothing imports can sit for weeks (`UnitActionBar.tsx`, with its CSS): before styling a screen,
+  check the component is actually rendered (`grep -rn "<Name" src/ui`).
