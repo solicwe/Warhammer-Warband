@@ -2095,11 +2095,18 @@ export function endConsolidateStep(s: GameState) {
 
 // ---------- reaction windows ----------
 
+/** The enemy units Fire Overwatch may shoot at the end of the Movement phase: those that made a Normal, Advance or
+ *  Fall Back move, or were set up, this turn. A unit that stayed where it was is not a target. */
+export function overwatchTargets(s: GameState, p: PlayerId): UnitState[] {
+  return boardUnits(s, other(p)).filter((e) => e.move === 'normal' || e.move === 'advance' || e.move === 'fallback' || e.setUpTurn === s.turn);
+}
+
 export function overwatchCandidates(s: GameState, p: PlayerId): UnitState[] {
   if (canUseStratagem(s, p, 'fire-overwatch')) return [];
+  const targets = overwatchTargets(s, p);
   return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && !hasKw(u, 'TITANIC') && u.stratagemPhase !== `${s.turn}:${s.phase}` && !unitFlags(s, u).noOverwatch
     && alive(u).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0])))
-    && boardUnits(s, other(p)).some((e) => unitDistance(u, e) <= RULES.snapShooting.range && alive(u).some((m) => unitVisibleTo(s, m, e))));
+    && targets.some((e) => unitDistance(u, e) <= RULES.snapShooting.range && alive(u).some((m) => unitVisibleTo(s, m, e))));
 }
 
 export function heroicCandidates(s: GameState, p: PlayerId): UnitState[] {

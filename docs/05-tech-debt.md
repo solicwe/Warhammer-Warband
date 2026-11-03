@@ -19,6 +19,8 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | Thinking during the player's turn, switched off since 9181a17 | The worker code, its helpers (`playToMovement`, `lookSig`, `boardSig`), the Commander panel and the Enemy plan button (fed only by that thinking, so it never appeared) were still in the code | Removed with their CSS and their one test |
 | Battle screen crash after an attack (React error #300) | `DiceTray` returned before two of its hooks | Return moved below the hooks; `hooksOrder.test.ts` guards every component |
 | `UnitActionBar.tsx` | A whole component and its CSS that nothing rendered | Removed |
+| Fire Overwatch on a unit that did not move | The end-of-Movement window let any enemy within 24" be shot | `overwatchTargets`: only units that moved or were set up this turn, for the player and the bot |
+| The defender could not fight back | The map's unit actions were for the active player only | The side whose pick it is gets the Fight action, and the panel has a Fight button |
 | A stale comment | `fitFormation` said objective markers block a model; they do not (`pathing.ts`) | Comment corrected, unused filter removed |
 
 ## Open, by priority

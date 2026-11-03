@@ -127,6 +127,25 @@ describe('Rituals', () => {
     expect(boyz.models.filter((m) => !m.dead).length).toBeLessThan(before);
     expect(attemptRitual(s, 0, cs[1].model.id, 'doombolt', boyz.id, { channel: false }).error).toMatch(/already attempted/);
   });
+  it('Ritual of Regeneration: a wounded unit that manifests a Ritual heals (Sorcerous Invigoration), once a turn', () => {
+    const s = game([['Rubric Marines', 5, 100], ['Sorcerer', 1, 95, 'x0']], [['Boyz', 10, 90]], 'Ritual of Regeneration');
+    const rubrics = put(s, 'p0-x0', { x: 20, y: 30 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 45 });
+    s.phase = 'shooting';
+    const hurt = rubrics.models.filter((m) => !m.dead)[1];
+    let healed = false;
+    for (let i = 0; i < 30 && !healed; i++) {
+      s.players[0].rituals = undefined;
+      s.players[0].abilityUsed = {};
+      hurt.wounds = 1;
+      s.rng = 2000 + i * 7919;
+      const r = attemptRitual(s, 0, casters(s, 0)[0].model.id, 'doombolt', boyz.id, { channel: true });
+      expect(r.error).toBeNull();
+      if (r.out?.manifested) { healed = true; expect(hurt.wounds).toBeGreaterThan(1); }
+      else expect(hurt.wounds).toBe(1);
+    }
+    expect(healed).toBe(true);
+  });
   it('the odds of a Psychic test', () => {
     expect(testOdds(2, 0, 7).pass).toBeCloseTo(21 / 36, 5);
     expect(testOdds(3, 0, 9).pass).toBeGreaterThan(testOdds(2, 0, 9).pass);

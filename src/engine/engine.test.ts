@@ -471,6 +471,23 @@ describe('Chapter Approved missions', () => {
     rollHits(s);
     expect(s.attack!.pools[0].hits.some((h) => h.o === 'crit')).toBe(false);
   });
+  it('Fire Overwatch only targets a unit that moved or was set up this turn, never one that stayed put', async () => {
+    const { overwatchCandidates, overwatchTargets } = await import('./game');
+    const s = game();
+    s.terrain = s.terrain.filter((t) => t.objectiveId);
+    s.terrain.forEach((t) => { t.walls = []; t.category = 'exposed'; });
+    const a = put(s, s.units[0].id, { x: 22, y: 10 });
+    const t = put(s, s.units[2].id, { x: 22, y: 25 });
+    s.phase = 'movement'; s.active = 1; s.turn = 3; s.players[0].cp = 5; s.players[1].cp = 5;
+    t.setUpTurn = -10; t.move = null;
+    expect(overwatchTargets(s, a.owner)).toEqual([]);
+    expect(overwatchCandidates(s, a.owner)).toEqual([]);
+    t.move = 'stationary';
+    expect(overwatchTargets(s, a.owner)).toEqual([]);
+    t.move = 'normal';
+    expect(overwatchTargets(s, a.owner).map((u) => u.id)).toEqual([t.id]);
+    expect(overwatchCandidates(s, a.owner).map((u) => u.id)).toContain(a.id);
+  });
 });
 
 describe('wargear', () => {

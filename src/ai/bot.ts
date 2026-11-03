@@ -9,7 +9,7 @@ import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import {
   autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
-  openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
+  openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, nextDeployer, startConsolidate } from '../engine/game';
 import { applyPick } from '../factions/blessings';
@@ -813,7 +813,7 @@ export function botWindow(s: GameState) {
     if (w.kind === 'fireOverwatch' && s.players[w.player].cp >= 2) {
       let best: { u: UnitState; t: UnitState; v: number } | null = null;
       for (const u of overwatchCandidates(s, w.player)) {
-        for (const t of boardUnits(s, other(w.player))) {
+        for (const t of overwatchTargets(s, w.player)) {
           const r = buildShootPools(s, u.id, t.id, { mode: 'snap' });
           if (r.error || !r.pools.length) continue;
           const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);

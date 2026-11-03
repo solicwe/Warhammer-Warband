@@ -18,7 +18,7 @@ import { rollN } from '../engine/dice';
 import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible,
+  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible,
   rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
@@ -558,7 +558,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const shootTargets = useMemo(() => {
     if (mode?.k !== 'shoot') return [];
     const u = U(mode.unitId);
-    return boardUnits(s, other(u.owner)).filter((t) => {
+    // Fire Overwatch: only a unit that moved or was set up this turn
+    const pool = mode.overwatch ? overwatchTargets(s, u.owner) : boardUnits(s, other(u.owner));
+    return pool.filter((t) => {
       if (mode.smode === 'closeQuarters') return engagedEnemies(s, u).includes(t) || alive(u).some((m) => m.keywords.includes('VEHICLE') || m.keywords.includes('MONSTER'));
       if (mode.smode === 'indirect') return true;
       if (mode.smode === 'snap' && unitDistance(u, t) > RULES.snapShooting.range) return false;
