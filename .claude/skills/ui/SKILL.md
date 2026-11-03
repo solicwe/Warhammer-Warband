@@ -65,3 +65,6 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   below the last hook; `src/ui/hooksOrder.test.ts` checks every component in `src/ui`.
 - A component file nothing imports can sit for weeks (`UnitActionBar.tsx`, with its CSS): before styling a screen,
   check the component is actually rendered (`grep -rn "<Name" src/ui`).
+- The Fight phase is the one phase where the player who is not active acts (they fight back). A guard like
+  `selUnit.owner !== s.active` (the quick actions in `GameScreen.tsx`) hid the Fight button from the defender; check
+  `fightCandidates(s).player` there instead.

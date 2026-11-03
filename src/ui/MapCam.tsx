@@ -48,7 +48,8 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
       const svg = document.querySelector('.board-wrap > svg:not(.fx-overlay)') as SVGSVGElement | null;
       const f = focusRef.current, m = svg?.getScreenCTM();
       let now = false;
-      if (f && svg && m) {
+      // the dice tray shows both sides itself, and its 1-Click Resolve sits where this window would go
+      if (f && svg && m && !document.querySelector('.tray')) {
         const at = new DOMPoint(f.x, f.y).matrixTransform(m);
         const box = svg.getBoundingClientRect();
         const sheetTop = Math.min(...['.game-side', '.tray'].map((sel) => document.querySelector(sel)?.getBoundingClientRect().top ?? Infinity));

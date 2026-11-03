@@ -1007,7 +1007,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   }, [baseBadges, mode, modeUnit, shootTargets, targets, s]);
 
   const quickActions = useMemo(() => {
-    if (!sel || !selUnit || selUnit.owner !== s.active) return undefined;
+    // in the Fight phase the side whose pick it is acts, whoever's turn it is (the defender fights back)
+    const picksNow = !!fc && !!selUnit && fc.player === selUnit.owner && fc.units.includes(selUnit);
+    if (!sel || !selUnit || (selUnit.owner !== s.active && !picksNow)) return undefined;
     const actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] = [];
     if (s.phase === 'movement' && onBoard(selUnit)) {
       if (selUnit.move && reopenMove && reopenMove.mode.unitId === selUnit.id) {
@@ -1086,7 +1088,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     }
     // the unit's sheet opens from the unit bar; the map keeps only the phase's action
     return actions.length > 0 ? { unitId: selUnit.id, actions } : undefined;
-  }, [sel, selUnit, s, fly, reopenMove]);
+  }, [sel, selUnit, s, fly, reopenMove, fc]);
 
   // tape measure: tap two points on the board
   const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });
@@ -2796,6 +2798,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {cands.player !== null && <div className="handoff">{pName(s, cands.player)} selects a unit to fight{cands.units.some((u) => u.chargedTurn === s.turn || u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn) ? ' (Fights First units first)' : ''}</div>}
 
         {selUnit && cands.units.includes(selUnit) && unitCard(selUnit)}
+        {selUnit && cands.units.includes(selUnit) && isEngaged(s, selUnit) && selUnit.owner === cands.player && (
+          <div className="row">
+            <button className="btn primary grow" onClick={() => {
+              const eng = engagedEnemies(s, selUnit).map((e) => e.id);
+              setModeRaw({ k: 'fight', unitId: selUnit.id, target: eng.length === 1 ? eng[0] : null, epic: false });
+            }}><Icon name="fight" /> Fight with {selUnit.name}</button>
+          </div>
+        )}
         {overrunReady && (
           <div className="row">
             <span className="small grow">{selUnit!.name} is no longer engaged: Overrun (pile in 3" more)</span>
