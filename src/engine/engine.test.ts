@@ -490,6 +490,21 @@ describe('Chapter Approved missions', () => {
   });
 });
 
+describe('battle formation', () => {
+  it('Reserves are declared once, before setting up, within the points limit', async () => {
+    const { declareReserves, armyPoints } = await import('./game');
+    const s = createGame({ lists: [list('SM', [['Intercessor Squad', 5, 80], ['Hellblaster Squad', 5, 110], ['Assault Intercessor Squad', 5, 75]]), list('ORK', [['Boyz', 10, 90]])], factions: [SM, ORK], names: ['A', 'B'], seed: 4 });
+    const mine = s.units.filter((u) => u.owner === 0);
+    const tooMany = mine.map((u) => u.id);
+    expect(declareReserves(s, 0, tooMany)).toMatch(/cannot exceed/);
+    expect(mine.every((u) => u.status === 'pending')).toBe(true);
+    const one = mine.find((u) => u.pts <= armyPoints(s, 0) * 0.5)!;
+    expect(declareReserves(s, 0, [one.id])).toBeNull();
+    expect(one.status).toBe('reserves');
+    expect(declareReserves(s, 0, [])).toMatch(/already declared/);
+  });
+});
+
 describe('wargear', () => {
   const opt = (sheetName: string, f: FactionData, re: RegExp) => f.datasheets.find((d) => d.name === sheetName)!.wargearOptions!.findIndex((o) => re.test(o.text));
   const one = (f: FactionData, factionId: string, e: ArmyUnitEntry) => buildUnits({ name: 't', factionId, battleSize: 'incursion', detachments: [], units: [e] }, f, 0)[0];

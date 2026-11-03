@@ -56,7 +56,7 @@ export function tipsNow(v: CoachView): Tip[] {
   if (s.phase === 'deploy') {
     if (s.deployTurn !== me) return out;
     if (mode?.k === 'place') out.push({ id: 'deploy-place', at: '.board-wrap', title: 'Place the unit', text: 'Tap inside your deployment zone (your coloured strip), drag to adjust, then Confirm.' });
-    else out.push({ id: 'deploy', at: '[data-coach="deploy-auto"]', title: 'Set up your army', text: 'Pick a unit and place it in your zone — or let the app set up the rest for you here.' });
+    else out.push({ id: 'deploy', at: '.unit-strip', title: 'Set up your army', text: 'Pick a unit and place it in your zone. Players take turns, one unit at a time.' });
     return out;
   }
   if (s.active !== me || s.window) return out;

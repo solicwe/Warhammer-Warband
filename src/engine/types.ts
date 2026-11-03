@@ -764,6 +764,8 @@ export interface GameState {
   autoDeploy?: PlayerId[];
   /** players who chose to deploy all units directly onto the battlefield without placing in reserves */
   deployAllOnField?: PlayerId[];
+  /** players who declared which units start in Reserves (once, before setting anything up) */
+  reservesDeclared?: PlayerId[];
   /** vs bot: the player rolls their own saves when the bot attacks (and can use Command Re-roll then). Default on. */
   defenderRolls?: boolean;
   /** ability re-rolls ("re-roll the Hit roll", Oath of Moment …) wait for the dice to be picked; off: every failed die is re-rolled at once */

@@ -52,6 +52,9 @@ The game follows the 11th edition core rules. A summary of what is modelled, wit
 
 - **Phases.** Each turn runs Command, Movement, Shooting, Charge and Fight, in that order. Command points, Battle-shock,
   reserves, Deep Strike, Advance, Fall Back, overwatch, heroic interventions, pile-in and consolidation are all in.
+- **Battle formation.** Before setting anything up, each player declares which units start in Reserves (Strategic
+  Reserves or Deep Strike), within the points limit. It cannot be changed later; deployment then only sets units up,
+  one at a time each.
 - **Terrain footprints.** Every piece of terrain sits on a baseplate, its footprint. Models walk into ruin footprints
   freely but can't walk through walls. Every model, vehicles included, may end a move inside one to hold an objective. Titanic models stand astride ruins.
 - **Line of sight.** Sight is checked model to model. Walls block it. A dense footprint that neither model stands in
@@ -147,9 +150,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - The battlefield fills the screen. Tap a unit on the map to act with it. The bottom sheet lists only what isn't on
   the table (reserves and embarked units) and can be folded down to its handle.
-- When a sheet or the dice cover what you are following (the attack under way, the unit you picked, or the last unit
-  that acted), a small live map window appears under the phase tabs, following it, with a line about what just
-  happened. It stays away while that spot is in sight. Drag the picture to look around, pinch it to zoom, drag its caption to move it, or close it.
+- When a sheet hides the battlefield, a small live map window appears under the phase tabs with a line about what just
+  happened: zoomed on the unit you picked while the sheet hides it, else the whole board while the sheet hides most of
+  it. It never opens over the dice. Drag its caption to move it, or close it.
 - Pinch to zoom and drag to pan. The view stays on the table. Two faint dashed lines split the table into its four
   quarters, for the missions that score by quarter. An objective's outline takes the colour of whoever has more OC
   on it right now; the game settles control at the end of each phase.

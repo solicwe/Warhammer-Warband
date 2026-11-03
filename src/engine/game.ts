@@ -932,6 +932,22 @@ export function armyPoints(s: GameState, p: PlayerId) {
   return s.units.filter((u) => u.owner === p).reduce((a, u) => a + u.pts, 0);
 }
 
+/** Battle formation: before setting anything up, a player declares which units start in Reserves (Strategic Reserves
+ *  or Deep Strike), all at once. It cannot be changed afterwards; deployment then only sets units up. */
+export function declareReserves(s: GameState, p: PlayerId, ids: string[]): string | null {
+  if ((s.reservesDeclared ?? []).includes(p)) return 'Reserves are already declared';
+  const units = s.units.filter((u) => ids.includes(u.id) && u.owner === p && u.status === 'pending');
+  const pts = reservesPoints(s, p) + units.filter((u) => !hasKw(u, 'AIRCRAFT')).reduce((a, u) => a + u.pts, 0);
+  if (pts > armyPoints(s, p) * RULES.reserves.maxPointsFraction) return `Reserves cannot exceed ${RULES.reserves.maxPointsFraction * 100}% of the army's points`;
+  for (const u of units) {
+    u.status = 'reserves';
+    log(s, `${u.name} starts in Strategic Reserves${hasDeepStrike(s, u) ? ' (Deep Strike)' : ''}`, 'info', p);
+  }
+  s.reservesDeclared = [...(s.reservesDeclared ?? []), p];
+  if (!s.units.some((u) => u.owner === p && u.status === 'pending')) nextDeployer(s);
+  return null;
+}
+
 export function deployUnit(s: GameState, unitId: string, pos: Map<string, Pt>, how: 'deploy' | 'infiltrate' = 'deploy'): MoveCheck {
   const u = unitById(s, unitId);
   const chk = validatePlacement(s, u, pos, how);

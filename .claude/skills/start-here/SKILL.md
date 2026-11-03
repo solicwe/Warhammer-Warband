@@ -129,6 +129,8 @@ Made in conversation, so they are not all visible in the code. A change that wou
   or haze as the main event; every effect sized to the model and the zoom through the one scale (`VIS`, `TRACE`);
   blasts about the size of the unit hit; Deep Strike keeps the old lightning arrival the owner liked; mortal wounds
   are a flash and a shockwave, no lightning; Sonic is not drawn as rings; every ability style keeps its own shape.
+- **Reserves are declared before deployment**, once (battle formation); no per-unit Reserves button while deploying, no
+  automatic deploy buttons. The Idle tactic is chosen in Settings only.
 - **Big games must not freeze**: the bot's quick planning on big boards and the worker fallback stay.
 - No emoji anywhere; replies in Thai.
 

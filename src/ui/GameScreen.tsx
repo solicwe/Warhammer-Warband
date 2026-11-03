@@ -19,7 +19,7 @@ import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible,
-  rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, sendToReserves, smokescreenCandidates, useCounteroffensive,
+  rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
@@ -1648,6 +1648,29 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         </>
       );
     }
+    // battle formation first: which units start in Reserves is declared once, before anything is set up
+    if (!bots.includes(p) && !(s.autoDeploy ?? []).includes(p) && !(s.reservesDeclared ?? []).includes(p) && pending.length) {
+      const cap = Math.floor(armyPoints(s, p) * RULES.reserves.maxPointsFraction);
+      const inRes = reservesPoints(s, p) + pending.filter((x) => resPick.includes(x.id) && !hasKw(x, 'AIRCRAFT')).reduce((a, x) => a + x.pts, 0);
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: which units start in Reserves?</div>
+          <div className="small muted">Deep Strike and Strategic Reserves are declared now, before anything is set up, and cannot be changed later.</div>
+          <div className="unit-strip">
+            {pending.map((x) => (
+              <button key={x.id} className={`unit-pill ${resPick.includes(x.id) ? 'sel' : ''}`} aria-pressed={resPick.includes(x.id)}
+                onClick={() => setResPick((cur) => (cur.includes(x.id) ? cur.filter((i) => i !== x.id) : [...cur, x.id]))}>
+                {x.name.length > 22 ? x.name.slice(0, 21) + '…' : x.name}<span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
+              </button>
+            ))}
+          </div>
+          <div className={`small ${inRes > cap ? 'err' : 'muted'}`}>In Reserves: {inRes} / {cap} pts</div>
+          <button className="btn primary" disabled={inRes > cap} onClick={() => { const e = act((g) => declareReserves(g, p, resPick)); if (e) flash(e); else { setResPick([]); setSel(null); } }}>
+            <Icon name="check" /> {resPick.length ? `Confirm: ${resPick.length} unit${resPick.length > 1 ? 's' : ''} in Reserves` : 'No Reserves: set everything up'}
+          </button>
+        </>
+      );
+    }
     const u = selUnit && pending.includes(selUnit) ? selUnit : null;
     return (
       <>
@@ -1682,41 +1705,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             );
           })}
         </div>
-        {!bots.includes(p) && pending.length > 0 && !(s.autoDeploy ?? []).includes(p) && (
-          <div className="row wrap" style={{ gap: '0.5rem', marginBottom: '0.4rem' }}>
-            <button
-              className="btn"
-              data-coach="deploy-all"
-              onClick={() => {
-                act((g) => {
-                  g.autoDeploy = [...(g.autoDeploy ?? []), p];
-                  g.deployAllOnField = [...(g.deployAllOnField ?? []), p];
-                });
-                setSel(null);
-              }}
-            >
-              <Icon name="move" size={14} /> Deploy All on Field
-            </button>
-            <button
-              className="btn"
-              data-coach="deploy-auto"
-              onClick={() => {
-                act((g) => {
-                  g.autoDeploy = [...(g.autoDeploy ?? []), p];
-                  g.deployAllOnField = (g.deployAllOnField ?? []).filter((x) => x !== p);
-                });
-                setSel(null);
-              }}
-            >
-              <Icon name="reserves" size={14} /> Standard Deploy (with Reserves)
-            </button>
-          </div>
-        )}
         {u ? (
           <div className="row">
             <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'deploy' })}>Set up in deployment zone</button>
             {u.core.infiltrators && <button className="btn" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'infiltrate' })}>Infiltrate</button>}
-            <button className="btn" onClick={() => { const e = act((g) => sendToReserves(g, u.id)); if (e) flash(e); else setSel(null); }}>Strategic Reserves{u.core.deepStrike ? ' / Deep Strike' : ''}</button>
             {s.units.filter((t) => t.owner === p && t.transport && (t.status === 'board' || t.status === 'pending') && !canEmbarkIn(s, u, t)).map((t) => (
               <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, u.id), unitById(g, t.id), true)); if (e) flash(e); else setSel(null); }}>Embark in {t.name} ({transportSpaceUsed(s, t)}/{t.transport!.capacity})</button>
             ))}
@@ -1731,6 +1723,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
 
   const [detPick, setDetPick] = useState<string[]>([]);
+  const [resPick, setResPick] = useState<string[]>([]); // units being declared into Reserves before deployment
   const AUTO_LABEL: Record<string, React.ReactNode> = { full: <><Icon name="check" size={13} /> Automated</>, partial: <><Icon name="partial" size={13} /> Mostly automated</>, manual: <><Icon name="hand" size={13} /> Manual</>, none: <><Icon name="hand" size={13} /> Not supported (read the rule)</> };
   /** Detachment rules of player p: what the app applies, and "pick one" choices such as Combat Doctrines. */
   const detPanel = (p: PlayerId) => {
@@ -1832,7 +1825,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button key={o} className={`btn small ${c.on.includes(o) ? 'on' : ''}`} onClick={() => {
                   const on = c.on.includes(o) ? c.on.filter((x) => x !== o) : [...c.on, o].slice(-c.pick);
                   act((g) => pickAbilities(g, c.unit.id, on));
-                }}><span className={`radio-mark ${c.on.includes(o) ? 'on' : ''}`} aria-hidden="true" />{o}</button>
+                }}><span className={`radio-mark ${c.on.includes(o) ? 'on' : ''}`} aria-hidden="true" />{o}
+                  {/* what the option does, from the datasheet, so the choice is not made blind */}
+                  {c.unit.abilities.find((a) => a.name === o)?.text && <span className="tiny" style={{ display: 'block', fontWeight: 400 }}>{c.unit.abilities.find((a) => a.name === o)!.text}</span>}
+                </button>
               ))}
             </div>
           </div>
@@ -3137,20 +3133,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <span className="tb-ico"><Icon name="bot" size={20} /></span>
             <span className="tb-lbl">{autoPlay ? (s.idleTactic === 'assault' ? 'IDLE ASSAULT' : 'IDLE OBJ') : 'IDLE'}</span>
           </button>
-          <button
-            className="tb-tool"
-            onClick={() => {
-                const next = s.idleTactic === 'assault' ? 'objectives' : 'assault';
-                act((g) => { g.idleTactic = next; });
-                flash(next === 'assault' ? 'Idle: Pure Assault & Hunt All' : 'Idle: Objectives & Missions');
-              }}
-              aria-label="Toggle Idle Tactic"
-              title={s.idleTactic === 'assault' ? 'Idle Strategy: Assault (hunt all enemies)' : 'Idle Strategy: Objectives (hold VP & missions)'}
-              style={{ color: s.idleTactic === 'assault' ? '#f87171' : '#60a5fa' }}
-            >
-              <span className="tb-ico"><Icon name={s.idleTactic === 'assault' ? 'fight' : 'objective'} size={18} /></span>
-              <span className="tb-lbl" style={{ fontSize: 9 }}>{s.idleTactic === 'assault' ? 'Assault' : 'Obj'}</span>
-            </button>
           {canUndo && (
             <button
               className="tb-tool undo-tool"
@@ -3257,7 +3239,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </div>
-      {isMobileScreen && <MapCam s={s} focus={camFocus(s, modeUnit ?? selUnit)} />}
+      {isMobileScreen && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} />}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
