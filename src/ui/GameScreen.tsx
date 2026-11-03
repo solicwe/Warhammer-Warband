@@ -1727,9 +1727,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const AUTO_LABEL: Record<string, React.ReactNode> = { full: <><Icon name="check" size={13} /> Automated</>, partial: <><Icon name="partial" size={13} /> Mostly automated</>, manual: <><Icon name="hand" size={13} /> Manual</>, none: <><Icon name="hand" size={13} /> Not supported (read the rule)</> };
   /** Detachment rules of player p: what the app applies, and "pick one" choices such as Combat Doctrines. */
   const detPanel = (p: PlayerId) => {
-    const summary = detSummary(s, p);
-    if (!summary.length) return null;
+    // only a detachment rule that needs a pick now (a Combat Doctrine...) is shown: the rest just run
     const choices = detChoices(s, p);
+    const summary = detSummary(s, p).filter((d) => choices.some((c) => c.rule === d.name && c.open));
+    if (!summary.length) return null;
     return (
       <div className="card det-card">
         {summary.map((d) => {
@@ -1817,7 +1818,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         )}
-        {abilityChoices(s, s.active).map((c) => (
+        {abilityChoices(s, s.active).filter((c) => onBoard(c.unit)).map((c) => (
           <div key={c.unit.id + c.name} className="card" style={{ padding: 8 }}>
             <div className="small"><b>{c.name}</b> · {c.unit.name} — select {c.pick} (until your next Command phase)</div>
             <div className="det-opts">
@@ -1827,7 +1828,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   act((g) => pickAbilities(g, c.unit.id, on));
                 }}><span className={`radio-mark ${c.on.includes(o) ? 'on' : ''}`} aria-hidden="true" />{o}
                   {/* what the option does, from the datasheet, so the choice is not made blind */}
-                  {c.unit.abilities.find((a) => a.name === o)?.text && <span className="tiny" style={{ display: 'block', fontWeight: 400 }}>{c.unit.abilities.find((a) => a.name === o)!.text}</span>}
+                  {c.on.includes(o) && c.unit.abilities.find((a) => a.name === o)?.text && <span className="tiny" style={{ display: 'block', fontWeight: 400 }}>{c.unit.abilities.find((a) => a.name === o)!.text}</span>}
                 </button>
               ))}
             </div>
