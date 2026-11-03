@@ -43,51 +43,6 @@ export function stripBarricade(poly: number[][]): Seg[] {
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
 }
 
-const polyArea = (p: Pt[]) => Math.abs(p.reduce((a, q, i) => { const r = p[(i + 1) % p.length]; return a + q.x * r.y - r.x * q.y; }, 0) / 2);
-const plateGap = (A: Pt[], B: Pt[]) => {
-  if (A.some((p) => pointInPoly(p, B)) || B.some((p) => pointInPoly(p, A))) return -1;
-  const es = (P: Pt[]) => P.map((a, i) => ({ a, b: P[(i + 1) % P.length] }));
-  return Math.min(...es(A).flatMap((e) => es(B).map((f) => segSegDist(e, f))));
-};
-const shiftPt = (p: Pt, d: Pt): Pt => ({ x: p.x + d.x, y: p.y + d.y });
-function shiftPlate(t: TerrainPiece, d: Pt) {
-  const seg = (w: Seg): Seg => ({ a: shiftPt(w.a, d), b: shiftPt(w.b, d) });
-  t.poly = t.poly.map((p) => shiftPt(p, d));
-  t.walls = t.walls.map(seg);
-  if (t.obstacles) t.obstacles = t.obstacles.map(seg);
-  if (t.box) t.box = t.box.map((p) => shiftPt(p, d));
-  if (t.bounds) t.bounds = { x0: t.bounds.x0 + d.x, y0: t.bounds.y0 + d.y, x1: t.bounds.x1 + d.x, y1: t.bounds.y1 + d.y };
-}
-export const PLATE_GAP = 1, PLATE_MAX_SHIFT = 2.5;
-function separatePlates(terrain: TerrainPiece[], markers: Pt[], W: number, H: number) {
-  const holds = (t: TerrainPiece) => markers.some((m) => pointInPoly(m, t.poly));
-  const moved = new Map<TerrainPiece, Pt>();
-  for (let round = 0; round < 6; round++) {
-    const step = new Map<TerrainPiece, Pt>();
-    for (let i = 0; i < terrain.length; i++) for (let j = i + 1; j < terrain.length; j++) {
-      const A = terrain[i], B = terrain[j];
-      if (plateGap(A.poly, B.poly) >= PLATE_GAP - 1e-6 || (holds(A) && holds(B))) continue;
-      const [fix, mov] = holds(B) || (!holds(A) && polyArea(B.poly) > polyArea(A.poly)) ? [B, A] : [A, B];
-      const c1 = polyCentroid(fix.poly), c2 = polyCentroid(mov.poly);
-      const L = Math.hypot(c2.x - c1.x, c2.y - c1.y) || 1, u = { x: (c2.x - c1.x) / L, y: (c2.y - c1.y) / L };
-      let d = 0;
-      while (d <= PLATE_MAX_SHIFT && plateGap(fix.poly, mov.poly.map((p) => shiftPt(p, { x: u.x * d, y: u.y * d }))) < PLATE_GAP) d += 0.05;
-      const so = moved.get(mov) ?? { x: 0, y: 0 }, st = step.get(mov) ?? { x: 0, y: 0 };
-      const next = { x: st.x + u.x * d, y: st.y + u.y * d };
-      if (d > PLATE_MAX_SHIFT || Math.hypot(so.x + next.x, so.y + next.y) > PLATE_MAX_SHIFT) continue; // too deep: left as traced
-      step.set(mov, next);
-    }
-    if (!step.size) break;
-    for (const [t, d] of step) {
-      // stays on the table
-      if (t.poly.some((p) => p.x + d.x < 0 || p.x + d.x > W || p.y + d.y < 0 || p.y + d.y > H)) continue;
-      shiftPlate(t, d);
-      const so = moved.get(t) ?? { x: 0, y: 0 };
-      moved.set(t, { x: so.x + d.x, y: so.y + d.y });
-    }
-  }
-}
-
 export function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const targetW = tableSize?.width ?? RULES.battlefield.width;
@@ -271,10 +226,6 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     }
     t.walls = kept;
   }
-  // plates traced touching or overlapping read as one piece: each pair less than 1" apart is pulled apart to 1", the
-  // plate without an objective marker moving (the smaller one if neither has one), at most 2.5" in all. Every move in a
-  // round is worked out on the same positions and applied together, so a mirrored layout stays mirrored
-  separatePlates(terrain, L.objectives.map((o) => ({ x: o.x * sx, y: o.y * sy })), targetW, targetH);
   const objectives: ObjectiveState[] = L.objectives.map((o, i) => {
     const id = o.type === 'home' ? `home-${o.owner === 'attacker' ? 'a' : 'd'}` : `${o.type}-${i}`;
     const ox = Math.round(o.x * sx * 10) / 10;
@@ -294,11 +245,7 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
       terrain.push(tp);
     }
     tp.objectiveId = id;
-    // every plate the marker stands on or touches, and every plate it sat between before separatePlates pulled
-    // touching plates apart (at most 2.5"): a centre objective between two halves of a ruin counts both halves. On
-    // the official layouts those halves end 1.7-2.1" from the marker, any other plate 3.8" or more
-    const near = terrain.filter((t) => t.kind !== 'objective-area' && t.poly.some((q, k) => pointSegDist(at, { a: q, b: t.poly[(k + 1) % t.poly.length] }) <= 2.5));
-    const plates = [tp, ...new Set([...platesUnder(terrain, at), ...near].filter((t) => t !== tp))];
+    const plates = [tp, ...platesUnder(terrain, at).filter((t) => t !== tp)];
     for (const t of plates) t.objectiveId = id;
     return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, terrainIds: plates.map((t) => t.id), controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
