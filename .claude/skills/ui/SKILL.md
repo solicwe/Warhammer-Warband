@@ -69,5 +69,6 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   `selUnit.owner !== s.active` (the quick actions in `GameScreen.tsx`) hid the Fight button from the defender; check
   `fightCandidates(s).player` there instead.
 - The live map (`MapCam.tsx`) went through three designs in one week (cover >55%, follow the action, then this one);
-  the owner's current wish: zoomed on the picked unit while the sheet hides it, else the whole board while the sheet
-  hides most of the board, never over the dice tray, no panning or pinching inside it. Ask before changing it again.
+  the owner's current wish: shown while the sheet hides most of the board (or the picked unit), zoomed on the picked
+  unit else the whole board, no caption, never over the dice tray, no panning or pinching inside it (dragging moves
+  the window). Ask before changing it again.

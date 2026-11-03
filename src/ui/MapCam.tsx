@@ -11,10 +11,10 @@ export function camFocus(picked: UnitState | null): Pt | null {
 
 const VIEW = 20; // inches across when zoomed on a unit
 
-/** Phone: a small live view of the battlefield while a sheet hides it, with one line saying what just happened. It
+/** Phone: a small live view of the battlefield while a sheet hides it. It
  *  mirrors the board itself (an SVG <use>), so it costs no extra rendering of units. Zoomed on the picked unit (shown
  *  only while the sheet hides that unit), else the whole board (shown while the sheet hides most of the board); never
- *  over the dice tray. Drag the caption to move the window; close it and it stays away until the board is uncovered. */
+ *  over the dice tray. Drag the picture to move the window; close it and it stays away until the board is uncovered. */
 export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
   const [covered, setCovered] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -34,10 +34,12 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
       if (svg && m && !document.querySelector('.tray')) {
         const box = svg.getBoundingClientRect();
         const sheetTop = Math.min(box.bottom, document.querySelector('.game-side')?.getBoundingClientRect().top ?? Infinity);
-        if (f) {
+        // shown while the sheet hides most of the board, and also while it hides the picked unit
+        now = box.bottom - sheetTop > box.height * 0.5;
+        if (f && !now) {
           const at = new DOMPoint(f.x, f.y).matrixTransform(m);
           now = at.x < box.left || at.x > box.right || at.y < box.top || at.y > sheetTop - 24;
-        } else now = box.bottom - sheetTop > box.height * 0.5;
+        }
       }
       setCovered(now);
       if (!now) setClosed(false);
@@ -54,14 +56,11 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
   const vw = focus ? VIEW : W + 2, vh = focus ? VIEW * 0.72 : H + 2;
   const x = focus ? Math.min(W + 1 - vw / 2, Math.max(-1 - vw / 2, focus.x - vw / 2)) : -1;
   const y = focus ? Math.min(H + 1 - vh / 2, Math.max(-1 - vh / 2, focus.y - vh / 2)) : -1;
-  const line = s.log[s.log.length - 1]?.text ?? '';
 
   return (
-    <div className="map-cam" style={pos ? { left: pos.x, top: pos.y, right: 'auto' } : { top }} role="group" aria-label={`Live map: ${line}`}>
-      <svg viewBox={`${x} ${y} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true"><use href="#board-live" /></svg>
-      <div
-        className="map-cam-line"
-        style={{ cursor: 'move' }}
+    <div className="map-cam" style={pos ? { left: pos.x, top: pos.y, right: 'auto' } : { top }} role="group" aria-label="Live map">
+      <svg
+        viewBox={`${x} ${y} ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true" style={{ cursor: 'move', touchAction: 'none' }}
         onPointerDown={(e) => {
           const r = e.currentTarget.parentElement!.getBoundingClientRect();
           drag.current = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top };
@@ -75,7 +74,7 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
         }}
         onPointerUp={() => { drag.current = null; }}
         onPointerCancel={() => { drag.current = null; }}
-      >{line || 'Live map'}</div>
+      ><use href="#board-live" /></svg>
       <button className="map-cam-close" aria-label="Close the live map" onClick={() => setClosed(true)}><Icon name="close" size={14} /></button>
     </div>
   );

@@ -2111,7 +2111,6 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">Rituals · start of the Shooting phase</div>
-        <div className="rit-help small muted">Choose caster → Ritual → target. Each caster and Ritual can be used once per phase. Test: 2D6, or 3D6 with Channel; doubles cause D3 MW.</div>
         <div className="unit-strip rit-casters">
           {cs.map((x) => (
             <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id, channel: rit.channel }); setSel(x.unit.id); }}>

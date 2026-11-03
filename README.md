@@ -150,9 +150,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - The battlefield fills the screen. Tap a unit on the map to act with it. The bottom sheet lists only what isn't on
   the table (reserves and embarked units) and can be folded down to its handle.
-- When a sheet hides the battlefield, a small live map window appears under the phase tabs with a line about what just
-  happened: zoomed on the unit you picked while the sheet hides it, else the whole board while the sheet hides most of
-  it. It never opens over the dice. Drag its caption to move it, or close it.
+- When a sheet hides most of the battlefield (or hides the unit you picked), a small live map window appears under the
+  phase tabs: zoomed on the unit you picked, else the whole board. It never opens over the dice. Drag it to move it, or
+  close it.
 - Pinch to zoom and drag to pan. You can zoom out until the whole table is in view above the bottom sheet; it then sits centred at the top. Two faint dashed lines split the table into its four
   quarters, for the missions that score by quarter. An objective's outline takes the colour of whoever has more OC
   on it right now; the game settles control at the end of each phase.
