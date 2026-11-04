@@ -48,3 +48,5 @@ look-ahead tries; the campaign and phones skip the look-ahead.
 - Every person is on auto rules and also in `s.decides` (`withAutoRules`). Any `autoPlay.ts` helper that presses a
   button or spends CP for them must check `decides(s, p)` first: `autoSelectToShoot` once spent a Sorcerer's
   once-per-battle Twisted Sorceries the moment it was picked to shoot.
+- The bot never made an Overrun fight: a unit whose foe died just ended. `botFightStep` now piles in when an enemy is
+  within 5" (`canOverrun`). Melee weapons with strike / sweep still always use the first profile for the bot.

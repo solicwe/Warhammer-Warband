@@ -163,8 +163,12 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   top of the sheet, above the stick, so they stay on screen. Bikes and vehicles get turn buttons (45 degrees a press)
   while they move or set up, and keep the facing you gave them. A facing within 20 degrees of straight snaps straight.
 - **Auto fit.** A unit set down against a wall or another model shuffles to the nearest legal spot, and a long base
-  also turns to find an angle that fits. Pile-in and consolidation are automatic: each model tries every spot around
-  the nearest enemy models, base contact first, while the unit stays in coherency.
+  also turns to find an angle that fits. Pile-in is automatic: each model tries every spot around the nearest enemy
+  models, base contact first, while the unit stays in coherency. Consolidation: you pick which of your units
+  consolidate (Auto places them the same way); the bot's units do it on their own.
+- **Fight choices.** A melee weapon with several profiles (strike / sweep) gets profile cards, as in shooting. A unit
+  whose foe was destroyed before it fought may Overrun (pile in again, then fight) when an enemy is within 5"; with
+  none, it is done on its own and you do not have to pick it to skip it.
 - The site can be added to your home screen and works like an app.
 
 ## Saves

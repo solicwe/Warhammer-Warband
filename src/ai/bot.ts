@@ -7,7 +7,7 @@ import { smartPlacement } from './deploy';
 import { dist } from '../engine/geometry';
 import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import {
-  autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
+  autoCharge, autoPileMove, callWaaagh, canOverrun, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
   openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, declareReserves, armyPoints, reservesPoints, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
@@ -760,6 +760,8 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   if (isBot(s, u.owner)) botReadyStratagem(s, u);
   if (isBot(s, u.owner)) botFightChoice(s, u);
   botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
+  // no longer engaged: an Overrun fight (pile in towards an enemy within 5", then fight if it got there)
+  if (!engagedEnemies(s, u).length && canOverrun(s, u)) autoPileMove(s, u, 'pileIn');
   const eng = engagedEnemies(s, u);
   if (eng.length) {
     const scored = eng.map((e) => {

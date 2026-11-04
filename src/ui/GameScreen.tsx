@@ -81,7 +81,7 @@ type Mode =
   | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean; skip?: string[] }
   | { k: 'charge'; unitId: string; targets: string[]; heroic?: 'leap' | 'fray' }
   | { k: 'pile'; unitId: string; kind: 'pileIn' | 'consolidate'; overrun?: boolean }
-  | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean }
+  | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean; profile?: Record<string, number> }
   | { k: 'explosives'; unitId: string; target: string | null }
   | { k: 'crush'; unitId: string }
   | { k: 'deathstrike-target'; unitId: string };
@@ -1233,25 +1233,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const onTrayClose = () => {
     const at = s.attack!;
     const attacker = U(at.attackerId);
-    const targetId = at.targetId;
     act((g) => {
       finishAttack(g);
       if (at.kind === 'overwatch') closeWindow(g);
       if (at.kind === 'fight') { markFought(g, unitById(g, attacker.id)); openCounteroffensive(g, attacker.owner); }
     });
     setMode(null);
-    // If target was destroyed in melee and attacker is human player, allow them to consolidate/move normally
-    if (at.kind === 'fight' && !bots.includes(attacker.owner)) {
-      const targetAfter = s.units.find((x) => x.id === targetId);
-      const attackerAfter = s.units.find((x) => x.id === attacker.id);
-      if (attackerAfter && attackerAfter.status === 'board' && (!targetAfter || targetAfter.status === 'destroyed' || !isEngaged(s, attackerAfter))) {
-        if (consolidateEligible(s, attackerAfter) && consolidateMode(s, attackerAfter).mode) {
-          setMode({ k: 'pile', unitId: attackerAfter.id, kind: 'consolidate' }, startPaths(attackerAfter));
-          setSel(attackerAfter.id);
-          flash(`${attackerAfter.name}: Squad destroyed! Consolidate move up to 3"`);
-        }
-      }
-    }
   };
 
   const onReroll = (stage: 'hit' | 'wound' | 'save', i: number) => {
@@ -2758,16 +2745,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return null;
     }
     if (f.step === 'consolidate') {
-      setTimeout(() => act((g) => {
-        if (!g.fight) return;
-        for (const p of [g.active, other(g.active)]) {
-          for (const u of boardUnits(g, p).filter((x) => consolidateEligible(g, x) && consolidateMode(g, x).mode)) {
-            autoPileMove(g, u, 'consolidate');
-          }
-        }
-        endPhase(g);
-      }), 0);
-      return null;
+      // the bot's side consolidates on its own; a player picks which of their units consolidate, and how
+      const p = f.stepPlayer;
+      const ready = boardUnits(s, p).filter((x) => consolidateEligible(s, x) && consolidateMode(s, x).mode && !f.movedThisStep.includes(x.id));
+      if (bots.includes(p) || !ready.length) {
+        setTimeout(() => act((g) => {
+          if (g.fight?.step !== 'consolidate' || g.fight.stepPlayer !== p) return;
+          if (bots.includes(p)) for (const u of boardUnits(g, p).filter((x) => consolidateEligible(g, x) && consolidateMode(g, x).mode)) autoPileMove(g, u, 'consolidate');
+          endConsolidateStep(g);
+        }), 0);
+        return null;
+      }
+      return (
+        <>
+          <div className="handoff">{pName(s, p)} · Consolidate: units that fought may move up to 3" towards an enemy or an objective</div>
+          <div className="unit-strip">{ready.map((u) => unitPill(u, false, () => { setSel(u.id); setMode({ k: 'pile', unitId: u.id, kind: 'consolidate' }, startPaths(u)); }))}</div>
+          <button className="btn primary" onClick={() => act((g) => endConsolidateStep(g))}>Done <Icon name="next" /></button>
+        </>
+      );
     }
     // fight step
     if (mode?.k === 'fight' && modeUnit) {
@@ -2777,7 +2772,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       const weapons = [...new Map(alive(u).filter((m) => own(m).length > 1).flatMap(own).map((w) => [w.name, w])).values()];
       const chars = alive(u).filter((m) => m.isCharacter);
       const ec = canUseStratagem(s, u.owner, 'epic-challenge', u);
-      const res = mode.target ? buildFightPools(s, u.id, mode.target, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined }) : null;
+      // melee weapons with several profiles (strike / sweep): the player picks one, as when shooting
+      const multi = [...new Map(alive(u).flatMap(own).filter((w) => w.profiles.length > 1).map((w) => [w.name, w])).values()];
+      const res = mode.target ? buildFightPools(s, u.id, mode.target, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile }) : null;
       return (
         <>
           <div className="small"><b>{u.name}</b>{fightTargets.length > 1 ? ' · tap a target' : ''}{weapons.length > 1 ? ' · pick the weapon for models that carry several' : ''}</div>
@@ -2786,6 +2783,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             {weapons.length > 1 && weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
           </div>
+          <WeaponFireModePanel hasCQ={false} smode="fight" firedAny={false} useCQ={false} nonCqWeapons={new Map()} cqWeapons={new Map()} multi={multi}
+            profileChoices={mode.profile ?? {}} onSelectProfile={(name, idx, pName) => { setModeRaw({ ...mode, profile: { ...mode.profile, [name]: idx } }); flash(`${name} → ${pName}`); }} onSelectCQ={() => {}} />
           {abilityBar(u.owner, { unitId: u.id, whens: ['selectedToFight', 'fightStartButton'] })}
           {res?.pools.map((p) => <div key={p.key} className="tiny">{p.weapon}: {p.attackNote} · Hit {p.skill}+ · Wound {p.woundNeed}+ ({p.woundNote}) · AP{p.ap} D{p.damage}</div>)}
           {res?.notes.map((n) => <div key={n} className="err">{n}</div>)}
@@ -2793,7 +2792,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <button className="btn primary grow" disabled={!res || !res.pools.length} onClick={() => act((g) => {
               const gu = unitById(g, u.id);
               if (mode.epic) spendStratagem(g, gu.owner, 'epic-challenge', gu);
-              const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined });
+              const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile });
               startAttack(g, 'fight', gu.id, mode.target!, r.pools);
             })}>Fight!</button>
           </div>
@@ -2815,10 +2814,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             }}><Icon name="fight" /> Fight with {selUnit.name}</button>
           </div>
         )}
-        {overrunReady && (
+        {overrunReady && selUnit!.owner === cands.player && (
           <div className="row">
-            <span className="small grow">{selUnit!.name} is no longer engaged: Overrun (pile in 3" more)</span>
-            {isEngaged(s, selUnit!) ? null : <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit!.id)))}>Skip (does not fight)</button>}
+            <span className="small grow">{selUnit!.name} is no longer engaged</span>
+            <button className="btn primary small" onClick={() => setMode({ k: 'pile', unitId: selUnit!.id, kind: 'pileIn', overrun: true }, startPaths(selUnit!))}><Icon name="fight" /> Overrun (pile in {pileDistance(s, selUnit!, 'pileIn')}")</button>
+            <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit!.id)))}>Skip (does not fight)</button>
           </div>
         )}
         {cands.units.length === 0 && <div className="muted small">No units can fight</div>}

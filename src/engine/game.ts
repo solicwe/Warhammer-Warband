@@ -2030,7 +2030,18 @@ export function endPileInStep(s: GameState) {
   f.eligible = boardUnits(s).filter((u) => isEngaged(s, u) || u.chargedTurn === s.turn).map((u) => u.id);
   f.chooser = s.active;
   f.movedThisStep = [];
+  dropStranded(s);
   if (!fightCandidates(s).units.length) startConsolidate(s);
+}
+
+/** An unengaged unit still eligible to fight can make an Overrun fight: a pile-in towards an enemy within 5", then fight. */
+export const canOverrun = (s: GameState, u: UnitState) => boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.pileIn.targetRange);
+
+/** Eligible units that are no longer engaged and have no enemy within 5" cannot fight at all: they are done, so no one
+ *  has to pick them only to skip them. */
+function dropStranded(s: GameState) {
+  const f = s.fight!;
+  for (const u of boardUnits(s)) if (fightEligibleNow(s, u) && !isEngaged(s, u) && !canOverrun(s, u)) { f.fought.push(u.id); u.fought = true; }
 }
 
 export const isFightsFirst = (s: GameState, u: UnitState) => !unitFlags(s, u).noFightsFirst && (u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst);
@@ -2063,6 +2074,7 @@ export function markFought(s: GameState, u: UnitState) {
   u.fought = true;
   if (f.forcedNext === u.id) f.forcedNext = null;
   f.chooser = other(u.owner);
+  dropStranded(s);
   if (!fightCandidates(s).units.length) startConsolidate(s);
 }
 

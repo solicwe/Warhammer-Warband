@@ -86,3 +86,7 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   cross-shaped on the small plates) were traced as outlines and the stub pass made them Ls; the owner wants boxes, so
   `outlineBox` keeps each as the piece's `box` (November 2026). A box changes play: `autoApproach` had to learn to
   keep models off it (pile-in failed whole otherwise), and random test setups can land on one (skip those).
+- Fight phase (`fightPanel` in `GameScreen.tsx`): the Overrun pile-in mode existed but nothing ever opened it (only
+  Skip showed), and a Consolidate was offered in the middle of the fights while the Consolidate step ran by itself.
+  Now: Overrun button for an unengaged unit with an enemy within 5", `dropStranded` (engine) finishes those with none,
+  and the Consolidate step lists the player's units. Before adding a fight-phase choice, check the step it belongs to.

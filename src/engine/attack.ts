@@ -346,7 +346,7 @@ function scoreMelee(p: WeaponProfileData, T: number) {
   return a * hit * wound * (1 + -p.AP * 0.25) * exprAverage(p.D);
 }
 
-export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string; models?: string[] } = {}): BuildResult {
+export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string; models?: string[]; profile?: Record<string, number> } = {}): BuildResult {
   const A = unitById(s, attackerId);
   const T = unitById(s, targetId);
   const T_T = targetToughness(T, s);
@@ -373,7 +373,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
     if (!use.length) use.push({ name: 'Close combat weapon', profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '1', skill: 4, S: m.profile.T, AP: 0, D: '1', abilities: [] }] });
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of use) {
-      const p = w.profiles[0];
+      // a weapon with several profiles (strike / sweep) fights with the one picked, else the first
+      const p = w.profiles[Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1)];
       const fx = offenceFor(s, A, m, T, w, p, 'melee', d);
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'melee').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));

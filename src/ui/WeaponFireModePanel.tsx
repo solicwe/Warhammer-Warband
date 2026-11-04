@@ -382,7 +382,7 @@ export const WeaponFireModePanel = React.memo(function WeaponFireModePanel({
               <div key={w.name} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Icon name="shoot" size={14} />
+                  <Icon name={w.profiles[0]?.range === 'Melee' ? 'fight' : 'shoot'} size={14} />
                   <span
                     style={{
                       fontSize: '12.5px',
@@ -392,7 +392,7 @@ export const WeaponFireModePanel = React.memo(function WeaponFireModePanel({
                       letterSpacing: '0.05em',
                     }}
                   >
-                    <b>{w.name}</b> — Select Fire Profile:
+                    <b>{w.name}</b> — Select Profile:
                   </span>
                 </div>
                 <div style={{ height: '1px', background: '#262930', width: '100%' }} />
