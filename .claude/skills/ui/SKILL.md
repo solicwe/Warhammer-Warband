@@ -84,7 +84,9 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   (`src/engine/game.ts`), not drawn wrong in `Board.tsx`: the layouts are traced outlines, and the clean-up passes
   there turn them into walls. The small solid blocks (4 per layout: plain on the strip plates, stepped or
   cross-shaped on the small plates) were traced as outlines and the stub pass made them Ls; the owner wants boxes, so
-  `outlineBox` keeps each as the piece's `box` (November 2026). A box changes play: `autoApproach` had to learn to
+  `outlineBox` keeps each as the piece's `box` (November 2026). The two halves of a layout are traced apart, so
+  mirrored boxes came out of different sizes ("why are the boxes not equal"); buildTerrain now gives each pair the
+  bigger one (if it fits on the other plate) and adds a box whose mirror was lost in a tangle of walls. A box changes play: `autoApproach` had to learn to
   keep models off it (pile-in failed whole otherwise), and random test setups can land on one (skip those).
 - Fight phase (`fightPanel` in `GameScreen.tsx`): the Overrun pile-in mode existed but nothing ever opened it (only
   Skip showed), and a Consolidate was offered in the middle of the fights while the Consolidate step ran by itself.

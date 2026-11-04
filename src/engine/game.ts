@@ -122,6 +122,36 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     blocks.push(box);
     return { ...item, poly: box.map((p) => [p.x, p.y]), walls: [], box: box.map((p) => [p.x, p.y]) };
   });
+  // the layouts are point-symmetric about the centre: the two blocks of a mirrored pair get the same size (the bigger
+  // trace, as one is more often cut short than too long, if it fits on the other plate), and a block whose mirror was
+  // traced as a tangle of walls gets its mirror there
+  const mid = (b: number[][]) => ({ x: b.reduce((t, q) => t + q[0], 0) / b.length, y: b.reduce((t, q) => t + q[1], 0) / b.length });
+  const size = (b: number[][]) => Math.abs(b.reduce((t, q, i) => t + q[0] * b[(i + 1) % b.length][1] - b[(i + 1) % b.length][0] * q[1], 0)) / 2;
+  const flip = (b: number[][]) => b.map(([x, y]) => [Math.round((targetW - x) * 10) / 10, Math.round((targetH - y) * 10) / 10]);
+  const pts = (b: number[][]) => b.map(([x, y]) => ({ x, y }));
+  const onPlate = (b: number[][], plate: number[][]) => pts(b).every((q) => pointInPoly(q, pts(plate)) || pts(plate).some((v, e, P) => pointSegDist(q, { a: v, b: P[(e + 1) % P.length] }) < 0.3));
+  // a block put on a piece: the piece's walls under it or along its sides go (its four edges replace them)
+  const setBox = (k: number, box: number[][]) => {
+    const B = pts(box);
+    const near = (x: number, y: number) => pointInPoly({ x, y }, B) || B.some((q, e) => pointSegDist({ x, y }, { a: q, b: B[(e + 1) % 4] }) < 0.6 * Math.max(sx, sy));
+    raw[k] = { ...raw[k], box, walls: raw[k].walls.filter(([x0, y0, x1, y1]) => !(near(x0, y0) && near(x1, y1))) };
+  };
+  const boxes0 = raw.map((t) => t.box);
+  const mirrorOf = (i: number) => boxes0.findIndex((bb, k) => k !== i && bb && dist(mid(boxes0[i]!), { x: targetW - mid(bb).x, y: targetH - mid(bb).y }) < 3 * Math.max(sx, sy));
+  boxes0.forEach((ab, i) => {
+    if (!ab) return;
+    const j = mirrorOf(i);
+    if (j < 0) {
+      const m = flip(ab);
+      const k = raw.findIndex((t, n) => n !== i && !t.box && pointInPoly(mid(m), pts(t.poly)));
+      if (k >= 0 && onPlate(m, raw[k].poly)) setBox(k, m);
+      return;
+    }
+    if (j < i) return; // each pair once
+    const [w, l] = size(boxes0[j]!) > size(ab) + 0.1 ? [j, i] : [i, j];
+    if (onPlate(flip(boxes0[w]!), raw[l].poly)) setBox(l, flip(boxes0[w]!));
+    else if (onPlate(flip(boxes0[l]!), raw[w].poly)) setBox(w, flip(boxes0[l]!));
+  });
   const nearBlock = (w: number[]) => blocks.some((b) => [{ x: w[0], y: w[1] }, { x: w[2], y: w[3] }].every((p) => b.some((q, k) => pointSegDist(p, { a: q, b: b[(k + 1) % 4] }) < 0.7 * Math.max(sx, sy))));
   const terrain: TerrainPiece[] = raw.map((t0, i) => {
     const t = blocks.length && !t0.box ? { ...t0, walls: t0.walls.filter((w) => !nearBlock(w)) } : t0;
