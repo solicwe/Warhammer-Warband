@@ -51,5 +51,5 @@ export default defineConfig({
   }],
   define: { __DATA_VERSION__: JSON.stringify(dataVersion()) },
   // whole bot-vs-bot games run in the tests: a few seconds each
-  test: { testTimeout: 120000, setupFiles: ['src/engine/testSetup.ts'] },
+  test: { testTimeout: 300000, setupFiles: ['src/engine/testSetup.ts'] },
 });

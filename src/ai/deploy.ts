@@ -30,10 +30,10 @@ function samplePoly(poly: Pt[], step: number): Pt[] {
 /** The models that stand for the unit when checking sight: its ends and its middle. */
 function probes(u: UnitState, pos: Map<string, Pt>): ModelState[] {
   const ms = alive(u).map((m) => ({ ...m, ...pos.get(m.id)! }) as ModelState);
-  if (ms.length <= 3) return ms;
+  if (ms.length <= 5) return ms;
   const c = polyCentroid(ms);
   const sorted = [...ms].sort((a, b) => dist(a, c) - dist(b, c));
-  return [sorted[0], sorted[sorted.length - 1], sorted[Math.floor(sorted.length / 2)]];
+  return [sorted[0], sorted[sorted.length - 1], sorted[sorted.length - 2], sorted[Math.floor(sorted.length / 2)]];
 }
 
 /** How a bot sets up its whole army, decided once from both armies:
@@ -110,7 +110,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // every unit starts as well hidden as the zone allows: nothing is left out in the open for a first-turn alpha strike
   const bait = false;
 
-  // Evenly sample watchers across enemyZone, spanning both X and Y completely, plus placed enemy models
+  // Sample watchers across enemyZone: full coverage of the enemy deployment area
   const placed = s.units.filter((e) => e.owner !== u.owner && onBoard(e)).flatMap(alive);
   const enemyXs = enemyZone.map((p) => p.x), enemyYs = enemyZone.map((p) => p.y);
   const minX = Math.min(...enemyXs), maxX = Math.max(...enemyXs);
@@ -124,20 +124,8 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   }
   if (!gridPts.length) gridPts.push(ec);
 
-  const zoneWatchers: ModelState[] = [];
-  const maxZoneWatchers = placed.length ? 8 : 12;
-  if (gridPts.length <= maxZoneWatchers) {
-    for (const p of gridPts) zoneWatchers.push(lookout(p));
-  } else {
-    for (let i = 0; i < maxZoneWatchers; i++) {
-      const idx = Math.floor((i * (gridPts.length - 1)) / (maxZoneWatchers - 1));
-      zoneWatchers.push(lookout(gridPts[idx]));
-    }
-  }
-
-  const placedWatchers: ModelState[] = placed.length <= 4
-    ? placed.map(lookout)
-    : Array.from({ length: 4 }, (_, i) => lookout(placed[Math.floor((i * (placed.length - 1)) / 3)]));
+  const zoneWatchers: ModelState[] = gridPts.map(lookout);
+  const placedWatchers: ModelState[] = placed.map(lookout);
   const watchers = [...zoneWatchers, ...placedWatchers];
 
   const objs = s.objectives.map((o) => ({ o, p: polyCentroid(objectiveTerrain(s, o).poly) }));
@@ -216,21 +204,27 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   let best: { pos: Map<string, Pt>; score: number } | null = null;
   // sight checks for top candidates: evaluate sheltered and well-positioned spots
   const worth = Math.min(2, (u.pts * alive(u).length) / Math.max(1, u.startingStrength) / 120);
-  const pool = cands.slice(0, 48);
+  const pool = cands.slice(0, 36);
   for (const cand of pool) {
     if (vehicle && !canLeave(s, u, cand.pos)) continue;
     let score = cand.score;
     const eyes = probes(u, cand.pos);
-    // hidden from the enemy deployment zone (they may get the first turn)
-    const seen = watchers.filter((w) => eyes.some((m) => roughLos(s, w, m))).length / Math.max(1, watchers.length);
+    // early-exit sight check: count watchers seeing the candidate, break early if heavily exposed
+    let seenCount = 0;
+    for (const w of watchers) {
+      if (eyes.some((m) => roughLos(s, w, m))) {
+        seenCount++;
+        if (seenCount >= 2) break;
+      }
+    }
     if (bait) {
-      score += seen * 8;
-    } else if (seen === 0) {
+      score += (seenCount / watchers.length) * 8;
+    } else if (seenCount === 0) {
       // completely hidden behind a footprint or solid wall: highest priority to prevent turn 1 shots
       score += 35;
       if (isChar) score += 25;
     } else {
-      score -= 25 + seen * 50 * (0.75 + 0.25 * worth);
+      score -= 25 + (seenCount / watchers.length) * 50 * (0.75 + 0.25 * worth);
       if (isChar) score -= 35;
     }
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)

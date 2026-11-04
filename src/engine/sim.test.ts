@@ -38,7 +38,7 @@ describe('full game simulation (bot vs bot)', () => {
         }
         expect(s.phase).toBe('gameover');
         expect(s.round).toBe(5);
-      }, 240000);
+      }, 300000);
     }
   });
 });

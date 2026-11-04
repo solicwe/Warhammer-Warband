@@ -80,7 +80,7 @@ describe('smart deployment', () => {
 
   it('units stage hidden behind terrain footprints or walls to avoid turn-1 fire', () => {
     // Check across diverse layouts: characters and squads deploy hidden from the enemy zone
-    const layoutIds = Object.keys(LAYOUTS).slice(0, 5);
+    const layoutIds = LAYOUTS.slice(0, 12).map((l) => l.id);
     for (const layoutId of layoutIds) {
       const s = createGame({
         lists: [
