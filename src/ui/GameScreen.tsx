@@ -45,7 +45,7 @@ import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
-import { beaconCandidates, guardOptions, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
+import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
@@ -1315,7 +1315,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div style={{ fontWeight: 700, color: getPlayerFactionTheme(s, u.owner).primary }}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
           {u.enhancements.length > 0 && (
             <div className="tiny" style={{ color: '#eab308', fontWeight: 600, marginTop: 2 }}>
-              ✨ {u.enhancements.map((e) => e.name).join(' · ')}
+              {u.enhancements.map((e) => e.name).join(' · ')}
             </div>
           )}
           {attachedText && (
@@ -1769,7 +1769,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   </span>
                   {sub.text && (
                     <span className="unit-pill-sub">
-                      {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                      {sub.enh && <span className="pill-enh">{sub.enh}</span>}
                       {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                       {sub.attached && <span className="pill-att">{sub.attached}</span>}
                       {sub.attached && sub.weapons && <span> · </span>}
@@ -1796,7 +1796,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="card" style={{ padding: '8px 10px', marginBottom: 8, border: '1px solid var(--accent)', background: 'rgba(74, 144, 226, 0.08)' }}>
             <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <div className="small">
-                <b>✨ Risen Rubricae (Infiltrators)</b>
+                <b>Risen Rubricae (Infiltrators)</b>
               </div>
               <div className="tiny muted">
                 {(() => {
@@ -1860,7 +1860,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 </span>
                 {sub.text && (
                   <span className="unit-pill-sub">
-                    {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                    {sub.enh && <span className="pill-enh">{sub.enh}</span>}
                     {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                     {sub.attached && <span className="pill-att">{sub.attached}</span>}
                     {sub.attached && sub.weapons && <span> · </span>}
@@ -2030,22 +2030,28 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
         {!bots.includes(s.active) && s.players[s.active].secActive.includes('a-tempting-target') && (
-          <div className="card" style={{ padding: 8, marginBottom: 8 }}>
-            <div className="small"><b>A Tempting Target</b> — select the decoy objective in No Man's Land (5VP if controlled)</div>
-            <div className="unit-strip">
+          <div className="card" style={{ padding: '10px 12px', marginBottom: 8, border: '1px solid #ea580c', background: 'rgba(234, 88, 12, 0.08)' }}>
+            <div className="small" style={{ marginBottom: 6 }}>
+              <b>A Tempting Target</b> — select the decoy objective in No Man's Land (5VP if controlled):
+            </div>
+            <div className="unit-strip" style={{ gap: 6, flexWrap: 'wrap' }}>
               {temptingTargetCandidates(s, s.active).map(({ obj, index }) => {
                 const isSel = s.players[s.active].sec.temptingTarget === obj.id;
+                const loc = objLocationDesc(s, obj);
                 return (
                   <button
                     key={obj.id}
                     className={`unit-pill ${isSel ? 'sel' : ''}`}
+                    style={isSel ? { background: '#ea580c', borderColor: '#ea580c', color: '#fff', fontWeight: 700 } : {}}
                     aria-pressed={isSel}
                     onClick={() => {
                       const e = act((g) => setTemptingTarget(g, g.active, obj.id));
                       if (e) flash(e);
+                      else flash(`Target set: Objective ${index + 1} (${loc})`);
                     }}
                   >
-                    Objective {index + 1} {isSel ? '🎯 (Target)' : ''}
+                    <span>Objective {index + 1} <small style={{ opacity: 0.85 }}>({loc})</small></span>
+                    {isSel && <span style={{ marginLeft: 6, fontWeight: 800 }}>✓ Target</span>}
                   </button>
                 );
               })}
@@ -2221,7 +2227,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     </span>
                     {sub.text && (
                       <span className="unit-pill-sub">
-                        {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                        {sub.enh && <span className="pill-enh">{sub.enh}</span>}
                         {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                         {sub.attached && <span className="pill-att">{sub.attached}</span>}
                         {sub.attached && sub.weapons && <span> · </span>}
@@ -3624,7 +3630,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           {id === 'beacon' && (
                             <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                                📡 Beacon: {P.sec.beacon ? <span style={{ color: 'var(--accent)' }}>{s.units.find((u) => u.id === P.sec.beacon)?.name}</span> : <span className="muted">None selected</span>}
+                                Beacon: {P.sec.beacon ? <span style={{ color: 'var(--accent)' }}>{s.units.find((u) => u.id === P.sec.beacon)?.name}</span> : <span className="muted">None selected</span>}
                               </div>
                               {!bots.includes(p) && (
                                 <div className="unit-strip" style={{ maxHeight: 90, overflowY: 'auto' }}>
@@ -3645,7 +3651,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           {id === 'burden-of-trust' && (
                             <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                                🛡️ Guards ({P.sec.guards?.length ?? 0} assigned):
+                                Guards ({P.sec.guards?.length ?? 0} assigned):
                               </div>
                               {!bots.includes(p) && guardOptions(s, p).map((opt) => {
                                 const assignedUnit = opt.guardUnitId ? s.units.find((u) => u.id === opt.guardUnitId) : null;
@@ -3684,23 +3690,33 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           {id === 'a-tempting-target' && (
                             <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                                🎯 Decoy Target: {P.sec.temptingTarget ? <span style={{ color: 'var(--accent)' }}>Objective {s.objectives.findIndex((o) => o.id === P.sec.temptingTarget) + 1}</span> : <span className="muted">None selected</span>}
+                                Decoy Target: {P.sec.temptingTarget ? (() => {
+                                  const idx = s.objectives.findIndex((o) => o.id === P.sec.temptingTarget);
+                                  const obj = s.objectives[idx];
+                                  return (
+                                    <span style={{ color: '#ea580c', fontWeight: 700 }}>
+                                      Objective {idx + 1} {obj ? `(${objLocationDesc(s, obj)})` : ''}
+                                    </span>
+                                  );
+                                })() : <span className="muted">None selected</span>}
                               </div>
                               {!bots.includes(p) && (
-                                <div className="unit-strip">
+                                <div className="unit-strip" style={{ gap: 4, flexWrap: 'wrap' }}>
                                   {temptingTargetCandidates(s, p).map(({ obj, index }) => {
                                     const isSel = P.sec.temptingTarget === obj.id;
+                                    const loc = objLocationDesc(s, obj);
                                     return (
                                       <button
                                         key={obj.id}
                                         className={`unit-pill ${isSel ? 'sel' : ''}`}
-                                        style={{ minHeight: 30, fontSize: 12, padding: '2px 8px' }}
+                                        style={isSel ? { background: '#ea580c', borderColor: '#ea580c', color: '#fff', fontWeight: 700, minHeight: 30, fontSize: 12, padding: '2px 8px' } : { minHeight: 30, fontSize: 12, padding: '2px 8px' }}
                                         onClick={() => {
                                           const e = act((g) => setTemptingTarget(g, p, obj.id));
                                           if (e) flash(e);
+                                          else flash(`Target set: Objective ${index + 1} (${loc})`);
                                         }}
                                       >
-                                        Obj {index + 1} {isSel ? '✓' : ''}
+                                        Obj {index + 1} ({loc}) {isSel ? '✓ Target' : ''}
                                       </button>
                                     );
                                   })}
@@ -3710,7 +3726,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           )}
                           {id === 'cleanse' && (
                             <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 11 }}>
-                              <div style={{ fontWeight: 600, marginBottom: 2 }}>🧹 Cleanse:</div>
+                              <div style={{ fontWeight: 600, marginBottom: 2 }}>Cleanse:</div>
                               <div className="muted">Perform action in Shooting phase with an eligible unit on a non-home objective.</div>
                               {P.sec.cleansed && P.sec.cleansed.filter((x) => x.turn === s.turn).length > 0 && (
                                 <div style={{ color: 'var(--accent)', marginTop: 2 }}>
@@ -3721,7 +3737,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           )}
                           {id === 'plunder' && (
                             <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 11 }}>
-                              <div style={{ fontWeight: 600, marginBottom: 2 }}>📦 Plunder:</div>
+                              <div style={{ fontWeight: 600, marginBottom: 2 }}>Plunder:</div>
                               <div className="muted">Perform action in Shooting phase with an eligible unit in terrain outside your territory.</div>
                               {P.sec.plundered && P.sec.plundered.some((x) => x.turn === s.turn) && (
                                 <div style={{ color: 'var(--accent)', marginTop: 2 }}>
@@ -3873,9 +3889,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               )}
               {!bots.includes(p) && (
                 <div className="row">
-                  <span className="small grow">{tgtUnit ? <>For <b>{tgtUnit.name}</b> (only this unit gets it)</> : 'Any unit'}</span>
-                  <button className="btn small" onClick={() => { setShowStrats(false); setStratPick({ p, ids: boardUnits(s, p).map((u) => u.id) }); }}>Pick a unit on the map</button>
-                  {tgtUnit && <button className="btn small" onClick={() => setStratUnit('')}>All units</button>}
+                  <span className="small grow">{tgtUnit ? <>Target: <b>{tgtUnit.name}</b></> : 'Select target unit'}</span>
+                  <button className="btn small" onClick={() => { setShowStrats(false); setStratPick({ p, ids: boardUnits(s, p).map((u) => u.id) }); }}>
+                    {tgtUnit ? 'Change unit' : 'Pick a unit on the map'}
+                  </button>
                 </div>
               )}
               <div className="small muted">{PHASE_TH[s.phase] ?? s.phase} · {s.active === p ? 'your turn' : "opponent's turn"} — pick a unit and tap Use: the CP is spent and the effect applied for you (until the end of the phase / turn as written)</div>
