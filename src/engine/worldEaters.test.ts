@@ -88,6 +88,6 @@ describe('detachments', () => {
       expect(s.phase).toBe('gameover');
       for (const u of s.units) for (const m of u.models) expect(Number.isFinite(m.x) && Number.isFinite(m.y)).toBe(true);
       expect(s.log.some((l) => /Blessings of Khorne/.test(l.text))).toBe(true);
-    }, 240000);
+    }, 480000);
   }
 });

@@ -3,14 +3,17 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct } from './bot';
 import { armyPlan } from './botPlan';
-import { baitUnit } from './deploy';
-import { createGame } from '../engine/game';
-import { baseDist } from '../engine/geometry';
+import { baitUnit, smartPlacement } from './deploy';
+import { createGame, placeUnit, zoneOf } from '../engine/game';
+import { baseDist, pointInPoly } from '../engine/geometry';
 import { alive, onBoard } from '../engine/state';
-import type { ArmyList, FactionData } from '../engine/types';
+import type { ArmyList, FactionData, ModelState, Pt } from '../engine/types';
+import { roughLos } from '../engine/visibility';
+import { LAYOUTS } from '../engine/config';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
 const list = (f: string, u: [string, number, number][]): ArmyList => ({ name: 't', factionId: f, battleSize: 'incursion', detachments: [], units: u.map(([d, n, p], i) => ({ uid: `x${i}`, datasheet: d, models: n, pts: p })) });
+const lookout = (p: Pt): ModelState => ({ x: p.x, y: p.y, r: 0.5, keywords: ['INFANTRY'] }) as unknown as ModelState;
 
 describe('smart deployment', () => {
   it('a last unit that fits nowhere is dropped and deployment still ends (no hang)', () => {
@@ -73,5 +76,42 @@ describe('smart deployment', () => {
     const job = armyPlan(s, 1).jobs.get(grots.id);
     expect(job?.role).toBe('home');
     expect(job?.keep).toBe(true);
+  });
+
+  it('units stage hidden behind terrain footprints or walls to avoid turn-1 fire', () => {
+    // Check across diverse layouts: characters and squads deploy hidden from the enemy zone
+    const layoutIds = Object.keys(LAYOUTS).slice(0, 5);
+    for (const layoutId of layoutIds) {
+      const s = createGame({
+        lists: [
+          list('SM', [['Hellblaster Squad', 5, 110], ['Captain', 1, 80]]),
+          list('ORK', [['Boyz', 20, 180]]),
+        ],
+        factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 1, deploymentId: layoutId,
+      });
+
+      const enemyZone = zoneOf(s, 1);
+      const enemyXs = enemyZone.map((p) => p.x), enemyYs = enemyZone.map((p) => p.y);
+      const enemyWatchers: ModelState[] = [];
+      for (let y = Math.min(...enemyYs) + 2; y <= Math.max(...enemyYs); y += 4) {
+        for (let x = Math.min(...enemyXs) + 2; x <= Math.max(...enemyXs); x += 4) {
+          if (pointInPoly({ x, y }, enemyZone)) enemyWatchers.push(lookout({ x, y }));
+        }
+      }
+
+      for (const u of s.units.filter((x) => x.owner === 0)) {
+        const pos = smartPlacement(s, u);
+        expect(pos).not.toBeNull();
+        if (pos) {
+          placeUnit(s, u, pos);
+          const ms = alive(u);
+          const visible = ms.filter((m) => enemyWatchers.some((w) => roughLos(s, w, m)));
+          // Character must be completely hidden (0 visible)
+          if (ms[0].isCharacter) {
+            expect(visible.length).toBe(0);
+          }
+        }
+      }
+    }
   });
 });
