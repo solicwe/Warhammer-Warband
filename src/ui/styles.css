@@ -2903,9 +2903,13 @@ select option {
 .rl-det + .rl-det { border-top: 4px solid var(--line-2); }
 .rl-det-head { padding: 10px 16px 6px; font: 700 13px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: var(--surface-2); border-bottom: 1px solid var(--line); }
 
-/* home: New battle / Campaign as two small buttons at the top, the army list below is the page */
-.modes-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.mode-mini { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--surface); color: var(--text); font: 600 14px var(--font-cond); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+/* home: play modes as compact 2x2 grid at the top, the army list below is the core focus */
+.modes-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.mode-mini { display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 40px; padding: 5px 10px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--surface); color: var(--text); font: 600 13px var(--font-cond); letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.15s ease-out; }
+.mode-mini:hover { border-color: var(--accent); background: rgba(74, 144, 226, 0.06); }
+.reserves-tag { font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 6px; letter-spacing: 0.02em; transition: all 0.15s ease; }
+.reserves-tag.sel { background: #38bdf8; color: #090d16; font-weight: 800; box-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
+.unit-pill.res-active { border-color: #38bdf8 !important; background: rgba(56, 189, 248, 0.12) !important; box-shadow: 0 0 8px rgba(56, 189, 248, 0.25); }
 .mode-mini .icon { color: var(--accent); flex: none; }
 .mode-mini span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
 .mode-mini small { font: 500 11px var(--font-ui); letter-spacing: 0; text-transform: none; color: var(--text-3); }

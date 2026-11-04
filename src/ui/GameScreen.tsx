@@ -1,6 +1,6 @@
 import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, decides, onAuto } from '../ai/autoPlay';
 import { pathBlocked, routeAround } from '../engine/pathing';
-import { KEYS, readText, writeText } from '../services/storage';
+import { KEYS, readText, writeText, saveBattleLog } from '../services/storage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
@@ -349,10 +349,35 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // bot against bot: the summary goes away by itself
   useEffect(() => { if (!summary || !spectate) return; const tm = window.setTimeout(() => setSummary(null), 4000); return () => window.clearTimeout(tm); }, [summary, spectate]);
   const [finalSeen, setFinalSeen] = useState(false);
+  const loggedRef = useRef(false);
   useEffect(() => {
     if (s.phase !== 'gameover') return;
     for (const b of bots) speak(b, s.winner === b ? 'win' : 'lose');
     play(s.winner !== null && s.winner !== 'draw' && !bots.includes(s.winner) ? 'vp' : 'turn');
+
+    if (!loggedRef.current) {
+      loggedRef.current = true;
+      saveBattleLog({
+        id: 'battle-' + Date.now(),
+        timestamp: Date.now(),
+        mode: s.campaign ? 'campaign' : 'simulator',
+        players: ([0, 1] as const).map((p) => ({
+          name: pName(s, p),
+          faction: s.players[p].factionId ?? s.players[p].name,
+          score: s.players[p].vp + (s.players[p].secVp ?? 0),
+          cp: s.players[p].cp,
+          isWinner: s.winner === p,
+        })),
+        turn: s.turn,
+        maxTurns: s.maxRounds ?? 5,
+        layoutName: s.deploymentId ? ('Layout ' + s.deploymentId) : 'Standard Layout',
+        summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
+        replayState: {
+          seed: s.rng,
+          savedGame: s,
+        },
+      });
+    }
   }, [s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
@@ -1664,10 +1689,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     {unitDisplayName(selCand)}
                   </div>
                   <div className="small muted">
-                    {selCand.status === 'reserves' ? 'In Strategic Reserves' : (() => {
-                      const m = alive(selCand)[0];
-                      return m ? `Position: (${Math.round(m.x)}", ${Math.round(m.y)}") · ${alive(selCand).length} model(s)` : `${alive(selCand).length} model(s)`;
-                    })()}
+                    {selCand.status === 'reserves' ? 'In Strategic Reserves' : 'Deployed on battlefield'} · {alive(selCand).length} model(s) · {selCand.pts} pts
                   </div>
                   {unitSubDetails(selCand).text && (
                     <div className="tiny muted" style={{ marginTop: 2 }}>{unitSubDetails(selCand).text}</div>
@@ -1725,7 +1747,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           {dispName}{x.status === 'reserves' ? ' (Reserves)' : ''}
                         </div>
                         <div className="tiny muted">
-                          {m ? `Pos: (${Math.round(m.x)}", ${Math.round(m.y)}") · ` : ''}${alive(x).length} model(s)
+                          {x.status === 'reserves' ? 'In Reserves' : 'On battlefield'} · {alive(x).length} model(s) · {x.pts} pts
                           {sub.text ? ` · ${sub.text}` : ''}
                         </div>
                       </div>
@@ -1766,7 +1788,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               return (
                 <button
                   key={x.id}
-                  className={`unit-pill ${isSelected ? 'sel' : ''} ${sub.text ? 'has-sub' : ''}`}
+                  className={`unit-pill ${isSelected ? 'sel res-active' : ''} ${sub.text ? 'has-sub' : ''}`}
                   aria-pressed={isSelected}
                   onClick={() => {
                     setFocusUnit(x.id);
@@ -1776,6 +1798,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <span className="unit-pill-main">
                     <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
                     <span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
+                    {isSelected ? (
+                      <span className="reserves-tag sel" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: '#38bdf8', color: '#090d16', fontSize: 11, fontWeight: 800 }}>
+                        <Icon name="check" size={12} /> IN RESERVES
+                      </span>
+                    ) : (
+                      <span className="reserves-tag" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line-2)', color: 'var(--text-3)', fontSize: 11 }}>
+                        Deploy on board
+                      </span>
+                    )}
                   </span>
                   {sub.text && (
                     <span className="unit-pill-sub">

@@ -1,7 +1,9 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { newUid, syncList } from '../engine/army';
 import type { GameState } from '../engine/types';
+import { ArcaneModesModal } from './ArcaneModesModal';
 import { ArmyBuilder } from './ArmyBuilder';
+import { BattleLogsModal } from './BattleLogsModal';
 import { BattleSetup } from './BattleSetup';
 import { CampaignScreen } from './Campaign';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
@@ -9,9 +11,16 @@ import { GameScreen } from './GameScreen';
 import { Home } from './Home';
 import { loadArmies, saveArmies, withAutoRules, type Army } from './library';
 import { clearSaved, loadSaved } from './store';
+import { TabletopScreen } from './TabletopScreen';
 import { TokenSprites } from './Tokens';
 
-type Screen = { kind: 'home' } | { kind: 'build'; id: string; fresh?: boolean } | { kind: 'battle' } | { kind: 'game'; state: GameState } | { kind: 'campaign' };
+type Screen =
+  | { kind: 'home' }
+  | { kind: 'build'; id: string; fresh?: boolean }
+  | { kind: 'battle' }
+  | { kind: 'game'; state: GameState }
+  | { kind: 'campaign' }
+  | { kind: 'tabletop' };
 
 /** Keeps a rendering bug from taking the whole app down; the game itself is already saved. */
 class Guard extends Component<{ children: ReactNode; onReset: () => void }, { error: string | null }> {
@@ -36,6 +45,8 @@ export default function App() {
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [saved, setSaved] = useState<GameState | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [showArcaneModal, setShowArcaneModal] = useState(false);
+  const [showLogsModal, setShowLogsModal] = useState(false);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('Could not load the faction list. Reload the page to try again.')); setSaved(loadSaved()); }, []);
   useEffect(() => saveArmies(armies), [armies]);
@@ -65,6 +76,9 @@ export default function App() {
   if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen initial={screen.state} onExit={exitGame} /></div>);
   if (screen.kind === 'campaign') {
     return wrap(<CampaignScreen index={index} saved={saved} onBack={goHome} onPlay={(s) => setScreen({ kind: 'game', state: s })} onClearSaved={() => { clearSaved(); setSaved(null); }} />);
+  }
+  if (screen.kind === 'tabletop') {
+    return wrap(<TabletopScreen armies={armies} index={index} onBack={goHome} />);
   }
   if (screen.kind === 'build') {
     const a = armies.find((x) => x.id === screen.id);
@@ -105,11 +119,41 @@ export default function App() {
           });
         }}
         onBattle={() => setScreen({ kind: 'battle' })}
+        onArcane={() => setShowArcaneModal(true)}
+        onTabletop={() => setScreen({ kind: 'tabletop' })}
+        onLogs={() => setShowLogsModal(true)}
         onCampaign={() => setScreen({ kind: 'campaign' })}
-
         onContinue={() => { if (saved) setScreen({ kind: 'game', state: withAutoRules(saved) }); }}
         onAbandon={() => { clearSaved(); setSaved(null); }}
       />
+      {showArcaneModal && (
+        <ArcaneModesModal
+          onClose={() => setShowArcaneModal(false)}
+          onCampaign={() => {
+            setShowArcaneModal(false);
+            setScreen({ kind: 'campaign' });
+          }}
+          onTabletop={() => {
+            setShowArcaneModal(false);
+            setScreen({ kind: 'tabletop' });
+          }}
+          onLogs={() => {
+            setShowArcaneModal(false);
+            setShowLogsModal(true);
+          }}
+        />
+      )}
+      {showLogsModal && (
+        <BattleLogsModal
+          onClose={() => setShowLogsModal(false)}
+          onReplay={(log) => {
+            if (log.replayState?.savedGame) {
+              setShowLogsModal(false);
+              setScreen({ kind: 'game', state: withAutoRules(log.replayState.savedGame) });
+            }
+          }}
+        />
+      )}
       {err && <div className="toast" role="alert">{err}</div>}
     </>,
   );

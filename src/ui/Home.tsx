@@ -20,12 +20,29 @@ interface Props {
   onDelete: (id: string) => void;
   onImportArmies?: (armies: Army[]) => void;
   onBattle: () => void;
+  onArcane: () => void;
+  onTabletop: () => void;
+  onLogs: () => void;
   onCampaign: () => void;
   onContinue: () => void;
   onAbandon: () => void;
 }
 
-export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelete, onImportArmies, onBattle, onCampaign, onContinue, onAbandon }: Props) {
+export function Home({
+  armies,
+  index,
+  saved,
+  onOpen,
+  onNew,
+  onDuplicate,
+  onDelete,
+  onBattle,
+  onArcane,
+  onTabletop,
+  onLogs,
+  onContinue,
+  onAbandon,
+}: Props) {
   const run = loadRun();
   const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
   const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
@@ -66,12 +83,23 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           </section>
         )}
 
-        {/* playing sits small at the top: the page is about building armies */}
-        <nav className="modes-mini" aria-label="Play">
-          <button className="mode-mini" onClick={onBattle}><Icon name="fight" size={18} /><span>New battle</span></button>
-          <button className="mode-mini" onClick={onCampaign}>
-            <Icon name="trophy" size={18} />
-            <span>Demo Roguelike{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)} of {runLayers}</small> : null}</span>
+        {/* Compact modes bar: keeps army building as the central focus of the page */}
+        <nav className="modes-mini" aria-label="Play modes">
+          <button className="mode-mini" onClick={onBattle} title="Play standard simulator battle against bot or local player">
+            <Icon name="fight" size={17} />
+            <span>New battle</span>
+          </button>
+          <button className="mode-mini" onClick={onArcane} title="Demo Roguelike campaign and special game modes">
+            <Icon name="arcane" size={17} />
+            <span>Arcane{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)}/{runLayers}</small> : null}</span>
+          </button>
+          <button className="mode-mini" onClick={onTabletop} title="Physical 40k match scorekeeper, tactical deck, and 45 terrain maps">
+            <Icon name="tabletop" size={17} />
+            <span>Tabletop</span>
+          </button>
+          <button className="mode-mini" onClick={onLogs} title="Past battle history and replays">
+            <Icon name="history" size={17} />
+            <span>History</span>
           </button>
         </nav>
 
@@ -117,7 +145,6 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           })}
         </section>
 
-
         {pop && (() => {
           const a = armies.find((x) => x.id === pop.id);
           if (!a) return null;
@@ -143,7 +170,6 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
             </div>
           );
         })()}
-
 
       </main>
     </div>

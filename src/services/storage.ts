@@ -17,6 +17,7 @@ export const KEYS = {
   fx: 'fx-level',
   liveMap: 'live-map-on',
   fastShooting: 'fast-shooting',
+  battleLogs: 'w40k11-battle-logs',
 } as const;
 
 export function readText(key: string): string | null {
@@ -53,4 +54,50 @@ export function loadRun(): Run | null {
 
 export function saveRun(run: Run | null) {
   if (run) writeJSON(KEYS.campaignRun, run); else removeKey(KEYS.campaignRun);
+}
+
+// ---------- battle logs & match history ----------
+
+export interface BattleRecord {
+  id: string;
+  timestamp: number;
+  mode: 'simulator' | 'tabletop' | 'campaign';
+  title?: string;
+  players: {
+    name: string;
+    faction?: string;
+    score: number;
+    cp?: number;
+    isWinner?: boolean;
+  }[];
+  turn: number;
+  maxTurns?: number;
+  layoutName?: string;
+  summary?: string;
+  replayState?: {
+    seed: number;
+    savedGame: any;
+  };
+}
+
+export function loadBattleLogs(): BattleRecord[] {
+  const logs = readJSON<BattleRecord[]>(KEYS.battleLogs);
+  return Array.isArray(logs) ? logs : [];
+}
+
+export function saveBattleLog(record: BattleRecord): void {
+  const current = loadBattleLogs();
+  const filtered = current.filter((r) => r.id !== record.id);
+  const updated = [record, ...filtered].slice(0, 50);
+  writeJSON(KEYS.battleLogs, updated);
+}
+
+export function deleteBattleLog(id: string): void {
+  const current = loadBattleLogs();
+  const updated = current.filter((r) => r.id !== id);
+  writeJSON(KEYS.battleLogs, updated);
+}
+
+export function clearBattleLogs(): void {
+  removeKey(KEYS.battleLogs);
 }

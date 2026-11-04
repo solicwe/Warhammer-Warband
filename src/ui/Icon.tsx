@@ -78,6 +78,10 @@ const ICONS = {
   swords: <><path {...S} d="M14.5 17.5L3 6V3h3l11.5 11.5" /><path {...S} d="M13 19l6-6M16 16l4 4" /><path {...S} d="M9.5 17.5L21 6V3h-3L6.5 14.5" /><path {...S} d="M11 19l-6-6M8 16l-4 4" /></>,
   shield: <path {...S} d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z" />,
   stealth: <><path {...S} d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" /><circle {...S} cx="12" cy="12" r="3" strokeDasharray="2 1.5" /></>,
+  history: <><path {...S} d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path {...S} d="M3 3v5h5" /><path {...S} d="M12 7v5l3 2" /></>,
+  tabletop: <><rect {...S} x="3" y="4" width="18" height="16" rx="2.5" /><path {...S} d="M3 9.5h18" /><path {...S} d="M9.5 9.5v10.5" /><circle {...F} cx="6.2" cy="6.8" r="1.2" /><circle {...F} cx="14.5" cy="14.5" r="1.5" /><circle {...F} cx="17.5" cy="14.5" r="1.5" /></>,
+  arcane: <><circle {...S} cx="12" cy="12" r="9" /><path {...S} d="M12 3a9 9 0 0 1 0 18" strokeDasharray="3 3" /><circle {...S} cx="12" cy="12" r="4.5" /><circle {...F} cx="12" cy="12" r="1.6" /></>,
+  map: <><polygon {...S} points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line {...S} x1="9" y1="3" x2="9" y2="18" /><line {...S} x1="15" y1="6" x2="15" y2="21" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;
