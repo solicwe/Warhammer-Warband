@@ -42,6 +42,10 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 - Lag: measure, do not guess. Effects: time a frame (`verify`). The board: React re-renders per state change
   (`useMemo` on `s` in `GameScreen.tsx`); the bot: the worst step (`bot`).
 - `npx vitest run src/ui` for the UI tests.
+- The board alone, any layout, in seconds: `src/zz/board.html` + `board.tsx` that fetches `/data/factions/SM.json`,
+  calls `createGame({ ..., deploymentId: '<layout id>' })` and renders `<Board s={s} viewer={0} />` full screen; open
+  `http://localhost:5179/src/zz/board.html`. For all 45 layouts at once, a vitest in `src/zz/` that writes an SVG of
+  `buildTerrain(id)` (plates, raw walls from `data/layouts.json` in red, built walls and boxes on top), then screenshot it.
 
 ## Pitfalls seen before
 
@@ -76,3 +80,7 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   owner could not drag it any more. The clamp in `Board.tsx` lets the view hang half off the table at every zoom.
 - `ModelToken` in `Board.tsx` has a hand-written memo comparator: a new field that changes how a model is drawn
   (its facing `rot` was missing, so turning a vehicle in place showed nothing until it moved) must be added there.
+- A terrain shape that looks wrong on the board ("the green L should be a box") is usually made in `buildTerrain`
+  (`src/engine/game.ts`), not drawn wrong in `Board.tsx`: the layouts are traced outlines, and the clean-up passes
+  there turn them into walls. The small solid block on the strip plates (2 per layout) was traced as a closed
+  rectangle and the stub pass made it an L; `outlineBox` now keeps it as the piece's `box` (November 2026).

@@ -43,6 +43,28 @@ export function stripBarricade(poly: number[][]): Seg[] {
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
 }
 
+/** The rectangle a piece's walls outline, if they trace a small closed block (1.5" to 5" a side, every side at
+ *  least half walled, no wall elsewhere), in the frame of its longest wall; else null. */
+function outlineBox(walls: number[][], k: number): number[][] | null {
+  if (walls.length < 4) return null;
+  const ws = walls.map(([x0, y0, x1, y1]) => ({ a: { x: x0, y: y0 }, b: { x: x1, y: y1 } }));
+  const w0 = [...ws].sort((p, q) => dist(q.a, q.b) - dist(p.a, p.b))[0];
+  const L = dist(w0.a, w0.b);
+  const u = { x: (w0.b.x - w0.a.x) / L, y: (w0.b.y - w0.a.y) / L }, n = { x: -u.y, y: u.x };
+  const pts = ws.flatMap((w) => [w.a, w.b]);
+  const pu = pts.map((p) => p.x * u.x + p.y * u.y), pn = pts.map((p) => p.x * n.x + p.y * n.y);
+  const [u0, u1, n0, n1] = [Math.min(...pu), Math.max(...pu), Math.min(...pn), Math.max(...pn)];
+  if (Math.min(u1 - u0, n1 - n0) < 1.5 * k || Math.max(u1 - u0, n1 - n0) > 5 * k) return null;
+  const P = (a: number, b: number): Pt => ({ x: u.x * a + n.x * b, y: u.y * a + n.y * b });
+  const box = [P(u0, n0), P(u1, n0), P(u1, n1), P(u0, n1)];
+  const sides = box.map((c, i) => ({ a: c, b: box[(i + 1) % 4] }));
+  const on = (w: Seg, side: Seg) => pointSegDist(w.a, side) < 0.6 * k && pointSegDist(w.b, side) < 0.6 * k;
+  // every side at least half walled, and (nearly) no wall off the sides: a stepped or cross-shaped outline is not a block
+  const walled = sides.every((side) => ws.reduce((sum, w) => sum + (on(w, side) ? dist(w.a, w.b) : 0), 0) >= 0.5 * dist(side.a, side.b));
+  const off = ws.reduce((sum, w) => sum + (sides.some((side) => on(w, side)) ? 0 : dist(w.a, w.b)), 0);
+  return walled && off <= 0.1 * ws.reduce((sum, w) => sum + dist(w.a, w.b), 0) ? box.map((p) => [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10]) : null;
+}
+
 export function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
   const L = deploymentById(layoutId);
   const targetW = tableSize?.width ?? RULES.battlefield.width;
@@ -72,7 +94,9 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
       Math.round(y1 * sy * 10) / 10,
     ]);
     const scaledBox = t.box?.map(([x, y]) => [Math.round(x * sx * 10) / 10, Math.round(y * sy * 10) / 10]);
-    const item = { ...t, poly: scaledPoly, walls: scaledWalls, obstacles: scaledObstacles, ...(scaledBox ? { box: scaledBox } : {}) };
+    // a solid block on the plate traced as the closed outline of a small rectangle stays that block (not an L)
+    const outline = scaledBox ? null : outlineBox(scaledWalls, Math.max(sx, sy));
+    const item = { ...t, poly: scaledPoly, walls: scaledWalls, obstacles: scaledObstacles, ...(scaledBox ?? outline ? { box: scaledBox ?? outline! } : {}) };
 
     if (item.box || item.obstacles.length || item.walls.length < 3 || item.poly.length !== 4) return item;
     const P = item.poly.map(([x, y]) => ({ x, y }));
@@ -185,7 +209,7 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     // crowded: a wall within 1.2" of another without meeting it at a corner
     const meets = (w: Seg, k: Seg) => [w.a, w.b].some((p) => pointSegDist(p, k) < 0.35) || [k.a, k.b].some((p) => pointSegDist(p, w) < 0.35);
     const crowded = t.walls.some((w, i) => t.walls.some((k, j) => j > i && segSegDist(w, k) < 1.2 && !meets(w, k)));
-    if (t.walls.length < 4 && !crowded) continue;
+    if (t.box || (t.walls.length < 4 && !crowded)) continue;
     const k = [...t.walls].sort((a, b) => dist(b.a, b.b) - dist(a.a, a.b))[0];
     const L = dist(k.a, k.b);
     const u = { x: (k.b.x - k.a.x) / L, y: (k.b.y - k.a.y) / L }, n = { x: -u.y, y: u.x };

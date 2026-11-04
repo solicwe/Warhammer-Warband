@@ -1079,7 +1079,7 @@ function BoardImpl(props: BoardProps) {
             <polygon points={pts} fill={plate && backdropReady ? 'none' : t.category === 'dense' ? 'url(#tiles)' : 'rgba(170,158,128,0.55)'} stroke="#1c1712" strokeWidth={0.14} />
             <polygon points={inner} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.06} />
             {t.box && (() => {
-              // a solid block (container / bunker) standing on the plate: shadow, metal top with ribs, lit rim
+              // a solid block standing on the plate, in the ruin walls' green: shadow, top with ribs, lit rim
               const bp = t.box.map((p) => `${p.x},${p.y}`).join(' ');
               const sp = t.box.map((p) => `${p.x + 0.3},${p.y + 0.42}`).join(' ');
               const bc = polyCentroid(t.box);
@@ -1092,13 +1092,13 @@ function BoardImpl(props: BoardProps) {
               return (
                 <g>
                   <polygon points={sp} fill="rgba(0,0,0,0.45)" />
-                  <polygon points={bp} fill="#4a3a2a" stroke="#1a130c" strokeWidth={0.14} strokeLinejoin="round" />
+                  <polygon points={bp} fill="#3e7a58" stroke="#14261c" strokeWidth={0.14} strokeLinejoin="round" />
                   {Array.from({ length: ribs - 1 }, (_, k) => {
                     const f = (k + 1) / ribs - 0.5;
                     const c0 = { x: bc.x + (u.x * f), y: bc.y + (u.y * f) };
-                    return <line key={k} x1={c0.x - across.x * 0.45} y1={c0.y - across.y * 0.45} x2={c0.x + across.x * 0.45} y2={c0.y + across.y * 0.45} stroke="#2e2318" strokeWidth={0.07} />;
+                    return <line key={k} x1={c0.x - across.x * 0.45} y1={c0.y - across.y * 0.45} x2={c0.x + across.x * 0.45} y2={c0.y + across.y * 0.45} stroke="#24503a" strokeWidth={0.07} />;
                   })}
-                  <polygon points={t.box.map((p) => `${bc.x + (p.x - bc.x) * 0.9},${bc.y + (p.y - bc.y) * 0.9}`).join(' ')} fill="none" stroke="rgba(255,220,170,0.25)" strokeWidth={0.06} />
+                  <polygon points={t.box.map((p) => `${bc.x + (p.x - bc.x) * 0.9},${bc.y + (p.y - bc.y) * 0.9}`).join(' ')} fill="none" stroke="rgba(200,255,220,0.3)" strokeWidth={0.06} />
                 </g>
               );
             })()}
