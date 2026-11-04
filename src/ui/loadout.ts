@@ -205,7 +205,7 @@ export interface UnitSubDetails {
 
 /**
  * Combined details describing what the unit has equipped/attached:
- * - Enhancements: "✨ Lord of Forbidden Lore"
+ * - Enhancements: "Lord of Forbidden Lore"
  * - Attached units: "+ 10× Scarab Occult Terminators"
  * - Key weapons: "Twin lascannon + Missile launcher"
  */
@@ -215,7 +215,7 @@ export function unitSubDetails(u: UnitState): UnitSubDetails {
   const weapons = unitWeaponsSummary(u) || null;
 
   const parts: string[] = [];
-  if (enh) parts.push(`✨ ${enh}`);
+  if (enh) parts.push(enh);
   if (attached) parts.push(attached);
   if (weapons) parts.push(weapons);
 

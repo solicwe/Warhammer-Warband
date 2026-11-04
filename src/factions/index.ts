@@ -3,6 +3,7 @@
 // To add a faction: write its module, then add a block that subscribes its functions to the events it needs.
 // Modules that register themselves when loaded:
 import './rituals';
+import './thousandSons';
 import { deathstrikeShooting, officerDeath, sigilOfExigence } from './deathstrike';
 import { copyOrders, extraOrder, ordersShockFailed, orderTo, isOfficer } from './orders';
 import { amOppMovementEnd, disembarkOne, shootFrom, shootWith } from './amTransports';

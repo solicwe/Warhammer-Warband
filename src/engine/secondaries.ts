@@ -398,6 +398,22 @@ export function setTemptingTarget(s: GameState, p: PlayerId, objId: string): str
   return null;
 }
 
+/** Human-friendly location description of an objective (e.g. Centre, Left Flank, Right Flank). */
+export function objLocationDesc(s: GameState, o: { x: number; y: number; type?: string }): string {
+  const W = tableW(s);
+  const H = tableH(s);
+  const cx = W / 2;
+  const cy = H / 2;
+  if (o.type === 'central' || (Math.abs(o.x - cx) < 3.5 && Math.abs(o.y - cy) < 3.5)) {
+    return 'Centre';
+  }
+  const xDesc = o.x < cx - 5 ? 'Left' : o.x > cx + 5 ? 'Right' : 'Mid';
+  const yDesc = o.y < cy - 6 ? 'Top' : o.y > cy + 6 ? 'Bottom' : 'Centre';
+  if (xDesc === 'Mid') return `${yDesc} Mid`;
+  if (yDesc === 'Centre') return `${xDesc} Flank`;
+  return `${yDesc}-${xDesc}`;
+}
+
 /** Beacon: the units that may be selected, while the card was drawn this turn (empty otherwise, unless allowAnyTurn is true). */
 export function beaconCandidates(s: GameState, p: PlayerId, allowAnyTurn = false): UnitState[] {
   const P = s.players[p];

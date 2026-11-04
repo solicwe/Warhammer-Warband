@@ -179,6 +179,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [sound, setSound] = useState(soundOn());
   const [liveMap, setLiveMapRaw] = useState<boolean>(() => readText(KEYS.liveMap) !== '0');
   const setLiveMap = (v: boolean) => { setLiveMapRaw(v); writeText(KEYS.liveMap, v ? '1' : '0'); };
+  const [fastShooting, setFastShootingRaw] = useState<boolean>(() => readText(KEYS.fastShooting) === 'true');
+  const setFastShooting = (v: boolean) => { setFastShootingRaw(v); writeText(KEYS.fastShooting, String(v)); };
   const [shake, setShake] = useState(0);
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
   const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
@@ -1242,6 +1244,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (at.kind === 'fight') { markFought(g, unitById(g, attacker.id)); openCounteroffensive(g, attacker.owner); }
     });
     setMode(null);
+    if (at.kind === 'shoot' && !unfiredWeaponNames(attacker).length) setSel(null);
   };
 
   const onReroll = (stage: 'hit' | 'wound' | 'save', i: number) => {
@@ -1314,8 +1317,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <div className="grow">
           <div style={{ fontWeight: 700, color: getPlayerFactionTheme(s, u.owner).primary }}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
           {u.enhancements.length > 0 && (
-            <div className="tiny" style={{ color: '#eab308', fontWeight: 600, marginTop: 2 }}>
-              {u.enhancements.map((e) => e.name).join(' · ')}
+            <div className="tiny" style={{ color: '#eab308', fontWeight: 600, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Icon name="enhancement" size={12} />
+              <span>{u.enhancements.map((e) => e.name).join(' · ')}</span>
             </div>
           )}
           {attachedText && (
@@ -1769,7 +1773,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   </span>
                   {sub.text && (
                     <span className="unit-pill-sub">
-                      {sub.enh && <span className="pill-enh">{sub.enh}</span>}
+                      {sub.enh && <span className="pill-enh"><Icon name="enhancement" size={11} />{sub.enh}</span>}
                       {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                       {sub.attached && <span className="pill-att">{sub.attached}</span>}
                       {sub.attached && sub.weapons && <span> · </span>}
@@ -1822,7 +1826,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     if (e) flash(e);
                   }}
                 >
-                  {c.unit.name} {c.kind === 'other' ? '(Terminators)' : '(Battleline)'} {c.selected ? '✓ Infiltrator' : ''}
+                  {c.unit.name} {c.kind === 'other' ? '(Terminators)' : '(Battleline)'}
+                  {c.selected && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4 }}><Icon name="check" size={13} /> Infiltrator</span>}
                 </button>
               ))}
             </div>
@@ -1860,7 +1865,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 </span>
                 {sub.text && (
                   <span className="unit-pill-sub">
-                    {sub.enh && <span className="pill-enh">{sub.enh}</span>}
+                    {sub.enh && <span className="pill-enh"><Icon name="enhancement" size={11} />{sub.enh}</span>}
                     {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                     {sub.attached && <span className="pill-att">{sub.attached}</span>}
                     {sub.attached && sub.weapons && <span> · </span>}
@@ -2019,7 +2024,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                             if (e) flash(e);
                           }}
                         >
-                          {u.name} {isAssigned ? '✓ (Guarding)' : ''}
+                          {u.name} {isAssigned && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4 }}><Icon name="check" size={13} /> (Guarding)</span>}
                         </button>
                       );
                     })}
@@ -2051,7 +2056,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     }}
                   >
                     <span>Objective {index + 1} <small style={{ opacity: 0.85 }}>({loc})</small></span>
-                    {isSel && <span style={{ marginLeft: 6, fontWeight: 800 }}>✓ Target</span>}
+                    {isSel && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 6, fontWeight: 800 }}><Icon name="crosshair" size={13} /> Target</span>}
                   </button>
                 );
               })}
@@ -2227,7 +2232,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     </span>
                     {sub.text && (
                       <span className="unit-pill-sub">
-                        {sub.enh && <span className="pill-enh">{sub.enh}</span>}
+                        {sub.enh && <span className="pill-enh"><Icon name="enhancement" size={11} />{sub.enh}</span>}
                         {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
                         {sub.attached && <span className="pill-att">{sub.attached}</span>}
                         {sub.attached && sub.weapons && <span> · </span>}
@@ -2660,16 +2665,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
             <button className="btn primary grow" data-coach="fire" disabled={!res || !res.pools.length} onClick={() => {
-              const auto = onAuto(s, modeUnit.owner);
+              const skip = fastShooting || bots.includes(modeUnit.owner);
               act((g) => {
                 const gu = unitById(g, modeUnit.id);
                 if (mode.overwatch) spendStratagem(g, gu.owner, 'fire-overwatch', gu);
-                if (auto) { autoShoot(g, gu.id, mode.target!, opt, !!mode.overwatch); return; }
+                if (skip) { autoShoot(g, gu.id, mode.target!, opt, !!mode.overwatch); return; }
                 const r = buildShootPools(g, gu.id, mode.target!, opt);
                 startAttack(g, mode.overwatch ? 'overwatch' : 'shoot', gu.id, mode.target!, r.pools);
               });
               // the unit has shot: its buttons go away so the board (and the shot) can be seen
-              if (auto) { setMode(null); setSel(null); }
+              setMode(null);
+              if (skip) setSel(null);
             }}>Shoot!{mode.overwatch ? ' (1CP)' : ''}</button>
           </div>
         </>
@@ -3674,7 +3680,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                                 if (e) flash(e);
                                               }}
                                             >
-                                              {u.name} {isAssigned ? '✓' : ''}
+                                              {u.name} {isAssigned && <Icon name="check" size={12} style={{ marginLeft: 4, verticalAlign: -1 }} />}
                                             </button>
                                           );
                                         })}
@@ -3716,7 +3722,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                           else flash(`Target set: Objective ${index + 1} (${loc})`);
                                         }}
                                       >
-                                        Obj {index + 1} ({loc}) {isSel ? '✓ Target' : ''}
+                                        Obj {index + 1} ({loc}) {isSel && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4, fontWeight: 700 }}><Icon name="crosshair" size={12} /> Target</span>}
                                       </button>
                                     );
                                   })}
@@ -3789,6 +3795,34 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 ))}
               </div>
               <span className="field-note">{fxLevel === 'full' ? 'Each attack counts up: shots, hits, wounds, through the saves — and what changed the odds' : fxLevel === 'short' ? 'Only what each attack destroyed' : 'No reports (the board still shows the shots)'}</span>
+            </div>
+            <div className="field">
+              <span id="shooting-dice-setting">Shooting resolution</span>
+              <div className="seg" role="radiogroup" aria-labelledby="shooting-dice-setting">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!fastShooting}
+                  className={!fastShooting ? 'on' : ''}
+                  onClick={() => { setFastShooting(false); flash('Shooting: Dice tray enabled'); }}
+                >
+                  <Icon name="dice" size={14} /> Dice tray
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={fastShooting}
+                  className={fastShooting ? 'on' : ''}
+                  onClick={() => { setFastShooting(true); flash('Shooting: Fast skip enabled'); }}
+                >
+                  Fast / Skip
+                </button>
+              </div>
+              <span className="field-note">
+                {!fastShooting
+                  ? 'Roll hit, wound, and save dice step-by-step in the dice tray (like in melee fight)'
+                  : 'Fast mode: instantly roll all shooting dice and apply damage without opening the tray'}
+              </span>
             </div>
             {bots.length === 1 && (
               <div className="field">

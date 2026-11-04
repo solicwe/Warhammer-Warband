@@ -306,6 +306,7 @@ interface ModelTokenProps {
   loRange: number | null;
   isInfBeastOp: boolean;
   riled: boolean;
+  isNoLos?: boolean;
   flinch?: Pt;
   disp: { wounds: number; low: boolean; fading?: number };
   onPointerDown: (e: React.PointerEvent) => void;
@@ -334,6 +335,7 @@ const ModelToken = memo(function ModelToken({
   loRange,
   isInfBeastOp,
   riled,
+  isNoLos,
   flinch,
   disp,
   onPointerDown,
@@ -345,7 +347,9 @@ const ModelToken = memo(function ModelToken({
       onPointerDown={onPointerDown}
       style={{
         cursor: isDraft ? 'grab' : 'pointer',
-        ...(isModelHidden
+        ...(isNoLos
+          ? { opacity: 0.5, filter: 'grayscale(60%)' }
+          : isModelHidden
           ? { opacity: 0.8, filter: 'grayscale(55%)' }
           : isUntargetable
             ? { opacity: 0.45, filter: 'grayscale(100%)' }
@@ -361,6 +365,9 @@ const ModelToken = memo(function ModelToken({
           <BaseShape m={m} p={p} grow={0.44} fill="none" stroke={uTheme.glow} strokeWidth={0.24} opacity={0.85} className="faction-aura-glow" pointerEvents="none" />
           <BaseShape m={m} p={p} grow={0.26} fill="none" stroke={isSel ? uTheme.primary : uTheme.secondary} strokeWidth={0.16} className="sel-ring" pointerEvents="none" />
         </>
+      )}
+      {isNoLos && !isDraft && (
+        <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#ef4444" strokeWidth={0.14} strokeDasharray="0.22 0.14" opacity={0.9} pointerEvents="none" />
       )}
       {isModelHidden && !isSel && !isPicked && !isDraft && (
         <BaseShape m={m} p={p} grow={0.24} fill="none" stroke="#94a3b8" strokeWidth={0.12} strokeDasharray="0.28 0.16" opacity={0.85} pointerEvents="none" />
@@ -422,7 +429,15 @@ const ModelToken = memo(function ModelToken({
           )}
         </g>
       )}
-      {isModelHidden && !hasLoneOp && (
+      {isNoLos && (
+        <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
+          <rect x={-0.85} y={-0.24} width={1.7} height={0.48} rx={0.24} fill="rgba(15, 23, 42, 0.92)" stroke="#ef4444" strokeWidth={0.08} />
+          <text y={0.1} fontSize={0.20} textAnchor="middle" fill="#fca5a5" fontWeight={900} letterSpacing={0.03}>
+            NO LOS
+          </text>
+        </g>
+      )}
+      {isModelHidden && !hasLoneOp && !isNoLos && (
         <g pointerEvents="none" transform={`translate(${p.x + m.r * 0.78} ${p.y + m.r * 0.78})`} className="fx-glow">
           <rect x={-0.85} y={-0.24} width={1.7} height={0.48} rx={0.24} fill="rgba(15, 23, 42, 0.92)" stroke="#94a3b8" strokeWidth={0.08} />
           <text y={0.1} fontSize={0.22} textAnchor="middle" fill="#f1f5f9" fontWeight={900} letterSpacing={0.04}>
@@ -456,6 +471,7 @@ const ModelToken = memo(function ModelToken({
     prev.hasStealth === next.hasStealth &&
     prev.hasLoneOp === next.hasLoneOp &&
     prev.riled === next.riled &&
+    prev.isNoLos === next.isNoLos &&
     prev.flinch?.x === next.flinch?.x &&
     prev.flinch?.y === next.flinch?.y
   );
@@ -1551,6 +1567,7 @@ function BoardImpl(props: BoardProps) {
         const isDecoyed = s.players.some((p) => p.mission?.decoyed?.includes(o.id));
         const isTriangulated = s.players.some((p) => p.mission?.triangulated?.includes(o.id));
         const isCompleted = isSecured || isCleansed || isConsecrated || isDecoyed || isTriangulated;
+        const isTemptingTarget = s.players.some((p) => p.secActive?.includes('a-tempting-target') && p.sec?.temptingTarget === o.id);
 
         return (
           <g key={o.id} pointerEvents="none">
@@ -1601,6 +1618,12 @@ function BoardImpl(props: BoardProps) {
               />
             )}
 
+            {isTemptingTarget && (
+              <g pointerEvents="none">
+                <circle cx={o.x} cy={o.y} r={1.38} fill="none" stroke="#ea580c" strokeWidth={0.22} strokeDasharray="0.36 0.18" className="obj-inprogress-pulse" />
+                <circle cx={o.x} cy={o.y} r={1.68} fill="none" stroke="rgba(234, 88, 12, 0.55)" strokeWidth={0.08} />
+              </g>
+            )}
             <circle cx={o.x} cy={o.y} r={0.79} fill="url(#objdisc)" stroke="#111" strokeWidth={0.08} />
             <circle cx={o.x} cy={o.y} r={0.55} fill="none" stroke={ctrl === null ? '#555' : COLORS[ctrl]} strokeWidth={0.18} />
             <text x={o.x} y={o.y + 0.27} fontSize={0.75} textAnchor="middle" fill="#111" fontWeight={900}>{i + 1}</text>
@@ -1614,6 +1637,7 @@ function BoardImpl(props: BoardProps) {
             )}
             {o.secured != null && !isCompleted && <g><circle cx={o.x + 1.15} cy={o.y - 0.75} r={0.62} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.secured]} strokeWidth={0.08} /><SvgIcon name="hold" x={o.x + 1.15} y={o.y - 0.75} size={0.8} color={COLORS[o.secured]} /></g>}
             {o.warded != null && <g><circle cx={o.x + 1.15} cy={o.y + 0.75} r={0.55} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.warded]} strokeWidth={0.08} /><text x={o.x + 1.15} y={o.y + 0.95} fontSize={0.62} textAnchor="middle" fill={COLORS[o.warded]} fontWeight={900}>W</text></g>}
+            {isTemptingTarget && <g pointerEvents="none"><circle cx={o.x - 1.15} cy={o.y - 0.75} r={0.62} fill="#ea580c" stroke="#fff" strokeWidth={0.08} /><text x={o.x - 1.15} y={o.y - 0.61} fontSize={0.34} textAnchor="middle" fill="#fff" fontWeight={900}>5VP</text></g>}
             
             <g transform={`translate(${cx} ${bannerY})`}>
               <rect x={-2.1} y={-0.5} width={4.2} height={0.95} rx={0.45} fill="rgba(12,13,16,0.85)" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.06} />
@@ -1621,7 +1645,14 @@ function BoardImpl(props: BoardProps) {
               <text x={1.95} y={0.2} fontSize={0.55} textAnchor="end" fontWeight={800}>
                 <tspan fill={COLORS[0]}>{a}</tspan><tspan fill="#aaa"> : </tspan><tspan fill={COLORS[1]}>{b}</tspan>
               </text>
-              {pendingAction ? (
+              {isTemptingTarget ? (
+                <g transform="translate(0 0.95)">
+                  <rect x={-2.6} y={-0.38} width={5.2} height={0.76} rx={0.3} fill="rgba(234,88,12,0.95)" stroke="#fff" strokeWidth={0.08} />
+                  <text x={0} y={0.16} fontSize={0.35} textAnchor="middle" fill="#fff" fontWeight={900} letterSpacing={0.02}>
+                    TEMPTING TARGET (5VP)
+                  </text>
+                </g>
+              ) : pendingAction ? (
                 <g transform="translate(0 0.95)">
                   <rect x={-2.4} y={-0.38} width={4.8} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke={pendingTheme!.primary} strokeWidth={0.07} />
                   <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill={pendingTheme!.primary} fontWeight={800}>
@@ -1836,6 +1867,7 @@ function BoardImpl(props: BoardProps) {
                   loRange={loRange}
                   isInfBeastOp={isInfBeastOp}
                   riled={riled ?? false}
+                  isNoLos={props.noLos?.includes(m.id)}
                   flinch={flinch ?? undefined}
                   disp={disp}
                   onPointerDown={(e) => startDragRef.current(e, u.id, m.id)}

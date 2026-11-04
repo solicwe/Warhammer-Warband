@@ -129,7 +129,7 @@ describe('unitSubDetails', () => {
     expect(sub.enh).toBe('Athenaean Scrolls');
     expect(sub.attached).toBe('+ 2× Scarab Occult Terminators');
     expect(sub.weapons).toBe('Inferno combi-bolter + Force weapon');
-    expect(sub.text).toContain('✨ Athenaean Scrolls');
+    expect(sub.text).toContain('Athenaean Scrolls');
     expect(sub.text).toContain('+ 2× Scarab Occult Terminators');
   });
 

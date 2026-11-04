@@ -1,6 +1,6 @@
 // The game's own line icons (24×24, drawn with the current text colour). No emoji, no image files:
 // every icon is a few SVG strokes, so it stays sharp at any size and follows the theme.
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 const F = { fill: 'currentColor', stroke: 'none' } as const;
@@ -82,9 +82,9 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-export function Icon({ name, size = 20, className, title }: { name: IconName; size?: number; className?: string; title?: string }) {
+export function Icon({ name, size = 20, className, title, style }: { name: IconName; size?: number; className?: string; title?: string; style?: CSSProperties }) {
   return (
-    <svg className={`icon ${className ?? ''}`} width={size} height={size} viewBox="0 0 24 24" aria-hidden={title ? undefined : true} role={title ? 'img' : undefined}>
+    <svg className={`icon ${className ?? ''}`} width={size} height={size} viewBox="0 0 24 24" style={style} aria-hidden={title ? undefined : true} role={title ? 'img' : undefined}>
       {title && <title>{title}</title>}
       {ICONS[name]}
     </svg>

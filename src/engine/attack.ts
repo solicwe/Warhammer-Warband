@@ -198,10 +198,8 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
   // sight and cover depend on the model, not the weapon: worked out once per model
   const sees = new Map<ModelState, boolean>();
   const seesT = (m: ModelState) => { let v = sees.get(m); if (v === undefined) { v = tModels.some((t) => modelVisible(s, m, T, t, aFlags.ignoreLoneOperative)); sees.set(m, v); } return v; };
-  // a weapon's target must be visible to its unit and in range of the weapon: the model that sees it and the model in
-  // range can be different ones (04.02 FAQ), so a squad half inside a ruin shoots with every model in range
-  let unitSeen: boolean | undefined;
-  const unitSees = () => (unitSeen ??= shooters.some(seesT));
+  // Under Warhammer 40k 10th Edition rules (Select Targets), each attacking model must independently have
+  // line of sight to at least one model in the target unit (and range to at least one model) to make ranged attacks.
   const covered = new Map<ModelState, boolean>();
   const coverOf = (m: ModelState) => { let v = covered.get(m); if (v === undefined) { v = hasCover(s, m, T); covered.set(m, v); } return v; };
   for (const m of shooters) {
@@ -244,7 +242,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if ((opt.mode === 'assault' || A.move === 'advance') && !canDo(s, A, 'shootAfterAdvance') && !riled(s, A) && !hasAbility(p, 'assault') && !grants(fx, inc, 'assault') && !assaultWeapons(s, A) && !cm.assault) continue;
       const maxRange = opt.mode === 'snap' ? Math.min(range, RULES.snapShooting.range) : range;
       // Linked Fire (Fire Prism): range and visibility from another friendly FIRE PRISM the bearer can see; then 1 attack
-      const linked = p.abilities.includes('linked fire') && (d > maxRange + 1e-6 || !unitSees()) && s.units.some((f) => f.owner === A.owner && f.id !== A.id && onBoard(f)
+      const linked = p.abilities.includes('linked fire') && (d > maxRange + 1e-6 || !seesT(m)) && s.units.some((f) => f.owner === A.owner && f.id !== A.id && onBoard(f)
         && alive(f).some((r) => /Fire Prism/i.test(r.source) && modelVisible(s, m, f, r) && tModels.some((t) => baseDist(r, t) <= maxRange + 1e-6 && modelVisible(s, r, T, t))));
       if (d > maxRange + 1e-6 && !linked) continue;
       if (untargetableAt(s, T, d)) continue;
@@ -253,7 +251,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (opt.mode === 'closeQuarters' && !isMV(m) && !engagedWithTarget) continue;
       if (hasAbility(p, 'blast') && tEngaged) continue;
       const indirect = opt.mode === 'indirect' && hasAbility(p, 'indirect-fire');
-      if (!indirect && !linked && !unitSees()) continue;
+      if (!indirect && !linked && !seesT(m)) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
       const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };

@@ -16,6 +16,7 @@ export const KEYS = {
   sound: 'sfx-on',
   fx: 'fx-level',
   liveMap: 'live-map-on',
+  fastShooting: 'fast-shooting',
 } as const;
 
 export function readText(key: string): string | null {
