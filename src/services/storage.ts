@@ -15,6 +15,7 @@ export const KEYS = {
   coach: 'coach',
   sound: 'sfx-on',
   fx: 'fx-level',
+  liveMap: 'live-map-on',
 } as const;
 
 export function readText(key: string): string | null {

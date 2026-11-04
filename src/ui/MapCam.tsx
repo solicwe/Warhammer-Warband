@@ -15,7 +15,7 @@ const VIEW = 20; // inches across when zoomed on a unit
  *  mirrors the board itself (an SVG <use>), so it costs no extra rendering of units. Zoomed on the picked unit (shown
  *  only while the sheet hides that unit), else the whole board (shown while the sheet hides most of the board); never
  *  over the dice tray. Drag the picture to move the window; close it and it stays away until the board is uncovered. */
-export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
+export function MapCam({ s, focus, onClose }: { s: GameState; focus: Pt | null; onClose?: () => void }) {
   const [covered, setCovered] = useState(false);
   const [closed, setClosed] = useState(false);
   const [top, setTop] = useState(96);
@@ -39,7 +39,7 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
         now = f ? box.bottom - sheetTop > 24 : box.bottom - sheetTop > box.height * 0.5;
       }
       setCovered(now);
-      if (!now) setClosed(false);
+
       const board = document.querySelector('.board-wrap');
       if (board) setTop(board.getBoundingClientRect().top + 8);
     };
@@ -72,7 +72,7 @@ export function MapCam({ s, focus }: { s: GameState; focus: Pt | null }) {
         onPointerUp={() => { drag.current = null; }}
         onPointerCancel={() => { drag.current = null; }}
       ><use href="#board-live" /></svg>
-      <button className="map-cam-close" aria-label="Close the live map" onClick={() => setClosed(true)}><Icon name="close" size={14} /></button>
+      <button className="map-cam-close" aria-label="Close the live map" onClick={() => { setClosed(true); onClose?.(); }}><Icon name="close" size={14} /></button>
     </div>
   );
 }

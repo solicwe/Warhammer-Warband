@@ -177,6 +177,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
   const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); writeText(KEYS.fx, v); };
   const [sound, setSound] = useState(soundOn());
+  const [liveMap, setLiveMapRaw] = useState<boolean>(() => readText(KEYS.liveMap) !== '0');
+  const setLiveMap = (v: boolean) => { setLiveMapRaw(v); writeText(KEYS.liveMap, v ? '1' : '0'); };
   const [shake, setShake] = useState(0);
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
   const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
@@ -3497,7 +3499,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </div>
-      {isMobileScreen && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} />}
+      {isMobileScreen && liveMap && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} onClose={() => { setLiveMap(false); flash('Live map closed (re-enable in Menu)'); }} />}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
@@ -3822,6 +3824,14 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button role="radio" aria-checked={sound} className={sound ? 'on' : ''} onClick={() => { setSoundOn(true); setSound(true); play('gem'); }}>On</button>
                 <button role="radio" aria-checked={!sound} className={!sound ? 'on' : ''} onClick={() => { setSoundOn(false); setSound(false); }}>Off</button>
               </div>
+            </div>
+            <div className="field">
+              <span id="live-map-mirror">Live map mirror (phone)</span>
+              <div className="seg" role="radiogroup" aria-labelledby="live-map-mirror">
+                <button role="radio" aria-checked={liveMap} className={liveMap ? 'on' : ''} onClick={() => { setLiveMap(true); flash('Live map mirror enabled'); }}>On</button>
+                <button role="radio" aria-checked={!liveMap} className={!liveMap ? 'on' : ''} onClick={() => { setLiveMap(false); flash('Live map mirror disabled'); }}>Off</button>
+              </div>
+              <span className="field-note">Floating mini map mirror of the board when a sheet is open</span>
             </div>
             <button className="btn danger" onClick={onExit}>Exit to home <span className="muted small">· the battle is saved</span></button>
           </div>

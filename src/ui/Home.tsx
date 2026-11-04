@@ -71,7 +71,7 @@ export function Home({ armies, index, saved, onOpen, onNew, onDuplicate, onDelet
           <button className="mode-mini" onClick={onBattle}><Icon name="fight" size={18} /><span>New battle</span></button>
           <button className="mode-mini" onClick={onCampaign}>
             <Icon name="trophy" size={18} />
-            <span>Campaign{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)} of {runLayers}</small> : null}</span>
+            <span>Demo Roguelike{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)} of {runLayers}</small> : null}</span>
           </button>
         </nav>
 
