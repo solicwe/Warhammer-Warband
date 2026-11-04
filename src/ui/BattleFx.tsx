@@ -19,26 +19,26 @@ let VIS = 1;
 /** shots, beams and tracers: a little thinner than the rest of the effects */
 let TRACE = 0.8;
 
-export const FxLayer = memo(function FxLayer({ fx, viewW = 30 }: { fx: ActiveFx[]; viewW?: number }) {
+export const FxLayer = memo(function FxLayer({ fx, viewW = 30, now: parentNow }: { fx: ActiveFx[]; viewW?: number; now?: number }) {
   // zoomed out, effects grow a little so they still read; not as much as the board shrinks, or a shot swamps the models
   VIS = Math.max(1, Math.min(1.6, viewW / 32));
   TRACE = VIS * 0.8;
   const live = fx.filter((a) => LIVE.has(a.e.kind) || (a.e.kind === 'move' && a.e.moveKind === 'charge') || (a.e.kind === 'place' && !!a.e.at));
-  const [now, setNow] = useState(() => performance.now());
+  const [localNow, setLocalNow] = useState(() => performance.now());
+  const now = parentNow ?? localNow;
   useEffect(() => {
-    if (!live.length) return;
+    // If parent supplied now (synchronized with Board animation), do NOT run a duplicate RAF loop!
+    if (parentNow !== undefined || !live.length) return;
     let raf = 0;
     // ~30 frames a second is smooth for a flash and halves the work on a phone
     let last = 0;
-    const tick = () => {
-      const t = performance.now();
-      if (t - last >= 30) { last = t; setNow(t); }
-      if (live.some((a) => t - a.t0 < FX_MS[a.e.kind])) raf = requestAnimationFrame(tick);
+    const tick = (time: number) => {
+      if (time - last >= 30) { last = time; setLocalNow(time); }
+      if (live.some((a) => time - a.t0 < FX_MS[a.e.kind])) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fx]);
+  }, [fx, parentNow, live]);
   if (!live.length) return null;
   return (
     <g pointerEvents="none">

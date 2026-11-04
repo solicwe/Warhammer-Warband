@@ -136,3 +136,25 @@ export function fireTex(hex: string): string[] {
   fireCache.set(hex, out);
   return out;
 }
+
+/** Warm up textures in idle time so the first attack has zero stutter */
+export function prewarmFxTextures() {
+  if (cache !== undefined) return;
+  if (typeof window === 'undefined') return;
+  const runner = () => {
+    fxTextures();
+    // Also prewarm common energy colours
+    for (const c of ['#60a5fa', '#a855f7', '#fbbf24', '#ef4444', '#a3e635']) {
+      energyTex(c);
+    }
+  };
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(runner, { timeout: 2500 });
+  } else {
+    setTimeout(runner, 150);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  prewarmFxTextures();
+}

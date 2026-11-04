@@ -6,36 +6,61 @@ export type Sfx = 'tick' | 'hit' | 'wound' | 'kill' | 'destroy' | 'vp' | 'gem' |
 
 let on = readText(KEYS.sound) !== '0';
 let ctx: AudioContext | null = null;
+let noiseBuffer: AudioBuffer | null = null;
 
 export const soundOn = () => on;
 export function setSoundOn(v: boolean) {
   on = v;
   writeText(KEYS.sound, v ? '1' : '0');
+  if (v && ctx && ctx.state === 'suspended') {
+    void ctx.resume().catch(() => undefined);
+  }
+}
+
+/** Pre-allocated static noise buffer: generated once per context so repeated sound effects (dice rolls,
+ *  impacts, weapons) perform zero memory allocations and zero synchronous Math.random loops on the UI thread. */
+function getNoiseBuffer(a: AudioContext): AudioBuffer {
+  if (!noiseBuffer || noiseBuffer.sampleRate !== a.sampleRate) {
+    const len = Math.floor(a.sampleRate * 2); // 2 seconds of white noise
+    noiseBuffer = a.createBuffer(1, len, a.sampleRate);
+    const d = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuffer;
 }
 
 function audio(): AudioContext | null {
   if (!on) return null;
   try {
     ctx ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    // iOS leaves it 'interrupted' after switching apps or tabs: wake it up whatever the state
-    if (ctx.state !== 'running') void ctx.resume().catch(() => undefined);
+    // iOS/mobile browser leaves it 'interrupted' or 'suspended': wake it up immediately
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
     return ctx;
   } catch { return null; }
 }
 
 // coming back to the page (or the next tap after it) resumes the sound
 if (typeof window !== 'undefined') {
-  // the first tap creates the sound context: one made later, outside a tap (the roll-off that opens a game), stays muted
-  const wake = (e?: Event) => {
-    // leaving the page: drop the context; mobile browsers can hand back one that says 'running' but stays silent
-    if (document.visibilityState === 'hidden') { void ctx?.close().catch(() => undefined); ctx = null; return; }
-    if (!ctx && e && e.type !== 'visibilitychange' && e.type !== 'pageshow') audio();
-    if (ctx && ctx.state !== 'running') void ctx.resume().catch(() => undefined);
+  const wake = () => {
+    // Suspend rather than destroy context on tab switch/lock so the audio pipeline and buffer remain warm
+    if (document.visibilityState === 'hidden') {
+      void ctx?.suspend().catch(() => undefined);
+      return;
+    }
+    const a = audio();
+    if (a && a.state === 'suspended') void a.resume().catch(() => undefined);
   };
   document.addEventListener('visibilitychange', wake);
   window.addEventListener('pageshow', wake);
-  window.addEventListener('pagehide', () => { void ctx?.close().catch(() => undefined); ctx = null; });
-  for (const t of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(t, wake, { passive: true });
+  // Full cleanup only on pagehide (tab close / navigation away)
+  window.addEventListener('pagehide', () => {
+    void ctx?.close().catch(() => undefined);
+    ctx = null;
+    noiseBuffer = null;
+  });
+  for (const t of ['pointerdown', 'touchend', 'click', 'keydown']) {
+    window.addEventListener(t, wake, { passive: true });
+  }
 }
 
 /** One note: an oscillator with a quick attack and an exponential fall. */
@@ -46,7 +71,7 @@ function tone(a: AudioContext, freq: number, at: number, len: number, type: Osci
   o.frequency.setValueAtTime(freq, at);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), at + len);
   g.gain.setValueAtTime(0.0001, at);
-  g.gain.exponentialRampToValueAtTime(vol, at + 0.008);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol), at + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0001, at + len);
   o.connect(g).connect(a.destination);
   o.start(at);
@@ -59,21 +84,27 @@ function clack(a: AudioContext, at: number, vol: number, pitch: number) {
   tone(a, 900 + pitch * 900, at, 0.03, 'square', vol * 0.18);
 }
 
-/** A burst of noise (dice rattle, impacts). */
+/** A burst of noise (dice rattle, impacts). Zero-allocation playback via pre-cached noise buffer and native gain decay. */
 function noise(a: AudioContext, at: number, len: number, vol: number, lowpass: number, kind: BiquadFilterType = 'lowpass') {
-  const n = Math.max(1, Math.floor(a.sampleRate * len));
-  const buf = a.createBuffer(1, n, a.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const buf = getNoiseBuffer(a);
   const src = a.createBufferSource();
   src.buffer = buf;
+  // Offset start at a pseudo-random point in the 2s buffer so repeated bursts sound naturally varied
+  const maxOffset = Math.max(0, buf.duration - len - 0.05);
+  const offset = Math.random() * maxOffset;
+
   const f = a.createBiquadFilter();
   f.type = kind;
-  f.frequency.value = lowpass;
+  f.frequency.setValueAtTime(lowpass, at);
+
   const g = a.createGain();
-  g.gain.value = vol;
+  const v = Math.max(0.0001, vol);
+  g.gain.setValueAtTime(v, at);
+  g.gain.linearRampToValueAtTime(0.0001, at + len);
+
   src.connect(f).connect(g).connect(a.destination);
-  src.start(at);
+  src.start(at, offset, len + 0.01);
+  src.stop(at + len + 0.02);
 }
 
 // a major scale: each counted step of an attack plays one note higher (Balatro's rising count)
@@ -83,7 +114,7 @@ const SCALE = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
 export function play(kind: Sfx, step = 0, size = 0) {
   const a = audio();
   if (!a) return;
-  const t = a.currentTime + 0.01;
+  const t = Math.max(a.currentTime, 0) + 0.005;
   switch (kind) {
     case 'tick': tone(a, SCALE[Math.min(SCALE.length - 1, step)], t, 0.09, 'triangle', 0.12); break;
     case 'hit': tone(a, SCALE[Math.min(SCALE.length - 1, step)] / 2, t, 0.08, 'square', 0.05); break;
