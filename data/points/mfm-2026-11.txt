@@ -7,7 +7,27 @@ AS | Exorcist | =175/215
 # --- Adeptus Custodes (AC) ---
 AC | Allarus Custodians | 2=180/210,3=270/300
 AC | Vertus Praetors | 2=220/240,3=330/350
+AC | Shield-Captain | =180/200
+AC | Shield-Captain in Allarus Terminator Armour | =185/205
 AC | Shield-Captain on Dawneagle Jetbike | =205/225
+AC | Blade Champion | =175/195
+AC | Custodian Guard Sodality | 3=240/270
+AC | Sentinel Guard Sodality | 3=240/270
+AC | Aquilon Terminators with Solarite Power Gauntlets | 3=285/315
+AC | Aquilon Terminators with Solarite Power Talons | 3=275/305
+AC | Caladius Grav-tank | =230/260
+AC | Caladius Annihilator Grav-tank | =250/280
+AC | Contemptor-Achillus Dreadnought | =230/260
+AC | Contemptor-Galatus Dreadnought | =220/250
+AC | Coronus Grav-carrier | =225/245
+AC | Telemon Heavy Dreadnought | =280/310
+AC | Venatari with Kinetic Destroyers | 3=255/280
+AC | Venatari with Verutum Lances | 3=270/300
+AC | Gyrfalcon Jetbike Sodality | 2=260/280
+AC | Anathema Psykana Rhino | =70/80
+AC | Prosecutor Squad | 4=45,5=50,9=80,10=90
+AC | Vigilator Squad | 4=50,5=55,9=90,10=100
+AC | Witchseeker Squad | 4=55,5=60,9=100,10=110
 
 # --- Aeldari (AE) ---
 AE | D-Cannon Platform | t2:=130
