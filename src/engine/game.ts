@@ -21,6 +21,7 @@ import { isMelee } from './weapons';
 import { endSpotBlocked, isMV, pathBlocked, pathLength, settleMove } from './pathing';
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
+import { autoSelectRisenRubricae, hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, toggleRisenRubricae } from '../factions/thousandSons';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
 
 
@@ -502,6 +503,7 @@ export function createGame(o: NewGameOptions): GameState {
   fireAll(s, 'formation', 'both');
   // abilities that give a core rule at deployment (Blackwing Shroud, Masters of Misdirection: Infiltrators)
   for (const u of s.units) if (!u.core.infiltrators && unitFlags(s, u).infiltrators) u.core.infiltrators = true;
+  for (const p of [0, 1] as PlayerId[]) autoSelectRisenRubricae(s, p);
   startOfBattle(s);
   emit(s, 'setup', {});
   return s;
@@ -523,6 +525,7 @@ setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => bodyW
 export interface MoveCheck { ok: boolean; errors: string[]; bad: string[] }
 
 export { canCrossDense, isMV, pathLength, settleMove, routeAround } from './pathing';
+export { hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, toggleRisenRubricae };
 
 function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: string[], bad: Set<string>) {
   const W = tableW(s), H = tableH(s);

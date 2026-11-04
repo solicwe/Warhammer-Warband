@@ -343,6 +343,7 @@ export interface ObjectiveState {
 }
 
 export interface PlayerState {
+  risenRubricae?: string[]; // unit IDs selected for Infiltrators via Risen Rubricae
   favoured?: string; // Slaanesh's Chosen: the unit that is the army's Favoured Champions
   favouredTurn?: number; // … last changed in this turn (only the first kill in each turn passes it on)
   pledge?: { round: number; n: number; boosted?: boolean }; // Coterie of the Conceited: this battle round's pledge to Slaanesh

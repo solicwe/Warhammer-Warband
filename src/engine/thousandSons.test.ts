@@ -292,24 +292,71 @@ describe('Risen Rubricae enhancement', () => {
     expect(sorc.core.infiltrators).toBe(true);
   });
 
-  it('gives the bearer unit Infiltrators when attached to Rubric Marines and buffs other Rubricae', () => {
+  it('gives at most 2 Rubric Marines Infiltrators when selecting battleline', () => {
     const s = game([
       ['Rubric Marines', 5, 100],
       ['Exalted Sorcerer', 1, 90, 'x0', { enhancement: 'Risen Rubricae' }],
       ['Rubric Marines', 5, 100],
+      ['Rubric Marines', 5, 100],
     ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
-    const leaderSquad = s.units.find((u) => u.sources.includes('Exalted Sorcerer'))!;
-    const otherSquad = s.units.find((u) => !u.sources.includes('Exalted Sorcerer') && u.owner === 0)!;
-    expect(leaderSquad.core.infiltrators).toBe(true);
-    expect(otherSquad.core.infiltrators).toBe(true);
+    const rubrics = s.units.filter((u) => u.owner === 0 && u.sources.includes('Rubric Marines'));
+    expect(rubrics.length).toBe(3);
+    const infiltrating = rubrics.filter((u) => u.core.infiltrators);
+    // At most 2 Rubric Marines can infiltrate!
+    expect(infiltrating.length).toBe(2);
   });
 
-  it('gives the bearer unit Infiltrators when attached to Scarab Occult Terminators', () => {
+  it('gives only 1 unit Infiltrators when selecting Scarab Occult Terminators', () => {
     const s = game([
       ['Scarab Occult Terminators', 5, 180],
       ['Sorcerer In Terminator Armour', 1, 105, 'x0', { enhancement: 'Risen Rubricae' }],
+      ['Scarab Occult Terminators', 5, 180],
     ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
-    const termSquad = s.units.find((u) => u.sources.includes('Sorcerer In Terminator Armour'))!;
-    expect(termSquad.core.infiltrators).toBe(true);
+    const terms = s.units.filter((u) => u.owner === 0 && u.sources.includes('Scarab Occult Terminators'));
+    expect(terms.length).toBe(2);
+    const infiltrating = terms.filter((u) => u.core.infiltrators);
+    // Only 1 Terminator unit can infiltrate!
+    expect(infiltrating.length).toBe(1);
+  });
+
+  it('allows toggling between 2 Rubric Marines and 1 Terminator unit', async () => {
+    const { toggleRisenRubricae } = await import('../factions/thousandSons');
+    const s = game([
+      ['Rubric Marines', 5, 100],
+      ['Exalted Sorcerer', 1, 90, 'x0', { enhancement: 'Risen Rubricae' }],
+      ['Rubric Marines', 5, 100],
+      ['Scarab Occult Terminators', 5, 180],
+    ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+
+    const rubric1 = s.units.find((u) => u.sources.includes('Exalted Sorcerer'))!;
+    const rubric2 = s.units.find((u) => u.owner === 0 && u.sources.includes('Rubric Marines') && u.id !== rubric1.id)!;
+    const term = s.units.find((u) => u.sources.includes('Scarab Occult Terminators'))!;
+
+    // Initial default: 2 Rubric Marines have Infiltrators
+    expect(rubric1.core.infiltrators).toBe(true);
+    expect(rubric2.core.infiltrators).toBe(true);
+    expect(term.core.infiltrators).toBe(false);
+
+    // Switch to Terminator: Terminator gets Infiltrators, Rubrics lose it
+    toggleRisenRubricae(s, 0, term.id);
+    expect(term.core.infiltrators).toBe(true);
+    expect(rubric1.core.infiltrators).toBe(false);
+    expect(rubric2.core.infiltrators).toBe(false);
+
+    // Switch back to Rubrics: click rubric1 then rubric2
+    toggleRisenRubricae(s, 0, rubric1.id);
+    expect(rubric1.core.infiltrators).toBe(true);
+    expect(term.core.infiltrators).toBe(false);
+
+    toggleRisenRubricae(s, 0, rubric2.id);
+    expect(rubric1.core.infiltrators).toBe(true);
+    expect(rubric2.core.infiltrators).toBe(true);
+    expect(term.core.infiltrators).toBe(false);
+
+    const { setRisenRubricae } = await import('../factions/thousandSons');
+    // Cannot select 1 Terminator + 1 Rubric Marine
+    expect(setRisenRubricae(s, 0, [term.id, rubric1.id])).toBe(
+      'Risen Rubricae can only select 1 Terminator/other Rubricae unit, or up to 2 Rubricae Battleline units'
+    );
   });
 });

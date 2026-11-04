@@ -25,7 +25,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit } from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, hasRisenRubricae, risenRubricaeCandidates, toggleRisenRubricae } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
@@ -1790,6 +1790,42 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
+        {hasRisenRubricae(s, p) && (
+          <div className="card" style={{ padding: '8px 10px', marginBottom: 8, border: '1px solid var(--accent)', background: 'rgba(74, 144, 226, 0.08)' }}>
+            <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div className="small">
+                <b>✨ Risen Rubricae (Infiltrators)</b>
+              </div>
+              <div className="tiny muted">
+                {(() => {
+                  const cands = risenRubricaeCandidates(s, p);
+                  const selBl = cands.filter((c) => c.selected && c.kind === 'battleline').length;
+                  const selOth = cands.filter((c) => c.selected && c.kind === 'other').length;
+                  if (selOth > 0) return '1 / 1 Terminators selected';
+                  return `${selBl} / 2 Rubric Marines selected`;
+                })()}
+              </div>
+            </div>
+            <div className="tiny muted" style={{ marginBottom: 6 }}>
+              Select either <b>2 Rubric Marines</b> (Battleline) or <b>1 Scarab Occult Terminators</b>:
+            </div>
+            <div className="unit-strip">
+              {risenRubricaeCandidates(s, p).map((c) => (
+                <button
+                  key={c.unit.id}
+                  className={`unit-pill ${c.selected ? 'sel' : ''}`}
+                  aria-pressed={c.selected}
+                  onClick={() => {
+                    const e = act((g) => toggleRisenRubricae(g, p, c.unit.id));
+                    if (e) flash(e);
+                  }}
+                >
+                  {c.unit.name} {c.kind === 'other' ? '(Terminators)' : '(Battleline)'} {c.selected ? '✓ Infiltrator' : ''}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="unit-strip">
           {groupUnits(pending).map((g) => {
             const isSelected = selUnit && g.units.some((u) => u.id === selUnit.id);
