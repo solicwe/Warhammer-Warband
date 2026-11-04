@@ -133,6 +133,8 @@ Made in conversation, so they are not all visible in the code. A change that wou
   Reserves button while deploying, no automatic deploy buttons. The Idle tactic is chosen in Settings only.
 - **Terrain footprints stay where the layout traces them**: plates traced touching stay touching (a ruin and its
   small plate are one piece on the real table); never pull them apart.
+- **Small solid blocks are boxes, never an L**: every small traced outline (plain, stepped or cross-shaped, 1.5" to
+  5" a side) is the piece's sealed `box`, drawn as a green block.
 - **Big games must not freeze**: the bot's quick planning on big boards and the worker fallback stay.
 - No emoji anywhere; replies in Thai.
 

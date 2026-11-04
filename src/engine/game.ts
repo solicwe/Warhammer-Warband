@@ -43,26 +43,38 @@ export function stripBarricade(poly: number[][]): Seg[] {
   return [{ a: { x: a.x + ux * inset, y: a.y + uy * inset }, b: { x: b.x - ux * inset, y: b.y - uy * inset } }];
 }
 
-/** The rectangle a piece's walls outline, if they trace a small closed block (1.5" to 5" a side, every side at
- *  least half walled, no wall elsewhere), in the frame of its longest wall; else null. */
-function outlineBox(walls: number[][], k: number): number[][] | null {
-  if (walls.length < 4) return null;
+/** A small solid block traced as its outline: a group of 4+ joined walls (or 6+ loose ones) inside a rectangle
+ *  1.5" to 5" a side (plain, stepped or cross-shaped). Returns the smallest such rectangle and the piece's other walls,
+ *  or null. */
+function outlineBox(walls: number[][], k: number): { box: number[][]; rest: number[][] } | null {
   const ws = walls.map(([x0, y0, x1, y1]) => ({ a: { x: x0, y: y0 }, b: { x: x1, y: y1 } }));
-  const w0 = [...ws].sort((p, q) => dist(q.a, q.b) - dist(p.a, p.b))[0];
-  const L = dist(w0.a, w0.b);
-  const u = { x: (w0.b.x - w0.a.x) / L, y: (w0.b.y - w0.a.y) / L }, n = { x: -u.y, y: u.x };
-  const pts = ws.flatMap((w) => [w.a, w.b]);
-  const pu = pts.map((p) => p.x * u.x + p.y * u.y), pn = pts.map((p) => p.x * n.x + p.y * n.y);
-  const [u0, u1, n0, n1] = [Math.min(...pu), Math.max(...pu), Math.min(...pn), Math.max(...pn)];
-  if (Math.min(u1 - u0, n1 - n0) < 1.5 * k || Math.max(u1 - u0, n1 - n0) > 5 * k) return null;
-  const P = (a: number, b: number): Pt => ({ x: u.x * a + n.x * b, y: u.y * a + n.y * b });
-  const box = [P(u0, n0), P(u1, n0), P(u1, n1), P(u0, n1)];
-  const sides = box.map((c, i) => ({ a: c, b: box[(i + 1) % 4] }));
-  const on = (w: Seg, side: Seg) => pointSegDist(w.a, side) < 0.6 * k && pointSegDist(w.b, side) < 0.6 * k;
-  // every side at least half walled, and (nearly) no wall off the sides: a stepped or cross-shaped outline is not a block
-  const walled = sides.every((side) => ws.reduce((sum, w) => sum + (on(w, side) ? dist(w.a, w.b) : 0), 0) >= 0.5 * dist(side.a, side.b));
-  const off = ws.reduce((sum, w) => sum + (sides.some((side) => on(w, side)) ? 0 : dist(w.a, w.b)), 0);
-  return walled && off <= 0.1 * ws.reduce((sum, w) => sum + dist(w.a, w.b), 0) ? box.map((p) => [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10]) : null;
+  // the groups of walls that touch each other
+  const group = ws.map((_, i) => i);
+  const root = (i: number): number => (group[i] === i ? i : (group[i] = root(group[i])));
+  const touch = (w: Seg, v: Seg) => [w.a, w.b].some((p) => pointSegDist(p, v) < 0.4 * k) || [v.a, v.b].some((p) => pointSegDist(p, w) < 0.4 * k);
+  ws.forEach((w, i) => ws.forEach((v, j) => { if (j > i && touch(w, v)) group[root(i)] = root(j); }));
+  // each group, then all the walls at once: an outline traced as a dashed line (6+ dashes) does not join up
+  for (const g of [...new Set(ws.map((_, i) => root(i))), -1]) {
+    const inG = (i: number) => g < 0 || root(i) === g;
+    const gw = ws.filter((_, i) => inG(i));
+    if (gw.length < (g < 0 ? 6 : 4)) continue;
+    // squared to the direction (a wall's, or the table's) that gives the smallest rectangle
+    const pts = gw.flatMap((w) => [w.a, w.b]);
+    const frame = (th: number) => {
+      const u = { x: Math.cos(th), y: Math.sin(th) }, n = { x: -u.y, y: u.x };
+      const pu = pts.map((p) => p.x * u.x + p.y * u.y), pn = pts.map((p) => p.x * n.x + p.y * n.y);
+      return { u, n, u0: Math.min(...pu), u1: Math.max(...pu), n0: Math.min(...pn), n1: Math.max(...pn) };
+    };
+    const area = (f: ReturnType<typeof frame>) => (f.u1 - f.u0) * (f.n1 - f.n0);
+    const { u, n, u0, u1, n0, n1 } = [0, ...gw.map((w) => Math.atan2(w.b.y - w.a.y, w.b.x - w.a.x))].map(frame).reduce((x, y) => (area(y) < area(x) - 1e-6 ? y : x));
+    if (Math.min(u1 - u0, n1 - n0) < 1.5 * k || Math.max(u1 - u0, n1 - n0) > 5 * k) continue;
+    const P = (a: number, b: number): Pt => ({ x: u.x * a + n.x * b, y: u.y * a + n.y * b });
+    return {
+      box: [P(u0, n0), P(u1, n0), P(u1, n1), P(u0, n1)].map((p) => [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10]),
+      rest: walls.filter((_, i) => !inG(i)),
+    };
+  }
+  return null;
 }
 
 export function buildTerrain(layoutId: string, tableSize?: { width: number; height: number }): { terrain: TerrainPiece[]; objectives: ObjectiveState[] } {
@@ -94,9 +106,9 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
       Math.round(y1 * sy * 10) / 10,
     ]);
     const scaledBox = t.box?.map(([x, y]) => [Math.round(x * sx * 10) / 10, Math.round(y * sy * 10) / 10]);
-    // a solid block on the plate traced as the closed outline of a small rectangle stays that block (not an L)
+    // a solid block on the plate traced as its outline stays that block (its four edges), not an L
     const outline = scaledBox ? null : outlineBox(scaledWalls, Math.max(sx, sy));
-    const item = { ...t, poly: scaledPoly, walls: scaledWalls, obstacles: scaledObstacles, ...(scaledBox ?? outline ? { box: scaledBox ?? outline! } : {}) };
+    const item = { ...t, poly: scaledPoly, walls: outline ? outline.rest : scaledWalls, obstacles: scaledObstacles, ...(scaledBox ?? outline ? { box: scaledBox ?? outline!.box } : {}) };
 
     if (item.box || item.obstacles.length || item.walls.length < 3 || item.poly.length !== 4) return item;
     const P = item.poly.map(([x, y]) => ({ x, y }));
@@ -202,7 +214,7 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     const onMerged = (w: Seg) => dist(w.a, w.b) <= 1.6 && merged.some((m) => pointSegDist({ x: (w.a.x + w.b.x) / 2, y: (w.a.y + w.b.y) / 2 }, m) < 0.75);
     t.walls = [...merged, ...t.walls.filter((w) => !gone.has(w) && !onMerged(w))];
   }
-  // a small ruin traced as a tangle of stubs (4+ walls inside 5" square), or any ruin whose walls crowd each other, is
+  // a ruin whose walls crowd each other (a small one traced as a tangle of stubs is its box, above) is
   // drawn as one clean L: the two sides of its
   // box, along its longest wall, that carried the most of the traced walls
   for (const t of terrain) {
@@ -1884,7 +1896,10 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
   const avoid = boardUnits(s, other(u.owner)).filter((e) => !targets.includes(e) && !hasKw(e, 'AIRCRAFT')).flatMap(alive);
   const clearOfOthers = (b: Body) => avoid.every((e) => gap(b, e) > RULES.engagementRange + 0.05);
   const pos = new Map<string, Pt>(ms.map((m) => [m.id, { x: m.x, y: m.y }]));
-  const free = (id: string, b: Body) => onTable(b, W, H)
+  // a sealed container: no model ends in it or half over it (the roof is left to the player)
+  const boxes = s.terrain.filter((t) => t.box).map((t) => t.box!);
+  const offBox = (b: Body) => boxes.every((q) => !bodyTouchesPoly(b, -0.05, q));
+  const free = (id: string, b: Body) => onTable(b, W, H) && offBox(b)
     && others.every((o) => gap(o, b) >= -0.01)
     && ms.every((m) => m.id === id || gap(bodyAt(m, pos.get(m.id)!), b) >= -0.01)
     && !endSpotBlocked(s, b, b) && clearOfOthers(b);
@@ -1921,7 +1936,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
         for (let sub = k; sub >= 0; sub -= 0.5) {
           const cand = { x: m.x + dir!.x * sub, y: m.y + dir!.y * sub };
           if (sub > 0 && mates.some((o) => gap(bodyAt(m, cand), o) < -0.01)) continue;
-          if (onTable(bodyAt(m, cand), W, H) && others.every((o) => gap(bodyAt(m, cand), o) >= -0.01)
+          if (onTable(bodyAt(m, cand), W, H) && offBox(bodyAt(m, cand)) && others.every((o) => gap(bodyAt(m, cand), o) >= -0.01)
             && !endSpotBlocked(s, m, cand) && clearOfOthers(bodyAt(m, cand)) && clearLine(m, cand)) {
             bestP = cand;
             break;

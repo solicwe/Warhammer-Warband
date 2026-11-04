@@ -57,7 +57,8 @@ The game follows the 11th edition core rules. A summary of what is modelled, wit
   one at a time each.
 - **Terrain footprints.** Every piece of terrain sits on a baseplate, its footprint. Models walk into ruin footprints
   freely but can't walk through walls. Every model, vehicles included, may end a move inside one to hold an objective. Titanic models stand astride ruins.
-  The solid block in the middle of the small strip plates is a container: nothing stands in it or half over it;
+  The small solid blocks (in the middle of the strip plates and on the small plates) are containers: nothing stands
+  in one or half over it;
   infantry, beasts, swarms, flyers and monsters may stand wholly on its roof.
 - **Line of sight.** Sight is checked model to model. Walls block it. A dense footprint that neither model stands in
   blocks it completely. A model inside a footprint can see out and be seen.

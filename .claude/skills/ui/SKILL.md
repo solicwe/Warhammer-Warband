@@ -82,5 +82,7 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   (its facing `rot` was missing, so turning a vehicle in place showed nothing until it moved) must be added there.
 - A terrain shape that looks wrong on the board ("the green L should be a box") is usually made in `buildTerrain`
   (`src/engine/game.ts`), not drawn wrong in `Board.tsx`: the layouts are traced outlines, and the clean-up passes
-  there turn them into walls. The small solid block on the strip plates (2 per layout) was traced as a closed
-  rectangle and the stub pass made it an L; `outlineBox` now keeps it as the piece's `box` (November 2026).
+  there turn them into walls. The small solid blocks (4 per layout: plain on the strip plates, stepped or
+  cross-shaped on the small plates) were traced as outlines and the stub pass made them Ls; the owner wants boxes, so
+  `outlineBox` keeps each as the piece's `box` (November 2026). A box changes play: `autoApproach` had to learn to
+  keep models off it (pile-in failed whole otherwise), and random test setups can land on one (skip those).
