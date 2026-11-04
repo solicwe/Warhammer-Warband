@@ -284,3 +284,32 @@ describe('Thousand Sons in a game', () => {
     expect(ritualsPending(s, 0)).toBe(false);
   });
 });
+
+describe('Risen Rubricae enhancement', () => {
+  it('gives the bearer unit Infiltrators when standalone', () => {
+    const s = game([['Exalted Sorcerer', 1, 90, undefined, { enhancement: 'Risen Rubricae' }]], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+    const sorc = s.units.find((u) => u.sources.includes('Exalted Sorcerer'))!;
+    expect(sorc.core.infiltrators).toBe(true);
+  });
+
+  it('gives the bearer unit Infiltrators when attached to Rubric Marines and buffs other Rubricae', () => {
+    const s = game([
+      ['Rubric Marines', 5, 100],
+      ['Exalted Sorcerer', 1, 90, 'x0', { enhancement: 'Risen Rubricae' }],
+      ['Rubric Marines', 5, 100],
+    ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+    const leaderSquad = s.units.find((u) => u.sources.includes('Exalted Sorcerer'))!;
+    const otherSquad = s.units.find((u) => !u.sources.includes('Exalted Sorcerer') && u.owner === 0)!;
+    expect(leaderSquad.core.infiltrators).toBe(true);
+    expect(otherSquad.core.infiltrators).toBe(true);
+  });
+
+  it('gives the bearer unit Infiltrators when attached to Scarab Occult Terminators', () => {
+    const s = game([
+      ['Scarab Occult Terminators', 5, 180],
+      ['Sorcerer In Terminator Armour', 1, 105, 'x0', { enhancement: 'Risen Rubricae' }],
+    ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+    const termSquad = s.units.find((u) => u.sources.includes('Sorcerer In Terminator Armour'))!;
+    expect(termSquad.core.infiltrators).toBe(true);
+  });
+});

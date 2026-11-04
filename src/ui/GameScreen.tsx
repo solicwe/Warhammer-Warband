@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
 import { modelPortraitKey } from './portraits';
+import { unitAttachedSummary, unitDisplayName, unitKitSignature, unitSubDetails, unitWeaponsSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
@@ -429,7 +430,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const groupUnits = (units: UnitState[]): UnitGroup[] => {
     const map = new Map<string, UnitGroup>();
     for (const u of units) {
-      const key = `${u.name}|${u.startingStrength}|${u.owner}`;
+      const key = `${u.name}|${u.startingStrength}|${u.owner}|${unitKitSignature(u)}`;
       const cur = map.get(key);
       if (cur) {
         cur.units.push(u);
@@ -1301,17 +1302,33 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       u.chargedTurn === s.turn && 'Fights First',
       isRiledUp(s, u) && 'Riled up 5++',
       s.players[other(u.owner)].oathTarget === u.id && `${markRuleName(s, other(u.owner)) ?? 'Marked'} target`,
-      ...u.enhancements.map((e) => e.name),
       ...u.buffs.map((b) => (b.label && !BUFFS.some((x) => x.kind === b.kind) ? `${EFFECT_LABEL[b.kind] ?? b.kind} (${b.label})` : BUFFS.find((x) => x.kind === b.kind)?.label ?? EFFECT_LABEL[b.kind] ?? b.kind)),
     ].filter(Boolean) as string[];
+    const attachedText = unitAttachedSummary(u);
+    const weaponsText = unitWeaponsSummary(u);
     return (
       <div className="row unit-card" style={{ flexWrap: 'nowrap', gap: 10 }}>
         <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={40} datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
         <div className="grow">
           <div style={{ fontWeight: 700, color: getPlayerFactionTheme(s, u.owner).primary }}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
+          {u.enhancements.length > 0 && (
+            <div className="tiny" style={{ color: '#eab308', fontWeight: 600, marginTop: 2 }}>
+              ✨ {u.enhancements.map((e) => e.name).join(' · ')}
+            </div>
+          )}
+          {attachedText && (
+            <div className="tiny muted" style={{ marginTop: 1 }}>
+              {attachedText}
+            </div>
+          )}
           <div className="statline">
             M <b>{m.profile.M !== undefined && m.profile.M !== null ? m.profile.M + unitFlags(s, u).move : '-'}"</b> · T <b>{m.profile.T}</b> · Sv <b>{m.profile.Sv}+</b>{m.profile.InSv ? <> · <b>{m.profile.InSv}++</b></> : null} · W <b>{m.wounds}/{m.profile.W}</b> · Ld <b>{bestLd(u, s)}+</b> · OC <b>{u.battleShocked ? '-' : m.profile.OC ?? '-'}</b>
           </div>
+          {weaponsText && (
+            <div className="tiny" style={{ color: 'var(--text-2)', marginTop: 1 }}>
+              Weapons: <span style={{ color: 'var(--text)' }}>{weaponsText}</span>
+            </div>
+          )}
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
         </div>
         <button
@@ -1639,20 +1656,46 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     if (!bots.includes(p) && !(s.autoDeploy ?? []).includes(p) && !(s.reservesDeclared ?? []).includes(p) && pending.length) {
       const cap = Math.floor(armyPoints(s, p) * RULES.reserves.maxPointsFraction);
       const inRes = reservesPoints(s, p) + pending.filter((x) => resPick.includes(x.id) && !hasKw(x, 'AIRCRAFT')).reduce((a, x) => a + x.pts, 0);
+      const focusResUnit = pending.find((x) => x.id === (focusUnit ?? resPick[resPick.length - 1]));
       return (
         <>
           <div className="handoff">{pName(s, p)}: which units start in Reserves?</div>
           <div className="small muted">Deep Strike and Strategic Reserves are declared now, before anything is set up, and cannot be changed later.</div>
           <div className="unit-strip">
-            {pending.map((x) => (
-              <button key={x.id} className={`unit-pill ${resPick.includes(x.id) ? 'sel' : ''}`} aria-pressed={resPick.includes(x.id)}
-                onClick={() => setResPick((cur) => (cur.includes(x.id) ? cur.filter((i) => i !== x.id) : [...cur, x.id]))}>
-                {x.name.length > 22 ? x.name.slice(0, 21) + '…' : x.name}<span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
-              </button>
-            ))}
+            {pending.map((x) => {
+              const isSelected = resPick.includes(x.id);
+              const sub = unitSubDetails(x);
+              const dispName = unitDisplayName(x);
+              return (
+                <button
+                  key={x.id}
+                  className={`unit-pill ${isSelected ? 'sel' : ''} ${sub.text ? 'has-sub' : ''}`}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setFocusUnit(x.id);
+                    setResPick((cur) => (cur.includes(x.id) ? cur.filter((i) => i !== x.id) : [...cur, x.id]));
+                  }}
+                >
+                  <span className="unit-pill-main">
+                    <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
+                    <span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
+                  </span>
+                  {sub.text && (
+                    <span className="unit-pill-sub">
+                      {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                      {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
+                      {sub.attached && <span className="pill-att">{sub.attached}</span>}
+                      {sub.attached && sub.weapons && <span> · </span>}
+                      {sub.weapons && <span className="pill-wep">{sub.weapons}</span>}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           <div className={`small ${inRes > cap ? 'err' : 'muted'}`}>In Reserves: {inRes} / {cap} pts</div>
-          <button className="btn primary" disabled={inRes > cap} onClick={() => { const e = act((g) => declareReserves(g, p, resPick)); if (e) flash(e); else { setResPick([]); setSel(null); } }}>
+          {focusResUnit && unitCard(focusResUnit)}
+          <button className="btn primary" disabled={inRes > cap} onClick={() => { const e = act((g) => declareReserves(g, p, resPick)); if (e) flash(e); else { setResPick([]); setSel(null); setFocusUnit(null); } }}>
             <Icon name="check" /> {resPick.length ? `Confirm: ${resPick.length} unit${resPick.length > 1 ? 's' : ''} in Reserves` : 'No Reserves: set everything up'}
           </button>
         </>
@@ -1666,10 +1709,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {groupUnits(pending).map((g) => {
             const isSelected = selUnit && g.units.some((u) => u.id === selUnit.id);
             const activeUnit = isSelected ? selUnit! : g.units[0];
+            const sub = unitSubDetails(activeUnit);
+            const dispName = unitDisplayName(activeUnit);
             return (
               <button
                 key={g.key}
-                className={`unit-pill ${isSelected ? 'sel' : ''}`}
+                className={`unit-pill ${isSelected ? 'sel' : ''} ${sub.text ? 'has-sub' : ''}`}
                 onClick={() => {
                   if (isSelected) {
                     const idx = g.units.findIndex((u) => u.id === selUnit!.id);
@@ -1682,12 +1727,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   }
                 }}
               >
-                <span className="pill-face" aria-hidden="true">
-                  <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                <span className="unit-pill-main">
+                  <span className="pill-face" aria-hidden="true">
+                    <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
+                  <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>
+                  {g.count > 1 && <span className="unit-pill-count">[×{g.count}]</span>}
                 </span>
-                {activeUnit.name.length > 22 ? activeUnit.name.slice(0, 21) + '…' : activeUnit.name}
-                <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>
-                {g.count > 1 && <span className="unit-pill-count">[×{g.count}]</span>}
+                {sub.text && (
+                  <span className="unit-pill-sub">
+                    {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                    {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
+                    {sub.attached && <span className="pill-att">{sub.attached}</span>}
+                    {sub.attached && sub.weapons && <span> · </span>}
+                    {sub.weapons && <span className="pill-wep">{sub.weapons}</span>}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -1695,7 +1751,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         {u ? (
           <div className="row">
             <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'deploy' })}>Set up in deployment zone</button>
-            {u.core.infiltrators && <button className="btn" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'infiltrate' })}>Infiltrate</button>}
+            {(u.core.infiltrators || unitFlags(s, u).infiltrators) && <button className="btn" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'infiltrate' })}>Infiltrate</button>}
             {s.units.filter((t) => t.owner === p && t.transport && (t.status === 'board' || t.status === 'pending') && !canEmbarkIn(s, u, t)).map((t) => (
               <button key={t.id} className="btn" onClick={() => { const e = act((g) => embarkUnit(g, unitById(g, u.id), unitById(g, t.id), true)); if (e) flash(e); else setSel(null); }}>Embark in {t.name} ({transportSpaceUsed(s, t)}/{t.transport!.capacity})</button>
             ))}
@@ -1957,10 +2013,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 const unacted = g.units.filter((u) => !u.move);
                 const activeUnit = isSelected ? selUnit! : (unacted[0] ?? g.units[0]);
                 const allDone = g.units.every((u) => !!u.move);
+                const sub = unitSubDetails(activeUnit);
+                const dispName = unitDisplayName(activeUnit);
                 return (
                   <button
                     key={g.key}
-                    className={`unit-pill ${allDone ? 'done' : ''} ${isSelected ? 'sel' : ''}`}
+                    className={`unit-pill ${allDone ? 'done' : ''} ${isSelected ? 'sel' : ''} ${sub.text ? 'has-sub' : ''}`}
                     onClick={() => {
                       if (isSelected) {
                         const idx = g.units.findIndex((u) => u.id === selUnit!.id);
@@ -1973,12 +2031,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                       }
                     }}
                   >
-                    <span className="pill-face" aria-hidden="true">
-                      <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                    <span className="unit-pill-main">
+                      <span className="pill-face" aria-hidden="true">
+                        <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                      </span>
+                      <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
+                      <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>
+                      {g.count > 1 && <span className="unit-pill-count">[×{g.count}]</span>}
                     </span>
-                    {activeUnit.name.length > 22 ? activeUnit.name.slice(0, 21) + '…' : activeUnit.name}
-                    <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>
-                    {g.count > 1 && <span className="unit-pill-count">[×{g.count}]</span>}
+                    {sub.text && (
+                      <span className="unit-pill-sub">
+                        {sub.enh && <span className="pill-enh">✨ {sub.enh}</span>}
+                        {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
+                        {sub.attached && <span className="pill-att">{sub.attached}</span>}
+                        {sub.attached && sub.weapons && <span> · </span>}
+                        {sub.weapons && <span className="pill-wep">{sub.weapons}</span>}
+                      </span>
+                    )}
                   </button>
                 );
               })}

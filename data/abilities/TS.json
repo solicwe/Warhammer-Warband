@@ -1283,15 +1283,20 @@
   "note": "Feel No Pain 4+ and W5"
  },
  "Risen Rubricae": {
+  "effects": [
+   {
+    "infiltrators": true
+   }
+  ],
   "act": {
    "when": "formation",
    "auto": true,
    "target": {
     "side": "friendly",
     "units": [
-     "RUBRICAE",
-     "BATTLELINE"
+     "RUBRICAE"
     ],
+    "notSelf": true,
     "each": true,
     "count": 2,
     "anywhere": true

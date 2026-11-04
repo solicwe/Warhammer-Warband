@@ -129,3 +129,121 @@ export function datasheetVariants(sheet: DatasheetData, extra: ModelState[] = []
   (sheet.wargearOptions ?? []).forEach((o, opt) => o.choices.forEach((_, choice) => models.push(...build([{ opt, choice, count: 1 }]))));
   return pictureVariants(sheet.name, models);
 }
+
+
+/**
+ * Short weapon summary for a unit (e.g. "Twin lascannon + Missile launcher", "4× Inferno boltgun + Soulreaper cannon").
+ * Excludes generic 'Close combat weapon' when the unit has other weapons, and deprioritizes basic pistols when primary guns exist.
+ */
+export function unitWeaponsSummary(u: UnitState): string {
+  const ms = u.models.filter((m) => !m.dead);
+  if (!ms.length) return '';
+
+  const counts = new Map<string, number>();
+  for (const m of ms) {
+    for (const w of m.weapons ?? []) {
+      const name = w.name?.trim();
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+  }
+
+  // Filter out generic close combat weapon if other weapons exist
+  let filtered = [...counts.keys()].filter((w) => {
+    if (/^close combat weapon$/i.test(w) && counts.size > 1) return false;
+    return true;
+  });
+
+  if (!filtered.length) return '';
+
+  // Deprioritize basic sidearm pistols if the squad already has primary ranged or melee weapons
+  const isBasicPistol = (w: string) => /^(bolt|inferno bolt|auto|slugga|autopistol)\s*pistol$/i.test(w) || /^autopistol$/i.test(w);
+  const hasPrimary = filtered.some((w) => !isBasicPistol(w));
+  if (hasPrimary && filtered.length > 2) {
+    const withoutPistols = filtered.filter((w) => !isBasicPistol(w));
+    if (withoutPistols.length) filtered = withoutPistols;
+  }
+
+  // If every model in the squad carries the exact same weapon set:
+  if (ms.length > 1 && filtered.every((w) => counts.get(w) === ms.length)) {
+    return filtered.join(' + ');
+  }
+
+  // If squad has mixed loadouts (some models carry special weapons, some carry standard):
+  return filtered
+    .sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0))
+    .slice(0, 3)
+    .map((w) => {
+      const c = counts.get(w) ?? 0;
+      return c > 1 && c < ms.length ? `${c}× ${w}` : w;
+    })
+    .join(' + ');
+}
+
+/**
+ * Returns attached bodyguard or leader description, e.g. "+ 10× Scarab Occult Terminators"
+ */
+export function unitAttachedSummary(u: UnitState): string | null {
+  const sources = [...new Set(u.models.map((m) => m.source))];
+  if (sources.length <= 1) return null;
+
+  const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
+  const otherModels = u.models.filter((m) => m.source !== lead.source);
+  if (!otherModels.length) return null;
+
+  const otherSource = otherModels[0].source;
+  const count = otherModels.length;
+  return `+ ${count > 1 ? `${count}× ` : ''}${otherSource}`;
+}
+
+export interface UnitSubDetails {
+  enh: string | null;
+  attached: string | null;
+  weapons: string | null;
+  text: string;
+}
+
+/**
+ * Combined details describing what the unit has equipped/attached:
+ * - Enhancements: "✨ Lord of Forbidden Lore"
+ * - Attached units: "+ 10× Scarab Occult Terminators"
+ * - Key weapons: "Twin lascannon + Missile launcher"
+ */
+export function unitSubDetails(u: UnitState): UnitSubDetails {
+  const enh = u.enhancements?.length ? u.enhancements.map((e) => e.name).join(' · ') : null;
+  const attached = unitAttachedSummary(u);
+  const weapons = unitWeaponsSummary(u) || null;
+
+  const parts: string[] = [];
+  if (enh) parts.push(`✨ ${enh}`);
+  if (attached) parts.push(attached);
+  if (weapons) parts.push(weapons);
+
+  return {
+    enh,
+    attached,
+    weapons,
+    text: parts.join(' · '),
+  };
+}
+
+/**
+ * Deterministic signature of a unit's equipment (enhancements + attached + weapons)
+ * used to distinguish units so units with different weapons are not grouped into [×2].
+ */
+export function unitKitSignature(u: UnitState): string {
+  const enh = (u.enhancements ?? []).map((e) => e.name).sort().join(',');
+  const att = [...new Set(u.models.map((m) => m.source))].sort().join(',');
+  const wep = [...new Set(u.models.flatMap((m) => (m.weapons ?? []).map((w) => w.name)))].sort().join(',');
+  return `${enh}|${att}|${wep}`;
+}
+
+/**
+ * Primary display name of the unit, keeping leader and bodyguard clean when attached
+ */
+export function unitDisplayName(u: UnitState): string {
+  if (u.name.includes(' + ')) {
+    return u.name.split(' + ')[0];
+  }
+  return u.name;
+}
