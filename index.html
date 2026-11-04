@@ -3,15 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Warhammer Warband - Warhammer 40k Battles & Army Builder</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Warhammer 40,000 battles directly in your browser on phone or PC. Army list builder, bot AI battles, branching campaign mode, 23 factions, and 11th edition rules. Free, no install or account required." />
+    <meta name="keywords" content="Warhammer 40k, Warhammer Warband, 40k army builder, Warhammer browser game, Warhammer 40,000 simulator, 40k bot battle, tabletop wargame, 11th edition 40k" />
+    <meta name="author" content="solicwe" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://solicwe.github.io/Warhammer-Warband/" />
+
+    <!-- Google Discover & Mobile Theme Colors -->
     <meta name="theme-color" content="#eceff1" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Warband" />
+
+    <!-- Open Graph / Facebook / Discord / Social Feeds -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://solicwe.github.io/Warhammer-Warband/" />
+    <meta property="og:title" content="Warhammer Warband - Warhammer 40,000 Battles in your Browser" />
+    <meta property="og:description" content="Play Warhammer 40,000 battles directly on your phone or PC. Army builder, bot AI battles, campaign map, 23 factions, and 45 mission layouts. Free browser game." />
+    <meta property="og:image" content="https://solicwe.github.io/Warhammer-Warband/og-image.jpg" />
+    <meta property="og:image:width" content="1600" />
+    <meta property="og:image:height" content="820" />
+    <meta property="og:image:alt" content="Warhammer Warband battle simulation gameplay" />
+    <meta property="og:site_name" content="Warhammer Warband" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://solicwe.github.io/Warhammer-Warband/" />
+    <meta name="twitter:title" content="Warhammer Warband - Warhammer 40k Battles & Army Builder" />
+    <meta name="twitter:description" content="Play Warhammer 40,000 battles directly in your browser on phone or PC. Free, no install or account required." />
+    <meta name="twitter:image" content="https://solicwe.github.io/Warhammer-Warband/og-image.jpg" />
+
+    <!-- Icons & Manifest -->
     <link rel="apple-touch-icon" href="icon-180.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2316191d'/><rect x='5' y='33' width='9' height='15' rx='3.5' fill='%237d838b'/><rect x='50' y='33' width='9' height='15' rx='3.5' fill='%237d838b'/><path d='M12 33C12 16 20.5 6.5 32 6.5S52 16 52 33v10l-5 8H17l-5-8z' fill='%23c9952f'/><path d='M24.6 7.6Q32 5.4 39.4 7.6L38.6 25H25.4z' fill='%23e8e6e1'/><path d='M27 7Q32 5.9 37 7L36.4 25h-8.8z' fill='%239e1f1a'/><circle cx='32' cy='16.5' r='3.6' fill='%23c9cdd2'/><rect x='29.6' y='18.6' width='4.8' height='3.2' rx='1' fill='%23c9cdd2'/><circle cx='30.6' cy='16.3' r='1' fill='%232a2d31'/><circle cx='33.4' cy='16.3' r='1' fill='%232a2d31'/><path d='M14.5 27.5l13.5 3.6-1.2 5.4-10.8-2.4z' fill='%230d1014'/><path d='M49.5 27.5L36 31.1l1.2 5.4 10.8-2.4z' fill='%230d1014'/><path d='M22.5 33.5h19l2.5 11-5 9.5H25l-5-9.5z' fill='%23ddb35a'/><path d='M24.6 38.5l4.6 2.2M24.2 42.6l4.6 2.2M24.8 46.7l4.2 2M39.4 38.5l-4.6 2.2M39.8 42.6l-4.6 2.2M39.2 46.7l-4.2 2' stroke='%230d1014' stroke-width='2' stroke-linecap='round'/><rect x='11' y='45' width='9' height='10' rx='3' fill='%236b7178'/><rect x='44' y='45' width='9' height='10' rx='3' fill='%236b7178'/><path d='M13.2 46.5v7M15.5 46.5v7M17.8 46.5v7M46.2 46.5v7M48.5 46.5v7M50.8 46.5v7' stroke='%23474c52' stroke-width='1.1'/></svg>" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" />
-    <title>Warhammer Warband</title>
+
+    <!-- Structured Data (JSON-LD Schema for Google Search) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Warhammer Warband",
+      "url": "https://solicwe.github.io/Warhammer-Warband/",
+      "description": "A browser game for playing Warhammer 40,000 battles on your phone or PC. Army list builder, bot AI battles, campaign map, and 23 factions.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "image": "https://solicwe.github.io/Warhammer-Warband/og-image.jpg",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,7 +1,9 @@
 {
   "name": "Warhammer Warband",
   "short_name": "Warband",
+  "description": "Play Warhammer 40,000 battles in your browser on phone or desktop. Features army list builder, AI bot battles, campaign map, and 23 factions.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#16191d",
   "theme_color": "#16191d",
