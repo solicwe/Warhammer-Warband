@@ -45,7 +45,7 @@ import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
-import { beaconCandidates, secondaryDead, secondaryGoal, secondaryPreview, setBeacon } from '../engine/secondaries';
+import { beaconCandidates, guardOptions, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
 import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
@@ -1637,17 +1637,102 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     const pending = s.units.filter((u) => u.owner === p && u.status === 'pending');
     const rd = s.redeploy;
     if (rd && rd.player === p && !pending.length) {
+      const candidates = redeployCandidates(s);
+      const selCand = sel ? candidates.find((c) => c.id === sel) : null;
       return (
         <>
           <div className="handoff">{rd.source}: {pName(s, p)} can redeploy {rd.left} more unit(s){rd.infantryOnly ? ' (INFANTRY)' : ''}</div>
-          <div className="small muted">Pick a unit up to set it up again, or move it into Strategic Reserves (no limit), then tap Done</div>
-          {rd.left > 0 && redeployCandidates(s).map((x) => (
-            <div key={x.id} className="row">
-              <span className="grow small">{x.name}{x.status === 'reserves' ? ' (Reserves)' : ''}</span>
-              {x.status === 'board' && <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, false)); if (e) flash(e); }}>Set up again</button>}
-              {x.status === 'board' && <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, true)); if (e) flash(e); }}>To Reserves</button>}
+          <div className="small muted">Pick a unit on the board or list to set it up again, or move it into Strategic Reserves, then tap Done</div>
+          {selCand && rd.left > 0 && (
+            <div className="card redeploy-sel-card" style={{ padding: 10, border: '2px solid var(--accent)', background: 'var(--surface, rgba(255,255,255,0.06))', borderRadius: 8, margin: '8px 0' }}>
+              <div className="row" style={{ alignItems: 'flex-start', gap: 10 }}>
+                <Portrait kind={unitToken(selCand)} owner={selCand.owner} character={selCand.models.some((m) => m.isCharacter)} size={38} datasheet={selCand.models[0]?.source} fallback={selCand.models[0]?.source} />
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
+                    {unitDisplayName(selCand)}
+                  </div>
+                  <div className="small muted">
+                    {selCand.status === 'reserves' ? 'In Strategic Reserves' : (() => {
+                      const m = alive(selCand)[0];
+                      return m ? `Position: (${Math.round(m.x)}", ${Math.round(m.y)}") · ${alive(selCand).length} model(s)` : `${alive(selCand).length} model(s)`;
+                    })()}
+                  </div>
+                  {unitSubDetails(selCand).text && (
+                    <div className="tiny muted" style={{ marginTop: 2 }}>{unitSubDetails(selCand).text}</div>
+                  )}
+                </div>
+              </div>
+              {selCand.status === 'board' && (
+                <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                  <button className="btn primary grow" onClick={() => {
+                    const e = act((g) => redeployUnit(g, selCand.id, false));
+                    if (e) flash(e);
+                  }}>
+                    <Icon name="move" /> Set up again
+                  </button>
+                  <button className="btn grow" onClick={() => {
+                    const e = act((g) => redeployUnit(g, selCand.id, true));
+                    if (e) flash(e);
+                    setSel(null);
+                  }}>
+                    <Icon name="reserves" /> To Reserves
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '6px 0 10px 0' }}>
+            {rd.left > 0 && candidates.map((x) => {
+              const isSel = sel === x.id;
+              const m = alive(x)[0];
+              const sub = unitSubDetails(x);
+              const dispName = unitDisplayName(x);
+              return (
+                <div
+                  key={x.id}
+                  className={`card-row ${isSel ? 'sel' : ''}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    border: isSel ? '2px solid var(--accent)' : '1px solid var(--line-2, rgba(255,255,255,0.1))',
+                    background: isSel ? 'rgba(74, 144, 226, 0.12)' : 'var(--surface, rgba(255,255,255,0.03))',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    setSel(x.id);
+                    setFocusUnit(x.id);
+                  }}
+                >
+                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div className="row" style={{ alignItems: 'center', gap: 8, minWidth: 0, flex: '1 1 auto' }}>
+                      <Portrait kind={unitToken(x)} owner={x.owner} character={x.models.some((m) => m.isCharacter)} size={32} datasheet={x.models[0]?.source} fallback={x.models[0]?.source} />
+                      <div className="grow" style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                          {dispName}{x.status === 'reserves' ? ' (Reserves)' : ''}
+                        </div>
+                        <div className="tiny muted">
+                          {m ? `Pos: (${Math.round(m.x)}", ${Math.round(m.y)}") · ` : ''}${alive(x).length} model(s)
+                          {sub.text ? ` · ${sub.text}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    {x.status === 'board' && (
+                      <div className="row" style={{ gap: 4, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                        <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, false)); if (e) flash(e); }}>
+                          Set up again
+                        </button>
+                        <button className="btn small" onClick={() => { const e = act((g) => redeployUnit(g, x.id, true)); if (e) flash(e); setSel(null); }}>
+                          To Reserves
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <button className="btn primary" onClick={() => { const e = act((g) => endRedeploy(g)); if (e) flash(e); }}><Icon name="check" /> Done</button>
         </>
       );
@@ -1862,13 +1947,70 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
         {!bots.includes(s.active) && beaconCandidates(s, s.active).length > 0 && (
-          <div className="card" style={{ padding: 8 }}>
+          <div className="card" style={{ padding: 8, marginBottom: 8 }}>
             <div className="small"><b>Beacon</b> — select the beacon unit (3VP outside your deployment zone, 5VP outside your territory)</div>
             <div className="unit-strip">
               {beaconCandidates(s, s.active).map((u) => (
                 <button key={u.id} className={`unit-pill ${s.players[s.active].sec.beacon === u.id ? 'sel' : ''}`} aria-pressed={s.players[s.active].sec.beacon === u.id}
                   onClick={() => { const e = act((g) => setBeacon(g, g.active, u.id)); if (e) flash(e); }}>{u.name}</button>
               ))}
+            </div>
+          </div>
+        )}
+        {!bots.includes(s.active) && s.players[s.active].secActive.includes('burden-of-trust') && (
+          <div className="card" style={{ padding: 8, marginBottom: 8 }}>
+            <div className="small"><b>Burden of Trust</b> — assign 1 guarding unit per objective (2VP per objective still guarded at end of opponent's turn)</div>
+            {guardOptions(s, s.active).map((opt) => {
+              if (opt.candidates.length === 0 && !opt.guardUnitId) return null;
+              const assignedUnit = opt.guardUnitId ? s.units.find((u) => u.id === opt.guardUnitId) : null;
+              return (
+                <div key={opt.objId} style={{ marginTop: 6, padding: '4px 6px', background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
+                  <div className="tiny" style={{ fontWeight: 600, marginBottom: 4 }}>
+                    {opt.objName}: {assignedUnit ? <span style={{ color: 'var(--accent)' }}>Guarded by {assignedUnit.name}</span> : <span className="muted">No unit guarding</span>}
+                  </div>
+                  <div className="unit-strip">
+                    {opt.candidates.map((u) => {
+                      const isAssigned = opt.guardUnitId === u.id;
+                      return (
+                        <button
+                          key={u.id}
+                          className={`unit-pill ${isAssigned ? 'sel' : ''}`}
+                          aria-pressed={isAssigned}
+                          onClick={() => {
+                            const e = act((g) => setGuard(g, g.active, opt.objId, isAssigned ? null : u.id));
+                            if (e) flash(e);
+                          }}
+                        >
+                          {u.name} {isAssigned ? '✓ (Guarding)' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!bots.includes(s.active) && s.players[s.active].secActive.includes('a-tempting-target') && (
+          <div className="card" style={{ padding: 8, marginBottom: 8 }}>
+            <div className="small"><b>A Tempting Target</b> — select the decoy objective in No Man's Land (5VP if controlled)</div>
+            <div className="unit-strip">
+              {temptingTargetCandidates(s, s.active).map(({ obj, index }) => {
+                const isSel = s.players[s.active].sec.temptingTarget === obj.id;
+                return (
+                  <button
+                    key={obj.id}
+                    className={`unit-pill ${isSel ? 'sel' : ''}`}
+                    aria-pressed={isSel}
+                    onClick={() => {
+                      const e = act((g) => setTemptingTarget(g, g.active, obj.id));
+                      if (e) flash(e);
+                    }}
+                  >
+                    Objective {index + 1} {isSel ? '🎯 (Target)' : ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -3434,7 +3576,122 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                       const dead = P.secMode === 'tactical' && secondaryDead(s, p, id);
                       return (
                         <div key={id} className="sec-slot">
-                          <SecondaryCard id={id} owner={p} dead={dead} progress={dead ? 'Cannot be achieved any more: discard it' : vp ? `If the turn ended now: +${vp} VP` : `To do: ${goal.todo}`} />
+                          <SecondaryCard
+                            id={id}
+                            owner={p}
+                            dead={dead}
+                            vp={vp}
+                            progress={dead ? 'Cannot be achieved any more: discard it' : vp ? `If the turn ended now: +${vp} VP` : `To do: ${goal.todo}`}
+                          />
+                          {id === 'beacon' && (
+                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                                📡 Beacon: {P.sec.beacon ? <span style={{ color: 'var(--accent)' }}>{s.units.find((u) => u.id === P.sec.beacon)?.name}</span> : <span className="muted">None selected</span>}
+                              </div>
+                              {!bots.includes(p) && (
+                                <div className="unit-strip" style={{ maxHeight: 90, overflowY: 'auto' }}>
+                                  {beaconCandidates(s, p, true).map((u) => (
+                                    <button
+                                      key={u.id}
+                                      className={`unit-pill ${P.sec.beacon === u.id ? 'sel' : ''}`}
+                                      style={{ minHeight: 32, fontSize: 12, padding: '2px 8px' }}
+                                      onClick={() => { const e = act((g) => setBeacon(g, p, u.id, true)); if (e) flash(e); }}
+                                    >
+                                      {u.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {id === 'burden-of-trust' && (
+                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                                🛡️ Guards ({P.sec.guards?.length ?? 0} assigned):
+                              </div>
+                              {!bots.includes(p) && guardOptions(s, p).map((opt) => {
+                                const assignedUnit = opt.guardUnitId ? s.units.find((u) => u.id === opt.guardUnitId) : null;
+                                return (
+                                  <div key={opt.objId} style={{ marginTop: 4, padding: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                                    <div className="tiny" style={{ fontWeight: 600 }}>
+                                      {opt.objName}: {assignedUnit ? <span style={{ color: 'var(--accent)' }}>{assignedUnit.name}</span> : <span className="muted">None</span>}
+                                    </div>
+                                    {opt.candidates.length > 0 ? (
+                                      <div className="unit-strip" style={{ marginTop: 2 }}>
+                                        {opt.candidates.map((u) => {
+                                          const isAssigned = opt.guardUnitId === u.id;
+                                          return (
+                                            <button
+                                              key={u.id}
+                                              className={`unit-pill ${isAssigned ? 'sel' : ''}`}
+                                              style={{ minHeight: 28, fontSize: 11, padding: '2px 6px' }}
+                                              onClick={() => {
+                                                const e = act((g) => setGuard(g, p, opt.objId, isAssigned ? null : u.id));
+                                                if (e) flash(e);
+                                              }}
+                                            >
+                                              {u.name} {isAssigned ? '✓' : ''}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <div className="tiny muted">No friendly unit in range</div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {id === 'a-tempting-target' && (
+                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                                🎯 Decoy Target: {P.sec.temptingTarget ? <span style={{ color: 'var(--accent)' }}>Objective {s.objectives.findIndex((o) => o.id === P.sec.temptingTarget) + 1}</span> : <span className="muted">None selected</span>}
+                              </div>
+                              {!bots.includes(p) && (
+                                <div className="unit-strip">
+                                  {temptingTargetCandidates(s, p).map(({ obj, index }) => {
+                                    const isSel = P.sec.temptingTarget === obj.id;
+                                    return (
+                                      <button
+                                        key={obj.id}
+                                        className={`unit-pill ${isSel ? 'sel' : ''}`}
+                                        style={{ minHeight: 30, fontSize: 12, padding: '2px 8px' }}
+                                        onClick={() => {
+                                          const e = act((g) => setTemptingTarget(g, p, obj.id));
+                                          if (e) flash(e);
+                                        }}
+                                      >
+                                        Obj {index + 1} {isSel ? '✓' : ''}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {id === 'cleanse' && (
+                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 11 }}>
+                              <div style={{ fontWeight: 600, marginBottom: 2 }}>🧹 Cleanse:</div>
+                              <div className="muted">Perform action in Shooting phase with an eligible unit on a non-home objective.</div>
+                              {P.sec.cleansed && P.sec.cleansed.filter((x) => x.turn === s.turn).length > 0 && (
+                                <div style={{ color: 'var(--accent)', marginTop: 2 }}>
+                                  Cleansed this turn: {P.sec.cleansed.filter((x) => x.turn === s.turn).length} objective(s)
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {id === 'plunder' && (
+                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 11 }}>
+                              <div style={{ fontWeight: 600, marginBottom: 2 }}>📦 Plunder:</div>
+                              <div className="muted">Perform action in Shooting phase with an eligible unit in terrain outside your territory.</div>
+                              {P.sec.plundered && P.sec.plundered.some((x) => x.turn === s.turn) && (
+                                <div style={{ color: 'var(--accent)', marginTop: 2 }}>
+                                  Plundered this turn: Yes (5VP)
+                                </div>
+                              )}
+                            </div>
+                          )}
                           {P.secMode === 'tactical' && !bots.includes(p) && (
                             <>
                               <button className="btn sec-discard" onClick={() => { act((g) => discardSecondary(g, p, id)); flash(s.active === p ? 'Card discarded, +1CP' : 'Card discarded (CP only in your own turn)'); }}>

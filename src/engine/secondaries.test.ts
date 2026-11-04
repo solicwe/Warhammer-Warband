@@ -74,4 +74,35 @@ describe('Plunder and Beacon', () => {
     s.turn += 1;
     expect(beaconCandidates(s, 0)).toEqual([]);
   });
+  it('Burden of Trust: guardOptions lists objectives and setGuard assigns friendly units in range', async () => {
+    const { guardOptions, setGuard } = await import('./secondaries');
+    const { formationAt, placeUnit } = await import('./game');
+    const s = setup();
+    s.players[0].secActive = ['burden-of-trust'];
+    const obj = s.objectives[0];
+    const u = s.units.find((x) => x.owner === 0)!;
+    placeUnit(s, u, formationAt(u, { x: obj.x, y: obj.y }));
+    const opts = guardOptions(s, 0);
+    const opt = opts.find((o) => o.objId === obj.id);
+    expect(opt).toBeDefined();
+    expect(opt!.candidates.some((c) => c.id === u.id)).toBe(true);
+
+    expect(setGuard(s, 0, obj.id, u.id)).toBeNull();
+    expect(s.players[0].sec.guards.some((g) => g.objId === obj.id && g.unitId === u.id)).toBe(true);
+
+    // Clears guard
+    expect(setGuard(s, 0, obj.id, null)).toBeNull();
+    expect(s.players[0].sec.guards.some((g) => g.objId === obj.id)).toBe(false);
+  });
+
+  it('A Tempting Target: temptingTargetCandidates lists No Mans Land objectives and setTemptingTarget sets it', async () => {
+    const { temptingTargetCandidates, setTemptingTarget } = await import('./secondaries');
+    const s = setup();
+    s.players[0].secActive = ['a-tempting-target'];
+    const cands = temptingTargetCandidates(s, 0);
+    expect(cands.length).toBeGreaterThan(0);
+    const targetObj = cands[0].obj;
+    expect(setTemptingTarget(s, 0, targetObj.id)).toBeNull();
+    expect(s.players[0].sec.temptingTarget).toBe(targetObj.id);
+  });
 });

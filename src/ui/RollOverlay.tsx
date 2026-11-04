@@ -160,9 +160,9 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
 }
 
 /** A secondary mission card: face down it shows the back, face up its name, when it scores and how. */
-export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, dead }: { id: string; faceUp?: boolean; delay?: number; owner?: 0 | 1; progress?: string; dead?: boolean }) {
+export function SecondaryCard({ id, faceUp = true, delay = 0, owner, progress, dead, vp }: { id: string; faceUp?: boolean; delay?: number; owner?: 0 | 1; progress?: string; dead?: boolean; vp?: number }) {
   const def = secondaryById(id);
-  const isCompleted = progress?.includes('+');
+  const isCompleted = typeof vp === 'number' ? vp > 0 : !!(progress && /^\s*If the turn ended now:\s*\+\d+\s*VP/i.test(progress));
   return (
     <div className={`sec-card ${faceUp ? 'up' : ''} ${owner === 1 ? 'p1' : 'p0'}`} style={{ animationDelay: `${delay}ms` }}>
       <div className="sec-face sec-back"><Icon name="objective" size={42} /><span>SECONDARY</span></div>

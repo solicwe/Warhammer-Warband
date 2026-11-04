@@ -325,16 +325,90 @@ export function secondaryChance(s: GameState, p: PlayerId, id: string): number {
   }
 }
 
-/** Beacon: the units that may be selected, while the card was drawn this turn (empty otherwise). */
-export function beaconCandidates(s: GameState, p: PlayerId): UnitState[] {
+export interface GuardOption {
+  objId: string;
+  objIndex: number;
+  objName: string;
+  guardUnitId: string | null;
+  candidates: UnitState[];
+}
+
+/** Burden of Trust: options for assigning friendly units to guard objectives. */
+export function guardOptions(s: GameState, p: PlayerId): GuardOption[] {
   const P = s.players[p];
-  if (!P.secActive.includes('beacon') || P.sec.beaconTurn !== s.turn) return [];
+  if (!P.secActive.includes('burden-of-trust')) return [];
+  const friendlyUnits = boardUnits(s, p);
+  return s.objectives.map((o, idx) => {
+    const cands = friendlyUnits.filter((u) => unitInRange(s, u, o));
+    const current = P.sec.guards?.find((g) => g.objId === o.id)?.unitId ?? null;
+    return {
+      objId: o.id,
+      objIndex: idx,
+      objName: `Objective ${idx + 1}`,
+      guardUnitId: current,
+      candidates: cands,
+    };
+  });
+}
+
+/** Burden of Trust: assign or clear a unit guarding an objective. */
+export function setGuard(s: GameState, p: PlayerId, objId: string, unitId: string | null): string | null {
+  const P = s.players[p];
+  if (!P.secActive.includes('burden-of-trust')) return 'Burden of Trust is not active';
+  const o = s.objectives.find((x) => x.id === objId);
+  if (!o) return 'Objective not found';
+  P.sec.guards ??= [];
+  P.sec.guards = P.sec.guards.filter((g) => g.objId !== objId);
+  if (unitId) {
+    const u = s.units.find((x) => x.id === unitId);
+    if (!u || u.owner !== p || !onBoard(u)) return 'Unit cannot guard';
+    if (!unitInRange(s, u, o)) return `${u.name} is not in range of Objective ${s.objectives.indexOf(o) + 1}`;
+    P.sec.guards = P.sec.guards.filter((g) => g.unitId !== unitId);
+    P.sec.guards.push({ objId, unitId });
+    log(s, `Burden of Trust: ${u.name} assigned to guard Objective ${s.objectives.indexOf(o) + 1}`, 'info', p);
+  } else {
+    log(s, `Burden of Trust: cleared guard on Objective ${s.objectives.indexOf(o) + 1}`, 'info', p);
+  }
+  return null;
+}
+
+export interface TemptingTargetCandidate {
+  obj: GameState['objectives'][number];
+  index: number;
+}
+
+/** A Tempting Target: candidate objectives in No Man's Land. */
+export function temptingTargetCandidates(s: GameState, p: PlayerId): TemptingTargetCandidate[] {
+  const P = s.players[p];
+  if (!P.secActive.includes('a-tempting-target')) return [];
+  return s.objectives
+    .map((o, index) => ({ obj: o, index }))
+    .filter(({ obj }) => obj.type !== 'home' && objInNML(s, obj));
+}
+
+/** A Tempting Target: select an objective in No Man's Land as the decoy target. */
+export function setTemptingTarget(s: GameState, p: PlayerId, objId: string): string | null {
+  const P = s.players[p];
+  if (!P.secActive.includes('a-tempting-target')) return 'A Tempting Target is not active';
+  const cands = temptingTargetCandidates(s, p);
+  const match = cands.find((c) => c.obj.id === objId);
+  if (!match) return 'That objective cannot be the Tempting Target';
+  P.sec.temptingTarget = objId;
+  log(s, `A Tempting Target: Objective ${match.index + 1} selected`, 'info', p);
+  return null;
+}
+
+/** Beacon: the units that may be selected, while the card was drawn this turn (empty otherwise, unless allowAnyTurn is true). */
+export function beaconCandidates(s: GameState, p: PlayerId, allowAnyTurn = false): UnitState[] {
+  const P = s.players[p];
+  if (!P.secActive.includes('beacon')) return [];
+  if (!allowAnyTurn && P.sec.beaconTurn !== undefined && P.sec.beaconTurn !== s.turn) return [];
   return s.units.filter((u) => u.owner === p && (onBoard(u) || u.status === 'embarked'));
 }
 
 /** Beacon: select the beacon unit ("when drawn, select one unit from your army"). */
-export function setBeacon(s: GameState, p: PlayerId, unitId: string): string | null {
-  const u = beaconCandidates(s, p).find((x) => x.id === unitId);
+export function setBeacon(s: GameState, p: PlayerId, unitId: string, allowAnyTurn = false): string | null {
+  const u = beaconCandidates(s, p, allowAnyTurn).find((x) => x.id === unitId);
   if (!u) return 'That unit cannot be the Beacon now';
   s.players[p].sec.beacon = u.id;
   log(s, `Beacon: ${u.name}`, 'info', p);
