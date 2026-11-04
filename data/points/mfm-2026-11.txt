@@ -1,0 +1,99 @@
+# Munitorum Field Manual Update, November 2026 (MFM v1.6)
+# Format: FACTION | Datasheet | sizes: models=pts (t1) or models=t1/t2 or t2:models=pts or =pts
+
+# --- Adepta Sororitas (AS) ---
+AS | Exorcist | =175/215
+
+# --- Adeptus Custodes (AC) ---
+AC | Allarus Custodians | 2=180/210,3=270/300
+AC | Vertus Praetors | 2=220/240,3=330/350
+AC | Shield-Captain on Dawneagle Jetbike | =205/225
+
+# --- Aeldari (AE) ---
+AE | D-Cannon Platform | t2:=130
+AE | Night Spinner | t2:=195
+
+# --- Astra Militarum (AM) ---
+AM | Basilisk | t2:=145
+AM | Deathstrike | t2:=145
+AM | Manticore | t2:=180
+AM | Wyvern | t2:=125
+AM | Bullgryn Squad | t2:3=120,6=230
+
+# --- Chaos Space Marines (CSM) ---
+CSM | Chaos Terminator Squad | t2:5=215,10=400
+
+# --- Death Guard (DG) ---
+DG | Blightlord Terminators | t2:3=145,5=215,10=400
+
+# --- Emperor's Children (EC) ---
+EC | Daemon Prince of Slaanesh | =180
+
+# --- Imperial Agents (AoI) ---
+AoI | Sisters of Battle Immolator | t2:=100
+AoI | enh:Decoy Targets | =15
+AoI | enh:Esoteric Explosives | =10
+AoI | enh:Micromelta Rounds | =20
+
+# --- Orks (ORK) ---
+ORK | Killa Kans | 6=275
+ORK | Squighog Boyz | t2:8=290
+
+# --- Space Marines (SM) ---
+SM | Ancient | =40
+SM | Assault Intercessor Squad | 5=85,10=170
+SM | Bladeguard Ancient | =70
+SM | Bladeguard Veteran Squad | 3=90/110,6=180/200
+SM | Brutalis Dreadnought | t2:=180
+SM | Captain in Terminator Armour | =90
+SM | Chaplain | =60
+SM | Chaplain in Terminator Armour | =75
+SM | Chaplain on Bike | =75
+SM | Chaplain with Jump Pack | =75
+SM | Company Heroes | 4=125/145
+SM | Desolation Squad | 5=140/150
+SM | Eradicator Squad with Heavy Bolters | 3=100/130
+SM | Gladiator Lancer | =160/180
+SM | Gladiator Reaper | t2:=185
+SM | Gladiator Valiant | t2:=185
+SM | Heavy Intercessor Squad | 5=115,10=230
+SM | Incursor Squad | 5=90/100,10=170/180
+SM | Infernus Squad | 5=95/105,10=190/200
+SM | Infiltrator Squad | 5=85
+SM | Intercessor Squad | 5=85,10=170
+SM | Invictor Tactical Warsuit | =135/150
+SM | Land Raider Crusader | =230/250
+SM | Land Speeder | =105
+SM | Lieutenant with Combi-weapon | =85
+SM | Outrider Squad | 3=80
+SM | Redemptor Dreadnought | =170/190
+SM | Repulsor Executioner | =260/280
+SM | Storm Speeder Thunderstrike | =140/150
+SM | Techmarine | =55
+SM | Terminator Assault Squad | 5=170/210,10=340/380
+SM | Terminator Squad | 5=190/230,10=380/420
+SM | Vanguard Veteran Squad with Jump Packs | 5=110,10=220/240
+SM | Assault Intercessors with Jump Packs | 5=95/105
+
+# --- Tyranids (TYR) ---
+TYR | Barbgaunts | 5=50,10=100
+TYR | Gargoyles | 10=75,20=150
+TYR | Mawloc | =130
+TYR | Neurotyrant | =120
+TYR | Old One Eye | =130
+TYR | Parasite of Mortrex | =65
+TYR | Termagants | 10=55
+TYR | Tervigon | =150
+TYR | The Red Terror | =120
+TYR | Trygon | =135
+
+# --- World Eaters (WE) ---
+WE | Chaos Land Raider | =200/220
+WE | Chaos Rhino | =85
+WE | Chaos Terminators | 5=175/185,10=350/360
+WE | Eightbound | 6=250/265
+WE | Exalted Eightbound | 6=260/275
+WE | Goremongers | 8=70
+WE | Jakhals | 20=120
+WE | Khorne Berzerkers | 10=170,20=330
+WE | Slaughterbound | =90

@@ -765,7 +765,7 @@
    }
   ],
   "act": {
-   "when": "chargeStart",
+   "when": "charge",
    "limit": "battle",
    "if": [
     "advanced"
@@ -846,7 +846,7 @@
    }
   ],
   "act": {
-   "when": "eachCommandStart",
+   "when": "anyCommand",
    "limit": "battle",
    "if": [
     "belowStartingW"
@@ -1022,5 +1022,22 @@
     "reroll": "wounds"
    }
   ]
+ },
+ "Howling Horde": {
+  "act": {
+   "when": "shotByEnemy",
+   "if": [
+    "lostModelsThisPhase",
+    "notEngaged"
+   ],
+   "limit": "phase",
+   "label": "Howling Horde: surge move of up to D6\"",
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ]
+  }
  }
 }

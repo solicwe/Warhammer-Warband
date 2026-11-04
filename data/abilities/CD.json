@@ -2120,5 +2120,18 @@
         }
       }
     ]
+  },
+  "Shadow Form Abilities": {
+    "choice": {
+      "name": "Shadow Form",
+      "pick": 1,
+      "when": "command",
+      "options": [
+        "Wreathed in Shadows (Aura, Psychic)",
+        "Pall of Despair (Aura, Psychic)",
+        "Shadow Lord (Aura, Psychic)"
+      ]
+    },
+    "note": "Chosen in your Command phase (the card: at the start of the battle round)"
   }
 }

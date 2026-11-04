@@ -2,7 +2,7 @@
   "id": "WE",
   "name": "World Eaters",
   "link": "https://wahapedia.ru/wh40k11ed/factions/world-eaters",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Blessings of Khorne",
@@ -11,13 +11,17 @@
     {
       "name": "Pact of Blood",
       "text": "When mustering your army, unless specifically stated otherwise, you cannot select Blood Legions as your Army Faction."
+    },
+    {
+      "name": "Combat Doctrines",
+      "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
     }
   ],
   "detachments": [
     {
       "id": "000000777",
       "name": "Berzerker Warband",
-      "dp": 3,
+      "dp": 2,
       "forceDisposition": "Purge the Foe",
       "rules": [
         {
@@ -57,15 +61,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008431003",
-          "name": "HACK AND SLASH",
-          "cp": 1,
-          "type": "Berzerker Warband – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One World Eaters unit from your army that has not been selected to fight this phase and that made a charge move this turn.\nEFFECT: Until the end of the phase, improve the Armour Penetration characteristic of melee weapons equipped by models in your unit by 1."
-        },
-        {
           "id": "000008431004",
           "name": "FRENZIED RESILIENCE",
           "cp": 2,
@@ -73,6 +68,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One World Eaters unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit, subtract 1 from the Damage characteristic of that attack."
+        },
+        {
+          "id": "000008431003",
+          "name": "HACK AND SLASH",
+          "cp": 1,
+          "type": "Berzerker Warband – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One World Eaters unit from your army that has not been selected to fight this phase and that made a charge move this turn.\nEFFECT: Until the end of the phase, improve the Armour Penetration characteristic of melee weapons equipped by models in your unit by 1."
         },
         {
           "id": "000008431002",
@@ -84,24 +88,6 @@
           "text": "WHEN: Any phase.\nTARGET: One World Eaters unit from your army that was just destroyed while it was within range of one or more objective markers you controlled at the end of the previous phase. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Select one of those objective markers. That objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
-          "id": "000008431007",
-          "name": "BERZERKER’S WRATH",
-          "cp": 1,
-          "type": "Berzerker Warband – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One KHORNE BERZERKERS unit from your army that can make a surge move as a result of those attacks.\nEFFECT: Do not roll a D6 to determine how far models in your unit can move when they make a surge move. Instead, when making a surge move, those models can move up to 8\"."
-        },
-        {
-          "id": "000008431006",
-          "name": "APOPLECTIC FRENZY",
-          "cp": 1,
-          "type": "Berzerker Warband – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Movement phase, just after a KHORNE BERZERKERS unit from your army is selected to Advance.\nTARGET: That Khorne Berzerkers unit.\nEFFECT: Until the end of the turn, your unit is eligible to declare a charge in a turn in which it Advanced."
-        },
-        {
           "id": "000008431005",
           "name": "SKULLS FOR THE SKULL THRONE!",
           "cp": 1,
@@ -109,6 +95,24 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, just after a WORLD EATERS unit from your army destroys a CHARACTER or MONSTER model.\nTARGET: That World Eaters unit.\nEFFECT: Make a Blessings of Khorne roll and use the results to activate one Blessing of Khorne. Until the end of the battle round, that Blessing of Khorne is active in addition to any other Blessings of Khorne that are currently active."
+        },
+        {
+          "id": "000008431006",
+          "name": "APOPLECTIC FRENZY",
+          "cp": 1,
+          "type": "Berzerker Warband – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase, just after a KHORNE BERZERKERS unit from your army is selected to Advance.\nTARGET: That Khorne Berzerkers unit.\nEFFECT: Until the end of the turn, your unit is eligible to declare a charge in a turn in which it Advanced."
+        },
+        {
+          "id": "000008431007",
+          "name": "BERZERKER’S WRATH",
+          "cp": 1,
+          "type": "Berzerker Warband – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One KHORNE BERZERKERS unit from your army that can make a surge move as a result of those attacks.\nEFFECT: Do not roll a D6 to determine how far models in your unit can move when they make a surge move. Instead, when making a surge move, those models can move up to 8\"."
         }
       ]
     },
@@ -141,15 +145,6 @@
       ],
       "stratagems": [
         {
-          "id": "000009848004",
-          "name": "PUNISH THE CRAVEN",
-          "cp": 1,
-          "type": "Vessels of Wrath Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, when a unit is selected to make a fall-back move, if that unit is engaged with a friendly WORLD EATERS CHARACTER unit.\nTARGET: That WORLD EATERS CHARACTER unit.\nEFFECT: When an enemy unit engaged with your unit is selected to make a fall-back move, that enemy unit must use the desperate escape mode. If that enemy unit is battle-shocked, -1 from those hazard rolls."
-        },
-        {
           "id": "000009848002",
           "name": "SCORN THE WITCH",
           "cp": 1,
@@ -166,6 +161,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, when a friendly WORLD EATERS CHARACTER unit (excluding EPIC HERO units) is selected to fight.\nTARGET: That WORLD EATERS CHARACTER unit.\nEFFECT: Your unit’s CHARACTER models’ melee attacks have:\n• +1 A.\n• +2 S."
+        },
+        {
+          "id": "000009848004",
+          "name": "PUNISH THE CRAVEN",
+          "cp": 1,
+          "type": "Vessels of Wrath Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, when a unit is selected to make a fall-back move, if that unit is engaged with a friendly WORLD EATERS CHARACTER unit.\nTARGET: That WORLD EATERS CHARACTER unit.\nEFFECT: When an enemy unit engaged with your unit is selected to make a fall-back move, that enemy unit must use the desperate escape mode. If that enemy unit is battle-shocked, -1 from those hazard rolls."
         }
       ]
     },
@@ -239,15 +243,6 @@
           "text": "WHEN: Any phase.\nTARGET: One World Eaters Monster or World Eaters Titanic unit from your army that was just destroyed by an enemy unit. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a model in a Jakhals or Goremongers unit from your army makes an attack that targets the enemy unit that just destroyed your unit, you can re-roll the Hit roll."
         },
         {
-          "id": "000010075004",
-          "name": "IN THE SHADOW OF BRASS IDOLS",
-          "cp": 1,
-          "type": "Cult of Blood – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Jakhals or Goremongers unit from your army that was selected as the target as one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 6+ ability. If your unit is within 6\" of one or more friendly World Eaters Monster units, or within 9\" of one or more friendly World Eaters Titanic units, your unit has the Feel No Pain 5+ ability instead."
-        },
-        {
           "id": "000010075003",
           "name": "DRAWN TO THE SLAUGHTER",
           "cp": 2,
@@ -255,6 +250,15 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase.\nTARGET: One Jakhals unit from your army that was just destroyed. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Add a new unit to your army identical to your destroyed unit, in Strategic Reserves, at its Starting Strength.\nRESTRICTIONS: This Stratagem cannot be used to return destroyed Character units to Attached units. You can only use this Stratagem once per battle."
+        },
+        {
+          "id": "000010075004",
+          "name": "IN THE SHADOW OF BRASS IDOLS",
+          "cp": 1,
+          "type": "Cult of Blood – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Jakhals or Goremongers unit from your army that was selected as the target as one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 6+ ability. If your unit is within 6\" of one or more friendly World Eaters Monster units, or within 9\" of one or more friendly World Eaters Titanic units, your unit has the Feel No Pain 5+ ability instead."
         },
         {
           "id": "000010075006",
@@ -310,15 +314,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010079003",
-          "name": "DAEMONIC FURY",
-          "cp": 1,
-          "type": "Khorne Daemonkin – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Start of your Fight phase.\nTARGET: One Blood Legions unit from your army.\nEFFECT: Select one friendly World Eaters unit within 6\" of your unit. Until the end of the turn, melee weapons equipped by models in your WORLD EATERS unit have the [LANCE] ability. If the Daemonic Rage ability is active for your army, then until the end of the phase those melee weapons also have the [TWIN-LINKED] ability."
-        },
-        {
           "id": "000010079005",
           "name": "BLESSING OF BURNING BLOOD",
           "cp": 1,
@@ -326,6 +321,15 @@
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Blood Legions unit from your army that is within 6\" of a friendly World Eaters unit that was selected as the target as one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your WORLD EATERS unit have a 5+ invulnerable save. If the Boon of Blood ability is active for your army, then until the end of the phase, models in your WORLD EATERS unit have a 4+ invulnerable save."
+        },
+        {
+          "id": "000010079003",
+          "name": "DAEMONIC FURY",
+          "cp": 1,
+          "type": "Khorne Daemonkin – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Start of your Fight phase.\nTARGET: One Blood Legions unit from your army.\nEFFECT: Select one friendly World Eaters unit within 6\" of your unit. Until the end of the turn, melee weapons equipped by models in your WORLD EATERS unit have the [LANCE] ability. If the Daemonic Rage ability is active for your army, then until the end of the phase those melee weapons also have the [TWIN-LINKED] ability."
         },
         {
           "id": "000010079004",
@@ -337,15 +341,6 @@
           "text": "WHEN: Fight phase, just after a Blood Legions or World Eaters unit from your army has fought, and one or more enemy CHARACTER or MONSTER models were destroyed as a result of those attacks.\nTARGET: That BLOOD LEGIONS or WORLD EATERS unit.\nEFFECT: You gain D3BTP and you can then spend one or more BTP you have to activate one of the Blood Tithe abilities."
         },
         {
-          "id": "000010079006",
-          "name": "DAEMONTIDE",
-          "cp": 1,
-          "type": "Khorne Daemonkin – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One World Eaters unit from your army.\nEFFECT: Select one friendly Blood Legions unit within 6\" of your unit. One destroyed Mounted model, up to D3 destroyed Beast models, or up to D6 destroyed Infantry models are returned to that BLOOD LEGIONS unit with their full wounds remaining.\nRESTRICTIONS: This Stratagem cannot be used to return destroyed Character models to Attached units."
-        },
-        {
           "id": "000010079007",
           "name": "MURDER-CALL",
           "cp": 1,
@@ -353,6 +348,15 @@
           "turn": "Opponent’s turn",
           "phase": "Fight phase",
           "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One Blood Legions unit from your army that is on the battlefield and not within Engagement Range of one or more enemy units.\nEFFECT: Remove your unit from the battlefield and place it into Strategic Reserves."
+        },
+        {
+          "id": "000010079006",
+          "name": "DAEMONTIDE",
+          "cp": 1,
+          "type": "Khorne Daemonkin – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Command phase",
+          "text": "WHEN: Your Command phase.\nTARGET: One World Eaters unit from your army.\nEFFECT: Select one friendly Blood Legions unit within 6\" of your unit. One destroyed Mounted model, up to D3 destroyed Beast models, or up to D6 destroyed Infantry models are returned to that BLOOD LEGIONS unit with their full wounds remaining.\nRESTRICTIONS: This Stratagem cannot be used to return destroyed Character models to Attached units."
         },
         {
           "id": "000010079002",
@@ -408,15 +412,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010083004",
-          "name": "IMMORTAL FURY",
-          "cp": 2,
-          "type": "Possessed Slaughterband – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One World Eaters Possessed unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking model’s unit has finished making its attacks, and is then removed from play."
-        },
-        {
           "id": "000010083002",
           "name": "DAEMONIC RESISTANCE",
           "cp": 2,
@@ -435,6 +430,24 @@
           "text": "WHEN: Fight phase.\nTARGET: One World Eaters Possessed unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time an attack made by a model in your unit is allocated to an enemy model, if your unit has the Eightbound keyword and that enemy model is not a MONSTER or VEHICLE, add 1 to the Damage characteristic of that attack. If your unit has the Exalted Eightbound keyword and that enemy model is a MONSTER or VEHICLE, add 1 to the Damage characteristic of that attack instead."
         },
         {
+          "id": "000010083004",
+          "name": "IMMORTAL FURY",
+          "cp": 2,
+          "type": "Possessed Slaughterband – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One World Eaters Possessed unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking model’s unit has finished making its attacks, and is then removed from play."
+        },
+        {
+          "id": "000010083005",
+          "name": "RAPID MANIFESTATION",
+          "cp": 1,
+          "type": "Possessed Slaughterband – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One Exalted Eightbound unit from your army that is arriving using the Deep Strike ability this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy units.\nRESTRICTIONS: A unit targeted with this Stratagem is not eligible to declare a charge in the same turn."
+        },
+        {
           "id": "000010083006",
           "name": "WARP STALKERS",
           "cp": 1,
@@ -451,15 +464,6 @@
           "turn": "Opponent’s turn",
           "phase": "Command phase",
           "text": "WHEN: Your opponent’s Command phase.\nTARGET: One World Eaters Possessed unit from your army.\nEFFECT: Each enemy unit within Engagement Range of your unit must take a Battle-shock test, subtracting 1 from that test."
-        },
-        {
-          "id": "000010083005",
-          "name": "RAPID MANIFESTATION",
-          "cp": 1,
-          "type": "Possessed Slaughterband – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One Exalted Eightbound unit from your army that is arriving using the Deep Strike ability this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy units.\nRESTRICTIONS: A unit targeted with this Stratagem is not eligible to declare a charge in the same turn."
         }
       ]
     },
@@ -506,13 +510,13 @@
       ],
       "stratagems": [
         {
-          "id": "000010087006",
-          "name": "UNRELENTING ADVANCE",
+          "id": "000010087003",
+          "name": "SMASH THROUGH",
           "cp": 1,
           "type": "Goretrack Onslaught – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One World Eaters Vehicle model from your army that was hit by one or more of the attacking unit’s attacks.\nEFFECT: Your model can make a Normal move of up to 6\".\nRESTRICTIONS: A unit cannot be targeted by this Stratagem and the Fury Unleashed Stratagem in the same phase."
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One World Eaters Vehicle model from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal or Advance move, it can move horizontally through terrain features."
         },
         {
           "id": "000010087005",
@@ -524,6 +528,15 @@
           "text": "WHEN: Your Movement phase.\nTARGET: One World Eaters Rhino model from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, each time a WORLD EATERS unit disembarks from that model after it has made a Normal move, that unit makes an assault disembark move (Core Rules, 18.06) for that disembarkation."
         },
         {
+          "id": "000010087006",
+          "name": "UNRELENTING ADVANCE",
+          "cp": 1,
+          "type": "Goretrack Onslaught – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One World Eaters Vehicle model from your army that was hit by one or more of the attacking unit’s attacks.\nEFFECT: Your model can make a Normal move of up to 6\".\nRESTRICTIONS: A unit cannot be targeted by this Stratagem and the Fury Unleashed Stratagem in the same phase."
+        },
+        {
           "id": "000010087004",
           "name": "AGGRESSIVE DISEMBARKATION",
           "cp": 1,
@@ -533,13 +546,13 @@
           "text": "WHEN: Your Movement phase.\nTARGET: One World Eaters Rhino model from your army that has not been selected to move this phase.\nEFFECT: One WORLD EATERS unit embarked within your RHINO can disembark. When doing so, models in that unit can be set up anywhere on the battlefield wholly within 6\" of your RHINO and can be set up within Engagement Range of one or more enemy units."
         },
         {
-          "id": "000010087003",
-          "name": "SMASH THROUGH",
+          "id": "000010087002",
+          "name": "ENDLESS PURSUIT OF VIOLENCE",
           "cp": 1,
           "type": "Goretrack Onslaught – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One World Eaters Vehicle model from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal or Advance move, it can move horizontally through terrain features."
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: End of the Fight phase.\nTARGET: One World Eaters Infantry unit from your army and one friendly Transport that it is able to embark within.\nEFFECT: If your WORLD EATERS INFANTRY unit is wholly within 6\" of that TRANSPORT, it can embark within it."
         },
         {
           "id": "000010087007",
@@ -549,15 +562,6 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One WORLD EATERS RHINO model from your army that has one or more wounds remaining and was hit by one or more of the attacking unit’s attacks.\nEFFECT: One KHORNE BERZERKERS unit embarked within your model can make a disembark move and then make a surge move of up to D6+2\".\nRESTRICTION: A unit cannot be targeted by this Stratagem and the Unrelenting Advance Stratagem in the same phase."
-        },
-        {
-          "id": "000010087002",
-          "name": "ENDLESS PURSUIT OF VIOLENCE",
-          "cp": 1,
-          "type": "Goretrack Onslaught – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: End of the Fight phase.\nTARGET: One World Eaters Infantry unit from your army and one friendly Transport that it is able to embark within.\nEFFECT: If your WORLD EATERS INFANTRY unit is wholly within 6\" of that TRANSPORT, it can embark within it."
         }
       ]
     },
@@ -590,6 +594,15 @@
       ],
       "stratagems": [
         {
+          "id": "000010977002",
+          "name": "APOPLECTIC CLARITY",
+          "cp": 1,
+          "type": "Brazen Engines Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your Shooting phase or the Fight phase, when a friendly DAEMON VEHICLE unit is selected to attack.\nTARGET: That DAEMON VEHICLE unit.\nEFFECT: Your unit’s attacks can ignore modifiers to:\n• BS.\n• WS.\n• Hit rolls and wound rolls."
+        },
+        {
           "id": "000010977004",
           "name": "GOADED TO FURY",
           "cp": 1,
@@ -606,15 +619,6 @@
           "turn": "Your turn",
           "phase": "Movement or Charge phase",
           "text": "WHEN: Your Movement phase, when a friendly DAEMON VEHICLE unit is selected to move.\nTARGET: That DAEMON VEHICLE unit.\nEFFECT: Your unit has MOBILE."
-        },
-        {
-          "id": "000010977002",
-          "name": "APOPLECTIC CLARITY",
-          "cp": 1,
-          "type": "Brazen Engines Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase, when a friendly DAEMON VEHICLE unit is selected to attack.\nTARGET: That DAEMON VEHICLE unit.\nEFFECT: Your unit’s attacks can ignore modifiers to:\n• BS.\n• WS.\n• Hit rolls and wound rolls."
         }
       ]
     },
@@ -682,15 +686,15 @@
       "name": "Angron",
       "role": "Monster Epic Hero",
       "keywords": [
-        "EPIC HERO",
+        "MONSTER",
+        "FLY",
         "ANGRON",
         "PRIMARCH",
-        "MONSTER",
         "CHARACTER",
-        "FLY",
-        "CHAOS",
+        "DAEMON",
         "KHORNE",
-        "DAEMON"
+        "CHAOS",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -833,17 +837,17 @@
       "name": "Khârn The Betrayer",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "CHAOS",
+        "GRENADES",
         "EPIC HERO",
         "CHARACTER",
         "INFANTRY",
-        "KHORNE",
         "KHÂRN THE BETRAYER",
-        "CHAOS",
-        "GRENADES"
+        "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -976,12 +980,12 @@
       "name": "Lord Invocatus",
       "role": "Mounted Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "MOUNTED",
-        "CHAOS",
         "LORD INVOCATUS",
-        "EPIC HERO",
-        "KHORNE"
+        "CHAOS",
+        "MOUNTED",
+        "KHORNE",
+        "CHARACTER",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "",
@@ -1029,7 +1033,7 @@
               "name": "Bolt pistol",
               "range": 12,
               "A": "1",
-              "skill": 3,
+              "skill": 4,
               "S": 5,
               "AP": -1,
               "D": "1",
@@ -1133,11 +1137,11 @@
       "name": "Daemon Prince of Khorne",
       "role": "Monster Character",
       "keywords": [
+        "DAEMON",
+        "KHORNE",
+        "CHAOS",
         "CHARACTER",
         "MONSTER",
-        "CHAOS",
-        "KHORNE",
-        "DAEMON",
         "DAEMON PRINCE"
       ],
       "factionKeywords": [
@@ -1271,15 +1275,15 @@
       "name": "Lord on Juggernaut",
       "role": "Mounted Character",
       "keywords": [
-        "MOUNTED",
-        "CHARACTER",
-        "CHAOS",
+        "LORD ON JUGGERNAUT",
         "KHORNE",
-        "LORD ON JUGGERNAUT"
+        "CHAOS",
+        "MOUNTED",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -1300,10 +1304,10 @@
       ],
       "composition": [
         {
-          "name": "Lord on Juggernaut",
+          "name": "World Eaters Lord on Juggernaut",
           "min": 1,
           "max": 1,
-          "text": "1 Lord on Juggernaut"
+          "text": "1 World Eaters Lord on Juggernaut"
         }
       ],
       "loadout": {
@@ -1405,8 +1409,8 @@
       ],
       "leads": [
         "Khorne Berzerkers",
-        "Exalted Eightbound",
-        "Eightbound"
+        "Eightbound",
+        "Exalted Eightbound"
       ],
       "isSupport": false,
       "points": [
@@ -1428,15 +1432,15 @@
       "name": "Master of Executions",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "CHAOS",
         "MASTER OF EXECUTIONS",
+        "CHARACTER",
+        "INFANTRY",
+        "CHAOS",
         "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -1480,7 +1484,7 @@
               "name": "Bolt pistol",
               "range": 12,
               "A": "1",
-              "skill": 3,
+              "skill": 4,
               "S": 5,
               "AP": -1,
               "D": "1",
@@ -1555,15 +1559,15 @@
       "role": "Battleline",
       "keywords": [
         "INFANTRY",
-        "BATTLELINE",
-        "GRENADES",
-        "CHAOS",
         "BERZERKERS",
-        "KHORNE"
+        "KHORNE",
+        "CHAOS",
+        "GRENADES",
+        "BATTLELINE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -1757,14 +1761,14 @@
           "text": "In your opponent’s Shooting phase, when an enemy unit has shot, if a model in this unit was destroyed as a result of those attacks, this unit can make a surge move of up to D6+2\"."
         },
         {
-          "name": "Icon of Khorne",
-          "type": "Wargear",
-          "text": "If the bearer’s unit contains one or more Icons of Khorne, each time the bearer’s unit destroys an enemy unit, you gain 1 Bloodshed point. Each time you make a Blessings of Khorne roll, roll one additional D6 for each Bloodshed point you have, after which, all your Bloodshed points are lost."
-        },
-        {
           "name": "Murderous Charge",
           "type": "Datasheet",
           "text": "If this unit made a charge move this turn, this unit’s melee attacks have +1 S."
+        },
+        {
+          "name": "Icon of Khorne",
+          "type": "Wargear",
+          "text": "If the bearer’s unit contains one or more Icons of Khorne, each time the bearer’s unit destroys an enemy unit, you gain 1 Bloodshed point. Each time you make a Blessings of Khorne roll, roll one additional D6 for each Bloodshed point you have, after which, all your Bloodshed points are lost."
         }
       ],
       "leads": [],
@@ -1775,11 +1779,11 @@
           "options": [
             {
               "models": 10,
-              "pts": 160
+              "pts": 170
             },
             {
               "models": 20,
-              "pts": 320
+              "pts": 330
             }
           ]
         }
@@ -1792,15 +1796,15 @@
       "name": "Jakhals",
       "role": "Infantry",
       "keywords": [
-        "CHAOS",
-        "KHORNE",
-        "GRENADES",
         "JAKHALS",
+        "KHORNE",
+        "CHAOS",
+        "GRENADES",
         "INFANTRY"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -1821,22 +1825,19 @@
       ],
       "composition": [
         {
-          "name": "Jakhal Pack Leader",
+          "name": "Jakhal Pack Leader, 1 Dishonoured and 8 Jakhals",
           "min": 1,
           "max": 1,
-          "text": "1 Jakhal Pack Leader"
+          "text": "1 Jakhal Pack Leader, 1 Dishonoured and 8 Jakhals"
         },
         {
-          "name": "Dishonoured",
+          "text": "or:"
+        },
+        {
+          "name": "Jakhal Pack Leader, 2 Dishonoured and 17 Jakhals",
           "min": 1,
-          "max": 2,
-          "text": "1-2 Dishonoured"
-        },
-        {
-          "name": "Jakhals",
-          "min": 8,
-          "max": 17,
-          "text": "8-17 Jakhals"
+          "max": 1,
+          "text": "1 Jakhal Pack Leader, 2 Dishonoured and 17 Jakhals"
         }
       ],
       "loadout": {
@@ -2006,7 +2007,7 @@
             },
             {
               "models": 20,
-              "pts": 130
+              "pts": 120
             }
           ]
         }
@@ -2019,15 +2020,15 @@
       "name": "Chaos Terminators",
       "role": "Infantry",
       "keywords": [
-        "TERMINATOR SQUAD",
-        "INFANTRY",
         "CHAOS",
         "KHORNE",
-        "TERMINATOR"
+        "TERMINATOR",
+        "TERMINATOR SQUAD",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -2317,24 +2318,24 @@
           "options": [
             {
               "models": 5,
-              "pts": 165
-            },
-            {
-              "models": 10,
-              "pts": 330
-            }
-          ]
-        },
-        {
-          "label": "YOUR 3RD + UNIT COSTS",
-          "options": [
-            {
-              "models": 5,
               "pts": 175
             },
             {
               "models": 10,
-              "pts": 340
+              "pts": 350
+            }
+          ]
+        },
+        {
+          "label": "YOUR 3RD+ UNIT COSTS",
+          "options": [
+            {
+              "models": 5,
+              "pts": 185
+            },
+            {
+              "models": 10,
+              "pts": 360
             }
           ]
         }
@@ -2347,16 +2348,16 @@
       "name": "Eightbound",
       "role": "Infantry",
       "keywords": [
-        "EIGHTBOUND",
+        "KHORNE",
+        "INFANTRY",
+        "CHAOS",
         "DAEMON",
         "POSSESSED",
-        "KHORNE",
-        "CHAOS",
-        "INFANTRY"
+        "EIGHTBOUND"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -2444,12 +2445,12 @@
             },
             {
               "models": 6,
-              "pts": 255
+              "pts": 250
             }
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -2457,7 +2458,7 @@
             },
             {
               "models": 6,
-              "pts": 270
+              "pts": 265
             }
           ]
         }
@@ -2470,12 +2471,12 @@
       "name": "Exalted Eightbound",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "KHORNE",
-        "CHAOS",
         "EXALTED EIGHTBOUND",
-        "POSSESSED",
-        "DAEMON"
+        "INFANTRY",
+        "CHAOS",
+        "KHORNE",
+        "DAEMON",
+        "POSSESSED"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -2569,12 +2570,12 @@
             },
             {
               "models": 6,
-              "pts": 265
+              "pts": 260
             }
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -2582,7 +2583,7 @@
             },
             {
               "models": 6,
-              "pts": 280
+              "pts": 275
             }
           ]
         }
@@ -2595,11 +2596,11 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
-        "WALKER",
-        "VEHICLE",
+        "HELBRUTE",
         "KHORNE",
         "CHAOS",
-        "HELBRUTE"
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -2967,9 +2968,9 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
-        "SPAWN",
-        "KHORNE",
         "CHAOS",
+        "KHORNE",
+        "SPAWN",
         "BEAST"
       ],
       "factionKeywords": [
@@ -3071,13 +3072,13 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "SMOKE",
-        "LAND RAIDER",
-        "KHORNE",
-        "CHAOS",
-        "FRAME",
         "TRANSPORT",
-        "VEHICLE"
+        "VEHICLE",
+        "FRAME",
+        "CHAOS",
+        "KHORNE",
+        "LAND RAIDER",
+        "SMOKE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -3285,16 +3286,16 @@
           "options": [
             {
               "models": 1,
-              "pts": 220
+              "pts": 200
             }
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 240
+              "pts": 220
             }
           ]
         }
@@ -3308,11 +3309,11 @@
       "role": "Vehicle",
       "keywords": [
         "VEHICLE",
-        "FRAME",
-        "SMOKE",
-        "CHAOS",
         "KHORNE",
-        "PREDATOR DESTRUCTOR"
+        "PREDATOR DESTRUCTOR",
+        "CHAOS",
+        "SMOKE",
+        "FRAME"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -3553,7 +3554,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3571,11 +3572,11 @@
       "role": "Vehicle",
       "keywords": [
         "FRAME",
-        "VEHICLE",
-        "SMOKE",
         "CHAOS",
-        "KHORNE",
-        "PREDATOR ANNIHILATOR"
+        "SMOKE",
+        "VEHICLE",
+        "PREDATOR ANNIHILATOR",
+        "KHORNE"
       ],
       "factionKeywords": [
         "",
@@ -3817,7 +3818,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3835,11 +3836,11 @@
       "role": "Walker",
       "keywords": [
         "DAEMON",
-        "KHORNE",
-        "VEHICLE",
         "FORGEFIEND",
+        "VEHICLE",
         "WALKER",
-        "CHAOS"
+        "CHAOS",
+        "KHORNE"
       ],
       "factionKeywords": [
         "",
@@ -4015,7 +4016,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4037,12 +4038,12 @@
       "name": "Maulerfiend",
       "role": "Walker",
       "keywords": [
-        "KHORNE",
-        "WALKER",
         "VEHICLE",
-        "DAEMON",
         "MAULERFIEND",
-        "CHAOS"
+        "CHAOS",
+        "DAEMON",
+        "WALKER",
+        "KHORNE"
       ],
       "factionKeywords": [
         "",
@@ -4191,7 +4192,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4208,18 +4209,18 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "KHORNE",
-        "CHAOS",
         "VEHICLE",
-        "SMOKE",
-        "DEDICATED TRANSPORT",
-        "FRAME",
+        "CHAOS",
         "TRANSPORT",
-        "RHINO"
+        "DEDICATED TRANSPORT",
+        "SMOKE",
+        "FRAME",
+        "RHINO",
+        "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -4387,12 +4388,12 @@
           "options": [
             {
               "models": 1,
-              "pts": 75
+              "pts": 85
             }
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4409,12 +4410,12 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
-        "FLY",
-        "VEHICLE",
         "HELDRAKE",
-        "DAEMON",
+        "VEHICLE",
+        "FLY",
+        "CHAOS",
         "KHORNE",
-        "CHAOS"
+        "DAEMON"
       ],
       "factionKeywords": [
         "",
@@ -4439,10 +4440,10 @@
       ],
       "composition": [
         {
-          "name": "Heldrake",
+          "name": "Chaos Heldrake",
           "min": 1,
           "max": 1,
-          "text": "1 Heldrake"
+          "text": "1 Chaos Heldrake"
         }
       ],
       "loadout": {
@@ -4573,14 +4574,14 @@
       "name": "Khorne Lord of Skulls",
       "role": "Titanic",
       "keywords": [
-        "LORD OF SKULLS",
-        "CHAOS",
-        "TOWERING",
-        "TITANIC",
-        "FRAME",
         "KHORNE",
+        "DAEMON",
+        "LORD OF SKULLS",
         "VEHICLE",
-        "DAEMON"
+        "FRAME",
+        "TITANIC",
+        "TOWERING",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -4810,7 +4811,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4827,13 +4828,13 @@
       "name": "Daemon Prince of Khorne with Wings",
       "role": "Monster Character",
       "keywords": [
-        "DAEMON",
-        "MONSTER",
         "CHARACTER",
-        "FLY",
+        "DAEMON",
+        "KHORNE",
         "CHAOS",
-        "DAEMON PRINCE",
-        "KHORNE"
+        "FLY",
+        "MONSTER",
+        "DAEMON PRINCE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -4942,7 +4943,7 @@
         {
           "name": "Swooping Predator",
           "type": "Datasheet",
-          "text": "Each time this model ends a Normal or Advance move, you can select one enemy unit that it moved over during that move and roll six D6: for each 4+, that enemy unit suffers 1 mortal wound."
+          "text": "Each time this model ends a Normal move, you can select one enemy unit that it moved over during that move and roll six D6: for each 4+, that enemy unit suffers 1 mortal wound."
         }
       ],
       "leads": [],
@@ -4966,15 +4967,15 @@
       "name": "Goremongers",
       "role": "Infantry",
       "keywords": [
+        "GRENADES",
+        "INFANTRY",
         "GOREMONGERS",
         "KHORNE",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY"
+        "CHAOS"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -5143,7 +5144,7 @@
           "options": [
             {
               "models": 8,
-              "pts": 75
+              "pts": 70
             }
           ]
         }
@@ -5156,17 +5157,17 @@
       "name": "Slaughterbound",
       "role": "Infantry Character",
       "keywords": [
+        "DAEMON",
+        "POSSESSED",
+        "SLAUGHTERBOUND",
         "INFANTRY",
         "CHARACTER",
         "CHAOS",
-        "KHORNE",
-        "DAEMON",
-        "POSSESSED",
-        "SLAUGHTERBOUND"
+        "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -5262,7 +5263,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 100
+              "pts": 90
             }
           ]
         }
@@ -5275,18 +5276,18 @@
       "name": "Skarbrand",
       "role": "Monster Epic Hero",
       "keywords": [
-        "SUMMONED",
         "SKARBRAND",
+        "KHORNE",
+        "DAEMON",
+        "SUMMONED",
         "MONSTER",
         "CHARACTER",
         "EPIC HERO",
-        "CHAOS",
-        "KHORNE",
-        "DAEMON"
+        "CHAOS"
       ],
       "factionKeywords": [
-        "BLOOD LEGIONS",
-        ""
+        "",
+        "BLOOD LEGIONS"
       ],
       "models": [
         {
@@ -5420,14 +5421,14 @@
       "name": "Bloodthirster",
       "role": "Monster Character",
       "keywords": [
-        "DAEMON",
-        "CHAOS",
         "MONSTER",
         "CHARACTER",
         "FLY",
-        "BLOODTHIRSTER",
+        "CHAOS",
+        "DAEMON",
+        "KHORNE",
         "SUMMONED",
-        "KHORNE"
+        "BLOODTHIRSTER"
       ],
       "factionKeywords": [
         "BLOOD LEGIONS",
@@ -5636,7 +5637,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5653,13 +5654,13 @@
       "name": "Bloodletters",
       "role": "Battleline",
       "keywords": [
-        "SUMMONED",
-        "BLOODLETTERS",
-        "CHAOS",
-        "BATTLELINE",
         "INFANTRY",
+        "BATTLELINE",
+        "CHAOS",
         "DAEMON",
-        "KHORNE"
+        "KHORNE",
+        "SUMMONED",
+        "BLOODLETTERS"
       ],
       "factionKeywords": [
         "BLOOD LEGIONS",
@@ -5803,16 +5804,16 @@
       "name": "Bloodcrushers",
       "role": "Mounted",
       "keywords": [
+        "BLOODCRUSHERS",
         "MOUNTED",
         "CHAOS",
         "DAEMON",
-        "BLOODCRUSHERS",
         "KHORNE",
         "SUMMONED"
       ],
       "factionKeywords": [
-        "BLOOD LEGIONS",
-        ""
+        "",
+        "BLOOD LEGIONS"
       ],
       "models": [
         {
@@ -5848,10 +5849,10 @@
       "loadout": {
         "*": [
           "hellblade",
-          "bladed horn"
+          "Juggernaut’s bladed horn"
         ]
       },
-      "loadoutText": "Every model is equipped with: hellblade; bladed horn.",
+      "loadoutText": "Every model is equipped with: hellblade; Juggernaut’s bladed horn.",
       "options": [
         "1 Bloodcrusher that is not equipped with a daemonic icon can be equipped with 1 instrument of Chaos.",
         "1 Bloodcrusher that is not equipped with an instrument of Chaos can be equipped with 1 daemonic icon."
@@ -5967,7 +5968,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -5990,14 +5991,14 @@
       "keywords": [
         "CHAOS",
         "BEAST",
+        "FLESH HOUNDS",
         "SUMMONED",
         "KHORNE",
-        "FLESH HOUNDS",
         "DAEMON"
       ],
       "factionKeywords": [
-        "",
-        "BLOOD LEGIONS"
+        "BLOOD LEGIONS",
+        ""
       ],
       "models": [
         {
@@ -6130,10 +6131,10 @@
       "keywords": [
         "DEFILER",
         "DAEMON",
-        "KHORNE",
         "CHAOS",
-        "WALKER",
-        "VEHICLE"
+        "KHORNE",
+        "VEHICLE",
+        "WALKER"
       ],
       "factionKeywords": [
         "",
@@ -6495,7 +6496,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,

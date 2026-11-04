@@ -1183,7 +1183,7 @@ export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | nu
 
 const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
-  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived', 'oppChargeStart'];
+  'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived', 'oppChargeStart', 'chargeStart'];
 
 /** Abilities player p can use by pressing a button right now. */
 export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
@@ -1258,8 +1258,9 @@ export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyF
       if (def.spec.when !== trigger || def.spec.auto || !limitLeft(s, def)) continue;
       if (trigger === 'enemyMovedNear' && !(alive(mover).length && near(from(def), mover, def.spec.range ?? 8))) continue;
       if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }))) continue;
-      const mv = def.spec.do?.find((a) => a.move)?.move ?? '';
-      offers.push({ unitId: u.id, key: def.key, label: `${def.name}: move ${mv === 'M' ? 'Normal move' : `${mv}"`}` });
+      const mv = def.spec.do?.find((a) => a.move)?.move ?? def.spec.do?.find((a) => a.surge)?.surge ?? '';
+      const kind = def.spec.do?.some((a) => a.surge) ? 'surge' : 'move';
+      offers.push({ unitId: u.id, key: def.key, label: `${def.name}: ${kind} ${mv === 'M' ? 'Normal move' : `${mv}"`}` });
     }
   }
   if (!offers.length) return;

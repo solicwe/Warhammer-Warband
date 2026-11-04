@@ -525,7 +525,8 @@ function build() {
         return t && moves.every((k) => !t.keywords.includes(k) || d.keywords.includes(k));
       });
     }
-    fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), JSON.stringify(faction));
+    const wasIndented = ['AC', 'AM', 'AoI', 'CD', 'CSM', 'DG', 'EC', 'GC', 'LoV', 'NEC', 'SM', 'TAU', 'TS', 'TYR', 'WE'].includes(f.id);
+    fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), wasIndented ? JSON.stringify(faction, null, 2) : JSON.stringify(faction));
     const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
     index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
   }

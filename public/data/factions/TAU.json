@@ -2,7 +2,7 @@
   "id": "TAU",
   "name": "T’au Empire",
   "link": "https://wahapedia.ru/wh40k11ed/factions/t-au-empire",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "For the Greater Good",
@@ -53,15 +53,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008443004",
-          "name": "COORDINATE TO ENGAGE",
-          "cp": 1,
-          "type": "Kauyon – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One T’AU EMPIRE unit from your army that has just been selected as an Observer unit (see For the Greater Good).\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets their Spotted unit, improve the Ballistic Skill characteristic of that attack by 1 and, if your unit has the Markerlight keyword, that attack has the [IGNORES COVER] ability."
-        },
-        {
           "id": "000008443003",
           "name": "POINT-BLANK AMBUSH",
           "cp": 1,
@@ -89,13 +80,13 @@
           "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One Stealth, Ghostkeel or Commander Shadowsun unit from your army.\nEFFECT: Remove your unit from the battlefield and place it into Strategic Reserves.\nRESTRICTIONS: You cannot target a unit that is within Engagement Range of one or more enemy units."
         },
         {
-          "id": "000008443006",
-          "name": "PHOTON GRENADES",
+          "id": "000008443004",
+          "name": "COORDINATE TO ENGAGE",
           "cp": 1,
-          "type": "Kauyon – Wargear Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your opponent's charge phase, just after an enemy unit has selected its charge target.\nTARGET: One T’AU EMPIRE GRENADES unit from your army that was selected as one of the targets of that charge.\nEFFECT: That enemy unit must immediately take a Battle-shock test, and until the end of the phase, subtract 2 from Charge rolls made for that enemy unit. \nRESTRICTION: You cannot target a unit that is within Engagement Range of one or more enemy units."
+          "type": "Kauyon – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One T’AU EMPIRE unit from your army that has just been selected as an Observer unit (see For the Greater Good).\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets their Spotted unit, improve the Ballistic Skill characteristic of that attack by 1 and, if your unit has the Markerlight keyword, that attack has the [IGNORES COVER] ability."
         },
         {
           "id": "000008443005",
@@ -105,6 +96,15 @@
           "turn": "Opponent’s turn",
           "phase": "Charge phase",
           "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One T’au Empire Infantry unit from your army that was selected as one of the targets of that charge, and one friendly Transport.\nEFFECT: Your unit can embark within that TRANSPORT. If it does, your opponent can select new targets for that charge.\nRESTRICTIONS: Every model in your T’AU EMPIRE INFANTRY unit must be within 3\" of that TRANSPORT and there must be sufficient transport capacity to embark the entire unit."
+        },
+        {
+          "id": "000008443006",
+          "name": "PHOTON GRENADES",
+          "cp": 1,
+          "type": "Kauyon – Wargear Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your opponent's charge phase, just after an enemy unit has selected its charge target.\nTARGET: One T’AU EMPIRE GRENADES unit from your army that was selected as one of the targets of that charge.\nEFFECT: That enemy unit must immediately take a Battle-shock test, and until the end of the phase, subtract 2 from Charge rolls made for that enemy unit. \nRESTRICTION: You cannot target a unit that is within Engagement Range of one or more enemy units."
         }
       ]
     },
@@ -112,7 +112,7 @@
       "id": "000000845",
       "name": "Mont’ka",
       "dp": 3,
-      "forceDisposition": "Priority Assets",
+      "forceDisposition": "Priority Assets, Take and Hold",
       "rules": [
         {
           "name": "Killing Blow",
@@ -151,15 +151,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008812005",
-          "name": "COMBAT DEBARKATION",
-          "cp": 1,
-          "type": "Mont’ka – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One T’au Empire Infantry unit from your army that disembarked from a TRANSPORT this turn.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets the closest enemy unit, you can re-roll the Wound roll."
-        },
-        {
           "id": "000008812004",
           "name": "FOCUSED FIRE",
           "cp": 1,
@@ -167,6 +158,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Start of your Shooting phase.\nTARGET: Two T’AU EMPIRE units from your army that have not been selected to shoot this phase, and one enemy unit.\nEFFECT: Until the end of the phase, each time a model in either of your units makes an attack, it can only target that enemy unit (and only if it is an eligible target for that attack), and when resolving that attack, improve the Armour Penetration characteristic by 1.\nRESTRICTIONS: You cannot use this Stratagem during the fourth or fifth battle rounds."
+        },
+        {
+          "id": "000008812002",
+          "name": "PINPOINT COUNTER-OFFENSIVE",
+          "cp": 1,
+          "type": "Mont’ka – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Any phase",
+          "text": "WHEN: Any phase.\nTARGET: One T’AU EMPIRE unit (excluding Kroot units) from your army that was just destroyed. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a T’AU EMPIRE unit (excluding KROOT units) from your army makes an attack that targets the enemy unit that just destroyed your unit, you can re-roll the Hit roll."
         },
         {
           "id": "000008812003",
@@ -178,13 +178,13 @@
           "text": "WHEN: Your Movement phase.\nTARGET: One T’AU EMPIRE unit from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, if your unit Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
         },
         {
-          "id": "000008812002",
-          "name": "PINPOINT COUNTER-OFFENSIVE",
+          "id": "000008812005",
+          "name": "COMBAT DEBARKATION",
           "cp": 1,
           "type": "Mont’ka – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Any phase",
-          "text": "WHEN: Any phase.\nTARGET: One T’AU EMPIRE unit (excluding Kroot units) from your army that was just destroyed. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a T’AU EMPIRE unit (excluding KROOT units) from your army makes an attack that targets the enemy unit that just destroyed your unit, you can re-roll the Hit roll."
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One T’au Empire Infantry unit from your army that disembarked from a TRANSPORT this turn.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets the closest enemy unit, you can re-roll the Wound roll."
         },
         {
           "id": "000008812006",
@@ -210,7 +210,7 @@
       "id": "000000846",
       "name": "Retaliation Cadre",
       "dp": 3,
-      "forceDisposition": "Purge the Foe",
+      "forceDisposition": "Purge the Foe, Reconnaissance",
       "rules": [
         {
           "name": "Bonded Heroes",
@@ -276,15 +276,6 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One T’au Empire Battlesuit unit from your army that can FLY whose attacks have been resolved this phase.\nEFFECT: If your unit is not within Engagement Range of one or more enemy units, it can make a Normal move. If it does, your unit cannot declare a charge this turn"
         },
         {
-          "id": "000008816007",
-          "name": "GRAV-INHIBITOR FIELD",
-          "cp": 1,
-          "type": "Retaliation Cadre – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One T’au Empire Battlesuit unit from your army that was selected as a target of that charge.\nEFFECT: That enemy unit must immediately take a Battle-shock test and you must roll one D6 for each model in that enemy unit: for each 6, that enemy unit suffers 1 mortal wound."
-        },
-        {
           "id": "000008816004",
           "name": "THE SHORTENED BLADE",
           "cp": 2,
@@ -292,6 +283,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase.\nTARGET: One T’au Empire Battlesuit unit from your army that is arriving using the Deep Strike ability this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy models.\nRESTRICTIONS: A unit targeted with this Stratagem is not eligible to declare a charge in the same turn."
+        },
+        {
+          "id": "000008816007",
+          "name": "GRAV-INHIBITOR FIELD",
+          "cp": 1,
+          "type": "Retaliation Cadre – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One T’au Empire Battlesuit unit from your army that was selected as a target of that charge.\nEFFECT: That enemy unit must immediately take a Battle-shock test and you must roll one D6 for each model in that enemy unit: for each 6, that enemy unit suffers 1 mortal wound."
         },
         {
           "id": "000008816003",
@@ -373,6 +373,15 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Kroot unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: After your unit has resolved its attacks this phase, select one enemy unit that was hit by one or more of those attacks. Until the end of the phase, each time a KROOT model from your army makes an attack that targets that enemy unit, unless the attacking unit is Battle-shocked, improve the Armour Penetration characteristic of that attack by 1."
         },
         {
+          "id": "000008822007",
+          "name": "HIDDEN HUNTERS",
+          "cp": 1,
+          "type": "Kroot Hunting Pack – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Kroot unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
+        },
+        {
           "id": "000008822005",
           "name": "THE GRISLY FEAST",
           "cp": 1,
@@ -389,15 +398,6 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase, just after a Kroot unit from your army Falls Back.\nTARGET: That KROOT unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge."
-        },
-        {
-          "id": "000008822007",
-          "name": "HIDDEN HUNTERS",
-          "cp": 1,
-          "type": "Kroot Hunting Pack – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Kroot unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
         },
         {
           "id": "000008822004",
@@ -514,15 +514,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010897004",
-          "name": "AUTOREACTIVE CAMOUFLAGE",
-          "cp": 1,
-          "type": "Advanced Acquisition Cadre Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly PATHFINDER TEAM/ STEALTH BATTLESUITS unit, if that friendly unit is hidden.\nTARGET: That PATHFINDER TEAM/STEALTH BATTLESUITS unit.\nEFFECT: Your unit has +1 Sv."
-        },
-        {
           "id": "000010897003",
           "name": "MICRODRONE SUPPORT",
           "cp": 1,
@@ -530,6 +521,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase, when a friendly PATHFINDER TEAM/ STEALTH BATTLESUITS unit starts an action.\nTARGET: That PATHFINDER TEAM/STEALTH BATTLESUITS unit.\nEFFECT: That action does not prevent your unit from being eligible to shoot."
+        },
+        {
+          "id": "000010897004",
+          "name": "AUTOREACTIVE CAMOUFLAGE",
+          "cp": 1,
+          "type": "Advanced Acquisition Cadre Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly PATHFINDER TEAM/ STEALTH BATTLESUITS unit, if that friendly unit is hidden.\nTARGET: That PATHFINDER TEAM/STEALTH BATTLESUITS unit.\nEFFECT: Your unit has +1 Sv."
         },
         {
           "id": "000010897002",
@@ -549,12 +549,12 @@
       "name": "Commander In Coldstar Battlesuit",
       "role": "Vehicle Character",
       "keywords": [
-        "FLY",
-        "WALKER",
-        "VEHICLE",
+        "BATTLESUIT",
         "COMMANDER IN COLDSTAR BATTLESUIT",
-        "CHARACTER",
-        "BATTLESUIT"
+        "VEHICLE",
+        "WALKER",
+        "FLY",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -894,8 +894,8 @@
       ],
       "leads": [
         "Crisis Starscythe Battlesuits",
-        "Crisis Fireknife Battlesuits",
-        "Crisis Sunforge Battlesuits"
+        "Crisis Sunforge Battlesuits",
+        "Crisis Fireknife Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -1059,8 +1059,8 @@
       "name": "Cadre Fireblade",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
         "INFANTRY",
+        "CHARACTER",
         "CADRE FIREBLADE",
         "GRENADES"
       ],
@@ -1203,13 +1203,13 @@
       "name": "Commander Farsight",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "WALKER",
-        "EPIC HERO",
-        "BATTLESUIT",
-        "COMMANDER FARSIGHT",
         "VEHICLE",
+        "EPIC HERO",
         "CHARACTER",
-        "FLY"
+        "FLY",
+        "WALKER",
+        "COMMANDER FARSIGHT",
+        "BATTLESUIT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1323,9 +1323,9 @@
         }
       ],
       "leads": [
-        "Crisis Sunforge Battlesuits",
+        "Crisis Starscythe Battlesuits",
         "Crisis Fireknife Battlesuits",
-        "Crisis Starscythe Battlesuits"
+        "Crisis Sunforge Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -1347,12 +1347,12 @@
       "name": "Commander Shadowsun",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "FLY",
-        "CHARACTER",
+        "COMMANDER SHADOWSUN",
         "EPIC HERO",
+        "CHARACTER",
         "BATTLESUIT",
-        "COMMANDER SHADOWSUN"
+        "INFANTRY",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1546,11 +1546,11 @@
       "name": "Darkstrider",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "DARKSTRIDER",
         "MARKERLIGHT",
-        "EPIC HERO"
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY",
+        "DARKSTRIDER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1679,12 +1679,12 @@
       "name": "Strike Team",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
         "STRIKE TEAM",
         "FIRE WARRIOR",
         "MARKERLIGHT",
         "GRENADES",
-        "BATTLELINE"
+        "BATTLELINE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1865,7 +1865,7 @@
         {
           "name": "DS8 Support Turret",
           "type": "Datasheet",
-          "text": "In your Movement phase, if this unit Remains Stationary, until the start of your next Movement phase, its Fire Warrior Shas’ui model is equipped with the support turret missile system weapon. \nDesigner’s Note: Place a Support Turret token next to this unit to remind you."
+          "text": "In your Movement phase, if this unit Remains Stationary, until the start of your next turn, its Shas’ui model is equipped with the support turret weapon. \nDesigner’s Note: Place a Support Turret token next to this unit to remind you."
         }
       ],
       "leads": [],
@@ -1889,12 +1889,12 @@
       "name": "Breacher Team",
       "role": "Battleline",
       "keywords": [
+        "FIRE WARRIOR",
+        "BREACHER TEAM",
         "MARKERLIGHT",
         "GRENADES",
         "BATTLELINE",
-        "INFANTRY",
-        "BREACHER TEAM",
-        "FIRE WARRIOR"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2046,7 +2046,7 @@
         {
           "name": "DS8 Support Turret",
           "type": "Datasheet",
-          "text": "In your Movement phase, if this unit Remains Stationary, until the start of your next Movement phase, its Fire Warrior Shas’ui model is equipped with the support turret missile system weapon. \nDesigner’s Note: Place a Support Turret token next to this unit to remind you."
+          "text": "In your Movement phase, if this unit Remains Stationary, until the start of your next turn, its Shas’ui model is equipped with the support turret weapon. \nDesigner’s Note: Place a Support Turret token next to this unit to remind you."
         }
       ],
       "leads": [],
@@ -2070,10 +2070,10 @@
       "name": "Kroot Carnivores",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "GRENADES",
         "KROOT",
-        "CARNIVORES",
-        "INFANTRY"
+        "CARNIVORES"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2253,7 +2253,7 @@
         {
           "name": "Fieldcraft",
           "type": "Datasheet",
-          "text": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+          "text": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
           "name": "BODYGUARD",
@@ -2287,9 +2287,9 @@
       "role": "Mounted",
       "keywords": [
         "KROOT",
-        "GRENADES",
         "MOUNTED",
-        "KROOTOX RIDERS"
+        "KROOTOX RIDERS",
+        "GRENADES"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2456,8 +2456,8 @@
       "name": "Kroot Hounds",
       "role": "Beast",
       "keywords": [
-        "KROOT",
         "BEASTS",
+        "KROOT",
         "HOUNDS"
       ],
       "factionKeywords": [
@@ -2561,11 +2561,11 @@
       "name": "Stealth Battlesuits",
       "role": "Infantry",
       "keywords": [
-        "FLY",
-        "GRENADES",
         "STEALTH",
-        "MARKERLIGHT",
         "BATTLESUIT",
+        "FLY",
+        "MARKERLIGHT",
+        "GRENADES",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -2782,7 +2782,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -2799,12 +2799,12 @@
       "name": "Ghostkeel Battlesuit",
       "role": "Walker",
       "keywords": [
-        "BATTLESUIT",
-        "GHOSTKEEL",
-        "WALKER",
         "SMOKE",
+        "VEHICLE",
+        "WALKER",
         "FLY",
-        "VEHICLE"
+        "BATTLESUIT",
+        "GHOSTKEEL"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -3059,7 +3059,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3081,11 +3081,11 @@
       "name": "Riptide Battlesuit",
       "role": "Walker",
       "keywords": [
-        "BATTLESUIT",
-        "VEHICLE",
-        "RIPTIDE",
         "WALKER",
-        "FLY"
+        "VEHICLE",
+        "FLY",
+        "BATTLESUIT",
+        "RIPTIDE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -3329,7 +3329,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3352,8 +3352,8 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "MARKERLIGHT",
         "GRENADES",
+        "MARKERLIGHT",
         "PATHFINDER TEAM"
       ],
       "factionKeywords": [
@@ -3466,10 +3466,7 @@
               "Semi-automatic grenade launcher"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Pulse carbine"
-          ]
+          "max": 1
         }
       ],
       "weapons": [
@@ -3658,7 +3655,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 10,
@@ -3680,10 +3677,10 @@
       "name": "Piranhas",
       "role": "Vehicle",
       "keywords": [
-        "PIRANHAS",
+        "FLY",
         "FRAME",
-        "VEHICLE",
-        "FLY"
+        "PIRANHAS",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -3884,7 +3881,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3909,12 +3906,12 @@
       "name": "Devilfish",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "FRAME",
-        "DEDICATED TRANSPORT",
-        "TRANSPORT",
         "FLY",
-        "DEVILFISH"
+        "FRAME",
+        "TRANSPORT",
+        "DEVILFISH",
+        "VEHICLE",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4108,7 +4105,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4125,11 +4122,11 @@
       "name": "Razorshark Strike Fighter",
       "role": "Aircraft",
       "keywords": [
+        "VEHICLE",
+        "RAZORSHARK STRIKE FIGHTER",
         "FRAME",
         "FLY",
-        "AIRCRAFT",
-        "VEHICLE",
-        "RAZORSHARK STRIKE FIGHTER"
+        "AIRCRAFT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4329,11 +4326,11 @@
       "name": "Sun Shark Bomber",
       "role": "Aircraft",
       "keywords": [
-        "AIRCRAFT",
-        "VEHICLE",
         "SUN SHARK BOMBER",
         "FRAME",
-        "FLY"
+        "FLY",
+        "VEHICLE",
+        "AIRCRAFT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4768,7 +4765,7 @@
           "close combat weapons."
         ]
       },
-      "loadoutText": "This model is equipped with: longshot pulse rifles; pulse pistol; close combat weapons. \nDesigner’s Note: The Firesight Marksman model and sniper drone models are treated as a single model for all rules purposes. All distances are measured to and from the Farsight Marksman model. The sniper drone models do not count as models for any rules purposes.",
+      "loadoutText": "This model is equipped with: longshot pulse rifles; pulse pistol; close combat weapons. \nDesigner’s Note: The Firesight Marksman model and sniper drone models are treated as a single model for all rules purposes. All distances are measured to and from the Firesight Marksman model. The sniper drone models do not count as models for any rules purposes.",
       "options": [
         "None"
       ],
@@ -4873,11 +4870,11 @@
       "name": "Sky Ray Gunship",
       "role": "Vehicle",
       "keywords": [
+        "SKY RAY GUNSHIP",
         "MARKERLIGHT",
         "FRAME",
         "FLY",
-        "VEHICLE",
-        "SKY RAY GUNSHIP"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5072,10 +5069,10 @@
       "name": "Hammerhead Gunship",
       "role": "Vehicle",
       "keywords": [
-        "HAMMERHEAD GUNSHIP",
         "FRAME",
         "FLY",
-        "VEHICLE"
+        "VEHICLE",
+        "HAMMERHEAD GUNSHIP"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5342,7 +5339,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5359,10 +5356,10 @@
       "name": "Broadside Battlesuits",
       "role": "Walker",
       "keywords": [
+        "VEHICLE",
         "BROADSIDE",
         "BATTLESUIT",
-        "WALKER",
-        "VEHICLE"
+        "WALKER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5613,7 +5610,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5643,11 +5640,11 @@
       "name": "Stormsurge",
       "role": "Titanic",
       "keywords": [
-        "WALKER",
+        "VEHICLE",
         "STORMSURGE",
         "TOWERING",
-        "VEHICLE",
-        "TITANIC"
+        "TITANIC",
+        "WALKER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5944,7 +5941,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5961,12 +5958,12 @@
       "name": "Tidewall Droneport",
       "role": "Fortifications",
       "keywords": [
-        "FORTIFICATION",
-        "VEHICLE",
-        "TRANSPORT",
         "FLY",
-        "FRAME",
-        "TIDEWALL DRONEPORT"
+        "VEHICLE",
+        "FORTIFICATION",
+        "TRANSPORT",
+        "TIDEWALL DRONEPORT",
+        "FRAME"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6077,12 +6074,12 @@
       "name": "Tidewall Shieldline",
       "role": "Fortifications",
       "keywords": [
-        "FORTIFICATION",
-        "VEHICLE",
         "TRANSPORT",
         "FRAME",
         "FLY",
-        "TIDEWALL SHIELDLINE"
+        "TIDEWALL SHIELDLINE",
+        "VEHICLE",
+        "FORTIFICATION"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6186,16 +6183,15 @@
             {
               "models": 1,
               "pts": 85
+            },
+            {
+              "models": 2,
+              "pts": 105
             }
           ]
         }
       ],
-      "wargearCosts": [
-        {
-          "name": "Tidewall Defence Platform",
-          "pts": 20
-        }
-      ],
+      "wargearCosts": [],
       "link": "https://wahapedia.ru/wh40k11ed/factions/t-au-empire/Tidewall-Shieldline"
     },
     {
@@ -6203,12 +6199,12 @@
       "name": "Tidewall Gunrig",
       "role": "Fortifications",
       "keywords": [
-        "TIDEWALL GUNRIG",
         "FRAME",
-        "FLY",
-        "TRANSPORT",
+        "TIDEWALL GUNRIG",
+        "FORTIFICATION",
         "VEHICLE",
-        "FORTIFICATION"
+        "TRANSPORT",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6314,11 +6310,11 @@
       "name": "Commander In Enforcer Battlesuit",
       "role": "Vehicle Character",
       "keywords": [
+        "VEHICLE",
+        "WALKER",
         "COMMANDER IN ENFORCER BATTLESUIT",
         "BATTLESUIT",
         "CHARACTER",
-        "WALKER",
-        "VEHICLE",
         "FLY"
       ],
       "factionKeywords": [
@@ -6641,8 +6637,8 @@
       ],
       "leads": [
         "Crisis Starscythe Battlesuits",
-        "Crisis Sunforge Battlesuits",
-        "Crisis Fireknife Battlesuits"
+        "Crisis Fireknife Battlesuits",
+        "Crisis Sunforge Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -6664,9 +6660,9 @@
       "name": "Kroot Farstalkers",
       "role": "Infantry",
       "keywords": [
-        "FARSTALKERS",
-        "GRENADES",
         "KROOT",
+        "GRENADES",
+        "FARSTALKERS",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -6786,10 +6782,7 @@
               "Pech'ra"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Farstalker firearm"
-          ]
+          "max": 1
         }
       ],
       "weapons": [
@@ -6962,7 +6955,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 12,
@@ -6980,11 +6973,11 @@
       "role": "Walker",
       "keywords": [
         "BATTLESUIT",
-        "FLY",
+        "VEHICLE",
         "WALKER",
-        "CRISIS",
         "SUNFORGE",
-        "VEHICLE"
+        "CRISIS",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7114,7 +7107,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -7131,12 +7124,12 @@
       "name": "Crisis Fireknife Battlesuits",
       "role": "Walker",
       "keywords": [
+        "VEHICLE",
         "WALKER",
-        "FIREKNIFE",
-        "CRISIS",
-        "BATTLESUIT",
         "FLY",
-        "VEHICLE"
+        "BATTLESUIT",
+        "CRISIS",
+        "FIREKNIFE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7312,7 +7305,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -7335,11 +7328,11 @@
       "role": "Walker",
       "keywords": [
         "VEHICLE",
-        "STARSCYTHE",
-        "CRISIS",
         "BATTLESUIT",
-        "FLY",
-        "WALKER"
+        "WALKER",
+        "CRISIS",
+        "STARSCYTHE",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7518,7 +7511,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -7540,11 +7533,11 @@
       "name": "Kroot Trail Shaper",
       "role": "Infantry Character",
       "keywords": [
-        "KROOT",
-        "SHAPER",
         "TRAIL SHAPER",
+        "SHAPER",
         "INFANTRY",
-        "CHARACTER"
+        "CHARACTER",
+        "KROOT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7674,11 +7667,11 @@
       "name": "Kroot War Shaper",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "KROOT",
+        "WAR SHAPER",
         "SHAPER",
-        "WAR SHAPER"
+        "CHARACTER",
+        "INFANTRY",
+        "KROOT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7863,11 +7856,11 @@
       "name": "Kroot Flesh Shaper",
       "role": "Infantry Character",
       "keywords": [
+        "KROOT",
         "CHARACTER",
         "FLESH SHAPER",
-        "SHAPER",
         "INFANTRY",
-        "KROOT"
+        "SHAPER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7999,10 +7992,10 @@
       "name": "Kroot Lone-Spear",
       "role": "Mounted Character",
       "keywords": [
-        "KROOT",
-        "LONE-SPEAR",
+        "MOUNTED",
         "CHARACTER",
-        "MOUNTED"
+        "KROOT",
+        "LONE-SPEAR"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -8195,10 +8188,10 @@
       "name": "Krootox Rampagers",
       "role": "Mounted",
       "keywords": [
-        "KROOTOX RAMPAGERS",
         "KROOT",
-        "GRENADES",
-        "MOUNTED"
+        "KROOTOX RAMPAGERS",
+        "MOUNTED",
+        "GRENADES"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -8323,7 +8316,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -8344,13 +8337,13 @@
       "name": "The Twin Lance",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "FLY",
-        "BATTLESUIT",
+        "CHARACTER",
         "WALKER",
         "VEHICLE",
+        "FLY",
         "THE TWIN LANCE",
-        "EPIC HERO",
-        "CHARACTER"
+        "BATTLESUIT",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -8593,329 +8586,6 @@
       ],
       "wargearCosts": [],
       "link": "https://wahapedia.ru/wh40k11ed/factions/t-au-empire/The-Twin-Lance"
-    },
-    {
-      "id": "000004204",
-      "name": "Ta'unar Supremacy Armour",
-      "role": "Vehicle",
-      "keywords": [
-        "TITANIC",
-        "TOWERING",
-        "WALKER",
-        "VEHICLE",
-        "BATTLESUIT",
-        "TA'UNAR SUPREMACY ARMOUR"
-      ],
-      "factionKeywords": [
-        "T’AU EMPIRE"
-      ],
-      "models": [
-        {
-          "name": "Ta'unar Supremacy Armour",
-          "M": 8,
-          "T": 13,
-          "Sv": 2,
-          "InSv": 5,
-          "W": 30,
-          "Ld": 7,
-          "OC": 10,
-          "base": {
-            "w": 160,
-            "h": 160,
-            "text": "160mm"
-          }
-        }
-      ],
-      "composition": [
-        {
-          "name": "Ta'unar Supremacy Armour",
-          "min": 1,
-          "max": 1,
-          "text": "1 Ta'unar Supremacy Armour"
-        }
-      ],
-      "loadout": {
-        "*": [
-          "burst cannon",
-          "burst cannon",
-          "burst cannon",
-          "burst cannon",
-          "smart missile system",
-          "smart missile system",
-          "smart missile system",
-          "heavy rail cannon array",
-          "fragmentation cluster shell launcher",
-          "tri-axis ion cannon",
-          "tri-axis ion cannon",
-          "crushing feet"
-        ]
-      },
-      "loadoutText": "This model is equipped with: 4 burst cannons; 3 smart missile systems; 1 heavy rail cannon array; 1 fragmentation cluster shell launcher; 2 tri-axis ion cannons; crushing feet.",
-      "options": [
-        "This model’s heavy rail cannon array and fragmentation cluster shell launcher can be replaced with one of the following:• 1 pulse ordnance driver and 1 fragmentation cluster shell launcher\n• 2 nexus missile launchers",
-        "This model’s 2 tri-axis ion cannons can each be replaced with 1 fusion eradicator."
-      ],
-      "wargearOptions": [
-        {
-          "text": "This model's heavy rail cannon array can be replaced with 1 pulse ordnance driver.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Heavy rail cannon array"
-          ],
-          "choices": [
-            [
-              "Pulse ordnance driver"
-            ]
-          ]
-        },
-        {
-          "text": "This model's heavy rail cannon array and fragmentation cluster shell launcher can be replaced with 2 nexus missile launchers.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Heavy rail cannon array",
-            "Fragmentation cluster shell launcher"
-          ],
-          "choices": [
-            [
-              "Nexus missile launcher",
-              "Nexus missile launcher"
-            ]
-          ]
-        },
-        {
-          "text": "This model's tri-axis ion cannon can be replaced with 1 fusion eradicator.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Tri-axis ion cannon"
-          ],
-          "choices": [
-            [
-              "Fusion eradicator"
-            ]
-          ]
-        },
-        {
-          "text": "This model's second tri-axis ion cannon can be replaced with 1 fusion eradicator.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Tri-axis ion cannon"
-          ],
-          "choices": [
-            [
-              "Fusion eradicator"
-            ]
-          ]
-        }
-      ],
-      "weapons": [
-        {
-          "name": "Burst cannon",
-          "profiles": [
-            {
-              "name": "Burst cannon",
-              "range": 18,
-              "A": "4",
-              "skill": 4,
-              "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Fragmentation cluster shell launcher",
-          "profiles": [
-            {
-              "name": "Fragmentation cluster shell launcher",
-              "range": 24,
-              "A": "2D6+6",
-              "skill": 4,
-              "S": 6,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "blast"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Fusion eradicator",
-          "profiles": [
-            {
-              "name": "Fusion eradicator",
-              "range": 24,
-              "A": "5",
-              "skill": 4,
-              "S": 10,
-              "AP": -4,
-              "D": "D6",
-              "abilities": [
-                "melta 3"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Heavy rail cannon array",
-          "profiles": [
-            {
-              "name": "Heavy rail cannon array",
-              "range": 120,
-              "A": "2",
-              "skill": 4,
-              "S": 26,
-              "AP": -5,
-              "D": "16",
-              "abilities": [
-                "devastating wounds",
-                "heavy"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Nexus missile launcher",
-          "profiles": [
-            {
-              "name": "Nexus missile launcher",
-              "range": 36,
-              "A": "8",
-              "skill": 4,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Pulse ordnance driver",
-          "profiles": [
-            {
-              "name": "Pulse ordnance driver",
-              "range": 60,
-              "A": "8",
-              "skill": 4,
-              "S": 5,
-              "AP": -1,
-              "D": "3",
-              "abilities": [
-                "anti-infantry 2+"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Smart missile system",
-          "profiles": [
-            {
-              "name": "Smart missile system",
-              "range": 30,
-              "A": "3",
-              "skill": 4,
-              "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "indirect fire"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Tri-axis ion cannon",
-          "profiles": [
-            {
-              "name": "standard",
-              "range": 36,
-              "A": "D6+3",
-              "skill": 4,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "blast"
-              ]
-            },
-            {
-              "name": "supercharge",
-              "range": 36,
-              "A": "D6+3",
-              "skill": 4,
-              "S": 9,
-              "AP": -3,
-              "D": "3",
-              "abilities": [
-                "blast",
-                "hazardous"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Crushing feet",
-          "profiles": [
-            {
-              "name": "Crushing feet",
-              "range": "Melee",
-              "A": "6",
-              "skill": 5,
-              "S": 8,
-              "AP": -1,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        }
-      ],
-      "abilities": [
-        {
-          "name": "Deadly Demise",
-          "type": "Core",
-          "param": "D6+3",
-          "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, after the units embarked within it (if any) have made their emergency disembark moves, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X (if this is a random number, roll separately for each unit within 6\")."
-        },
-        {
-          "name": "For the Greater Good",
-          "type": "Faction",
-          "text": "If your Army Faction is T’AU EMPIRE, at the start of your Shooting phase you can select units from your army with this ability to become Observer units.\nDuring your Shooting phase, for each Observer unit from your army that has not been selected to shoot this phase and is eligible to shoot (excluding Fortification and Battle-shocked units) select one enemy unit that is visible to be marked as their Spotted unit until the end of the phase. Each enemy unit can only be marked as a Spotted unit once per phase.\nUnits from your army with the For the Greater Good ability (excluding Observer units) are Guided units while targeting one or more Spotted units.\nUntil the end of the phase, each time a model from your army in a Guided unit makes an attack that targets a Spotted unit, improve the Ballistic Skill characteristic of that attack by 1 and, if the Spotted unit was marked by an Observer unit that has the Markerlight keyword, that attack has the [IGNORES COVER] ability."
-        },
-        {
-          "name": "Coordinated Strike",
-          "type": "Datasheet",
-          "text": "While this model is a Guided unit, each time it makes an attack that targets its Spotted unit, re-roll a Hit roll of 1."
-        },
-        {
-          "name": "Super-heavy Walker",
-          "type": "Datasheet",
-          "text": "Each time this model makes a Normal, Advance or Fall Back move, it can move over models (excluding TITANIC models) and terrain features that are 4\" or less in height as if they were not there."
-        }
-      ],
-      "leads": [],
-      "isSupport": false,
-      "damaged": {
-        "w": "1-10",
-        "text": "While this model has 1-10 wounds remaining, subtract 4 from this model’s Objective Control characteristic, and each time this model makes an attack, subtract 1 from the Hit roll."
-      },
-      "points": [
-        {
-          "label": "YOUR UNIT COSTS",
-          "options": [
-            {
-              "models": 1,
-              "pts": 790
-            }
-          ]
-        }
-      ],
-      "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/t-au-empire/Taunar-Supremacy-Armour"
     }
   ]
 }

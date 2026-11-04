@@ -934,9 +934,9 @@ function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?
   let lost = 0;
   const thief = woundsGoTo(s, u);
   if (thief && n > 0) { lines?.push(`${n} wound(s) go to ${thief.name} (THIEVES OF PAIN)`); applyMortalWounds(s, thief, n, 'THIEVES OF PAIN'); return 0; }
-  const buffFnp = u.buffs.some((b) => b.kind === 'fnp4') ? 4 : u.buffs.some((b) => b.kind === 'fnp5') ? 5 : u.buffs.some((b) => b.kind === 'fnp6') ? 6 : undefined;
+  const buffFnp = (u.buffs ?? []).some((b) => b.kind === 'fnp4') ? 4 : (u.buffs ?? []).some((b) => b.kind === 'fnp5') ? 5 : (u.buffs ?? []).some((b) => b.kind === 'fnp6') ? 6 : undefined;
   const fxFnp = modelDefence(s, u, m, kind, psychic).fnp ?? undefined;
-  const fnp = [u.core.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
+  const fnp = [u.core?.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
   const fnpRolls: number[] = [];
   for (let i = 0; i < n && !m.dead; i++) {
     if (fnp) { const r = d6(s); fnpRolls.push(r); if (r >= fnp) continue; }

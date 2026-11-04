@@ -2589,5 +2589,34 @@
     "attacks": 1
    }
   ]
+ },
+ "Rapid Assault": {
+  "effects": [
+   {
+    "scope": "unit",
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1
+   }
+  ]
+ },
+ "Howling Horde": {
+  "act": {
+   "when": "shotByEnemy",
+   "if": [
+    "lostModelsThisPhase",
+    "notEngaged"
+   ],
+   "limit": "phase",
+   "label": "Howling Horde: surge move of up to D6\"",
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ]
+  }
  }
 }

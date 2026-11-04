@@ -393,7 +393,8 @@
      ],
      "until": "phase"
     }
-   ]
+   ],
+   "auto": true
   }
  },
  "Tox-cycler": {
@@ -427,7 +428,8 @@
  },
  "Arbites Medi-kit": {
   "act": {
-   "when": "commandStart",
+   "when": "command",
+   "limit": "turn",
    "if": [
     "belowStarting"
    ],
@@ -459,12 +461,14 @@
       }
      ]
     }
-   ]
+   ],
+   "label": "Arbites Medi-kit: return up to D3 Exaction Vigilants"
   }
  },
  "Narthecium": {
   "act": {
-   "when": "commandStart",
+   "when": "command",
+   "limit": "turn",
    "if": [
     "belowStarting"
    ],
@@ -472,12 +476,14 @@
     {
      "revive": 1
     }
-   ]
+   ],
+   "label": "Narthecium: return 1 destroyed model"
   }
  },
  "Salvationist Medikit": {
   "act": {
-   "when": "commandStart",
+   "when": "command",
+   "limit": "turn",
    "if": [
     "belowStarting"
    ],
@@ -509,12 +515,14 @@
       }
      ]
     }
-   ]
+   ],
+   "label": "Salvationist Medikit: return up to D3 destroyed models"
   }
  },
  "Healing Serum": {
   "act": {
-   "when": "commandStart",
+   "when": "command",
+   "limit": "turn",
    "if": [
     "belowStarting"
    ],
@@ -546,7 +554,8 @@
       }
      ]
     }
-   ]
+   ],
+   "label": "Healing Serum: return up to D3 destroyed models"
   }
  },
  "Nuncio Aquila": {
@@ -721,7 +730,8 @@
      "until": "battle"
     }
    ],
-   "label": "Backroom Deals: grant Infiltrators"
+   "label": "Backroom Deals: grant Infiltrators",
+   "auto": true
   }
  },
  "Warrant of Trade": {
@@ -882,7 +892,8 @@
      "until": "phase"
     }
    ],
-   "label": "Amulet of Auto-Chastisement: test enemy Vehicle"
+   "label": "Amulet of Auto-Chastisement: test enemy Vehicle",
+   "auto": true
   }
  },
  "Liber Heresius": {
@@ -968,7 +979,8 @@
      "until": "battle"
     }
    ],
-   "label": "Grant Infiltrators to up to 3 Agents Infantry units"
+   "label": "Grant Infiltrators to up to 3 Agents Infantry units",
+   "auto": true
   }
  },
  "Combat Landers": {
@@ -995,7 +1007,8 @@
      "until": "battle"
     }
    ],
-   "label": "Grant Deep Strike to up to 3 Voidfarers units"
+   "label": "Grant Deep Strike to up to 3 Voidfarers units",
+   "auto": true
   }
  },
  "Digital Weapons": {
@@ -1324,7 +1337,8 @@
      }
     }
    ],
-   "label": "Roll to return with 1 Wound"
+   "label": "Roll to return with 1 Wound",
+   "auto": true
   }
  },
  "CAT Unit": {

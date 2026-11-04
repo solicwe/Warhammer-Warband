@@ -2134,5 +2134,28 @@
     "arriveFromRound": 1
    }
   ]
+ },
+ "Sharp Eyes": {
+  "act": {
+   "when": "selectedToShoot",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "each": true,
+    "range": 99
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "detection": 6
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
  }
 }

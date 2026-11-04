@@ -1285,11 +1285,11 @@
   },
   "Asset Manipulator": {
     "act": {
-      "when": "commandStart",
+      "when": "anyCommand",
       "if": [
         "yp:3"
       ],
-      "limit": "phase",
+      "limit": "turn",
       "label": "Asset Manipulator: spend 3YP, -1 OC for enemy units within 3\"",
       "botUse": "never",
       "do": [

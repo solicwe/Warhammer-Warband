@@ -2,7 +2,7 @@
   "id": "TS",
   "name": "Thousand Sons",
   "link": "https://wahapedia.ru/wh40k11ed/factions/thousand-sons",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Cabal of Sorcerers",
@@ -11,6 +11,10 @@
     {
       "name": "Pact of Sorcery",
       "text": "When mustering your army, unless specifically stated otherwise, you cannot select Scintillating Legions as your Army Faction."
+    },
+    {
+      "name": "Combat Doctrines",
+      "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
     }
   ],
   "detachments": [
@@ -18,7 +22,7 @@
       "id": "000000983",
       "name": "Hexwarp Thrallband",
       "dp": 3,
-      "forceDisposition": "Take and Hold",
+      "forceDisposition": "Take and Hold, Reconnaissance",
       "rules": [
         {
           "name": "Flow of Magic",
@@ -84,6 +88,15 @@
           "text": "WHEN: Start of the Reinforcements step of your Movement phase.\nTARGET: One Rubric Marines or Scarab Occult Terminators unit from your army that is in Strategic Reserves.\nEFFECT: If it is a RUBRIC MARINES unit, until the end of the phase, it has the Deep Strike ability. When your unit is set up on the battlefield using the Deep Strike ability, if it is a SCARAB OCCULT TERMINATOR unit it can be set up anywhere on the battlefield that is wholly within your army’s Flow of Magic and more than 6\" horizontally away from all enemy models.\nRESTRICTIONS: If a SCARAB OCCULT TERMINATORS unit is targeted with this Stratagem, it is not eligible to declare a charge in the same turn."
         },
         {
+          "id": "000009742004",
+          "name": "STRANDS OF TIME",
+          "cp": 1,
+          "type": "Hexwarp Thrallband – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase, just after a THOUSAND SONS PSYKER unit from your army Falls Back.\nTARGET: That Thousand Sons Psyker unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot or declare a charge in a turn in which it Fell Back. If your unit is wholly within your army’s Flow of Magic when it is targeted with this Stratagem, then until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
+        },
+        {
           "id": "000009742003",
           "name": "WRATH OF THE DOOMED",
           "cp": 1,
@@ -100,15 +113,6 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Thousand Sons Psyker unit from your army that has not been selected to shoot this phase and is wholly within your army’s Flow of Magic.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability. After your unit has shot this phase, select one enemy unit hit by one or more of those attacks. Until the end of the phase, models in that unit cannot have the Benefit of Cover."
-        },
-        {
-          "id": "000009742004",
-          "name": "STRANDS OF TIME",
-          "cp": 1,
-          "type": "Hexwarp Thrallband – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase, just after a THOUSAND SONS PSYKER unit from your army Falls Back.\nTARGET: That Thousand Sons Psyker unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot or declare a charge in a turn in which it Fell Back. If your unit is wholly within your army’s Flow of Magic when it is targeted with this Stratagem, then until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
         }
       ]
     },
@@ -116,7 +120,7 @@
       "id": "000001061",
       "name": "Grand Coven",
       "dp": 3,
-      "forceDisposition": "Priority Assets",
+      "forceDisposition": "Priority Assets, Disruption",
       "rules": [
         {
           "name": "Kindred Sorcery",
@@ -164,24 +168,6 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One Thousand Sons Psyker unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, add 9\" to the Range characteristic of Psychic weapons equipped by models in your unit, and each time a model in your unit makes an attack with a Psychic weapon, you can re-roll the Hit roll and you can re-roll the Wound roll."
         },
         {
-          "id": "000010194002",
-          "name": "PSYCHIC DOMINION",
-          "cp": 1,
-          "type": "Grand Coven – Epic Deed Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Any phase",
-          "text": "WHEN: Any phase, just after an enemy unit has selected its targets.\nTARGET: One Thousand Sons unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, Psychic weapons equipped by models in the attacking unit have the [hazardous] ability, and models in your unit have the Feel No Pain 4+ ability against Psychic Attacks."
-        },
-        {
-          "id": "000010194003",
-          "name": "DESTINED BY FATE",
-          "cp": 1,
-          "type": "Grand Coven – Epic Deed Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Any phase",
-          "text": "WHEN: Any phase, just after a saving throw is failed for a Thousand Sons Psyker model from your army. If you are using fast dice rolling, this Stratagem can still be used after rolling multiple saving throws at once.\nTARGET: That PSYKER model.\nEFFECT: Change the Damage characteristic of that attack to 0. If you are using fast dice rolling, select one of those attacks you failed a saving throw for."
-        },
-        {
           "id": "000010194005",
           "name": "DESECRATION OF WORLDS",
           "cp": 1,
@@ -198,6 +184,24 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase, just after you take a Psychic test for a Thousand Sons model from your army that Channelled the Warp (before resolving that Ritual).\nTARGET: That THOUSAND SONS model.\nEFFECT: Re-roll all of the D6 rolled for that Psychic test (including the additional D6 for Channelling the Warp)."
+        },
+        {
+          "id": "000010194002",
+          "name": "PSYCHIC DOMINION",
+          "cp": 1,
+          "type": "Grand Coven – Epic Deed Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Any phase",
+          "text": "WHEN: Any phase, just after an enemy unit has selected its targets.\nTARGET: One Thousand Sons unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, all attacks made against your unit with Psychic weapons have the [hazardous] ability and all models in your unit have the Feel No Pain 4+ ability against Psychic Attacks."
+        },
+        {
+          "id": "000010194003",
+          "name": "DESTINED BY FATE",
+          "cp": 1,
+          "type": "Grand Coven – Epic Deed Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Any phase",
+          "text": "WHEN: Any phase, just after a saving throw is failed for a Thousand Sons Psyker model from your army. If you are using fast dice rolling, this Stratagem can still be used after rolling multiple saving throws at once.\nTARGET: That PSYKER model.\nEFFECT: Change the Damage characteristic of that attack to 0. If you are using fast dice rolling, select one of those attacks you failed a saving throw for."
         },
         {
           "id": "000010194004",
@@ -262,13 +266,13 @@
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Thousand Sons or Scintillating Legions unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
         },
         {
-          "id": "000010198007",
-          "name": "GLIMMERSHIFT PORTAL",
-          "cp": 1,
+          "id": "000010198003",
+          "name": "DECEPTIVE GLAMOUR",
+          "cp": 2,
           "type": "Changehost of Deceit – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
+          "turn": "Either player’s turn",
           "phase": "Fight phase",
-          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: Up to two Scintillating Legions units from your army (excluding Monsters), or one Scintillating Legions Monster unit from your army, if all of those units are more than 6\" horizontally away from all enemy units.\nEFFECT: Remove those units from the battlefield and place them into Strategic Reserves."
+          "text": "WHEN: Start of the Fight phase.\nTARGET: One Thousand Sons unit from your army.\nEFFECT: Until the end of the phase, each time an enemy model within Engagement Range of your unit selects targets for its attacks, it can only target your unit if there are no eligible Scintillating Legions targets for those attacks."
         },
         {
           "id": "000010198006",
@@ -280,15 +284,6 @@
           "text": "WHEN: Start of your opponent’s Charge phase.\nTARGET: One friendly unengaged THOUSAND SONS PSYKER/SCINTILLATING LEGIONS unit.\nEFFECT: Select one visible enemy unit within 12\" of your unit. When that enemy unit declares a charge, that enemy unit has -1 to charge rolls."
         },
         {
-          "id": "000010198005",
-          "name": "FRACTAL DISJUNCTION",
-          "cp": 1,
-          "type": "Changehost of Deceit – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Scintillating Legions unit from your army (excluding Monsters) that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
-        },
-        {
           "id": "000010198004",
           "name": "ETHEREAL PHANTASM",
           "cp": 1,
@@ -298,13 +293,22 @@
           "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One Scintillating Legions unit from your army that is within 8\" of that enemy unit and not within Engagement Range of one or more enemy units.\nEFFECT: Your unit can make a Normal move of up to D6\", or a Normal move of up to 6\" instead if it is wholly within 6\" of one or more friendly Thousand Sons units."
         },
         {
-          "id": "000010198003",
-          "name": "DECEPTIVE GLAMOUR",
-          "cp": 2,
+          "id": "000010198005",
+          "name": "FRACTAL DISJUNCTION",
+          "cp": 1,
           "type": "Changehost of Deceit – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Scintillating Legions unit from your army (excluding Monsters) that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
+        },
+        {
+          "id": "000010198007",
+          "name": "GLIMMERSHIFT PORTAL",
+          "cp": 1,
+          "type": "Changehost of Deceit – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
           "phase": "Fight phase",
-          "text": "WHEN: Start of the Fight phase.\nTARGET: One Thousand Sons unit from your army.\nEFFECT: Until the end of the phase, each time an enemy model within Engagement Range of your unit selects targets for its attacks, it can only target your unit if there are no eligible Scintillating Legions targets for those attacks."
+          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: Up to two Scintillating Legions units from your army (excluding Monsters), or one Scintillating Legions Monster unit from your army, if all of those units are more than 6\" horizontally away from all enemy units.\nEFFECT: Remove those units from the battlefield and place them into Strategic Reserves."
         }
       ]
     },
@@ -360,13 +364,13 @@
           "text": "WHEN: Any phase.\nTARGET: One Thousand Sons Character model from your army (excluding Monsters) that was just destroyed. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: At the end of the phase, add one Tzeentch Chaos Spawn unit containing one model to your army, and set it up as close as possible to where your model was destroyed and not within Engagement Range of one or more enemy units.\nRESTRICTIONS: You can only use this Stratagem once per battle round."
         },
         {
-          "id": "000010202006",
-          "name": "TOUCHED BY TZEENTCH",
+          "id": "000010202004",
+          "name": "DERANGED FEROCITY",
           "cp": 1,
           "type": "Warpmeld Pact – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Start of your Movement phase.\nTARGET: One Tzeentch Mutant unit from your army.\nEFFECT: Until the end of the turn, your unit is eligible to shoot or declare a charge in a turn in which it Advanced."
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, just after a Tzeentch Mutant unit from your army is selected to fight.\nTARGET: That TZEENTCH MUTANT unit.\nEFFECT: Until the end of the phase, each time a model in your unit makes a Pile-in or Consolidation move, it can move up to 6\" instead of up to 3\", and when determining which models in it are eligible to fight, any models in it that are within 3\" of one or more enemy models are eligible to fight. When resolving those attacks, such models can target one of those enemy units that is within 3\" of them and within Engagement Range of their unit."
         },
         {
           "id": "000010202005",
@@ -378,13 +382,13 @@
           "text": "WHEN: Your Command phase.\nTARGET: One Thousand Sons Psyker model from your army, and one friendly Tzaangors unit that is below its Starting Strength and within 12\" of that PSYKER model.\nEFFECT: Return up to D3+1 destroyed models (excluding Characters) to your TZAANGORS unit."
         },
         {
-          "id": "000010202003",
-          "name": "WARPED VICISSITUDE",
+          "id": "000010202006",
+          "name": "TOUCHED BY TZEENTCH",
           "cp": 1,
           "type": "Warpmeld Pact – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Tzaangors unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save."
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Start of your Movement phase.\nTARGET: One Tzeentch Mutant unit from your army.\nEFFECT: Until the end of the turn, your unit is eligible to shoot or declare a charge in a turn in which it Advanced."
         },
         {
           "id": "000010202007",
@@ -396,13 +400,13 @@
           "text": "WHEN: Reinforcements step of your Movement phase.\nTARGET: One Tzeentch Mutant unit from your army that is arriving from Strategic Reserves this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy units, or anywhere on the battlefield that is more than 8\" horizontally away from all enemy units if it is a Monster unit. In either case, until the end of the turn, it is not eligible to declare a charge."
         },
         {
-          "id": "000010202004",
-          "name": "DERANGED FEROCITY",
+          "id": "000010202003",
+          "name": "WARPED VICISSITUDE",
           "cp": 1,
           "type": "Warpmeld Pact – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, just after a Tzeentch Mutant unit from your army is selected to fight.\nTARGET: That TZEENTCH MUTANT unit.\nEFFECT: Until the end of the phase, each time a model in your unit makes a Pile-in or Consolidation move, it can move up to 6\" instead of up to 3\", and when determining which models in it are eligible to fight, any models in it that are within 3\" of one or more enemy models are eligible to fight. When resolving those attacks, such models can target one of those enemy units that is within 3\" of them and within Engagement Range of their unit."
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Tzaangors unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save."
         }
       ]
     },
@@ -410,7 +414,7 @@
       "id": "000001064",
       "name": "Rubricae Phalanx",
       "dp": 3,
-      "forceDisposition": "Take and Hold",
+      "forceDisposition": "Priority Assets, Take and Hold",
       "rules": [
         {
           "name": "All is Dust",
@@ -458,15 +462,6 @@
           "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit ends a Charge move.\nTARGET: One Rubric Marines unit from your army within Engagement Range of that enemy unit.\nEFFECT: Until the end of the turn, attacks that target your unit with a S greater than your unit’s T have -1 to wound rolls."
         },
         {
-          "id": "000010206006",
-          "name": "IMPLACABLE GUARDIANS",
-          "cp": 2,
-          "type": "Rubricae Phalanx – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Rubric Marines Psyker unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit (excluding PSYKER models), subtract 1 from the Damage characteristic of that attack."
-        },
-        {
           "id": "000010206005",
           "name": "REVENGE OF THE RUBRICAE",
           "cp": 1,
@@ -476,13 +471,13 @@
           "text": "WHEN: Your opponent’s Shooting phase, just after a Thousand Sons Psyker model from your army is destroyed.\nTARGET: One Rubricae unit from your army that was within 6\" of that PSYKER model when it was destroyed.\nEFFECT: After the attacking unit has shot, your RUBRICAE unit can shoot as if it were your Shooting phase, but when resolving those attacks it can only target the enemy unit that just destroyed your PSYKER model (and only if it is an eligible target)."
         },
         {
-          "id": "000010206002",
-          "name": "ARDENT AUTOMATA",
-          "cp": 1,
+          "id": "000010206006",
+          "name": "IMPLACABLE GUARDIANS",
+          "cp": 2,
           "type": "Rubricae Phalanx – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase, just after a Rubricae unit from your army Falls Back.\nTARGET: That RUBRICAE unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Rubric Marines Psyker unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit (excluding PSYKER models), subtract 1 from the Damage characteristic of that attack."
         },
         {
           "id": "000010206003",
@@ -492,6 +487,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase.\nTARGET: One Rubricae unit from your army.\nEFFECT: Until the end of the turn, your unit can ignore any or all modifiers to its Move characteristic and to Advance rolls made for it, and ranged weapons equipped by models in your unit have the [ASSAULT] ability."
+        },
+        {
+          "id": "000010206002",
+          "name": "ARDENT AUTOMATA",
+          "cp": 1,
+          "type": "Rubricae Phalanx – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase, just after a Rubricae unit from your army Falls Back.\nTARGET: That RUBRICAE unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
         },
         {
           "id": "000010206004",
@@ -547,15 +551,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010210002",
-          "name": "HEX-MARKED ARMOUR",
-          "cp": 1,
-          "type": "Warpforged Cabal – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Thousand Sons Vehicle unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
-        },
-        {
           "id": "000010210006",
           "name": "ENSORCELLED INFUSION",
           "cp": 2,
@@ -563,6 +558,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Thousand Sons Vehicle unit from your army that has not been selected to shoot this phase, that is within 6\" of one or more friendly Thousand Sons Psyker units.\nEFFECT: Until the end of the phase, ranged weapons equipped by VEHICLE models in your unit have the [PSYCHIC] ability and each time an attack is made with such a weapon, add 1 to the Wound roll."
+        },
+        {
+          "id": "000010210002",
+          "name": "HEX-MARKED ARMOUR",
+          "cp": 1,
+          "type": "Warpforged Cabal – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Thousand Sons Vehicle unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
         },
         {
           "id": "000010210003",
@@ -655,7 +659,7 @@
           "type": "Ritual of Regeneration Stratagem",
           "turn": "Either player’s turn",
           "phase": "Fight phase",
-          "text": "WHEN: Start of the Fight phase.\nTARGET: One friendly engaged THOUSAND SONS PSYKER unit.\nEFFECT: Select one enemy unit engaged with your unit. Roll six D6:\n• For each 4+, that enemy unit suffers 1 mortal wound."
+          "text": "WHEN: Start of the Fight phase.\nTARGET: One friendly engaged THOUSAND SONS PSYKER unit.\nEFFECT: Start of the Fight phase. One friendly engaged Thousand Sons Psyker unit. Select one enemy unit engaged with your unit. Roll six D6: For each 4+, that enemy unit suffers 1 mortal wound."
         }
       ]
     },
@@ -688,15 +692,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010969004",
-          "name": "WARP FIELDS",
-          "cp": 1,
-          "type": "Sekhetar Cohort Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly SEKHETAR ROBOTS unit within 12\" of a friendly THOUSAND SONS PSYKER unit.\nTARGET: That SEKHETAR ROBOTS unit.\nEFFECT: Ranged attacks that target your unit with a S greater than your unit’s T have -1 to wound rolls."
-        },
-        {
           "id": "000010969003",
           "name": "ECTOPLASMIC EXTRUSION",
           "cp": 1,
@@ -713,6 +708,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: End of your Movement phase.\nTARGET: One friendly SEKHETAR ROBOTS unit.\nEFFECT: Select one objective your unit is controlling. That objective is secured."
+        },
+        {
+          "id": "000010969004",
+          "name": "WARP FIELDS",
+          "cp": 1,
+          "type": "Sekhetar Cohort Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly SEKHETAR ROBOTS unit within 12\" of a friendly THOUSAND SONS PSYKER unit.\nTARGET: That SEKHETAR ROBOTS unit.\nEFFECT: Ranged attacks that target your unit with a S greater than your unit’s T have -1 to wound rolls."
         }
       ]
     },
@@ -780,13 +784,13 @@
       "name": "Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "TZEENTCH",
         "INFANTRY",
+        "SORCERER",
+        "TZEENTCH",
         "CHAOS",
         "GRENADES",
         "PSYKER",
-        "CHARACTER",
-        "SORCERER"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -964,13 +968,13 @@
       "name": "Sorcerer In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
+        "PSYKER",
         "INFANTRY",
-        "CHARACTER",
-        "SORCERER",
-        "TZEENTCH",
-        "CHAOS",
         "TERMINATOR",
-        "PSYKER"
+        "CHAOS",
+        "TZEENTCH",
+        "SORCERER",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -1161,13 +1165,13 @@
       "name": "Rubric Marines",
       "role": "Battleline",
       "keywords": [
-        "BATTLELINE",
-        "INFANTRY",
         "PSYKER",
-        "RUBRIC MARINES",
-        "RUBRICAE",
+        "BATTLELINE",
+        "CHAOS",
         "TZEENTCH",
-        "CHAOS"
+        "RUBRICAE",
+        "RUBRIC MARINES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "",
@@ -1485,15 +1489,15 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
-        "VEHICLE",
         "WALKER",
-        "CHAOS",
         "TZEENTCH",
-        "HELBRUTE"
+        "HELBRUTE",
+        "CHAOS",
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -1844,14 +1848,14 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "TZEENTCH",
-        "VEHICLE",
         "FRAME",
-        "DEDICATED TRANSPORT",
+        "TRANSPORT",
         "SMOKE",
-        "CHAOS",
+        "VEHICLE",
         "RHINO",
-        "TRANSPORT"
+        "TZEENTCH",
+        "CHAOS",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "",
@@ -2023,7 +2027,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2040,15 +2044,15 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
-        "MUTANT",
         "CHAOS SPAWN",
+        "MUTANT",
+        "TZEENTCH",
         "CHAOS",
-        "BEAST",
-        "TZEENTCH"
+        "BEAST"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -2135,10 +2139,10 @@
       "role": "Vehicle",
       "keywords": [
         "VEHICLE",
-        "FLY",
-        "DAEMON",
-        "CHAOS",
         "TZEENTCH",
+        "CHAOS",
+        "DAEMON",
+        "FLY",
         "HELDRAKE"
       ],
       "factionKeywords": [
@@ -2263,7 +2267,7 @@
         {
           "name": "Flame-wreathed",
           "type": "Datasheet",
-          "text": "Each time this model ends a Normal move, select one enemy unit it moved over during that move. Until the end of the turn, models in that unit cannot have the Benefit of Cover."
+          "text": "Each time this model ends a Normal move, you can select one enemy unit it moved over during that move. Until the end of the turn, models in that unit cannot have the Benefit of Cover."
         }
       ],
       "leads": [],
@@ -2292,16 +2296,16 @@
       "role": "Transport",
       "keywords": [
         "SMOKE",
-        "TRANSPORT",
+        "LAND RAIDER",
+        "TZEENTCH",
         "CHAOS",
         "FRAME",
-        "VEHICLE",
-        "LAND RAIDER",
-        "TZEENTCH"
+        "TRANSPORT",
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -2502,7 +2506,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2519,16 +2523,16 @@
       "name": "Chaos Predator Destructor",
       "role": "Vehicle",
       "keywords": [
+        "VEHICLE",
+        "SMOKE",
+        "CHAOS",
         "TZEENTCH",
         "PREDATOR DESTRUCTOR",
-        "CHAOS",
-        "SMOKE",
-        "FRAME",
-        "VEHICLE"
+        "FRAME"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -2759,7 +2763,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2777,11 +2781,11 @@
       "role": "Vehicle",
       "keywords": [
         "VEHICLE",
-        "SMOKE",
+        "FRAME",
         "CHAOS",
+        "SMOKE",
         "TZEENTCH",
-        "VINDICATOR",
-        "FRAME"
+        "VINDICATOR"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -2967,7 +2971,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2984,12 +2988,12 @@
       "name": "Forgefiend",
       "role": "Walker",
       "keywords": [
-        "FORGEFIEND",
-        "CHAOS",
-        "DAEMON",
-        "WALKER",
         "VEHICLE",
-        "TZEENTCH"
+        "DAEMON",
+        "CHAOS",
+        "TZEENTCH",
+        "FORGEFIEND",
+        "WALKER"
       ],
       "factionKeywords": [
         "",
@@ -3157,7 +3161,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3179,16 +3183,16 @@
       "name": "Maulerfiend",
       "role": "Walker",
       "keywords": [
-        "MAULERFIEND",
-        "TZEENTCH",
         "VEHICLE",
-        "WALKER",
+        "TZEENTCH",
+        "CHAOS",
         "DAEMON",
-        "CHAOS"
+        "MAULERFIEND",
+        "WALKER"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -3322,7 +3326,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3339,16 +3343,16 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "TZEENTCH",
-        "DAEMON",
         "DEFILER",
+        "DAEMON",
+        "TZEENTCH",
         "CHAOS",
         "WALKER",
         "VEHICLE"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -3690,7 +3694,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3701,11 +3705,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Hades lascannon",
+          "name": "Heavy reaper autocannon",
           "pts": 15
         },
         {
-          "name": "Heavy reaper autocannon",
+          "name": "Hades lascannon",
           "pts": 15
         }
       ],
@@ -3718,18 +3722,18 @@
       "keywords": [
         "FLY",
         "MAGNUS THE RED",
-        "TZEENTCH",
-        "CHAOS",
-        "PSYKER",
-        "PRIMARCH",
-        "DAEMON",
-        "EPIC HERO",
+        "MONSTER",
         "CHARACTER",
-        "MONSTER"
+        "EPIC HERO",
+        "DAEMON",
+        "PRIMARCH",
+        "PSYKER",
+        "CHAOS",
+        "TZEENTCH"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -3908,15 +3912,15 @@
       "name": "Ahriman",
       "role": "Mounted Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "AHRIMAN",
-        "TZEENTCH",
-        "CHAOS",
-        "PSYKER",
-        "FLY",
         "CHARACTER",
+        "EPIC HERO",
+        "FLY",
         "INFANTRY",
-        "MOUNTED"
+        "PSYKER",
+        "CHAOS",
+        "MOUNTED",
+        "AHRIMAN",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "",
@@ -4034,9 +4038,9 @@
         }
       ],
       "leads": [
+        "Tzaangor Enlightened with Fatecaster Greatbows",
         "Tzaangor Enlightened",
-        "Rubric Marines",
-        "Tzaangor Enlightened with Fatecaster Greatbows"
+        "Rubric Marines"
       ],
       "isSupport": false,
       "points": [
@@ -4058,13 +4062,13 @@
       "name": "Exalted Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
-        "PSYKER",
         "INFANTRY",
-        "TZEENTCH",
+        "GRENADES",
+        "EXALTED SORCERER",
         "CHARACTER",
         "CHAOS",
-        "EXALTED SORCERER"
+        "PSYKER",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "",
@@ -4234,11 +4238,11 @@
       "name": "Tzaangors",
       "role": "Infantry",
       "keywords": [
-        "MUTANT",
-        "TZEENTCH",
-        "TZAANGORS",
+        "CHAOS",
         "INFANTRY",
-        "CHAOS"
+        "TZAANGORS",
+        "MUTANT",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "",
@@ -4304,7 +4308,7 @@
         {
           "text": "1 Tzaangor not equipped with a herd banner can be equipped with 1 brayhorn.",
           "scope": "upTo",
-          "who": "*",
+          "who": "Tzaangor not",
           "replace": [],
           "choices": [
             [
@@ -4316,7 +4320,7 @@
         {
           "text": "1 Tzaangor not equipped with a brayhorn can be equipped with 1 herd banner.",
           "scope": "upTo",
-          "who": "*",
+          "who": "Tzaangor not",
           "replace": [],
           "choices": [
             [
@@ -4423,17 +4427,17 @@
       "name": "Scarab Occult Terminators",
       "role": "Infantry",
       "keywords": [
-        "PSYKER",
-        "TZEENTCH",
         "RUBRICAE",
-        "INFANTRY",
+        "CHAOS",
         "TERMINATOR",
+        "INFANTRY",
         "SCARAB OCCULT",
-        "CHAOS"
+        "TZEENTCH",
+        "PSYKER"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -4719,13 +4723,13 @@
       "name": "Daemon Prince of Tzeentch",
       "role": "Monster Character",
       "keywords": [
+        "CHARACTER",
+        "DAEMON",
+        "PSYKER",
         "CHAOS",
         "TZEENTCH",
-        "DAEMON",
-        "CHARACTER",
-        "MONSTER",
-        "PSYKER",
-        "DAEMON PRINCE"
+        "DAEMON PRINCE",
+        "MONSTER"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -4882,15 +4886,15 @@
       "name": "Tzaangor Shaman",
       "role": "Mounted Character",
       "keywords": [
-        "CHAOS",
-        "TZEENTCH",
         "MUTANT",
         "TZAANGOR SHAMAN",
-        "INFANTRY",
-        "MOUNTED",
         "CHARACTER",
+        "MOUNTED",
+        "INFANTRY",
         "FLY",
-        "PSYKER"
+        "PSYKER",
+        "CHAOS",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "",
@@ -5015,12 +5019,12 @@
       "name": "Tzaangor Enlightened",
       "role": "Mounted",
       "keywords": [
-        "TZEENTCH",
-        "CHAOS",
-        "FLY",
-        "TZAANGOR ENLIGHTENED",
         "MOUNTED",
-        "MUTANT"
+        "FLY",
+        "CHAOS",
+        "TZEENTCH",
+        "MUTANT",
+        "TZAANGOR ENLIGHTENED"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -5168,15 +5172,15 @@
       "name": "Mutalith Vortex Beast",
       "role": "Monster",
       "keywords": [
-        "CHAOS",
         "MONSTER",
-        "MUTALITH VORTEX BEAST",
+        "CHAOS",
+        "TZEENTCH",
         "MUTANT",
-        "TZEENTCH"
+        "MUTALITH VORTEX BEAST"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -5328,7 +5332,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5347,11 +5351,11 @@
       "keywords": [
         "GRENADES",
         "PSYKER",
-        "TZEENTCH",
-        "INFERNAL MASTER",
         "INFANTRY",
-        "CHAOS",
-        "CHARACTER"
+        "CHARACTER",
+        "INFERNAL MASTER",
+        "TZEENTCH",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -5505,16 +5509,16 @@
       "name": "Chaos Predator Annihilator",
       "role": "Vehicle",
       "keywords": [
+        "PREDATOR ANNIHILATOR",
+        "SMOKE",
         "VEHICLE",
         "CHAOS",
         "TZEENTCH",
-        "PREDATOR ANNIHILATOR",
-        "SMOKE",
         "FRAME"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -5745,7 +5749,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5762,15 +5766,15 @@
       "name": "Exalted Sorcerer on Disc of Tzeentch",
       "role": "Mounted Character",
       "keywords": [
-        "TZEENTCH",
+        "EXALTED SORCERER",
+        "CHAOS",
+        "PSYKER",
         "GRENADES",
         "FLY",
+        "CHARACTER",
         "MOUNTED",
         "INFANTRY",
-        "CHAOS",
-        "EXALTED SORCERER",
-        "CHARACTER",
-        "PSYKER"
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -5918,9 +5922,9 @@
         }
       ],
       "leads": [
-        "Tzaangor Enlightened",
         "Rubric Marines",
-        "Tzaangor Enlightened with Fatecaster Greatbows"
+        "Tzaangor Enlightened with Fatecaster Greatbows",
+        "Tzaangor Enlightened"
       ],
       "isSupport": false,
       "points": [
@@ -5945,15 +5949,15 @@
         "MONSTER",
         "CHARACTER",
         "DAEMON",
-        "FLY",
+        "DAEMON PRINCE",
         "TZEENTCH",
-        "CHAOS",
+        "FLY",
         "PSYKER",
-        "DAEMON PRINCE"
+        "CHAOS"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -6098,7 +6102,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6115,11 +6119,11 @@
       "name": "Sekhetar Robots",
       "role": "Walker",
       "keywords": [
-        "TZEENTCH",
-        "SEKHETAR ROBOTS",
-        "CHAOS",
         "WALKER",
-        "VEHICLE"
+        "VEHICLE",
+        "TZEENTCH",
+        "CHAOS",
+        "SEKHETAR ROBOTS"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -6312,7 +6316,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 2,
@@ -6333,13 +6337,13 @@
       "name": "Tzaangor Enlightened with Fatecaster Greatbows",
       "role": "Mounted",
       "keywords": [
-        "TZEENTCH",
-        "CHAOS",
-        "FLY",
-        "TZAANGOR ENLIGHTENED WITH FATECASTER GREATBOWS",
-        "TZAANGOR ENLIGHTENED",
         "MUTANT",
-        "MOUNTED"
+        "TZAANGOR ENLIGHTENED",
+        "TZAANGOR ENLIGHTENED WITH FATECASTER GREATBOWS",
+        "MOUNTED",
+        "FLY",
+        "CHAOS",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -6454,15 +6458,15 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "SUMMONED",
-        "TZEENTCH",
+        "KAIROS FATEWEAVER",
+        "CHARACTER",
         "MONSTER",
         "EPIC HERO",
         "FLY",
         "PSYKER",
         "CHAOS",
-        "CHARACTER",
-        "KAIROS FATEWEAVER",
-        "DAEMON"
+        "DAEMON",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "SCINTILLATING LEGIONS",
@@ -6580,7 +6584,7 @@
         {
           "name": "One Head Looks Back (Aura)",
           "type": "Datasheet",
-          "text": "Each time your opponent targets a unit from their army with a Stratagem, if that unit is within 12\" of this model, increase the cost of that use of that Stratagem by 1CP."
+          "text": "Once per turn, when your opponent targets a unit from their army within 12\" of this model with a Stratagem, you can use this ability. If you do, increase the CP cost of that use of that Stratagem by 1CP."
         }
       ],
       "leads": [],
@@ -6608,19 +6612,19 @@
       "name": "Lord of Change",
       "role": "Monster Character",
       "keywords": [
+        "CHAOS",
+        "PSYKER",
         "FLY",
         "CHARACTER",
         "MONSTER",
-        "LORD OF CHANGE",
-        "SUMMONED",
-        "TZEENTCH",
         "DAEMON",
-        "CHAOS",
-        "PSYKER"
+        "TZEENTCH",
+        "SUMMONED",
+        "LORD OF CHANGE"
       ],
       "factionKeywords": [
-        "SCINTILLATING LEGIONS",
-        ""
+        "",
+        "SCINTILLATING LEGIONS"
       ],
       "models": [
         {
@@ -6788,7 +6792,7 @@
       "isSupport": false,
       "damaged": {
         "w": "1-7",
-        "text": "While this model has 1-6 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll."
+        "text": "While this model has 1-7 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll."
       },
       "points": [
         {
@@ -6801,7 +6805,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6818,17 +6822,17 @@
       "name": "Flamers",
       "role": "Infantry",
       "keywords": [
+        "FLAMERS",
+        "SUMMONED",
         "INFANTRY",
         "FLY",
         "CHAOS",
         "DAEMON",
-        "TZEENTCH",
-        "SUMMONED",
-        "FLAMERS"
+        "TZEENTCH"
       ],
       "factionKeywords": [
-        "SCINTILLATING LEGIONS",
-        ""
+        "",
+        "SCINTILLATING LEGIONS"
       ],
       "models": [
         {
@@ -6948,13 +6952,13 @@
       "name": "Screamers",
       "role": "Beast",
       "keywords": [
+        "SCREAMERS",
         "BEAST",
         "FLY",
         "CHAOS",
         "DAEMON",
         "TZEENTCH",
-        "SUMMONED",
-        "SCREAMERS"
+        "SUMMONED"
       ],
       "factionKeywords": [
         "",
@@ -7055,16 +7059,16 @@
       "name": "Pink Horrors",
       "role": "Battleline",
       "keywords": [
-        "SUMMONED",
-        "HORRORS",
-        "PINK",
         "BLUE",
         "BRIMSTONE",
-        "BATTLELINE",
-        "INFANTRY",
-        "CHAOS",
+        "SUMMONED",
+        "PINK",
         "TZEENTCH",
-        "DAEMON"
+        "HORRORS",
+        "DAEMON",
+        "CHAOS",
+        "BATTLELINE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "",
@@ -7315,19 +7319,19 @@
       "name": "Blue Horrors",
       "role": "Battleline",
       "keywords": [
-        "CHAOS",
-        "BATTLELINE",
-        "BLUE",
         "INFANTRY",
+        "BATTLELINE",
+        "CHAOS",
         "BRIMSTONE",
+        "HORRORS",
+        "BLUE",
         "DAEMON",
-        "TZEENTCH",
         "SUMMONED",
-        "HORRORS"
+        "TZEENTCH"
       ],
       "factionKeywords": [
-        "SCINTILLATING LEGIONS",
-        ""
+        "",
+        "SCINTILLATING LEGIONS"
       ],
       "models": [
         {

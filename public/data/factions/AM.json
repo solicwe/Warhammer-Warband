@@ -2,11 +2,11 @@
   "id": "AM",
   "name": "Astra Militarum",
   "link": "https://wahapedia.ru/wh40k11ed/factions/astra-militarum",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Voice of Command",
-      "text": "If your Army Faction is ASTRA MILITARUM, OFFICER models with this ability can issue Orders. Each OFFICER’s datasheet will specify how many Orders it can issue in a battle round and which units are eligible to receive those Orders. Each time an OFFICER model issues an Order, select one of the Orders below, then select one eligible friendly unit within 6\" of that OFFICER model to issue it to.\nOFFICER models can issue Orders in your Command phase and at the end of a phase in which they disembarked from a TRANSPORT or were set up on the battlefield.\nUntil the start of your next Command phase, the unit you selected is affected by that Order. Unless otherwise stated, a unit can only be affected by one Order at a time (any Order subsequently issued to that unit replaces the current one). Orders cannot be issued to Battle-shocked units, and if a unit being affected by an Order becomes Battle-shocked, that Order ceases to affect that unit.\nOnly ASTRA MILITARUM models gain the benefit of an Order issued to their unit.\nMove! Move! Move!\nAdd 3\" to the Move characteristic of models in this unit.\nFix Bayonets!\nImprove the Weapon Skill characteristic of melee weapons equipped by models in this unit by 1.\nTake Aim!\nImprove the Ballistic Skill characteristic of ranged weapons equipped by models in this unit by 1.\nFirst Rank, Fire! Second Rank, Fire!\nImprove the Attacks characteristic of Rapid Fire weapons equipped by models in this unit by 1.\nTake Cover!\nImprove the Save characteristic of models in this unit by 1 (this cannot improve a model’s Save to better than 3+).\nDuty and Honour!\nImprove the Leadership and Objective Control characteristics of models in this unit by 1."
+      "text": "If your Army Faction is ASTRA MILITARUM, Officer models with this ability can issue Orders. Each OFFICER’s datasheet will specify how many Orders it can issue in a battle round and which units are eligible to receive those Orders. Each time an Officer model issues an Order, select one of the Orders below, then select one eligible friendly unit within 6\" of that Officer model to issue it to.\nOFFICER models can issue Orders in your Command phase and at the end of a phase in which they disembarked from a Transport or were set up on the battlefield.\nUntil the start of your next Command phase, the unit you selected is affected by that Order. Unless otherwise stated, a unit can only be affected by one Order at a time (any Order subsequently issued to that unit replaces the current one). Orders cannot be issued to Battle-shocked units, and if a unit being affected by an Order becomes Battle-shocked, that Order ceases to affect that unit.\nOnly ASTRA MILITARUM models gain the benefit of an Order issued to their unit.\nMove! Move! Move!\nM\n+3\"\nAdd 3\" to the Move characteristic of models in this unit.\nFix Bayonets!\nWS\n+1\nImprove the Weapon Skill characteristic of melee weapons equipped by models in this unit by 1.\nTake Aim!\nBS\n+1\nImprove the Ballistic Skill characteristic of ranged weapons equipped by models in this unit by 1.\nFirst Rank, Fire! Second Rank, Fire!\nA\n+1\nImprove the Attacks characteristic of Rapid Fire weapons equipped by models in this unit by 1.\nTake Cover!\nSV\n+1\nImprove the Save characteristic of models in this unit by 1 (this cannot improve a model’s Save to better than 3+).\nDuty and Honour!\nLD\n+1\nOC\n+1\nImprove the Leadership and Objective Control characteristics of models in this unit by 1."
     }
   ],
   "detachments": [
@@ -53,15 +53,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008381005",
-          "name": "FIELDS OF FIRE",
-          "cp": 1,
-          "type": "Combined Arms – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Regiment unit and one Squadron unit from your army that have not been selected to shoot this phase.\nEFFECT: Select one enemy unit. Until the end of the phase, each time your selected REGIMENT and SQUADRON units make an attack that targets that enemy unit, improve the Armour Penetration characteristic of that attack by 1."
-        },
-        {
           "id": "000008381007",
           "name": "STALWART PROTECTOR",
           "cp": 1,
@@ -78,6 +69,15 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Start of any phase.\nTARGET: One Regiment unit from your army and one Squadron unit from your army within 6\" of and visible to that REGIMENT unit.\nEFFECT: Until the end of the phase, Orders affecting one of your units affect the other, and vice versa."
+        },
+        {
+          "id": "000008381005",
+          "name": "FIELDS OF FIRE",
+          "cp": 1,
+          "type": "Combined Arms – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Regiment unit and one Squadron unit from your army that have not been selected to shoot this phase.\nEFFECT: Select one enemy unit. Until the end of the phase, each time your selected REGIMENT and SQUADRON units make an attack that targets that enemy unit, improve the Armour Penetration characteristic of that attack by 1."
         },
         {
           "id": "000008381006",
@@ -137,13 +137,13 @@
       ],
       "stratagems": [
         {
-          "id": "000009802002",
-          "name": "ON MY POSITION",
+          "id": "000009802004",
+          "name": "SERVO‑DESIGNATORS",
           "cp": 1,
           "type": "Bridgehead Strike Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One friendly engaged REGIMENT unit.\nEFFECT: Roll one D6 for each enemy unit engaged with your unit:\n• On a 2+ that enemy unit suffers D6 mortal wounds.\nThen, your unit suffers 3D3 mortal wounds."
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase, when a friendly MILITARUM TEMPESTUS unit has shot.\nTARGET: That MILITARUM TEMPESTUS unit.\nEFFECT: Select one enemy unit hit by those ranged attacks. Friendly MILITARUM TEMPESTUS units’ ranged attacks that target that enemy unit have [IGNORES COVER]."
         },
         {
           "id": "000009802003",
@@ -155,13 +155,13 @@
           "text": "WHEN: Your Shooting phase, when a friendly MILITARUM TEMPESTUS/KASRKIN unit is selected to shoot.\nTARGET: That MILITARUM TEMPESTUS/KASRKIN unit.\nEFFECT: Your unit’s Hot-shot Lascarbines, Hot-shot Lasguns, Hot-shot Laspistols, Hot-shot Marksman Rifles, Hot-shot Volley Guns and Sentry Hot-shot Volley Guns weapons that targeted an enemy unit within 12\" have +1 S and AP."
         },
         {
-          "id": "000009802004",
-          "name": "SERVO-DESIGNATORS",
+          "id": "000009802002",
+          "name": "ON MY POSITION",
           "cp": 1,
           "type": "Bridgehead Strike Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase, when a friendly MILITARUM TEMPESTUS unit has shot.\nTARGET: That MILITARUM TEMPESTUS unit.\nEFFECT: Select one enemy unit hit by those ranged attacks. Friendly MILITARUM TEMPESTUS units’ ranged attacks that target that enemy unit have [IGNORES COVER]."
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One friendly engaged REGIMENT unit.\nEFFECT: Roll one D6 for each enemy unit engaged with your unit:\n• On a 2+ that enemy unit suffers D6 mortal wounds.\nThen, your unit suffers 3D3 mortal wounds."
         }
       ]
     },
@@ -173,7 +173,7 @@
       "rules": [
         {
           "name": "Artillery Support",
-          "text": "At the start of the battle round, select one of the following types of artillery support.\n• Creeping Barrage: Roll one D6 for each enemy unit that is more than 12\" from every model from your army that is on the battlefield: On a 5+, until the end of the battle round, that unit is shaken. While a unit is shaken, subtract 2\" from its Move characteristic and subtract 2 from Charge rolls made for it. The maximum number of units that can be shaken by this rule in each battle round depends on the battle size, as shown below.\n• Incendiary Bombardment: Select a number of enemy units more than 12\" from every model from your army that is on the battlefield. Until the end of the battle round, those enemy units are scattered. While a unit is scattered, it cannot have the Benefit of Cover. The maximum number of units you can select in this way depends on the battle size, as shown below.\n• Smoke Shells: Select a number of units from your army. Until the end of the battle round, those units have the Stealth ability.\nBATTLE SIZE ¦ MAXIMUM NUMBER OF UNITS\nIncursion ¦ 2\nStrike Force ¦ 3\nOnslaught ¦ 4"
+          "text": "At the start of the battle round, select one of the following types of artillery support.\n• Creeping Barrage: Roll one D6 for each enemy unit that is more than 12\" from every model from your army that is on the battlefield: On a 5+, until the end of the battle round, that unit is shaken. While a unit is shaken, subtract 2\" from its Move characteristic and subtract 2 from Charge rolls made for it. The maximum number of units that can be shaken by this rule in each battle round depends on the battle size, as shown below.\n• Incendiary Bombardment: Select a number of enemy units more than 12\" from every model from your army that is on the battlefield. Until the end of the battle round, those enemy units are scattered. While a unit is scattered, it cannot have the Benefit of Cover. The maximum number of units you can select in this way depends on the battle size, as shown below.\n• Smoke Shells: Select a number of units from your army. Until the end of the battle round, those units have the Stealth ability. The maximum number of units you can select in this way depends on the battle size, as shown below.\nBATTLE SIZE ¦ MAXIMUM NUMBER OF UNITS\nIncursion ¦ 2\nStrike Force ¦ 3\nOnslaught ¦ 4"
         }
       ],
       "enhancements": [
@@ -244,15 +244,6 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One Platoon unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, add 1 to the Attacks characteristic of ranged weapons equipped by models in your unit while targeting an enemy unit within half range."
         },
         {
-          "id": "000009858007",
-          "name": "MINEFIELD",
-          "cp": 1,
-          "type": "Siege Regiment – Wargear Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Start of your opponent’s Charge phase.\nTARGET: One Platoon unit from your army.\nEFFECT: Until the end of the phase, each time an enemy unit ends a Charge move within Engagement Range of your unit, roll one D6 for each model in that enemy unit: for each 5+, that enemy unit suffers 1 mortal wound (to a maximum of 6 mortal wounds)."
-        },
-        {
           "id": "000009858004",
           "name": "FLARE BURST",
           "cp": 1,
@@ -260,6 +251,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Astra Militarum Character unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time your unit makes an attack that targets a visible enemy unit within 12\", you can re-roll the Hit roll."
+        },
+        {
+          "id": "000009858007",
+          "name": "MINEFIELD",
+          "cp": 1,
+          "type": "Siege Regiment – Wargear Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Start of your opponent’s Charge phase.\nTARGET: One Platoon unit from your army.\nEFFECT: Until the end of the phase, each time an enemy unit ends a Charge move within Engagement Range of your unit, roll one D6 for each model in that enemy unit: for each 5+, that enemy unit suffers 1 mortal wound (to a maximum of 6 mortal wounds)."
         }
       ]
     },
@@ -321,7 +321,7 @@
           "type": "Mechanised Assault – Battle Tactic Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One Transport unit from your army (excluding AIRCRAFT and TITANIC units) that is not within Engagement Range of one or more enemy units, and is within 8\" of the enemy unit that just ended that move.\nEFFECT: Your TRANSPORT can make a Normal move of up to 6\"."
+          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One Transport unit from your army (excluding AIRCRAFT and TiTANic units) that is not within Engagement Range of one or more enemy units, and is within 8\" of the enemy unit that just ended that move.\nEFFECT: Your TRANSPORT can make a Normal move of up to 6\"."
         },
         {
           "id": "000009862006",
@@ -330,7 +330,7 @@
           "type": "Mechanised Assault – Battle Tactic Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Charge phase",
-          "text": "WHEN: Your opponent’s Charge phase, after an enemy unit has selected targets for its charge but before it makes a Charge move.\nTARGET: One Astra Militarum Infantry unit from your army that was selected as a target of that charge.\nEFFECT: Provided your unit is not within Engagement Range of one or more enemy units and every model in your unit is within 3\" of an ASTRA Militarum Transport from your army, it can embark within that TRANSPORT."
+          "text": "WHEN: Your opponent’s Charge phase, after an enemy unit has selected targets for its charge but before it makes a Charge move.\nTARGET: One Astra Militarum Infantry unit from your army that was selected as a target of that charge.\nEFFECT: Provided your unit is not within Engagement Range of one or more enemy units and every model in your unit is within 3\" of an AsTRA Militarum Transport from your army, it can embark within that TRANSPORT."
         },
         {
           "id": "000009862003",
@@ -357,7 +357,7 @@
           "type": "Mechanised Assault – Wargear Stratagem",
           "turn": "Your turn",
           "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One Infantry Officer unit from your army embarked within a Transport. You can use this Stratagem on that unit even though it is embarked within a TRANSPORT.\nEFFECT: Until the end of the phase, your unit can issue Orders even though it is not on the battlefield, and it can issue Orders to Astra Militarum Transport units from your army [excluding TITANIC units) regardless of the distance to and from your unit’s TRANSPORT."
+          "text": "WHEN: Your Command phase.\nTARGET: One Infantry Officer unit from your army embarked within a Transport. You can use this Stratagem on that unit even though it is embarked within a TRANSPORT.\nEFFECT: Until the end of the phase, your unit can issue Orders even though it is not on the battlefield, and it can issue Orders to Astra Militarum Transport units from your army [excluding TiTANic units) regardless of the distance to and from your unit’s TRANSPORT."
         }
       ]
     },
@@ -404,15 +404,6 @@
       ],
       "stratagems": [
         {
-          "id": "000009866006",
-          "name": "FURIOUS CANNONADE",
-          "cp": 1,
-          "type": "Hammer of the Emperor – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Squadron unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a unit within 12\", improve the Armour Penetration characteristic of that attack by 1."
-        },
-        {
           "id": "000009866003",
           "name": "BLAZING ADVANCE",
           "cp": 1,
@@ -420,6 +411,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase, just after a Squadron unit from your army Advances.\nTARGET: That SQUADRON unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot in a turn in which it Advanced."
+        },
+        {
+          "id": "000009866006",
+          "name": "FURIOUS CANNONADE",
+          "cp": 1,
+          "type": "Hammer of the Emperor – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Squadron unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a unit within 12\", improve the Armour Penetration characteristic of that attack by 1."
         },
         {
           "id": "000009866002",
@@ -520,15 +520,6 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One Platoon unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [PRECISION] ability."
         },
         {
-          "id": "000009870005",
-          "name": "COURAGEOUS DIVERSION",
-          "cp": 1,
-          "type": "Recon Element – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Start of your opponent’s Shooting phase.\nTARGET: One Astra Militarum Infantry or Astra Militarum Mounted unit from your army.\nEFFECT: Until the end of the phase, your unit has the Feel No Pain 6+ ability, and each time an enemy model makes an attack, if your unit is the closest eligible target, subtract 1 from the Hit roll."
-        },
-        {
           "id": "000009870003",
           "name": "DRAW THEM OUT",
           "cp": 1,
@@ -536,6 +527,15 @@
           "turn": "Opponent’s turn",
           "phase": "Movement phase",
           "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One Platoon unit from your army that is within 8\" of that enemy unit, and is not within Engagement Range of one or more enemy units.\nEFFECT: Your unit can make a Normal move of up to 6\"."
+        },
+        {
+          "id": "000009870005",
+          "name": "COURAGEOUS DIVERSION",
+          "cp": 1,
+          "type": "Recon Element – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Start of your opponent’s Shooting phase.\nTARGET: One Astra Militarum Infantry or Astra Militarum Mounted unit from your army.\nEFFECT: Until the end of the phase, your unit has the Feel No Pain 6+ ability, and each time an enemy model makes an attack, if your unit is the closest eligible target, subtract 1 from the Hit roll."
         },
         {
           "id": "000009870004",
@@ -561,7 +561,7 @@
       "id": "000001121",
       "name": "Grizzled Company",
       "dp": 3,
-      "forceDisposition": "Priority Assets",
+      "forceDisposition": "Purge the Foe, Priority Assets",
       "rules": [
         {
           "name": "Ruthless Discipline",
@@ -600,24 +600,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010638004",
-          "name": "VETERAN SHARPSHOOTERS",
-          "cp": 1,
-          "type": "Grizzled Company Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One ASTRA MILITARUM unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability."
-        },
-        {
-          "id": "000010638005",
-          "name": "PURGING FIRE",
-          "cp": 1,
-          "type": "Grizzled Company Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One ASTRA MILITARUM unit from your army affected by an Order that has not been selected to shoot this phase.\nEFFECT: If your unit is within range of an objective marker, until the end of the phase, ranged weapons equipped by models in your unit have the [LETHAL HITS] ability."
-        },
-        {
           "id": "000010638007",
           "name": "ADDITIONAL ARMOUR",
           "cp": 1,
@@ -627,13 +609,13 @@
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One ASTRA MILITARUM unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
         },
         {
-          "id": "000010638006",
-          "name": "MORDIAN MINUTE",
+          "id": "000010638004",
+          "name": "VETERAN SHARPSHOOTERS",
           "cp": 1,
           "type": "Grizzled Company Stratagem",
           "turn": "Your turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Astra Militarum Infantry unit from your army affected by the First Rank, Fire! Second Rank, Fire! Order.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, improve the Strength characteristic of that attack by 1."
+          "text": "WHEN: Your Shooting phase.\nTARGET: One ASTRA MILITARUM unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability."
         },
         {
           "id": "000010638003",
@@ -652,6 +634,24 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Start of any phase.\nTARGET: One Astra Militarum Officer unit from your army.\nEFFECT: Your unit’s OFFICER model can issue 1 Order as if it were your Command phase."
+        },
+        {
+          "id": "000010638005",
+          "name": "PURGING FIRE",
+          "cp": 1,
+          "type": "Grizzled Company Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One ASTRA MILITARUM unit from your army affected by an Order that has not been selected to shoot this phase.\nEFFECT: If your unit is within range of an objective marker, until the end of the phase, ranged weapons equipped by models in your unit have the [LETHAL HITS] ability."
+        },
+        {
+          "id": "000010638006",
+          "name": "MORDIAN MINUTE",
+          "cp": 1,
+          "type": "Grizzled Company Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Astra Militarum Infantry unit from your army affected by the First Rank, Fire! Second Rank, Fire! Order.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, improve the Strength characteristic of that attack by 1."
         }
       ]
     },
@@ -716,6 +716,15 @@
           "text": "WHEN: Fight phase.\nTARGET: One Astra Militarum Titanic unit from your army that has not been selected to fight this phase.\nEFFECT: Select one enemy unit within Engagement Range of your unit. Until the end of the phase, add 6 to the Attacks characteristic of melee weapons equipped by models in your unit, improve the Armour Penetration characteristic of those weapons by 2, and each time a model in your unit fights, it can only target that enemy unit."
         },
         {
+          "id": "000010788004",
+          "name": "ADAMANTINE BEHEMOTH",
+          "cp": 1,
+          "type": "Steel Hammer – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement or Charge phase",
+          "text": "WHEN: Your Movement phase or your Charge phase.\nTARGET: One Astra Militarum Vehicle unit from your army that has not been selected to move or charge this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features."
+        },
+        {
           "id": "000010788003",
           "name": "IMPOSING ARRIVAL",
           "cp": 1,
@@ -723,15 +732,6 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Reinforcements step of your Movement phase, from the second battle round onwards.\nTARGET: One Astra Militarum Titanic unit from your army that is in Reserves.\nEFFECT: Set up your unit on the battlefield, wholly within 8\" of the battlefield edge and more than 6\" horizontally away from all enemy units."
-        },
-        {
-          "id": "000010788005",
-          "name": "SHATTERING SALVO",
-          "cp": 1,
-          "type": "Steel Hammer – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase, just after an Astra Militarum Titanic unit from your army has shot.\nTARGET: That ASTRA MILITARUM TITANIC unit.\nEFFECT: Select one enemy unit hit by one or more of those attacks. Until the end of the phase, that enemy unit cannot have the Benefit of Cover."
         },
         {
           "id": "000010788006",
@@ -743,13 +743,13 @@
           "text": "WHEN: Your Shooting phase, just after an Astra Militarum Vehicle unit from your army has shot.\nTARGET: That ASTRA MILITARUM VEHICLE unit.\nEFFECT: Select one enemy unit hit by one or more of those attacks. That enemy unit must take a Battle-shock test, subtracting 1 from that test."
         },
         {
-          "id": "000010788004",
-          "name": "ADAMANTINE BEHEMOTH",
+          "id": "000010788005",
+          "name": "SHATTERING SALVO",
           "cp": 1,
           "type": "Steel Hammer – Strategic Ploy Stratagem",
           "turn": "Your turn",
-          "phase": "Movement or Charge phase",
-          "text": "WHEN: Your Movement phase or your Charge phase.\nTARGET: One Astra Militarum Vehicle unit from your army that has not been selected to move or charge this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features."
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase, just after an Astra Militarum Titanic unit from your army has shot.\nTARGET: That ASTRA MILITARUM TITANIC unit.\nEFFECT: Select one enemy unit hit by one or more of those attacks. Until the end of the phase, that enemy unit cannot have the Benefit of Cover."
         }
       ]
     },
@@ -796,6 +796,15 @@
       ],
       "stratagems": [
         {
+          "id": "000010792002",
+          "name": "ORDER THE ADVANCE",
+          "cp": 1,
+          "type": "Armoured Infantry – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Start of your Movement phase.\nTARGET: One Astra Militarum Officer unit from your army.\nEFFECT: Select one or more friendly ASTRA MILITARUM units within 6\" of your unit; until the end of the phase, you can re-roll Advance rolls made for those units."
+        },
+        {
           "id": "000010792007",
           "name": "OPENING SALVO",
           "cp": 1,
@@ -821,15 +830,6 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Armoured Skirmisher unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a visible MONSTER or VEHICLE unit, you can re-roll the Hit roll."
-        },
-        {
-          "id": "000010792002",
-          "name": "ORDER THE ADVANCE",
-          "cp": 1,
-          "type": "Armoured Infantry – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Start of your Movement phase.\nTARGET: One Astra Militarum Officer unit from your army.\nEFFECT: Select one or more friendly ASTRA MILITARUM units within 6\" of your unit; until the end of the phase, you can re-roll Advance rolls made for those units."
         },
         {
           "id": "000010792003",
@@ -865,7 +865,7 @@
       "enhancements": [
         {
           "id": "000010912002",
-          "name": "Sharp eyes, Light fingers",
+          "name": "Sharp Eyes",
           "pts": 10,
           "upgrade": true,
           "text": "RATLINGS unit only. When this unit is selected to shoot, enemy units have +6\" detection range until this unit has shot."
@@ -937,15 +937,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010917004",
-          "name": "SUMP-SMOG SCREEN",
-          "cp": 1,
-          "type": "Designation Force Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Start of your opponent’s Shooting phase\nTARGET: One friendly ASTRA MILITARUM INFANTRY SMOKE unit.\nEFFECT: When an attack targets either your unit, or a unit that is not fully visible to the attacking model because of one or more models in your unit, the target has the benefit of cover against that attack."
-        },
-        {
           "id": "000010917003",
           "name": "TRIGGERED ALERTS",
           "cp": 1,
@@ -962,6 +953,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Start of your Shooting phase.\nTARGET: One friendly SCOUT SENTINEL/ASTRA MILITARUM INFANTRY unit.\nEFFECT: While a visible enemy unit is within 6\" of your unit, that unit has +3\" detection range."
+        },
+        {
+          "id": "000010917004",
+          "name": "SUMP-SMOG SCREEN",
+          "cp": 1,
+          "type": "Designation Force Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Start of your opponent’s Shooting phase\nTARGET: One friendly ASTRA MILITARUM INFANTRY SMOKE unit.\nEFFECT: When an attack targets either your unit, or a unit that is not fully visible to the attacking model because of one or more models in your unit, the target has the benefit of cover against that attack."
         }
       ]
     }
@@ -972,14 +972,14 @@
       "name": "Leman Russ Commander",
       "role": "Vehicle Character",
       "keywords": [
-        "VEHICLE",
-        "CHARACTER",
-        "SQUADRON",
         "SMOKE",
+        "CHARACTER",
+        "VEHICLE",
         "LEMAN RUSS COMMANDER",
         "FRAME",
         "OFFICER",
-        "IMPERIUM"
+        "IMPERIUM",
+        "SQUADRON"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -1410,7 +1410,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue up to 2 Orders to Squadron units."
         },
         {
@@ -1436,7 +1436,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -1447,15 +1447,15 @@
       ],
       "wargearCosts": [
         {
+          "name": "Lascannon",
+          "pts": 5
+        },
+        {
           "name": "Demolisher battle cannon",
           "pts": 15
         },
         {
           "name": "Multi-melta",
-          "pts": 5
-        },
-        {
-          "name": "Lascannon",
           "pts": 5
         },
         {
@@ -1470,11 +1470,11 @@
       "name": "Cadian Heavy Weapons Squad",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
+        "GRENADES",
         "IMPERIUM",
         "REGIMENT",
-        "CADIAN HEAVY WEAPONS SQUAD",
-        "INFANTRY",
-        "GRENADES"
+        "CADIAN HEAVY WEAPONS SQUAD"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -1682,7 +1682,7 @@
         },
         {
           "name": "EMBARKING",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "While embarked within a Transport, each model takes up the space of 2 models, and each weapon equipped by these models is considered to be 2 models’ weapons for the purposes of the Firing Deck ability."
         }
       ],
@@ -1707,14 +1707,13 @@
       "name": "Scout Sentinels",
       "role": "Walker",
       "keywords": [
+        "VEHICLE",
         "WALKER",
         "SMOKE",
         "IMPERIUM",
         "REGIMENT",
         "SQUADRON",
-        "SCOUT SENTINELS",
-        "VEHICLE",
-        "FRAME"
+        "SCOUT SENTINELS"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2026,14 +2025,13 @@
       "name": "Armoured Sentinels",
       "role": "Walker",
       "keywords": [
-        "SQUADRON",
-        "ARMOURED SENTINELS",
-        "VEHICLE",
-        "IMPERIUM",
-        "WALKER",
         "REGIMENT",
         "SMOKE",
-        "FRAME"
+        "IMPERIUM",
+        "WALKER",
+        "SQUADRON",
+        "VEHICLE",
+        "ARMOURED SENTINELS"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2339,14 +2337,14 @@
       "name": "Chimera",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
-        "IMPERIUM",
+        "FRAME",
         "CHIMERA",
         "DEDICATED TRANSPORT",
         "TRANSPORT",
         "SQUADRON",
-        "FRAME"
+        "IMPERIUM",
+        "SMOKE",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2621,7 +2619,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2638,12 +2636,12 @@
       "name": "Taurox",
       "role": "Dedicated Transports",
       "keywords": [
-        "TRANSPORT",
-        "SQUADRON",
-        "FRAME",
-        "DEDICATED TRANSPORT",
-        "TAUROX",
         "IMPERIUM",
+        "TAUROX",
+        "DEDICATED TRANSPORT",
+        "TRANSPORT",
+        "FRAME",
+        "SQUADRON",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -2775,7 +2773,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2793,10 +2791,10 @@
       "role": "Vehicle",
       "keywords": [
         "VEHICLE",
-        "IMPERIUM",
-        "SQUADRON",
-        "HELLHOUND",
         "FRAME",
+        "HELLHOUND",
+        "SQUADRON",
+        "IMPERIUM",
         "SMOKE"
       ],
       "factionKeywords": [
@@ -3060,7 +3058,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3078,12 +3076,12 @@
       "role": "Artillery",
       "keywords": [
         "VEHICLE",
+        "SQUADRON",
+        "ARTILLERY",
         "SMOKE",
         "IMPERIUM",
-        "SQUADRON",
-        "FRAME",
         "BASILISK",
-        "ARTILLERY"
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3264,7 +3262,7 @@
       },
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 1,
@@ -3273,11 +3271,11 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 135
+              "pts": 145
             }
           ]
         }
@@ -3493,12 +3491,12 @@
       "name": "Wyvern",
       "role": "Artillery",
       "keywords": [
-        "IMPERIUM",
-        "SQUADRON",
         "WYVERN",
-        "ARTILLERY",
+        "SQUADRON",
         "VEHICLE",
+        "ARTILLERY",
         "SMOKE",
+        "IMPERIUM",
         "FRAME"
       ],
       "factionKeywords": [
@@ -3681,7 +3679,7 @@
       },
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 1,
@@ -3690,11 +3688,11 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 115
+              "pts": 125
             }
           ]
         }
@@ -3707,13 +3705,13 @@
       "name": "Manticore",
       "role": "Artillery",
       "keywords": [
-        "SMOKE",
-        "ARTILLERY",
         "VEHICLE",
         "MANTICORE",
         "SQUADRON",
         "IMPERIUM",
-        "FRAME"
+        "FRAME",
+        "SMOKE",
+        "ARTILLERY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3895,7 +3893,7 @@
       },
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 1,
@@ -3904,11 +3902,11 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 170
+              "pts": 180
             }
           ]
         }
@@ -3921,13 +3919,13 @@
       "name": "Deathstrike",
       "role": "Artillery",
       "keywords": [
-        "VEHICLE",
-        "ARTILLERY",
-        "SMOKE",
-        "IMPERIUM",
         "SQUADRON",
-        "DEATHSTRIKE",
-        "FRAME"
+        "IMPERIUM",
+        "SMOKE",
+        "ARTILLERY",
+        "VEHICLE",
+        "FRAME",
+        "DEATHSTRIKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -4114,7 +4112,7 @@
       },
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 1,
@@ -4123,11 +4121,11 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 135
+              "pts": 145
             }
           ]
         }
@@ -4141,11 +4139,11 @@
       "role": "Vehicle",
       "keywords": [
         "FRAME",
-        "LEMAN RUSS BATTLE TANK",
         "SMOKE",
-        "VEHICLE",
         "IMPERIUM",
-        "SQUADRON"
+        "SQUADRON",
+        "LEMAN RUSS BATTLE TANK",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -4473,7 +4471,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4484,11 +4482,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -4503,8 +4501,8 @@
       "name": "Leman Russ Demolisher",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
         "SMOKE",
+        "VEHICLE",
         "IMPERIUM",
         "SQUADRON",
         "FRAME",
@@ -4836,7 +4834,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4847,11 +4845,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -4867,11 +4865,11 @@
       "role": "Titanic",
       "keywords": [
         "VEHICLE",
+        "TITANIC",
         "SMOKE",
         "IMPERIUM",
         "BANEBLADE",
-        "FRAME",
-        "TITANIC"
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5122,7 +5120,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5139,13 +5137,13 @@
       "name": "Banehammer",
       "role": "Titanic",
       "keywords": [
-        "VEHICLE",
+        "FRAME",
+        "BANEHAMMER",
+        "TRANSPORT",
+        "IMPERIUM",
         "TITANIC",
         "SMOKE",
-        "IMPERIUM",
-        "BANEHAMMER",
-        "FRAME",
-        "TRANSPORT"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5351,7 +5349,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5368,11 +5366,11 @@
       "name": "Banesword",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
         "VEHICLE",
+        "BANESWORD",
+        "FRAME",
         "IMPERIUM",
         "SMOKE",
-        "BANESWORD",
         "TITANIC"
       ],
       "factionKeywords": [
@@ -5573,7 +5571,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5590,13 +5588,13 @@
       "name": "Doomhammer",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
-        "VEHICLE",
-        "TITANIC",
         "SMOKE",
         "IMPERIUM",
         "TRANSPORT",
-        "DOOMHAMMER"
+        "DOOMHAMMER",
+        "FRAME",
+        "TITANIC",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5776,7 +5774,7 @@
         {
           "name": "Firing Deck",
           "type": "Core",
-          "param": "6",
+          "param": "12",
           "text": "FIRING DECK24.14\nSome transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions.\nThis ability always takes the form Firing Deck X. In your Shooting phase, each time this TRANSPORT is selected to shoot, if one or more units are embarked within it, resolve the following sequence:\n• Select up to X models embarked within this TRANSPORT (excluding models whose units have already been selected to shoot this phase).\n• For each selected model, select one of its ranged weapons (excluding [ONE SHOT] weapons).\n• Until this TRANSPORT has resolved all of its attacks, it has all of those selected weapons in addition to its other weapons.\n• Until the end of the turn, units embarked within this TRANSPORT are not eligible to shoot."
         },
         {
@@ -5803,7 +5801,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5820,11 +5818,11 @@
       "name": "Hellhammer",
       "role": "Titanic",
       "keywords": [
-        "TITANIC",
-        "FRAME",
         "VEHICLE",
+        "TITANIC",
         "SMOKE",
         "IMPERIUM",
+        "FRAME",
         "HELLHAMMER"
       ],
       "factionKeywords": [
@@ -6077,7 +6075,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6094,12 +6092,12 @@
       "name": "Shadowsword",
       "role": "Titanic",
       "keywords": [
-        "SHADOWSWORD",
+        "FRAME",
         "VEHICLE",
         "SMOKE",
         "TITANIC",
-        "IMPERIUM",
-        "FRAME"
+        "SHADOWSWORD",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6299,7 +6297,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6316,13 +6314,13 @@
       "name": "Stormlord",
       "role": "Titanic",
       "keywords": [
-        "TRANSPORT",
         "FRAME",
         "STORMLORD",
-        "VEHICLE",
-        "TITANIC",
         "SMOKE",
-        "IMPERIUM"
+        "TRANSPORT",
+        "IMPERIUM",
+        "VEHICLE",
+        "TITANIC"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6547,7 +6545,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6564,12 +6562,12 @@
       "name": "Stormsword",
       "role": "Titanic",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
-        "IMPERIUM",
-        "FRAME",
         "STORMSWORD",
-        "TITANIC"
+        "SMOKE",
+        "FRAME",
+        "IMPERIUM",
+        "TITANIC",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6769,7 +6767,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6786,11 +6784,11 @@
       "name": "Commissar",
       "role": "Infantry Character",
       "keywords": [
+        "INFANTRY",
         "CHARACTER",
-        "IMPERIUM",
         "OFFICER",
         "COMMISSAR",
-        "INFANTRY"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6961,16 +6959,16 @@
         },
         {
           "name": "ORDERS",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "This OFFICER can issue 1 Order to a Regiment unit. This OFFICER can only issue the Duty and Honour! and Fix Bayonets! Orders."
         }
       ],
       "leads": [
         "Cadian Shock Troops",
         "Catachan Jungle Fighters",
-        "Tempestus Scions",
         "Krieg Combat Engineers",
-        "Kasrkin"
+        "Kasrkin",
+        "Tempestus Scions"
       ],
       "isSupport": false,
       "points": [
@@ -6994,9 +6992,9 @@
       "keywords": [
         "INFANTRY",
         "GRENADES",
-        "IMPERIUM",
         "MILITARUM TEMPESTUS",
         "COMMAND SQUAD",
+        "IMPERIUM",
         "CHARACTER",
         "OFFICER"
       ],
@@ -7104,10 +7102,7 @@
               "Regimental standard"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Hot-shot lasgun"
-          ]
+          "max": 1
         },
         {
           "text": "1 Tempestus Scion's hot-shot lasgun can be replaced with 1 hot-shot laspistol and 1 master vox.",
@@ -7421,7 +7416,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This unit’s OFFICER can issue 1 Order to a Regiment unit."
         }
       ],
@@ -7440,7 +7435,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -7457,13 +7452,13 @@
       "name": "Taurox Prime",
       "role": "Dedicated Transports",
       "keywords": [
-        "IMPERIUM",
+        "DEDICATED TRANSPORT",
         "VEHICLE",
+        "TAUROX PRIME",
+        "IMPERIUM",
         "SQUADRON",
         "FRAME",
-        "TRANSPORT",
-        "DEDICATED TRANSPORT",
-        "TAUROX PRIME"
+        "TRANSPORT"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7709,7 +7704,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7727,10 +7722,10 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "GRENADES",
-        "IMPERIUM",
+        "OGRYN SQUAD",
         "OGRYN",
-        "OGRYN SQUAD"
+        "IMPERIUM",
+        "GRENADES"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7843,11 +7838,11 @@
       "name": "Bullgryn Squad",
       "role": "Infantry",
       "keywords": [
-        "IMPERIUM",
         "BULLGRYN SQUAD",
         "OGRYN",
-        "INFANTRY",
-        "GRENADES"
+        "IMPERIUM",
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7999,7 +7994,7 @@
       "isSupport": false,
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 3,
@@ -8012,15 +8007,15 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
-              "pts": 105
+              "pts": 120
             },
             {
               "models": 6,
-              "pts": 215
+              "pts": 230
             }
           ]
         }
@@ -8033,9 +8028,9 @@
       "name": "Ratlings",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "RATLINGS",
         "IMPERIUM",
-        "RATLINGS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8223,14 +8218,14 @@
       "name": "Nork Deddog",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "LOYAL PROTECTOR",
+        "OGRYN",
         "NORK DEDDOG",
-        "GRENADES",
         "INFANTRY",
         "CHARACTER",
         "EPIC HERO",
-        "IMPERIUM",
-        "LOYAL PROTECTOR",
-        "OGRYN"
+        "GRENADES",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8324,7 +8319,7 @@
         },
         {
           "name": "LOYAL PROTECTOR",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "At the start of the Declare Battle Formations step, this model must join one Command Squad unit from your army (a COMMAND SQUAD cannot have more than one Loyal Protector model joined to it). This model then counts as part of that COMMAND SQUAD for the rest of the battle, and its Starting Strength is increased accordingly. If it is not possible to join this model to a COMMAND SQUAD, it does not take part in the battle and counts as having been destroyed.\nWhile this model is joined to a unit, it can embark within any Transport that unit can embark within, and takes up the space of 3 models.\nThis model cannot be selected as your WARLORD."
         }
       ],
@@ -8349,12 +8344,11 @@
       "name": "Valkyrie",
       "role": "Transport",
       "keywords": [
+        "VEHICLE",
+        "VALKYRIE",
         "TRANSPORT",
         "IMPERIUM",
-        "VALKYRIE",
-        "FLY",
-        "VEHICLE",
-        "FRAME"
+        "FLY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8387,11 +8381,11 @@
       "loadout": {
         "*": [
           "hellstrike missiles",
-          "multi-laser",
+          "Militarum multi-laser",
           "armoured hull"
         ]
       },
-      "loadoutText": "This model is equipped with: hellstrike missiles; multi-laser; armoured hull.",
+      "loadoutText": "This model is equipped with: hellstrike missiles; Militarum multi-laser; armoured hull.",
       "options": [
         "This model’s multi-laser can be replaced with 1 lascannon.",
         "This model’s hellstrike missiles can be replaced with 2 multiple rocket pods.",
@@ -8572,7 +8566,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -8589,11 +8583,11 @@
       "name": "Primaris Psyker",
       "role": "Infantry Character",
       "keywords": [
-        "PRIMARIS PSYKER",
-        "IMPERIUM",
         "PSYKER",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "PRIMARIS PSYKER",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8721,11 +8715,11 @@
         }
       ],
       "leads": [
-        "Tempestus Scions",
-        "Kasrkin",
-        "Catachan Jungle Fighters",
         "Krieg Combat Engineers",
-        "Cadian Shock Troops"
+        "Tempestus Scions",
+        "Cadian Shock Troops",
+        "Catachan Jungle Fighters",
+        "Kasrkin"
       ],
       "isSupport": false,
       "points": [
@@ -8747,11 +8741,11 @@
       "name": "Ministorum Priest",
       "role": "Infantry Character",
       "keywords": [
-        "IMPERIUM",
-        "GRENADES",
         "INFANTRY",
-        "MINISTORUM PRIEST",
-        "CHARACTER"
+        "CHARACTER",
+        "GRENADES",
+        "IMPERIUM",
+        "MINISTORUM PRIEST"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8870,9 +8864,9 @@
       ],
       "abilities": [
         {
-          "name": "Leader",
+          "name": "Support",
           "type": "Core",
-          "text": "LEADER24.22\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "War Hymns",
@@ -8886,11 +8880,11 @@
         }
       ],
       "leads": [
-        "Tempestus Scions",
+        "Catachan Jungle Fighters",
+        "Cadian Shock Troops",
         "Krieg Combat Engineers",
         "Kasrkin",
-        "Catachan Jungle Fighters",
-        "Cadian Shock Troops"
+        "Tempestus Scions"
       ],
       "isSupport": false,
       "points": [
@@ -8912,10 +8906,10 @@
       "name": "Tech-Priest Enginseer",
       "role": "Infantry Character",
       "keywords": [
-        "IMPERIUM",
-        "TECH-PRIEST ENGINSEER",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "IMPERIUM",
+        "TECH-PRIEST ENGINSEER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9033,8 +9027,8 @@
       ],
       "leads": [
         "Catachan Jungle Fighters",
-        "Krieg Combat Engineers",
         "Cadian Shock Troops",
+        "Krieg Combat Engineers",
         "Kasrkin"
       ],
       "isSupport": false,
@@ -9057,13 +9051,13 @@
       "name": "Ogryn Bodyguard",
       "role": "Infantry Character",
       "keywords": [
-        "IMPERIUM",
-        "BODYGUARD",
         "OGRYN",
+        "BODYGUARD",
         "LOYAL PROTECTOR",
-        "GRENADES",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "GRENADES",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9254,8 +9248,8 @@
         },
         {
           "name": "LOYAL PROTECTOR",
-          "type": "Datasheet",
-          "text": "This model cannot be selected as your WARLORD and cannot be given Enhancements."
+          "type": "Fortification (левая колонка)",
+          "text": "At the start of the Declare Battle Formations step, this model must join one Command Squad unit from your army (a COMMAND SQUAD cannot have more than one Loyal Protector model joined to it). This model then counts as part of that COMMAND SQUAD for the rest of the battle, and its Starting Strength is increased accordingly. If it is not possible to join this model to a COMMAND SQUAD, it does not take part in the battle and counts as having been destroyed.\nWhile this model is joined to a unit, it can embark within any Transport that unit can embark within, and takes up the space of 3 models.\nThis model cannot be selected as your WARLORD and cannot be given Enhancements."
         }
       ],
       "leads": [],
@@ -9279,13 +9273,13 @@
       "name": "Sly Marbo",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "SLY MARBO",
-        "INFANTRY",
-        "CHARACTER",
-        "EPIC HERO",
         "GRENADES",
-        "IMPERIUM",
-        "REGIMENT"
+        "CHARACTER",
+        "INFANTRY",
+        "EPIC HERO",
+        "SLY MARBO",
+        "REGIMENT",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9391,7 +9385,7 @@
         },
         {
           "name": "LONER",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This model cannot be selected as your WARLORD."
         }
       ],
@@ -9416,13 +9410,13 @@
       "name": "Gaunt’s Ghosts",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "OFFICER",
+        "INFANTRY",
         "EPIC HERO",
-        "GRENADES",
-        "CHARACTER",
         "GAUNT’S GHOSTS",
         "IMPERIUM",
-        "INFANTRY"
+        "GRENADES",
+        "CHARACTER",
+        "OFFICER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9461,10 +9455,10 @@
       ],
       "composition": [
         {
-          "name": "Ibram Gaunt",
+          "name": "Ibram Gaunt – EPIC HERO",
           "min": 1,
           "max": 1,
-          "text": "1 Ibram Gaunt"
+          "text": "1 Ibram Gaunt – EPIC HERO"
         },
         {
           "name": "Tanith Ghosts",
@@ -9678,7 +9672,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This unit’s OFFICER can issue up to 2 Orders to Regiment or GAUNT’S GHOSTS units."
         }
       ],
@@ -9704,10 +9698,10 @@
       "role": "Mounted Epic Hero",
       "keywords": [
         "OFFICER",
-        "MOUNTED",
-        "CHARACTER",
         "LORD SOLAR LEONTUS",
         "IMPERIUM",
+        "MOUNTED",
+        "CHARACTER",
         "EPIC HERO"
       ],
       "factionKeywords": [
@@ -9822,12 +9816,12 @@
         },
         {
           "name": "SUPREME COMMANDER",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "If this model is in your army, it must be your WARLORD."
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue up to 3 Orders to:\n• Regiment units\n• Squadron units\n• Titanic units"
         }
       ],
@@ -9859,12 +9853,12 @@
       "name": "Ursula Creed",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "INFANTRY",
         "URSULA CREED",
         "OFFICER",
         "IMPERIUM",
-        "EPIC HERO",
         "CHARACTER",
-        "INFANTRY"
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9960,13 +9954,13 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue up to 3 Orders to Regiment units."
         }
       ],
       "leads": [
-        "Kasrkin",
-        "Cadian Shock Troops"
+        "Cadian Shock Troops",
+        "Kasrkin"
       ],
       "isSupport": false,
       "points": [
@@ -9988,12 +9982,12 @@
       "name": "Cadian Castellan",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
-        "CHARACTER",
-        "INFANTRY",
         "CADIAN CASTELLAN",
         "OFFICER",
-        "IMPERIUM"
+        "IMPERIUM",
+        "GRENADES",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -10238,13 +10232,13 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue 2 Orders to Regiment units."
         }
       ],
       "leads": [
-        "Cadian Shock Troops",
-        "Kasrkin"
+        "Kasrkin",
+        "Cadian Shock Troops"
       ],
       "isSupport": false,
       "points": [
@@ -10266,14 +10260,14 @@
       "name": "Cadian Command Squad",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "GRENADES",
-        "IMPERIUM",
-        "PLATOON",
-        "CADIAN",
-        "COMMAND SQUAD",
+        "INFANTRY",
+        "OFFICER",
         "CHARACTER",
-        "OFFICER"
+        "COMMAND SQUAD",
+        "CADIAN",
+        "PLATOON",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -10723,7 +10717,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This unit’s OFFICER can issue 1 Order to a Regiment unit."
         }
       ],
@@ -10750,14 +10744,13 @@
       "name": "Cadian Shock Troops",
       "role": "Battleline",
       "keywords": [
-        "CADIAN",
         "CADIAN SHOCK TROOPS",
-        "INFANTRY",
-        "BATTLELINE",
-        "IMPERIUM",
-        "GRENADES",
+        "PLATOON",
         "REGIMENT",
-        "PLATOON"
+        "GRENADES",
+        "IMPERIUM",
+        "BATTLELINE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -10781,16 +10774,19 @@
       ],
       "composition": [
         {
-          "name": "Shock Trooper Sergeant",
+          "name": "Shock Trooper Sergeant and 9 Shock Troopers",
           "min": 1,
-          "max": 2,
-          "text": "1-2 Shock Trooper Sergeants"
+          "max": 1,
+          "text": "1 Shock Trooper Sergeant and 9 Shock Troopers"
         },
         {
-          "name": "Shock Trooper",
-          "min": 9,
-          "max": 18,
-          "text": "9-18 Shock Troopers"
+          "text": "OR"
+        },
+        {
+          "name": "Shock Trooper Sergeants and 18 Shock Troopers",
+          "min": 2,
+          "max": 2,
+          "text": "2 Shock Trooper Sergeants and 18 Shock Troopers"
         }
       ],
       "loadout": {
@@ -10847,10 +10843,7 @@
             ]
           ],
           "per": 10,
-          "max": 1,
-          "requires": [
-            "Lasgun"
-          ]
+          "max": 1
         },
         {
           "text": "Any number of Shock Trooper Sergeants can each have their laspistol replaced with 1 bolt pistol.",
@@ -11075,7 +11068,7 @@
         {
           "name": "Shock Troops",
           "type": "Datasheet",
-          "text": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+          "text": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
           "name": "Vox-caster",
@@ -11108,13 +11101,13 @@
       "name": "Catachan Jungle Fighters",
       "role": "Battleline",
       "keywords": [
-        "REGIMENT",
-        "INFANTRY",
-        "BATTLELINE",
-        "IMPERIUM",
-        "PLATOON",
         "CATACHAN JUNGLE FIGHTERS",
-        "GRENADES"
+        "IMPERIUM",
+        "GRENADES",
+        "REGIMENT",
+        "BATTLELINE",
+        "PLATOON",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -11138,16 +11131,19 @@
       ],
       "composition": [
         {
-          "name": "Jungle Fighter Sergeant",
+          "name": "Jungle Fighter Sergeant and 9 Jungle Fighters",
           "min": 1,
-          "max": 2,
-          "text": "1-2 Jungle Fighter Sergeants"
+          "max": 1,
+          "text": "1 Jungle Fighter Sergeant and 9 Jungle Fighters"
         },
         {
-          "name": "Jungle Fighter",
-          "min": 9,
-          "max": 18,
-          "text": "9-18 Jungle Fighters"
+          "text": "OR"
+        },
+        {
+          "name": "Jungle Fighter Sergeants and 18 Jungle Fighters",
+          "min": 2,
+          "max": 2,
+          "text": "2 Jungle Fighter Sergeants and 18 Jungle Fighters"
         }
       ],
       "loadout": {
@@ -11192,10 +11188,7 @@
             ]
           ],
           "per": 10,
-          "max": 1,
-          "requires": [
-            "Lasgun"
-          ]
+          "max": 1
         }
       ],
       "weapons": [
@@ -11310,10 +11303,10 @@
       "name": "Kasrkin",
       "role": "Infantry",
       "keywords": [
-        "REGIMENT",
         "INFANTRY",
         "GRENADES",
         "IMPERIUM",
+        "REGIMENT",
         "KASRKIN"
       ],
       "factionKeywords": [
@@ -11436,10 +11429,7 @@
               "Vox-caster"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Hot-shot lasgun"
-          ]
+          "max": 1
         },
         {
           "text": "The Kasrkin Sergeant's chainsword can be replaced with 1 power weapon.",
@@ -11762,7 +11752,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 10,
@@ -11779,11 +11769,11 @@
       "name": "Attilan Rough Riders",
       "role": "Mounted",
       "keywords": [
-        "IMPERIUM",
         "MOUNTED",
+        "ATTILAN ROUGH RIDERS",
         "GRENADES",
         "REGIMENT",
-        "ATTILAN ROUGH RIDERS"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -11998,7 +11988,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -12019,12 +12009,12 @@
       "name": "Rogal Dorn Battle Tank",
       "role": "Vehicle",
       "keywords": [
+        "SQUADRON",
         "FRAME",
         "ROGAL DORN BATTLE TANK",
         "VEHICLE",
         "SMOKE",
-        "IMPERIUM",
-        "SQUADRON"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -12327,7 +12317,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -12345,9 +12335,9 @@
       "role": "Fortifications",
       "keywords": [
         "FRAME",
-        "AEGIS DEFENCE LINE",
+        "FORTIFICATION",
         "IMPERIUM",
-        "FORTIFICATION"
+        "AEGIS DEFENCE LINE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -12423,7 +12413,7 @@
         },
         {
           "name": "DEPLOYMENT",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "When this model is set up, it will consist of 1 platform section, up to 5 shield sections, up to 2 broken shield sections, and up to 2 end sections. All sections must be connected to each other to form a continuous defence line; the two broken shield sections can be placed either at the end of the defence line, or in the middle of it such that both are within 1/2\" of each other (in this case, these two sections count as being connected to each other). All the sections that have been set up are then treated as a single model for all rules purposes."
         }
       ],
@@ -12448,12 +12438,12 @@
       "name": "Leman Russ Eradicator",
       "role": "Vehicle",
       "keywords": [
-        "SMOKE",
-        "IMPERIUM",
-        "SQUADRON",
-        "FRAME",
         "LEMAN RUSS ERADICATOR",
-        "VEHICLE"
+        "SQUADRON",
+        "SMOKE",
+        "VEHICLE",
+        "IMPERIUM",
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -12782,7 +12772,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -12793,11 +12783,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -12812,12 +12802,12 @@
       "name": "Leman Russ Executioner",
       "role": "Vehicle",
       "keywords": [
+        "LEMAN RUSS EXECUTIONER",
+        "FRAME",
+        "SQUADRON",
         "VEHICLE",
         "SMOKE",
-        "IMPERIUM",
-        "SQUADRON",
-        "FRAME",
-        "LEMAN RUSS EXECUTIONER"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -13158,7 +13148,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -13169,11 +13159,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -13188,12 +13178,12 @@
       "name": "Leman Russ Exterminator",
       "role": "Vehicle",
       "keywords": [
-        "IMPERIUM",
-        "FRAME",
-        "SQUADRON",
-        "LEMAN RUSS EXTERMINATOR",
         "SMOKE",
-        "VEHICLE"
+        "VEHICLE",
+        "IMPERIUM",
+        "SQUADRON",
+        "FRAME",
+        "LEMAN RUSS EXTERMINATOR"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -13522,7 +13512,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -13533,11 +13523,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -13553,11 +13543,11 @@
       "role": "Vehicle",
       "keywords": [
         "LEMAN RUSS PUNISHER",
-        "SMOKE",
-        "SQUADRON",
         "IMPERIUM",
         "FRAME",
-        "VEHICLE"
+        "VEHICLE",
+        "SMOKE",
+        "SQUADRON"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -13883,7 +13873,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -13894,11 +13884,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -13913,12 +13903,12 @@
       "name": "Leman Russ Vanquisher",
       "role": "Vehicle",
       "keywords": [
+        "VEHICLE",
         "SMOKE",
         "IMPERIUM",
-        "SQUADRON",
-        "FRAME",
         "LEMAN RUSS VANQUISHER",
-        "VEHICLE"
+        "FRAME",
+        "SQUADRON"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -14246,7 +14236,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -14257,11 +14247,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Multi-melta",
+          "name": "Lascannon",
           "pts": 5
         },
         {
-          "name": "Lascannon",
+          "name": "Multi-melta",
           "pts": 5
         },
         {
@@ -14278,10 +14268,10 @@
       "keywords": [
         "REGIMENT",
         "IMPERIUM",
+        "GRENADES",
         "INFANTRY",
         "TEMPESTUS SCIONS",
-        "MILITARUM TEMPESTUS",
-        "GRENADES"
+        "MILITARUM TEMPESTUS"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -14419,7 +14409,7 @@
               "name": "Bolt pistol",
               "range": 12,
               "A": "1",
-              "skill": 3,
+              "skill": 4,
               "S": 4,
               "AP": 0,
               "D": "1",
@@ -14697,7 +14687,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -14718,13 +14708,13 @@
       "name": "Tempestus Aquilons",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
         "INFANTRY",
-        "TEMPESTUS AQUILONS",
         "MILITARUM TEMPESTUS",
-        "REGIMENT",
         "IMPERIUM",
-        "SMOKE"
+        "TEMPESTUS AQUILONS",
+        "REGIMENT",
+        "SMOKE",
+        "GRENADES"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -14776,7 +14766,7 @@
         "The Tempestor Aquilon’s sentry flamer can be replaced with one of the following:• 1 sentry hot-shot volley gun\n• 1 sentry grenade launcher",
         "The Tempestor Aquilon’s hot-shot lascarbine can be replaced with one of the following:• 1 chainsword\n• 1 power weapon\n• 1 hot-shot laspistol",
         "The Tempestor Aquilon can be equipped with one of the following:• 1 bolt pistol\n• 1 hot-shot laspistol",
-        "One Tempestus Aquilon’s hot-shot lascarbine can be replaced with 1 of the following:• 1 melta carbine\n• 1 plasma carbine",
+        "One Tempestus Aquilon’s hot‑shot lascarbine can be replaced with 1 of the following:• 1 melta carbine\n• 1 plasma carbine",
         "One Tempestus Aquilon’s hot-shot lascarbine can be replaced with 2 hot-shot laspistols.",
         "One Tempestus Aquilon’s hot-shot lascarbine can be replaced with 1 hot-shot long-las.",
         "Up to two Tempestus Aquilons can each have their hot-shot lascarbine replaced with 1 hot-shot laspistol."
@@ -14832,7 +14822,7 @@
           ]
         },
         {
-          "text": "One Tempestus Aquilon's hot-shot lascarbine can be replaced with 1 of the following:• 1 melta carbine • 1 plasma carbine",
+          "text": "One Tempestus Aquilon's hot‑shot lascarbine can be replaced with 1 of the following:• 1 melta carbine • 1 plasma carbine",
           "scope": "upTo",
           "who": "Tempestus Aquilon",
           "replace": [
@@ -14900,7 +14890,7 @@
               "name": "Bolt pistol",
               "range": 12,
               "A": "1",
-              "skill": 3,
+              "skill": 4,
               "S": 4,
               "AP": 0,
               "D": "1",
@@ -15157,13 +15147,13 @@
       "role": "Infantry Character",
       "keywords": [
         "OFFICER",
-        "INFANTRY",
+        "COMMAND SQUAD",
+        "CHARACTER",
         "GRENADES",
         "IMPERIUM",
-        "KRIEG",
-        "COMMAND SQUAD",
         "PLATOON",
-        "CHARACTER"
+        "KRIEG",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -15620,7 +15610,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This unit’s OFFICER can issue 1 Order to a Regiment unit."
         }
       ],
@@ -15649,11 +15639,11 @@
       "keywords": [
         "CHARACTER",
         "MOUNTED",
-        "LORD MARSHAL DREIR",
-        "OFFICER",
         "IMPERIUM",
         "GRENADES",
-        "EPIC HERO"
+        "EPIC HERO",
+        "OFFICER",
+        "LORD MARSHAL DREIR"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -15775,7 +15765,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue up to 3 Orders to Regiment units."
         }
       ],
@@ -15802,14 +15792,14 @@
       "name": "Catachan Command Squad",
       "role": "Infantry Character",
       "keywords": [
-        "OFFICER",
-        "CHARACTER",
-        "COMMAND SQUAD",
-        "CATACHAN",
+        "PLATOON",
         "IMPERIUM",
         "GRENADES",
         "INFANTRY",
-        "PLATOON"
+        "COMMAND SQUAD",
+        "CHARACTER",
+        "CATACHAN",
+        "OFFICER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -15875,8 +15865,8 @@
       "options": [
         "Any number of Veteran Guardsmen can each have their lasgun replaced with one of the following*:• 1 flamer\n• 1 grenade launcher\n• 1 heavy flamer\n• 1 meltagun\n• 1 plasma gun\n• 1 sniper rifle",
         "* You cannot select the same weapon from this list more than once per unit.",
-        "Veteran Guardsman equipped with a lasgun can be equipped with 1 master vox.**",
-        "Veteran Guardsman equipped with a lasgun can be equipped 1 medi-pack.**",
+        "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 master vox.**",
+        "1 Veteran Guardsman equipped with a lasgun can be equipped 1 medi-pack.**",
         "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 regimental standard.**",
         "** A model can only take one of these options.",
         "The Catachan Commander’s laspistol can be replaced with one of the following:• 1 bolt pistol\n• 1 plasma pistol",
@@ -15912,18 +15902,16 @@
           ]
         },
         {
-          "text": "Veteran Guardsman equipped with a lasgun can be equipped with 1 master vox.**",
-          "scope": "one",
-          "who": "*",
+          "text": "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 master vox.**",
+          "scope": "upTo",
+          "who": "Veteran Guardsman",
           "replace": [],
           "choices": [
             [
               "Master vox"
             ]
           ],
-          "requires": [
-            "Lasgun"
-          ]
+          "max": 1
         },
         {
           "text": "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 regimental standard.**",
@@ -15935,10 +15923,7 @@
               "Regimental standard"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Lasgun"
-          ]
+          "max": 1
         },
         {
           "text": "The Catachan Commander's laspistol can be replaced with one of the following:• 1 bolt pistol • 1 plasma pistol",
@@ -16304,7 +16289,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This unit’s OFFICER can issue 1 Order to a Regiment unit."
         }
       ],
@@ -16331,14 +16316,14 @@
       "name": "Rogal Dorn Commander",
       "role": "Vehicle Character",
       "keywords": [
-        "CHARACTER",
-        "SMOKE",
         "VEHICLE",
-        "IMPERIUM",
-        "ROGAL DORN COMMANDER",
-        "OFFICER",
+        "CHARACTER",
         "FRAME",
-        "SQUADRON"
+        "SMOKE",
+        "SQUADRON",
+        "IMPERIUM",
+        "OFFICER",
+        "ROGAL DORN COMMANDER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -16362,10 +16347,10 @@
       ],
       "composition": [
         {
-          "name": "Rogal Dorn Tank Commander",
+          "name": "Rogal Dorn Commander",
           "min": 1,
           "max": 1,
-          "text": "1 Rogal Dorn Tank Commander"
+          "text": "1 Rogal Dorn Commander"
         }
       ],
       "loadout": {
@@ -16418,8 +16403,8 @@
           "replace": [],
           "choices": [
             [
-              "Meltaguns",
-              "Meltaguns"
+              "Meltagun",
+              "Meltagun"
             ],
             [
               "Heavy stubber",
@@ -16505,6 +16490,23 @@
               "D": "1",
               "abilities": [
                 "rapid fire 3"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Meltagun",
+          "profiles": [
+            {
+              "name": "Meltagun",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 9,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
               ]
             }
           ]
@@ -16618,7 +16620,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "This OFFICER can issue up to 2 Orders to Squadron units."
         }
       ],
@@ -16639,7 +16641,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -16656,11 +16658,11 @@
       "name": "Krieg Combat Engineers",
       "role": "Infantry",
       "keywords": [
-        "SMOKE",
-        "INFANTRY",
-        "KRIEG COMBAT ENGINEERS",
-        "REGIMENT",
         "IMPERIUM",
+        "REGIMENT",
+        "KRIEG COMBAT ENGINEERS",
+        "INFANTRY",
+        "SMOKE",
         "GRENADES"
       ],
       "factionKeywords": [
@@ -17011,7 +17013,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -17033,10 +17035,10 @@
       "role": "Infantry",
       "keywords": [
         "REGIMENT",
-        "CATACHAN HEAVY WEAPONS SQUAD",
-        "GRENADES",
+        "IMPERIUM",
         "INFANTRY",
-        "IMPERIUM"
+        "GRENADES",
+        "CATACHAN HEAVY WEAPONS SQUAD"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17250,7 +17252,7 @@
         },
         {
           "name": "EMBARKING",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "While embarked within a Transport, each model takes up the space of 2 models, and each weapon equipped by these models is considered to be 2 models’ weapons for the purposes of the Firing Deck ability."
         }
       ],
@@ -17275,11 +17277,11 @@
       "name": "Krieg Heavy Weapons Squad",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
         "GRENADES",
         "IMPERIUM",
+        "REGIMENT",
         "KRIEG HEAVY WEAPONS SQUAD",
-        "REGIMENT"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17459,7 +17461,7 @@
         },
         {
           "name": "EMBARKING",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "While embarked within a Transport, each Heavy Weapons Gunner model takes up the space of 2 models, and each weapon equipped by these models is considered to be 2 models’ weapons for the purposes of the Firing Deck ability."
         }
       ],
@@ -17489,13 +17491,12 @@
       "name": "Artillery Team",
       "role": "Infantry",
       "keywords": [
-        "IMPERIUM",
-        "GRENADES",
         "INFANTRY",
         "ARTILLERY",
-        "ARTILLERY TEAM",
+        "GRENADES",
+        "IMPERIUM",
         "REGIMENT",
-        "FRAME"
+        "ARTILLERY TEAM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17697,13 +17698,12 @@
       "name": "Field Ordnance Battery",
       "role": "Infantry",
       "keywords": [
-        "FIELD ORDNANCE BATTERY",
+        "INFANTRY",
+        "ARTILLERY",
+        "GRENADES",
         "REGIMENT",
         "IMPERIUM",
-        "GRENADES",
-        "ARTILLERY",
-        "INFANTRY",
-        "FRAME"
+        "FIELD ORDNANCE BATTERY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17901,11 +17901,11 @@
       "name": "Death Riders",
       "role": "Mounted",
       "keywords": [
-        "DEATH RIDERS",
         "REGIMENT",
+        "DEATH RIDERS",
         "IMPERIUM",
-        "GRENADES",
-        "MOUNTED"
+        "MOUNTED",
+        "GRENADES"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18052,11 +18052,11 @@
       "name": "Commissar Yarrick",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "EPIC HERO",
         "COMMISSAR YARRICK",
-        "IMPERIUM",
         "OFFICER",
+        "IMPERIUM",
+        "EPIC HERO",
+        "INFANTRY",
         "CHARACTER"
       ],
       "factionKeywords": [
@@ -18207,13 +18207,13 @@
         },
         {
           "name": "ORDERS",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "This OFFICER can issue up to 2 Orders to Regiment, Squadron or Titanic units."
         },
         {
           "name": "Counterstrategist",
           "type": "Primarch",
-          "text": "At the end of your opponent’s Movement phase, you can select one enemy unit that was set up or ended a move within 8\" of this model, and one friendly Regiment unit within 6\" of and visible to this model that has not made a Normal move or been targeted with the Fire Overwatch Stratagem this phase. That REGIMENT unit can then either:\n• Make a Normal move of up to D6\".\n• Shoot at that enemy unit, but only if it is an eligible target. Until the end of the phase, each time a model in that unit makes a ranged attack, an unmodified Hit roll of 6 is required to score a hit, irrespective of the attacking weapon’s Ballistic Skill or any modifiers.\n• Make a Surge move. To do so, roll one D6: models in that unit move a number of inches up to the result, but that unit must end that move as close as possible to the closest enemy unit (excluding AIRCRAFT). When doing so, those models can b"
+          "text": "At the end of your opponent’s Movement phase, you can select one enemy unit that was set up or ended a move within 8\" of this model, and one friendly Regiment unit within 6\" of and visible to this model that has not made a Normal move or been targeted with the Fire Overwatch Stratagem this phase. That REGIMENT unit can then either:\n• Make a Normal move of up to D6\".\n• Shoot at that enemy unit, but only if it is an eligible target. Until the end of the phase, each time a model in that unit makes a ranged attack, an unmodified Hit roll of 6 is required to score a hit, irrespective of the attacking weapon’s Ballistic Skill or any modifiers.\n• Declare a charge. That REGIMENT unit must end that charge move engaged with the enemy unit you selected (note that even if this charge is successful, the charging unit does not receive any Charge bonus this turn)."
         },
         {
           "name": "Decisive Command",
@@ -18227,11 +18227,11 @@
         }
       ],
       "leads": [
-        "Cadian Shock Troops",
-        "Catachan Jungle Fighters",
         "Krieg Combat Engineers",
+        "Tempestus Scions",
         "Kasrkin",
-        "Tempestus Scions"
+        "Catachan Jungle Fighters",
+        "Cadian Shock Troops"
       ],
       "isSupport": false,
       "points": [
@@ -18253,13 +18253,13 @@
       "name": "Commissar Graves",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "EPIC HERO",
+        "COMMISSAR GRAVES",
         "IMPERIUM",
         "OFFICER",
-        "COMMISSAR GRAVES",
         "VEHICLE",
         "CHARACTER",
         "SQUADRON",
+        "EPIC HERO",
         "FRAME"
       ],
       "factionKeywords": [
@@ -18420,7 +18420,7 @@
         },
         {
           "name": "ORDERS",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "This OFFICER can issue 1 Order to Regiment or Squadron units. This OFFICER can only issue the Move! Move! Move!, Duty and Honour! and Fix Bayonets! Orders."
         }
       ],
@@ -18445,12 +18445,12 @@
       "name": "Commissar Graves on Foot",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "COMMISSAR GRAVES ON FOOT",
-        "INFANTRY",
         "CHARACTER",
         "EPIC HERO",
         "IMPERIUM",
-        "OFFICER"
+        "OFFICER",
+        "COMMISSAR GRAVES ON FOOT",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18548,21 +18548,21 @@
         },
         {
           "name": "ORDERS",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "This OFFICER can issue 1 Order to Regiment units. This OFFICER can only issue the Move! Move! Move!, Duty and Honour! and Fix Bayonets! Orders."
         },
         {
           "name": "USING COMMISSAR GRAVES",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "Your army can only include one Commissar Graves or Commissar Graves on Foot unit."
         }
       ],
       "leads": [
-        "Catachan Jungle Fighters",
-        "Cadian Shock Troops",
-        "Kasrkin",
+        "Tempestus Scions",
         "Krieg Combat Engineers",
-        "Tempestus Scions"
+        "Kasrkin",
+        "Catachan Jungle Fighters",
+        "Cadian Shock Troops"
       ],
       "isSupport": false,
       "points": [
@@ -18584,12 +18584,12 @@
       "name": "Hippogriff AFV",
       "role": "Vehicle",
       "keywords": [
-        "SQUADRON",
-        "HIPPOGRIFF AFV",
-        "VEHICLE",
         "IMPERIUM",
+        "HIPPOGRIFF AFV",
+        "SQUADRON",
+        "FRAME",
         "SMOKE",
-        "FRAME"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18826,13 +18826,13 @@
       "name": "Centaur RSV",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "IMPERIUM",
-        "SMOKE",
-        "SQUADRON",
-        "TRANSPORT",
         "CENTAUR RSV",
         "DEDICATED TRANSPORT",
+        "TRANSPORT",
+        "SQUADRON",
+        "SMOKE",
+        "IMPERIUM",
+        "VEHICLE",
         "FRAME"
       ],
       "factionKeywords": [
@@ -18941,7 +18941,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,

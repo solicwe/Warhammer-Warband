@@ -417,13 +417,22 @@ const PARSE_TOO = new Set(['QI', 'QT', 'TYR', 'AS', 'TAU', 'AE', 'LoV', 'TL', 'A
 
 function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
   const books = a.faction ? [FACTION_RULES[a.faction]].filter(Boolean) : Object.values(FACTION_RULES);
+  const baseName = a.name.replace(/\s*\([^)]*\)\s*$/, '').trim();
   for (const b of books) {
-    const r = b[`${a.name}@${sheet}`] ?? b[a.name];
+    const r = b[`${a.name}@${sheet}`] ?? b[a.name] ?? (baseName !== a.name ? (b[`${baseName}@${sheet}`] ?? b[baseName]) : undefined);
     if (r) return r;
   }
-  const c = COMMON_RULES[`${a.name}@${sheet}`] ?? COMMON_RULES[a.name];
+  const c = COMMON_RULES[`${a.name}@${sheet}`] ?? COMMON_RULES[a.name] ?? (baseName !== a.name ? (COMMON_RULES[`${baseName}@${sheet}`] ?? COMMON_RULES[baseName]) : undefined);
   if (c) return c;
   if (a.type === 'Core' || a.type === 'Faction') return undefined;
+  // If not found in a.faction book, check other books as fallback (e.g. allied units)
+  if (a.faction && FACTION_RULES[a.faction]) {
+    for (const [fId, b] of Object.entries(FACTION_RULES)) {
+      if (fId === a.faction) continue;
+      const r = b[`${a.name}@${sheet}`] ?? b[a.name] ?? (baseName !== a.name ? (b[`${baseName}@${sheet}`] ?? b[baseName]) : undefined);
+      if (r) return r;
+    }
+  }
   // factions without a hand-written file: read the common patterns from the text
   return a.faction && FACTION_RULES[a.faction] && !PARSE_TOO.has(a.faction) ? undefined : parseAbilityText(a.name, a.text);
 }

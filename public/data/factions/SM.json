@@ -3358,11 +3358,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 95
+              "pts": 85
             },
             {
               "models": 10,
-              "pts": 175
+              "pts": 170
             }
           ]
         }
@@ -3689,7 +3689,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider"
     },
     {
-      "id": "u-marneus-calgar",
+      "id": "000004246",
       "name": "Marneus Calgar",
       "role": "Infantry Epic Hero",
       "keywords": [
@@ -3717,9 +3717,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 50,
+            "h": 50,
+            "text": "50mm"
           }
         }
       ],
@@ -3838,7 +3838,7 @@
         "Bladeguard Veteran Squad",
         "Company Heroes",
         "Eradicator Squad with Heavy Bolters",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Heavy Intercessor Squad",
         "Infernus Squad",
         "Intercessor Squad",
@@ -3860,7 +3860,7 @@
         }
       ],
       "wargearOptions": [],
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Marneus-Calgar"
     },
     {
       "id": "000001611",
@@ -4330,9 +4330,9 @@
           "text": "This unit's melee attacks have:\n- [SUSTAINED HITS 1: non-MONSTER/VEHICLE].\n- Or: If the assault doctrine is active for this unit, [SUSTAINED HITS 1]."
         },
         {
-          "name": "Righteous Fury",
+          "name": "Righteous Fury (Once per battle, per army)",
           "type": "Datasheet",
-          "text": "In the Fight phase, you can use this ability. If you do, this unit’s melee attacks have +1 S, and when this unit has fought:\n• This model heals D3 wounds.\n• Or: If this model destroyed an enemy model this phase, this model heals 2D3 wounds."
+          "text": "In the Fight phase, you can use this ability. If you do, this unit's melee attacks have +1 S, and when this unit has fought:\n- This unit heals D3 wounds.\n- Or: If this unit destroyed an enemy model this phase, this unit heals 2D3 wounds."
         },
         {
           "name": "Honour of Ultramar",
@@ -4392,9 +4392,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 28.5,
+            "h": 28.5,
+            "text": "28.5mm"
           }
         },
         {
@@ -4422,9 +4422,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 28.5,
+            "h": 28.5,
+            "text": "28.5mm"
           }
         },
         {
@@ -4437,9 +4437,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 28.5,
+            "h": 28.5,
+            "text": "28.5mm"
           }
         },
         {
@@ -4452,9 +4452,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 28.5,
+            "h": 28.5,
+            "text": "28.5mm"
           }
         },
         {
@@ -4954,7 +4954,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Victrix-Honour-Guard"
     },
     {
-      "id": "u-kaius-konorius",
+      "id": "000004248",
       "name": "Kaius Konorius",
       "role": "Infantry Epic Hero",
       "keywords": [
@@ -5093,7 +5093,7 @@
         }
       ],
       "wargearOptions": [],
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Kaius-Konorius"
     },
     {
       "id": "000002105",
@@ -5331,7 +5331,7 @@
       "leads": [
         "Aggressor Squad",
         "Eradicator Squad with Heavy Bolters",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Heavy Intercessor Squad"
       ],
       "isSupport": false,
@@ -5787,7 +5787,7 @@
         "Assault Intercessor Squad",
         "Bladeguard Veteran Squad",
         "Company Heroes",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Infernus Squad"
       ],
       "isSupport": false,
@@ -6244,13 +6244,13 @@
         {
           "name": "Iron Father",
           "type": "Datasheet",
-          "text": "While this model is within 3\" of a friendly ADEPTUS ASTARTES VEHICLE unit, this model has Lone Operative."
+          "text": "While this model is within 3\" of a friendly ADEPTUS ASTARTES VEHICLE unit, this unit has Lone Operative."
         }
       ],
       "leads": [
         "Aggressor Squad",
         "Eradicator Squad with Heavy Bolters",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Heavy Intercessor Squad"
       ],
       "isSupport": false,
@@ -7105,9 +7105,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 50,
-            "h": 50,
-            "text": "50mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         }
       ],
@@ -7266,7 +7266,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 100
+              "pts": 90
             }
           ]
         }
@@ -7502,7 +7502,7 @@
       "leads": [
         "Aggressor Squad",
         "Eradicator Squad with Heavy Bolters",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Heavy Intercessor Squad",
         "Indomitor Kill Team"
       ],
@@ -7550,7 +7550,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Captain-In-Gravis-Armour"
     },
     {
-      "id": "u-captain-on-bike",
+      "id": "000002702",
       "name": "Captain on Bike",
       "role": "Mounted Character",
       "keywords": [
@@ -7773,7 +7773,7 @@
         }
       ],
       "maxPerArmy": 3,
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Captain-on-Bike"
     },
     {
       "id": "000001346",
@@ -8548,7 +8548,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 80
+              "pts": 85
             }
           ]
         }
@@ -8685,7 +8685,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 70
+              "pts": 60
             }
           ]
         }
@@ -8723,9 +8723,9 @@
           "Ld": 5,
           "OC": 1,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         }
       ],
@@ -8821,7 +8821,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 80
+              "pts": 75
             }
           ]
         }
@@ -8856,9 +8856,9 @@
           "Ld": 5,
           "OC": 1,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 50,
+            "h": 50,
+            "text": "50mm"
           }
         }
       ],
@@ -8970,7 +8970,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 85
+              "pts": 75
             }
           ]
         }
@@ -9129,7 +9129,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 80
+              "pts": 75
             }
           ]
         }
@@ -10027,7 +10027,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 45
+              "pts": 40
             }
           ]
         }
@@ -10166,7 +10166,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 60
+              "pts": 70
             }
           ]
         }
@@ -10424,7 +10424,7 @@
         {
           "name": "Techmarine",
           "type": "Datasheet",
-          "text": "While this model is within 3\" of a friendly ADEPTUS ASTARTES VEHICLE unit, this model has Lone Operative."
+          "text": "While this model is within 3\" of a friendly ADEPTUS ASTARTES VEHICLE unit, this unit has Lone Operative."
         },
         {
           "name": "Blessings of the Omnissiah",
@@ -10448,7 +10448,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 65
+              "pts": 55
             }
           ]
         }
@@ -10712,7 +10712,7 @@
       "leads": [
         "Aggressor Squad",
         "Eradicator Squad with Heavy Bolters",
-        "Eradicator Squad",
+        "Eradicator Squad with Melta Rifles",
         "Heavy Intercessor Squad",
         "Indomitor Kill Team"
       ],
@@ -10738,7 +10738,7 @@
     {
       "id": "000002772",
       "name": "Company Heroes",
-      "role": "Infantry",
+      "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
         "EXPLOSIVES",
@@ -10974,7 +10974,7 @@
           "options": [
             {
               "models": 4,
-              "pts": 135
+              "pts": 125
             }
           ]
         }
@@ -11212,11 +11212,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 90
+              "pts": 85
             },
             {
               "models": 10,
-              "pts": 175
+              "pts": 170
             }
           ]
         }
@@ -11491,7 +11491,7 @@
           "options": [
             {
               "models": 5,
-              "pts": 100
+              "pts": 95
             },
             {
               "models": 10,
@@ -11739,11 +11739,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 110
+              "pts": 115
             },
             {
               "models": 10,
-              "pts": 220
+              "pts": 230
             }
           ]
         }
@@ -12195,7 +12195,7 @@
           "options": [
             {
               "models": 5,
-              "pts": 135
+              "pts": 140
             }
           ]
         }
@@ -12390,11 +12390,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 100
+              "pts": 95
             },
             {
               "models": 10,
-              "pts": 200
+              "pts": 190
             }
           ]
         }
@@ -12566,7 +12566,7 @@
           "options": [
             {
               "models": 5,
-              "pts": 80
+              "pts": 85
             },
             {
               "models": 10,
@@ -12767,11 +12767,11 @@
           "options": [
             {
               "models": 3,
-              "pts": 85
+              "pts": 90
             },
             {
               "models": 6,
-              "pts": 170
+              "pts": 180
             }
           ]
         }
@@ -12796,13 +12796,13 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Bladeguard-Veteran-Squad"
     },
     {
-      "id": "000004137",
+      "id": "000002255",
       "name": "Sternguard Veteran Squad",
       "role": "Infantry",
       "keywords": [
@@ -13123,7 +13123,7 @@
         "pts": 15,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Sternguard-Veteran-Squad-1"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Sternguard-Veteran-Squad"
     },
     {
       "id": "000000147",
@@ -13370,11 +13370,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 120
+              "pts": 110
             },
             {
               "models": 10,
-              "pts": 240
+              "pts": 220
             }
           ]
         }
@@ -13443,7 +13443,7 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Vanguard-Veteran-Squad-With-Jump-Packs"
@@ -13608,11 +13608,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 95
+              "pts": 90
             },
             {
               "models": 10,
-              "pts": 160
+              "pts": 170
             }
           ]
         }
@@ -14680,7 +14680,7 @@
           "options": [
             {
               "models": 3,
-              "pts": 85
+              "pts": 80
             },
             {
               "models": 6,
@@ -14872,7 +14872,7 @@
           "options": [
             {
               "models": 3,
-              "pts": 95
+              "pts": 100
             },
             {
               "models": 6,
@@ -14890,15 +14890,14 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Eradicator-Squad-with-Heavy-Bolters"
     },
     {
-      "id": "000000103",
-      "name": "Eradicator Squad",
+      "id": "000004249",
+      "name": "Eradicator Squad with Melta Rifles",
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "EXPLOSIVES",
         "GRAVIS",
         "IMPERIUM",
-        "ERADICATOR SQUAD",
         "ERADICATOR SQUAD WITH MELTA RIFLES"
       ],
       "factionKeywords": [
@@ -15099,7 +15098,7 @@
             },
             {
               "models": 6,
-              "pts": 190
+              "pts": 200
             }
           ]
         }
@@ -15123,10 +15122,10 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 15,
+        "pts": 20,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Eradicator-Squad"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Eradicator-Squad-with-Melta-Rifles"
     },
     {
       "id": "000002099",
@@ -15573,7 +15572,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Inceptor-Squad"
     },
     {
-      "id": "000004138",
+      "id": "000001183",
       "name": "Terminator Squad",
       "role": "Infantry",
       "keywords": [
@@ -15830,11 +15829,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 195
+              "pts": 190
             },
             {
               "models": 10,
-              "pts": 390
+              "pts": 380
             }
           ]
         }
@@ -15906,7 +15905,7 @@
         "pts": 40,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Terminator-Squad-1"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Terminator-Squad"
     },
     {
       "id": "000000118",
@@ -16058,11 +16057,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 175
+              "pts": 170
             },
             {
               "models": 10,
-              "pts": 350
+              "pts": 340
             }
           ]
         }
@@ -16114,15 +16113,14 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Terminator-Assault-Squad"
     },
     {
-      "id": "000001158",
-      "name": "Invader ATV",
+      "id": "000004247",
+      "name": "Invader ATVs",
       "role": "Mounted",
       "keywords": [
         "MOUNTED",
         "VEHICLE",
         "FRAME",
         "IMPERIUM",
-        "INVADER ATV",
         "INVADER ATVS"
       ],
       "factionKeywords": [
@@ -16307,7 +16305,7 @@
         "pts": 10,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Invader-ATV"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Invader-ATVs"
     },
     {
       "id": "000002723",
@@ -17457,7 +17455,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 275
+              "pts": 260
             }
           ]
         }
@@ -17491,7 +17489,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Repulsor-Executioner-1"
     },
     {
-      "id": "000004139",
+      "id": "000000066",
       "name": "Land Raider Crusader",
       "role": "Transport",
       "keywords": [
@@ -17708,7 +17706,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 245
+              "pts": 230
             }
           ]
         }
@@ -17753,7 +17751,7 @@
         "pts": 20,
         "from": 2
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider-Crusader-1"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Land-Raider-Crusader"
     },
     {
       "id": "000002173",
@@ -18255,7 +18253,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 180
+              "pts": 170
             }
           ]
         }
@@ -18320,7 +18318,7 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 15,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Redemptor-Dreadnought"
@@ -18722,7 +18720,7 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Brutalis-Dreadnought-UL"
@@ -18919,7 +18917,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 140
+              "pts": 135
             }
           ]
         }
@@ -19419,7 +19417,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 155
+              "pts": 140
             }
           ]
         }
@@ -19593,7 +19591,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 110
+              "pts": 105
             }
           ]
         }
@@ -19745,7 +19743,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 165
+              "pts": 160
             }
           ]
         }
@@ -19753,7 +19751,7 @@
       "wargearOptions": [],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Lancer-1"
@@ -19897,7 +19895,7 @@
       "wargearOptions": [],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Reaper-1"
@@ -20075,7 +20073,7 @@
       "wargearOptions": [],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 10,
+        "pts": 20,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/space-marines/Gladiator-Valiant-1"
@@ -20950,9 +20948,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 50,
-            "h": 50,
-            "text": "50mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         }
       ],
@@ -24921,7 +24919,7 @@
           "base": {
             "w": 120,
             "h": 92,
-            "text": "120 x 92mm flying base"
+            "text": "120 x 92mm"
           }
         }
       ],
@@ -25726,9 +25724,9 @@
           "Ld": 6,
           "OC": 3,
           "base": {
-            "w": 60,
-            "h": 60,
-            "text": "60mm flying base"
+            "w": 0,
+            "h": 0,
+            "text": "Use model"
           }
         }
       ],
@@ -25892,7 +25890,7 @@
           "base": {
             "w": 120,
             "h": 92,
-            "text": "120 x 92mm flying base"
+            "text": "120 x 92mm"
           }
         }
       ],
@@ -28873,9 +28871,9 @@
           "Ld": 8,
           "OC": 0,
           "base": {
-            "w": 60,
-            "h": 35.5,
-            "text": "60 x 35.5mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         }
       ],
@@ -29542,9 +29540,9 @@
           "Ld": 8,
           "OC": 0,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 60,
+            "h": 35.5,
+            "text": "60 x 35.5mm"
           }
         },
         {
@@ -29587,9 +29585,9 @@
           "Ld": 6,
           "OC": 1,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 60,
+            "h": 35.5,
+            "text": "60 x 35.5mm"
           }
         }
       ],
@@ -32503,7 +32501,7 @@
           "base": {
             "w": 120,
             "h": 92,
-            "text": "120 x 92mm flying base"
+            "text": "120 x 92mm"
           }
         }
       ],
@@ -33940,9 +33938,9 @@
           "Ld": 6,
           "OC": 2,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         },
         {
@@ -33955,9 +33953,9 @@
           "Ld": 6,
           "OC": 2,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         },
         {
@@ -33970,9 +33968,9 @@
           "Ld": 6,
           "OC": 2,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         },
         {
@@ -33985,9 +33983,9 @@
           "Ld": 6,
           "OC": 2,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         },
         {
@@ -34000,9 +33998,9 @@
           "Ld": 6,
           "OC": 2,
           "base": {
-            "w": 32,
-            "h": 32,
-            "text": "32mm"
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
           }
         }
       ],
@@ -38293,11 +38291,10 @@
       "name": "Thunderhawk Gunship",
       "role": "Titanic",
       "keywords": [
-        "FLY",
-        "VEHICLE",
         "TRANSPORT",
         "IMPERIUM",
-        "THUNDERHAWK GUNSHIP",
+        "FLY",
+        "VEHICLE",
         "RAVENWING",
         "TITANIC"
       ],
@@ -38307,7 +38304,7 @@
       "models": [
         {
           "name": "Thunderhawk Gunship",
-          "M": 20,
+          "M": 14,
           "T": 12,
           "Sv": 2,
           "InSv": null,
@@ -38326,38 +38323,39 @@
           "name": "Thunderhawk Gunship",
           "min": 1,
           "max": 1,
-          "text": "1 Thunderhawk Gunship"
+          "text": "1 Thunderhawk Gunship model"
         }
       ],
       "loadout": {
         "*": [
-          "lascannons",
-          "lascannons",
-          "Thunderhawk heavy cannon",
-          "twin heavy bolters",
-          "twin heavy bolters",
-          "twin heavy bolters",
-          "twin heavy bolters",
-          "armoured hull",
-          "Thunderhawk cluster bombs"
+          "Armoured Hull",
+          "Hellstrike Missile Battery",
+          "Lascannon",
+          "Lascannon",
+          "Thunderhawk Heavy Cannon",
+          "Twin Heavy Bolter",
+          "Twin Heavy Bolter",
+          "Twin Heavy Bolter",
+          "Twin Heavy Bolter"
         ]
       },
-      "loadoutText": "This model is equipped with: 2 lascannons; Thunderhawk heavy cannon; 4 twin heavy bolters; armoured hull; Thunderhawk cluster bombs.",
+      "loadoutText": "This model is equipped with: 1 Armoured Hull; 1 Hellstrike Missile Battery; 2 Lascannon; 1 Thunderhawk Heavy Cannon; 4 Twin Heavy Bolter.",
       "options": [
-        "This model’s Thunderhawk heavy cannon can be replaced with 1 turbo-laser destructor.",
-        "This model’s Thunderhawk cluster bombs can be replaced with 1 hellstrike missile battery."
+        "This model's Thunderhawk Heavy Cannon can be replaced with 1 Turbo-laser Destructor.",
+        "This model’s Thunderhawk cluster bombs can be replaced with 1 hellstrike missile battery.",
+        "This model’s Thunderhawk heavy cannon can be replaced with 1 turbo-laser destructor."
       ],
       "wargearOptions": [
         {
-          "text": "This model's Thunderhawk heavy cannon can be replaced with 1 turbo-laser destructor.",
+          "text": "This model's Thunderhawk Heavy Cannon can be replaced with 1 Turbo-laser Destructor.",
           "scope": "one",
           "who": "*",
           "replace": [
-            "Thunderhawk heavy cannon"
+            "Thunderhawk Heavy Cannon"
           ],
           "choices": [
             [
-              "Turbo-laser destructor"
+              "Turbo-laser Destructor"
             ]
           ]
         },
@@ -38370,17 +38368,45 @@
           ],
           "choices": [
             [
-              "Hellstrike missile battery"
+              "Hellstrike Missile Battery"
+            ]
+          ]
+        },
+        {
+          "text": "This model's Thunderhawk heavy cannon can be replaced with 1 turbo-laser destructor.",
+          "scope": "one",
+          "who": "*",
+          "replace": [
+            "Thunderhawk Heavy Cannon"
+          ],
+          "choices": [
+            [
+              "Turbo-laser Destructor"
             ]
           ]
         }
       ],
       "weapons": [
         {
-          "name": "Hellstrike missile battery",
+          "name": "Lascannon",
           "profiles": [
             {
-              "name": "Hellstrike missile battery",
+              "name": "Lascannon",
+              "range": 48,
+              "A": "1",
+              "skill": 3,
+              "S": 12,
+              "AP": -3,
+              "D": "D3+3",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Hellstrike Missile Battery",
+          "profiles": [
+            {
+              "name": "Hellstrike Missile Battery",
               "range": 72,
               "A": "4",
               "skill": 3,
@@ -38394,59 +38420,44 @@
           ]
         },
         {
-          "name": "Lascannon",
+          "name": "Thunderhawk Heavy Cannon",
           "profiles": [
             {
-              "name": "Lascannon",
+              "name": "Thunderhawk Heavy Cannon",
               "range": 48,
-              "A": "1",
-              "skill": 3,
-              "S": 12,
-              "AP": -3,
-              "D": "D6+1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Thunderhawk heavy cannon",
-          "profiles": [
-            {
-              "name": "Thunderhawk heavy cannon",
-              "range": 48,
-              "A": "D6+6",
+              "A": "10",
               "skill": 3,
               "S": 10,
               "AP": -2,
               "D": "3",
               "abilities": [
-                "blast"
+                "blast 2"
               ]
             }
           ]
         },
         {
-          "name": "Turbo-laser destructor",
+          "name": "Turbo-laser Destructor",
           "profiles": [
             {
-              "name": "Turbo-laser destructor",
+              "name": "Turbo-laser Destructor",
               "range": 96,
-              "A": "D3+1",
+              "A": "3",
               "skill": 3,
               "S": 20,
               "AP": -4,
               "D": "D6+6",
               "abilities": [
-                "blast"
+                "blast 2"
               ]
             }
           ]
         },
         {
-          "name": "Twin heavy bolter",
+          "name": "Twin Heavy Bolter",
           "profiles": [
             {
-              "name": "Twin heavy bolter",
+              "name": "Twin Heavy Bolter",
               "range": 36,
               "A": "3",
               "skill": 3,
@@ -38454,17 +38465,18 @@
               "AP": -1,
               "D": "2",
               "abilities": [
-                "sustained hits 1",
-                "twin-linked"
+                "rapid fire 2",
+                "twin-linked",
+                "sustained hits 1"
               ]
             }
           ]
         },
         {
-          "name": "Armoured hull",
+          "name": "Armoured Hull",
           "profiles": [
             {
-              "name": "Armoured hull",
+              "name": "Armoured Hull",
               "range": "Melee",
               "A": "6",
               "skill": 4,
@@ -38484,40 +38496,51 @@
           "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, after the units embarked within it (if any) have made their emergency disembark moves, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X (if this is a random number, roll separately for each unit within 6\")."
         },
         {
+          "name": "Damaged",
+          "type": "Core",
+          "param": "10",
+          "text": "DAMAGED24.39\nThis ability always takes the form Damaged X. While a model’s remaining wounds are equal to or less than X, that model is damaged: while damaged, that model’s attacks have -1 to hit rolls."
+        },
+        {
           "name": "Hover",
           "type": "Core",
           "text": "HOVER24.17\nSome airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops.\nEach time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
         },
         {
-          "name": "Thunderhawk Cluster Bombs",
-          "type": "Wargear",
-          "text": "Each time the bearer ends a Normal move, you can select one enemy unit it moved over during that move and roll six D6: for each 3+, that unit suffers 1 mortal wound."
+          "name": "Combat Doctrines",
+          "type": "Faction",
+          "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
         },
         {
           "name": "Aerial Assault",
           "type": "Datasheet",
-          "text": "Each time a unit with the Deep Strike ability disembarks from this model after it has made a Normal move, that unit makes an assault disembark move (Core Rules, 18.06) for that disembarkation."
+          "text": "In your Movement phase, when this unit ends a normal move, units embarked within this unit can make an assault disembark move, provided every model in the embarked unit has Deep Strike."
         },
         {
-          "name": "Combat Doctrines",
-          "type": "Faction",
-          "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\n\nASSAULT DOCTRINE: When this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\n\nDEVASTATOR DOCTRINE: This unit's ranged attacks have [ASSAULT].\n\nTACTICAL DOCTRINE: When this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\n\nUnless otherwise stated:\n- You can only select each combat doctrine once per battle.\n- Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit.\n\nSPACE MARINE CHAPTERS: If an ADEPTUS ASTARTES unit has a second Faction keyword on its datasheet, that Faction keyword is the name of that unit's Chapter. You cannot include units from more than one Chapter in your army."
+          "name": "Thunderhawk Cluster Bombs",
+          "type": "Datasheet",
+          "text": "In your Movement phase, when this unit ends a normal/advance move, you can select one enemy unit this unit moved over during that move and roll six D6:\n• For each 3+, that enemy unit suffers 1 mortal wound."
         }
       ],
       "leads": [],
       "isSupport": false,
-      "transport": "This model has a transport capacity of 30 Adeptus Astartes Infantry or Adeptus Astartes Mounted models. Each Jump Pack, Wulfen, Gravis or Terminator model takes up the space of 2 models. Each Centurion model takes up the space of 3 models. Each MOUNTED model takes up the space of 4 models.",
-      "damaged": {
-        "w": "1-10",
-        "text": "While this model has 1-10 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll."
-      },
+      "transport": "This model has a transport capacity of 30 Adeptus Astartes Infantry models. Or Adeptus Astartes Mounted models. Each Jump Pack, Gravis, Terminator model takes up the space of 2 models. Each ADEPTUS ASTARTES MOUNTED model takes up the space of 4 models.",
       "points": [
         {
-          "label": "YOUR UNIT COSTS",
+          "label": "YOUR 1ST UNIT COSTS",
           "options": [
             {
               "models": 1,
               "pts": 850
+            }
+          ]
+        },
+        {
+          "label": "YOUR 2ND+ UNIT COSTS",
+          "options": [
+            {
+              "models": 1,
+              "pts": 950
             }
           ]
         }
@@ -38530,9 +38553,9 @@
       "name": "Astraeus",
       "role": "Titanic",
       "keywords": [
-        "ASTRAEUS",
-        "TITANIC",
+        "FRAME",
         "VEHICLE",
+        "TITANIC",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -38560,93 +38583,93 @@
           "name": "Astraeus",
           "min": 1,
           "max": 1,
-          "text": "1 Astraeus"
+          "text": "1 Astraeus model"
         }
       ],
       "loadout": {
         "*": [
-          "Astraeus las-rippers",
-          "Astraeus las-rippers",
-          "ironhail heavy stubber",
-          "storm bolter",
-          "twin heavy bolter",
-          "twin macro-accelerator cannon",
-          "armoured hull"
+          "Armoured Hull",
+          "Astareus Las-ripper",
+          "Astareus Las-ripper",
+          "Ironhail Heavy Stubber",
+          "Storm Bolter",
+          "Twin Heavy Bolter",
+          "Twin Macro-accelerator Cannon"
         ]
       },
-      "loadoutText": "This model is equipped with: 2 Astraeus las-rippers; ironhail heavy stubber; storm bolter; twin heavy bolter; twin macro-accelerator cannon; armoured hull.",
+      "loadoutText": "This model is equipped with: 1 Armoured Hull; 2 Astareus Las-ripper; 1 Ironhail Heavy Stubber; 1 Storm Bolter; 1 Twin Heavy Bolter; 1 Twin Macro-accelerator Cannon.",
       "options": [
-        "This model’s 2 Astraeus las-rippers can be replaced with 2 plasma eradicators.",
-        "This model’s twin heavy bolter can be replaced with 1 twin lascannon.",
-        "This model can be equipped with 1 ironhail heavy stubber."
+        "This model's 2 Astareus Las-rippers can be replaced with 2 Plasma Eradicator.",
+        "This model can be equipped with 1 Ironhail Heavy Stubber",
+        "This model's Twin Heavy Bolter can be replaced with 1 Twin Lascannon."
       ],
       "wargearOptions": [
         {
-          "text": "This model's 2 Astraeus las-rippers can be replaced with 2 plasma eradicators.",
+          "text": "This model's 2 Astareus Las-rippers can be replaced with 2 Plasma Eradicator.",
           "scope": "one",
           "who": "*",
           "replace": [
-            "Astraeus las-ripper",
-            "Astraeus las-ripper"
+            "Astareus Las-ripper",
+            "Astareus Las-ripper"
           ],
           "choices": [
             [
-              "Plasma eradicator",
-              "Plasma eradicator"
+              "Plasma Eradicator",
+              "Plasma Eradicator"
             ]
           ]
         },
         {
-          "text": "This model's twin heavy bolter can be replaced with 1 twin lascannon.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Twin heavy bolter"
-          ],
-          "choices": [
-            [
-              "Twin lascannon"
-            ]
-          ]
-        },
-        {
-          "text": "This model can be equipped with 1 ironhail heavy stubber.",
+          "text": "This model can be equipped with 1 Ironhail Heavy Stubber",
           "scope": "one",
           "who": "*",
           "replace": [],
           "choices": [
             [
-              "Ironhail heavy stubber"
+              "Ironhail Heavy Stubber"
+            ]
+          ]
+        },
+        {
+          "text": "This model's Twin Heavy Bolter can be replaced with 1 Twin Lascannon.",
+          "scope": "one",
+          "who": "*",
+          "replace": [
+            "Twin Heavy Bolter"
+          ],
+          "choices": [
+            [
+              "Twin Lascannon"
             ]
           ]
         }
       ],
       "weapons": [
         {
-          "name": "Astraeus las-ripper",
+          "name": "Astareus Las-ripper",
           "profiles": [
             {
-              "name": "Astraeus las-ripper",
+              "name": "Astareus Las-ripper",
               "range": 36,
               "A": "2",
               "skill": 3,
               "S": 12,
               "AP": -3,
-              "D": "D6+1",
+              "D": "D3+3",
               "abilities": []
             }
           ]
         },
         {
-          "name": "Ironhail heavy stubber",
+          "name": "Ironhail Heavy Stubber",
           "profiles": [
             {
-              "name": "Ironhail heavy stubber",
+              "name": "Ironhail Heavy Stubber",
               "range": 36,
               "A": "3",
               "skill": 3,
               "S": 4,
-              "AP": 0,
+              "AP": -1,
               "D": "1",
               "abilities": [
                 "rapid fire 3"
@@ -38655,45 +38678,45 @@
           ]
         },
         {
-          "name": "Plasma eradicator",
+          "name": "Plasma Eradicator",
           "profiles": [
             {
-              "name": "standard",
+              "name": "Standard",
               "range": 36,
-              "A": "D6",
+              "A": "3",
               "skill": 3,
               "S": 7,
               "AP": -2,
               "D": "2",
               "abilities": [
-                "blast"
+                "blast 2"
               ]
             },
             {
-              "name": "supercharge",
+              "name": "Supercharge",
               "range": 36,
-              "A": "D6",
+              "A": "3",
               "skill": 3,
               "S": 8,
               "AP": -3,
               "D": "3",
               "abilities": [
-                "blast",
+                "blast 2",
                 "hazardous"
               ]
             }
           ]
         },
         {
-          "name": "Storm bolter",
+          "name": "Storm Bolter",
           "profiles": [
             {
-              "name": "Storm bolter",
+              "name": "Storm Bolter",
               "range": 24,
               "A": "2",
               "skill": 3,
-              "S": 4,
-              "AP": 0,
+              "S": 5,
+              "AP": -1,
               "D": "1",
               "abilities": [
                 "rapid fire 2"
@@ -38702,10 +38725,10 @@
           ]
         },
         {
-          "name": "Twin heavy bolter",
+          "name": "Twin Heavy Bolter",
           "profiles": [
             {
-              "name": "Twin heavy bolter",
+              "name": "Twin Heavy Bolter",
               "range": 36,
               "A": "3",
               "skill": 3,
@@ -38713,23 +38736,24 @@
               "AP": -1,
               "D": "2",
               "abilities": [
+                "twin-linked",
                 "sustained hits 1",
-                "twin-linked"
+                "rapid fire 2"
               ]
             }
           ]
         },
         {
-          "name": "Twin lascannon",
+          "name": "Twin Lascannon",
           "profiles": [
             {
-              "name": "Twin lascannon",
+              "name": "Twin Lascannon",
               "range": 48,
               "A": "1",
               "skill": 3,
               "S": 12,
               "AP": -3,
-              "D": "D6+1",
+              "D": "D3+3",
               "abilities": [
                 "twin-linked"
               ]
@@ -38737,28 +38761,28 @@
           ]
         },
         {
-          "name": "Twin macro-accelerator cannon",
+          "name": "Twin Macro-accelerator Cannon",
           "profiles": [
             {
-              "name": "Twin macro-accelerator cannon",
+              "name": "Twin Macro-accelerator Cannon",
               "range": 72,
               "A": "12",
               "skill": 3,
-              "S": 9,
+              "S": 10,
               "AP": -1,
               "D": "3",
               "abilities": [
-                "sustained hits 1",
-                "twin-linked"
+                "twin-linked",
+                "sustained hits 1"
               ]
             }
           ]
         },
         {
-          "name": "Armoured hull",
+          "name": "Armoured Hull",
           "profiles": [
             {
-              "name": "Armoured hull",
+              "name": "Armoured Hull",
               "range": "Melee",
               "A": "6",
               "skill": 4,
@@ -38778,22 +38802,24 @@
           "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, after the units embarked within it (if any) have made their emergency disembark moves, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X (if this is a random number, roll separately for each unit within 6\")."
         },
         {
-          "name": "Suppression Fire",
-          "type": "Datasheet",
-          "text": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more attacks made with its twin macro-accelerator cannon this phase. Until the start of your next turn, while this model is on the battlefield, that enemy unit is suppressed. While a unit is suppressed, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
+          "name": "Damaged",
+          "type": "Core",
+          "param": "8",
+          "text": "DAMAGED24.39\nThis ability always takes the form Damaged X. While a model’s remaining wounds are equal to or less than X, that model is damaged: while damaged, that model’s attacks have -1 to hit rolls."
         },
         {
           "name": "Combat Doctrines",
           "type": "Faction",
-          "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\n\nASSAULT DOCTRINE: When this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\n\nDEVASTATOR DOCTRINE: This unit's ranged attacks have [ASSAULT].\n\nTACTICAL DOCTRINE: When this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\n\nUnless otherwise stated:\n- You can only select each combat doctrine once per battle.\n- Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit.\n\nSPACE MARINE CHAPTERS: If an ADEPTUS ASTARTES unit has a second Faction keyword on its datasheet, that Faction keyword is the name of that unit's Chapter. You cannot include units from more than one Chapter in your army."
+          "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
+        },
+        {
+          "name": "Suppression Fire",
+          "type": "Datasheet",
+          "text": "In your Shooting phase, when this unit has shot, select one enemy unit hit by this model’s Twin Macro-accelerator Cannon weapon. That enemy unit is suppressed until the start of your next turn:\n• While a unit is suppressed, that unit’s attacks have -1 to hit rolls."
         }
       ],
       "leads": [],
       "isSupport": false,
-      "damaged": {
-        "w": "1-8",
-        "text": "While this model has 1-8 wounds remaining, subtract 4 from its Objective Control characteristic and each time this model makes an attack, subtract 1 from the Hit roll."
-      },
       "points": [
         {
           "label": "YOUR 1ST UNIT COSTS",
@@ -38805,7 +38831,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,

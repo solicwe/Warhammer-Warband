@@ -519,7 +519,7 @@
           "name": "Superior Creation",
           "pts": 30,
           "upgrade": false,
-          "text": "ADEPTUS CUSTODES INFANTRY model only. (Once per battle, per army) At the end of a phase in which this model is destroyed, roll one D6:\n• On a 2+, set this model back up on the battlefield as close as possible to where it was destroyed, unengaged, with 3 wounds remaining."
+          "text": "ADEPTUS CUSTODES INFANTRY model only. At the end of a phase in which this model is destroyed, roll one D6:\n- On a 2+, set this model back up on the battlefield as close as possible to where it was destroyed, unengaged, with 3 wounds remaining."
         }
       ],
       "stratagems": [
@@ -778,7 +778,7 @@
       "forceDisposition": "Disruption",
       "keywordGrants": [
         {
-          "unit": "Prosecutors",
+          "unit": "Prosecutor Squad",
           "keyword": "BATTLELINE"
         }
       ],
@@ -969,7 +969,7 @@
         }
       ],
       "leads": [
-        "Custodian Guard",
+        "Custodian Guard Sodality",
         "Sentinel Guard Sodality",
         "Custodian Wardens",
         "Allarus Custodians",
@@ -1188,7 +1188,7 @@
         }
       ],
       "leads": [
-        "Custodian Guard",
+        "Custodian Guard Sodality",
         "Sentinel Guard Sodality",
         "Custodian Wardens"
       ],
@@ -1242,7 +1242,7 @@
         "pts": 20,
         "from": 2
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-captain"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-Captain"
     },
     {
       "id": "000001448",
@@ -1446,7 +1446,7 @@
         "pts": 20,
         "from": 2
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-captain-In-Allarus-Terminator-Armour"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-Captain-in-Allarus-Terminator-Armour"
     },
     {
       "id": "000001449",
@@ -1557,11 +1557,6 @@
           "text": ""
         },
         {
-          "name": "Leader",
-          "type": "Core",
-          "text": ""
-        },
-        {
           "name": "Aegis of the Emperor",
           "type": "Faction",
           "text": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds."
@@ -1587,9 +1582,7 @@
           "text": "At the end of the Fight phase, if this unit was eligible to fight this phase:\n- If this unit is unengaged, this unit can make a normal move.\n- Or: If this unit is engaged, this unit can make a fall-back move."
         }
       ],
-      "leads": [
-        "Vertus Praetors"
-      ],
+      "leads": [],
       "isSupport": false,
       "points": [
         {
@@ -1597,7 +1590,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 150
+              "pts": 205
             }
           ]
         }
@@ -1622,7 +1615,7 @@
         "pts": 20,
         "from": 2
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-captain-On-Dawneagle-Jetbike"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Shield-Captain-on-Dawneagle-Jetbike"
     },
     {
       "id": "000002518",
@@ -1746,7 +1739,7 @@
         }
       ],
       "leads": [
-        "Custodian Guard",
+        "Custodian Guard Sodality",
         "Sentinel Guard Sodality",
         "Custodian Wardens"
       ],
@@ -1771,7 +1764,7 @@
       "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Blade-Champion"
     },
     {
-      "id": "u-sentinel-guard-sodality",
+      "id": "000004255",
       "name": "Sentinel Guard Sodality",
       "role": "Battleline",
       "keywords": [
@@ -1929,18 +1922,17 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Sentinel-Guard-Sodality"
     },
     {
-      "id": "000000882",
-      "name": "Custodian Guard",
+      "id": "000004251",
+      "name": "Custodian Guard Sodality",
       "role": "Battleline",
       "keywords": [
         "INFANTRY",
         "BATTLELINE",
         "IMPERIUM",
         "TRUSTED SENTINEL",
-        "CUSTODIAN GUARD",
         "CUSTODIAN GUARD SODALITY"
       ],
       "factionKeywords": [
@@ -1981,9 +1973,9 @@
       "composition": [
         {
           "name": "Custodian Guard",
-          "min": 4,
-          "max": 5,
-          "text": "4-5 Custodian Guard"
+          "min": 2,
+          "max": 3,
+          "text": "2-3 Custodian Guard"
         },
         {
           "name": "Custodian Guard with Vexilla",
@@ -2074,12 +2066,8 @@
           "label": "",
           "options": [
             {
-              "models": 4,
-              "pts": 180
-            },
-            {
-              "models": 5,
-              "pts": 225
+              "models": 3,
+              "pts": 240
             }
           ]
         }
@@ -2087,10 +2075,10 @@
       "wargearOptions": [],
       "maxPerArmy": 6,
       "dupTax": {
-        "pts": 10,
+        "pts": 30,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Custodian-Guard"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Custodian-Guard-Sodality"
     },
     {
       "id": "000001450",
@@ -2502,11 +2490,11 @@
           "options": [
             {
               "models": 2,
-              "pts": 120
+              "pts": 180
             },
             {
               "models": 3,
-              "pts": 180
+              "pts": 270
             },
             {
               "models": 5,
@@ -2549,13 +2537,13 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 40,
+        "pts": 30,
         "from": 3
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Allarus-Custodians"
     },
     {
-      "id": "u-aquilon-terminators-with-solarite-power-gauntlets",
+      "id": "000004254",
       "name": "Aquilon Terminators with Solarite Power Gauntlets",
       "role": "Infantry",
       "keywords": [
@@ -2578,9 +2566,9 @@
           "Ld": 5,
           "OC": 2,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 50,
+            "h": 50,
+            "text": "50mm"
           }
         }
       ],
@@ -2673,10 +2661,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Aquilon-Terminators-with-Solarite-Power-Gauntlets"
     },
     {
-      "id": "u-aquilon-terminators-with-solarite-power-talons",
+      "id": "000004259",
       "name": "Aquilon Terminators with Solarite Power Talons",
       "role": "Infantry",
       "keywords": [
@@ -2699,9 +2687,9 @@
           "Ld": 5,
           "OC": 2,
           "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
+            "w": 50,
+            "h": 50,
+            "text": "50mm"
           }
         }
       ],
@@ -2832,10 +2820,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Aquilon-Terminators-with-Solarite-Power-Talons"
     },
     {
-      "id": "u-venatari-with-kinetic-destroyers",
+      "id": "000004262",
       "name": "Venatari with Kinetic Destroyers",
       "role": "Infantry",
       "keywords": [
@@ -2971,10 +2959,10 @@
         "pts": 25,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Venatari-with-Kinetic-Destroyers"
     },
     {
-      "id": "u-venatari-with-verutum-lances",
+      "id": "000004253",
       "name": "Venatari with Verutum Lances",
       "role": "Infantry",
       "keywords": [
@@ -3103,10 +3091,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Venatari-with-Verutum-Lances"
     },
     {
-      "id": "u-telemon-heavy-dreadnought",
+      "id": "000001479",
       "name": "Telemon Heavy Dreadnought",
       "role": "Walker",
       "keywords": [
@@ -3130,9 +3118,9 @@
           "Ld": 5,
           "OC": 4,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 100,
+            "h": 100,
+            "text": "100mm"
           }
         }
       ],
@@ -3369,10 +3357,10 @@
         "pts": 30,
         "from": 2
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Telemon-Heavy-Dreadnought"
     },
     {
-      "id": "u-contemptor-galatus-dreadnought",
+      "id": "000001557",
       "name": "Contemptor-Galatus Dreadnought",
       "role": "Walker",
       "keywords": [
@@ -3396,9 +3384,9 @@
           "Ld": 5,
           "OC": 3,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 60,
+            "h": 60,
+            "text": "60mm"
           }
         }
       ],
@@ -3497,10 +3485,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Contemptor-Galatus-Dreadnought"
     },
     {
-      "id": "u-contemptor-achillus-dreadnought",
+      "id": "000001458",
       "name": "Contemptor-Achillus Dreadnought",
       "role": "Walker",
       "keywords": [
@@ -3524,9 +3512,9 @@
           "Ld": 5,
           "OC": 3,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 60,
+            "h": 60,
+            "text": "60mm"
           }
         }
       ],
@@ -3746,7 +3734,7 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Contemptor-Achillus-Dreadnought"
     },
     {
       "id": "000001454",
@@ -3878,11 +3866,11 @@
           "options": [
             {
               "models": 2,
-              "pts": 155
+              "pts": 220
             },
             {
               "models": 3,
-              "pts": 230
+              "pts": 330
             }
           ]
         }
@@ -3904,13 +3892,13 @@
       ],
       "maxPerArmy": 3,
       "dupTax": {
-        "pts": 25,
+        "pts": 20,
         "from": 2
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Vertus-Praetors"
     },
     {
-      "id": "u-gyrfalcon-jetbike-sodality",
+      "id": "000004257",
       "name": "Gyrfalcon Jetbike Sodality",
       "role": "Mounted",
       "keywords": [
@@ -3933,9 +3921,9 @@
           "Ld": 5,
           "OC": 2,
           "base": {
-            "w": 90,
-            "h": 52,
-            "text": "90 x 52mm"
+            "w": 75,
+            "h": 42,
+            "text": "75 x 42mm"
           }
         }
       ],
@@ -4104,10 +4092,10 @@
         "pts": 20,
         "from": 2
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Gyrfalcon-Jetbike-Sodality"
     },
     {
-      "id": "u-caladius-grav-tank",
+      "id": "000001460",
       "name": "Caladius Grav-tank",
       "role": "Vehicle",
       "keywords": [
@@ -4133,9 +4121,9 @@
           "Ld": 5,
           "OC": 4,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 150,
+            "h": 95,
+            "text": "150 x 95mm"
           }
         }
       ],
@@ -4290,10 +4278,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Caladius-Grav-Tank"
     },
     {
-      "id": "u-caladius-annihilator-grav-tank",
+      "id": "000004261",
       "name": "Caladius Annihilator Grav-tank",
       "role": "Vehicle",
       "keywords": [
@@ -4319,9 +4307,9 @@
           "Ld": 5,
           "OC": 4,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 150,
+            "h": 95,
+            "text": "150 x 95mm"
           }
         }
       ],
@@ -4475,10 +4463,10 @@
         "pts": 30,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Caladius-Annihilator-Grav-Tank"
     },
     {
-      "id": "u-pallas-grav-attack",
+      "id": "000001562",
       "name": "Pallas Grav-attack",
       "role": "Vehicle",
       "keywords": [
@@ -4503,9 +4491,9 @@
           "Ld": 5,
           "OC": 2,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 105,
+            "h": 70,
+            "text": "105 x 70mm"
           }
         }
       ],
@@ -4631,10 +4619,10 @@
         }
       ],
       "maxPerArmy": 3,
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Pallas-Grav-Attack"
     },
     {
-      "id": "u-coronus-grav-carrier",
+      "id": "000001461",
       "name": "Coronus Grav-carrier",
       "role": "Transport",
       "keywords": [
@@ -4660,9 +4648,9 @@
           "Ld": 5,
           "OC": 5,
           "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Hull"
+            "w": 150,
+            "h": 95,
+            "text": "150 x 95mm"
           }
         }
       ],
@@ -4827,7 +4815,7 @@
         "pts": 20,
         "from": 3
       },
-      "link": ""
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Coronus-Grav-Carrier"
     },
     {
       "id": "000002520",
@@ -4982,9 +4970,9 @@
         }
       ],
       "leads": [
-        "Prosecutors",
-        "Vigilators",
-        "Witchseekers"
+        "Prosecutor Squad",
+        "Vigilator Squad",
+        "Witchseeker Squad"
       ],
       "isSupport": true,
       "points": [
@@ -5019,17 +5007,16 @@
         }
       ],
       "maxPerArmy": 3,
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Knight-centura"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Knight-Centura"
     },
     {
-      "id": "000002521",
-      "name": "Prosecutors",
+      "id": "000004252",
+      "name": "Prosecutor Squad",
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "IMPERIUM",
         "ANATHEMA PSYKANA",
-        "PROSECUTORS",
         "PROSECUTOR SQUAD"
       ],
       "factionKeywords": [
@@ -5124,11 +5111,11 @@
           "options": [
             {
               "models": 4,
-              "pts": 50
+              "pts": 45
             },
             {
               "models": 5,
-              "pts": 55
+              "pts": 50
             },
             {
               "models": 9,
@@ -5143,17 +5130,16 @@
       ],
       "wargearOptions": [],
       "maxPerArmy": 3,
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Prosecutors"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Prosecutor-Squad"
     },
     {
-      "id": "000002522",
-      "name": "Vigilators",
+      "id": "000004258",
+      "name": "Vigilator Squad",
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "IMPERIUM",
         "ANATHEMA PSYKANA",
-        "VIGILATORS",
         "VIGILATOR SQUAD"
       ],
       "factionKeywords": [
@@ -5250,17 +5236,16 @@
       ],
       "wargearOptions": [],
       "maxPerArmy": 3,
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Vigilators"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Vigilator-Squad"
     },
     {
-      "id": "000002523",
-      "name": "Witchseekers",
+      "id": "000004256",
+      "name": "Witchseeker Squad",
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "IMPERIUM",
         "ANATHEMA PSYKANA",
-        "WITCHSEEKERS",
         "WITCHSEEKER SQUAD"
       ],
       "factionKeywords": [
@@ -5381,7 +5366,7 @@
       ],
       "wargearOptions": [],
       "maxPerArmy": 3,
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Witchseekers"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Witchseeker-Squad"
     },
     {
       "id": "000002524",
@@ -5554,12 +5539,11 @@
       "name": "Valerian",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "VALERIAN",
         "SHIELD-CAPTAIN",
-        "IMPERIUM",
         "EPIC HERO",
         "CHARACTER",
-        "INFANTRY"
+        "INFANTRY",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ADEPTUS CUSTODES"
@@ -5567,12 +5551,12 @@
       "models": [
         {
           "name": "Valerian",
-          "M": 6,
-          "T": 6,
+          "M": 8,
+          "T": 7,
           "Sv": 2,
           "InSv": 4,
-          "W": 6,
-          "Ld": 6,
+          "W": 8,
+          "Ld": 5,
           "OC": 2,
           "base": {
             "w": 40,
@@ -5583,10 +5567,10 @@
       ],
       "composition": [
         {
-          "name": "Valerian – EPIC HERO",
+          "name": "Valerian",
           "min": 1,
           "max": 1,
-          "text": "1 Valerian – EPIC HERO"
+          "text": "1 Valerian model"
         }
       ],
       "loadout": {
@@ -5594,7 +5578,7 @@
           "Gnosis"
         ]
       },
-      "loadoutText": "This model is equipped with: Gnosis.",
+      "loadoutText": "This model is equipped with: 1 Gnosis.",
       "options": [],
       "wargearOptions": [],
       "weapons": [
@@ -5606,11 +5590,12 @@
               "range": 24,
               "A": "3",
               "skill": 2,
-              "S": 4,
+              "S": 6,
               "AP": -1,
               "D": "2",
               "abilities": [
-                "assault"
+                "assault",
+                "rapid fire 2"
               ]
             },
             {
@@ -5620,7 +5605,7 @@
               "skill": 2,
               "S": 8,
               "AP": -3,
-              "D": "2",
+              "D": "3",
               "abilities": []
             }
           ]
@@ -5644,29 +5629,35 @@
           "text": "LEADER24.22\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
+          "name": "Aegis of the Emperor",
+          "type": "Faction",
+          "text": "Friendly Adeptus Custodes units with this ability have Feel No Pain 5+ against mortal wounds."
+        },
+        {
+          "name": "Aquila Commander",
+          "type": "Faction",
+          "text": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP."
+        },
+        {
           "name": "Martial Ka'tah",
           "type": "Faction",
-          "text": "Each time a unit from your army with this ability is selected to fight, select one of the Ka’tah Stances below. Until that unit has finished making its attacks, the selected Stance is active for it and it gains the relevant ability:\nDacatarai Stance\nThose Custodians skilled in the Dacatarai Ka'tah are able to turn their enemies numerical advantage against them. Reserved for when the Custodians must battle seething hordes of foes, this stance sees them reap a terrible tally\nMelee weapons equipped by models in this unit have the [SUSTAINED HITS 1] ability.\nRendax Stance\nMasters of Rendax are superlative monster and war machine hunters. They have studied every aspect of how to do battle with a foe far larger than themselves, how to evade its powerful attacks, exploit its blind spots and lay it low.\nMelee weapons equipped by models in this unit have the [LETHAL HITS] ability."
+          "text": "At the start of your Command phase, friendly Adeptus Custodes units with this ability are readied. While a friendly unit is readied, you can select one of the ka’tah abilities presented below for that unit to use. If you do, that unit is no longer readied.\nEach ka’tah ability will tell you when that ka’tah ability can be used, and the effects that ka’tah ability has on the unit using it.\nWe recommend placing a token next to each readied unit, removing it when that unit is no longer readied.\nFavoured Ka’tah\nMany of the most prominent shield hosts favour a specific martial ka’tah above all others.\nAll detachments tagged ‘Unique: Shield Host’ state a Favoured Ka’tah. If you selected one of these detachments, the ka’tah ability that is the Favoured Ka’tah of that detachment grants the additional effect listed in that detachment.\nExample: If you selected the Solar Watch detachment, when you select the Calistus ka’tah ability for a readied unit, that unit has +2\" M in addition to the normal effect of Calistus."
         },
         {
           "name": "Golden Laurels",
           "type": "Datasheet",
-          "text": "While this model is leading a unit, each time a melee attack targets that unit, worsen the Armour Penetration characteristic of that attack by 1."
+          "text": "Attacks that target this unit have -1 AP."
         },
         {
-          "name": "Hero of Lion's Gate",
+          "name": "Hero of Lion's Gate (Once per battle, per unit)",
           "type": "Datasheet",
-          "text": "Once per battle, after making a Hit roll, Wound roll or saving throw for this model, you can change the result of that roll to an unmodified 6."
-        },
-        {
-          "name": "Aegis of the Emperor",
-          "type": "Faction",
-          "text": "Friendly ADEPTUS CUSTODES units with this ability have Feel No Pain 5+ against mortal wounds."
+          "text": "After making a hit roll, wound roll or save roll for this model, you can change the result to an unmodified 6."
         }
       ],
       "leads": [
-        "Custodian Wardens",
-        "Custodian Guard"
+        "Sentinel Guard Sodality",
+        "Custodian Guard Sodality",
+        "Custodian Wardens"
       ],
       "isSupport": false,
       "points": [

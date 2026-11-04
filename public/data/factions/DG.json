@@ -2,7 +2,7 @@
   "id": "DG",
   "name": "Death Guard",
   "link": "https://wahapedia.ru/wh40k11ed/factions/death-guard",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Nurgle’s Gift (Aura)",
@@ -11,6 +11,10 @@
     {
       "name": "Pact of Decay",
       "text": "When mustering your army, unless specifically stated otherwise, you cannot select Plague Legions as your Army Faction."
+    },
+    {
+      "name": "Combat Doctrines",
+      "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
     }
   ],
   "detachments": [
@@ -43,15 +47,6 @@
       ],
       "stratagems": [
         {
-          "id": "000009730004",
-          "name": "EYE OF THE SWARM",
-          "cp": 1,
-          "type": "Flyblown Host Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase, when a friendly PLAGUE MARINES unit is selected to shoot.\nTARGET: That PLAGUE MARINES unit.\nEFFECT: Your unit’s ranged attacks have [CLOSE-QUARTERS]."
-        },
-        {
           "id": "000009730003",
           "name": "DRONING HORROR",
           "cp": 1,
@@ -68,6 +63,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Start of the Fight phase\nTARGET: One friendly engaged PLAGUE MARINES unit.\nEFFECT: Select one enemy unit engaged with your unit. That enemy unit makes a battle-shock roll, with -1 to that battle-shock roll."
+        },
+        {
+          "id": "000009730004",
+          "name": "EYE OF THE SWARM",
+          "cp": 1,
+          "type": "Flyblown Host Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase, when a friendly PLAGUE MARINES unit is selected to shoot.\nTARGET: That PLAGUE MARINES unit.\nEFFECT: Your unit’s ranged attacks have [CLOSE-QUARTERS]."
         }
       ]
     },
@@ -75,7 +79,7 @@
       "id": "000001049",
       "name": "Virulent Vectorium",
       "dp": 3,
-      "forceDisposition": "Take and Hold",
+      "forceDisposition": "Purge the Foe, Take and Hold",
       "rules": [
         {
           "name": "Worldblight",
@@ -123,15 +127,6 @@
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Death Guard unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit, subtract 1 from the Damage characteristic of that attack."
         },
         {
-          "id": "000010124005",
-          "name": "LEECHSPORE ERUPTION",
-          "cp": 1,
-          "type": "Virulent Vectorium – Epic Deed Stratagem",
-          "turn": "Your turn",
-          "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One Death Guard model your army that has lost one or more wounds.\nEFFECT: Select one enemy unit within 3\" of your model. Roll a number of D6 equal to the number of wounds your model has lost: for each 5+, that enemy unit suffers one mortal wound (to a maximum of 6 mortal wounds) and your model regains 1 lost wound (to a maximum of 6 lost wounds)."
-        },
-        {
           "id": "000010124004",
           "name": "PLAGUESURGE",
           "cp": 2,
@@ -139,6 +134,15 @@
           "turn": "Your turn",
           "phase": "Command phase",
           "text": "WHEN: Your Command phase.\nTARGET: Your Death Guard WARLORD that is on the battlefield.\nEFFECT: Until the start of your next Command phase, add 3\" to the Contagion Range of models from your army."
+        },
+        {
+          "id": "000010124005",
+          "name": "LEECHSPORE ERUPTION",
+          "cp": 1,
+          "type": "Virulent Vectorium – Epic Deed Stratagem",
+          "turn": "Your turn",
+          "phase": "Command phase",
+          "text": "WHEN: Your Command phase.\nTARGET: One Death Guard model your army that has lost one or more wounds.\nEFFECT: Select one enemy unit within 3\" of your model. Roll a number of D6 equal to the number of wounds your model has lost: for each 5+, that enemy unit suffers one mortal wound (to a maximum of 6 mortal wounds) and your model regains 1 lost wound (to a maximum of 6 lost wounds)."
         },
         {
           "id": "000010124002",
@@ -150,15 +154,6 @@
           "text": "WHEN: Any phase.\nTARGET: One Death Guard Vehicle or Death Guard Monster model from your army with the Deadly Demise ability that was just destroyed. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: Do not roll one D6 to determine whether mortal wounds are inflicted by your model’s Deadly Demise ability. Instead, mortal wounds are automatically inflicted. In addition, any enemy units that suffer mortal wounds as a result of this Stratagem are Afflicted until the start of your next turn."
         },
         {
-          "id": "000010124006",
-          "name": "OVERWHELMING GENEROSITY",
-          "cp": 1,
-          "type": "Virulent Vectorium – Wargear Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Start of your Shooting phase.\nTARGET: One Death Guard Character unit from your army.\nEFFECT: Select one enemy unit visible to your unit. Until the end of the phase, each time a DEATH GUARD unit from your army selects that enemy unit as the target of any ranged attacks, you can re-roll the dice to determine how many attacks a weapon equipped by a model in that unit makes."
-        },
-        {
           "id": "000010124007",
           "name": "CREEPING BLIGHT",
           "cp": 1,
@@ -166,6 +161,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Death Guard Infantry unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes a ranged attack that targets an Afflicted unit, you can re-roll the Hit roll and you can re-roll the Wound roll."
+        },
+        {
+          "id": "000010124006",
+          "name": "OVERWHELMING GENEROSITY",
+          "cp": 1,
+          "type": "Virulent Vectorium – Wargear Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Start of your Shooting phase.\nTARGET: One Death Guard Character unit from your army.\nEFFECT: Select one enemy unit visible to your unit. Until the end of the phase, each time a DEATH GUARD unit from your army selects that enemy unit as the target of any ranged attacks, you can re-roll the dice to determine how many attacks a weapon equipped by a model in that unit makes."
         }
       ]
     },
@@ -221,15 +225,6 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One Death Guard unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a visible enemy unit (excluding AIRCRAFT) within your opponent’s deployment zone, you can re-roll the Hit roll."
         },
         {
-          "id": "000010128007",
-          "name": "STINKING MIRE",
-          "cp": 1,
-          "type": "Mortarion’s Hammer – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Start of your opponent’s Charge phase.\nTARGET: One friendly unengaged DEATH GUARD VEHICLE unit. \nEFFECT: Select one visible enemy unit within 12\" of your unit. When that enemy unit declares a charge, that enemy unit has -1 to charge rolls."
-        },
-        {
           "id": "000010128002",
           "name": "BLIGHTED LAND",
           "cp": 2,
@@ -248,13 +243,13 @@
           "text": "WHEN: Your Movement phase or your Charge phase.\nTARGET: One Death Guard Vehicle unit from your army that has not been selected to move or charge this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features."
         },
         {
-          "id": "000010128006",
-          "name": "EYESTINGER STORM",
+          "id": "000010128007",
+          "name": "STINKING MIRE",
           "cp": 1,
           "type": "Mortarion’s Hammer – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
-          "phase": "Command phase",
-          "text": "WHEN: Your opponent’s Command phase.\nTARGET: One Death Guard Vehicle unit from your army.\nEFFECT: Select one objective marker visible to one or more models in your unit. Each Afflicted enemy unit within range of that objective marker must take a Battle-shock test. Enemy units affected by this Stratagem do not need to take any other Battle-shock tests in the same phase."
+          "phase": "Charge phase",
+          "text": "WHEN: Start of your opponent’s Charge phase.\nTARGET: One friendly unengaged DEATH GUARD VEHICLE unit. \nEFFECT: Select one visible enemy unit within 12\" of your unit. When that enemy unit declares a charge, that enemy unit has -1 to charge rolls."
         },
         {
           "id": "000010128005",
@@ -264,6 +259,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Death Guard Vehicle unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [ASSAULT] ability."
+        },
+        {
+          "id": "000010128006",
+          "name": "EYESTINGER STORM",
+          "cp": 1,
+          "type": "Mortarion’s Hammer – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Command phase",
+          "text": "WHEN: Your opponent’s Command phase.\nTARGET: One Death Guard Vehicle unit from your army.\nEFFECT: Select one objective marker visible to one or more models in your unit. Each Afflicted enemy unit within range of that objective marker must take a Battle-shock test. Enemy units affected by this Stratagem do not need to take any other Battle-shock tests in the same phase."
         }
       ]
     },
@@ -319,15 +323,6 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Death Guard Attached unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, an unmodified Hit roll of 5+ scores a Critical Hit."
         },
         {
-          "id": "000010132004",
-          "name": "GROTESQUE FORTITUDE",
-          "cp": 1,
-          "type": "Champions of Contagion – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Death Guard Attached unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, add 2 to the Toughness characteristic of models in your unit."
-        },
-        {
           "id": "000010132003",
           "name": "MALIGNANCE MAGNIFIED",
           "cp": 2,
@@ -337,13 +332,13 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Death Guard Attached unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a unit that is below its Starting Strength, you can re-roll the Hit roll and you can re-roll the Wound roll."
         },
         {
-          "id": "000010132005",
-          "name": "RABID INFUSION",
+          "id": "000010132004",
+          "name": "GROTESQUE FORTITUDE",
           "cp": 1,
-          "type": "Champions of Contagion – Strategic Ploy Stratagem",
+          "type": "Champions of Contagion – Battle Tactic Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Start of the Fight phase.\nTARGET: One Death Guard unit from your army that includes two Character models.\nEFFECT: Until the end of the phase, your unit has the Fights First ability."
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Death Guard Attached unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, add 2 to the Toughness characteristic of models in your unit."
         },
         {
           "id": "000010132006",
@@ -353,6 +348,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase, before the Reinforcements step.\nTARGET: One Death Guard Character unit from your army that is not leading a unit.\nEFFECT: Select one other friendly Death Guard unit (excluding Battle-shocked units and Attached units that already have two Leader units or one of your CHARACTER units leading it] within 2\" horizontally and 5\" vertically of your unit that your unit can lead (as described in the Leader section of its datasheet]. Your unit attaches to that unit as a Leader. Change that unit’s Starting Strength accordingly."
+        },
+        {
+          "id": "000010132005",
+          "name": "RABID INFUSION",
+          "cp": 1,
+          "type": "Champions of Contagion – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Start of the Fight phase.\nTARGET: One Death Guard unit from your army that includes two Character models.\nEFFECT: Until the end of the phase, your unit has the Fights First ability."
         },
         {
           "id": "000010132007",
@@ -417,22 +421,13 @@
           "text": "WHEN: Fight phase.\nTARGET: One Death Guard unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets an enemy unit that is within Engagement Range of one or more Plague Legions units from your army, you can re-roll the Hit roll."
         },
         {
-          "id": "000010136004",
-          "name": "ALL IS ROT",
+          "id": "000010136007",
+          "name": "MIRESLICK",
           "cp": 1,
           "type": "Tallyband Summoners – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Plague Legions unit from your army that is within Engagement Range of one or more enemy units.\nEFFECT: Until the end of the phase, enemy units are not considered to be within Engagement Range of your unit for the purposes of selecting targets of ranged weapons. Until the end of the phase, each time an enemy model loses a wound, while that model’s unit is within Engagement Range of your unit, roll one D6: on a 5+, your unit suffers 1 mortal wound after the attacking unit has finished making its attacks."
-        },
-        {
-          "id": "000010136006",
-          "name": "AVATARS OF DECAY",
-          "cp": 1,
-          "type": "Tallyband Summoners – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Plague Legions unit from your army.\nEFFECT: Until the end of the phase, while an enemy unit is within 6\" of your unit, that enemy unit is Afflicted."
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, when an enemy unit (excluding MONSTERS and VEHICLES) is selected to Fall Back.\nTARGET: One Plague Legions unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: Until the end of the phase, while an enemy unit is within Engagement Range of your unit, each time that unit is selected to Fall Back, it must take a Leadership test. If that test is failed, that unit must Remain Stationary this phase instead."
         },
         {
           "id": "000010136005",
@@ -444,6 +439,15 @@
           "text": "WHEN: Your Movement phase or your Charge phase.\nTARGET: One Plague Legions Monster unit from your army that has not been selected to move or charge this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features."
         },
         {
+          "id": "000010136004",
+          "name": "ALL IS ROT",
+          "cp": 1,
+          "type": "Tallyband Summoners – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Plague Legions unit from your army that is within Engagement Range of one or more enemy units.\nEFFECT: Until the end of the phase, enemy units are not considered to be within Engagement Range of your unit for the purposes of selecting targets of ranged weapons. Until the end of the phase, each time an enemy model loses a wound, while that model’s unit is within Engagement Range of your unit, roll one D6: on a 5+, your unit suffers 1 mortal wound after the attacking unit has finished making its attacks."
+        },
+        {
           "id": "000010136002",
           "name": "PERSISTENT PESTS",
           "cp": 1,
@@ -453,13 +457,13 @@
           "text": "WHEN: Any phase.\nTARGET: One Nurglings unit from your army that was just destroyed. You can target that unit with this Stratagem even though it was just destroyed.\nEFFECT: Add a new unit to your army identical to your destroyed unit, in Strategic Reserves, at its Starting Strength and with its full wounds remaining.\nRESTRICTIONS: You can only use this Stratagem once per battle."
         },
         {
-          "id": "000010136007",
-          "name": "MIRESLICK",
+          "id": "000010136006",
+          "name": "AVATARS OF DECAY",
           "cp": 1,
           "type": "Tallyband Summoners – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, when an enemy unit (excluding MONSTERS and VEHICLES) is selected to Fall Back.\nTARGET: One Plague Legions unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: Until the end of the phase, while an enemy unit is within Engagement Range of your unit, each time that unit is selected to Fall Back, it must take a Leadership test. If that test is failed, that unit must Remain Stationary this phase instead."
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Plague Legions unit from your army.\nEFFECT: Until the end of the phase, while an enemy unit is within 6\" of your unit, that enemy unit is Afflicted."
         }
       ]
     },
@@ -515,24 +519,6 @@
           "text": "WHEN: Your Command phase.\nTARGET: One Poxwalkers unit from your army.\nEFFECT: Until the end of the turn, add 1 to the Move characteristic of models in your unit, and add 1 to the Attacks and Strength characteristics of melee weapons equipped by models in your unit."
         },
         {
-          "id": "000010140006",
-          "name": "SHOCK AND HORROR",
-          "cp": 1,
-          "type": "Shamblerot Vectorium – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Charge phase, just after a Death Guard unit from your army ends a Charge move.\nTARGET: That DEATH GUARD unit.\nEFFECT: Each enemy unit within Engagement Range of your unit must take a Battle-shock test, subtracting 1 from that test."
-        },
-        {
-          "id": "000010140005",
-          "name": "HIDDEN AMONGST THE DEAD",
-          "cp": 1,
-          "type": "Shamblerot Vectorium – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: The Reinforcements step of your Movement phase.\nTARGET: One Poxwalkers unit from your army that is in Strategic Reserves and that is not an Attached unit.\nEFFECT: Until the end of the phase, models in that unit have the Deep Strike ability."
-        },
-        {
           "id": "000010140003",
           "name": "SMEARED WITH FILTH",
           "cp": 1,
@@ -549,6 +535,24 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Death Guard unit from your army that was selected as the target of one or more of the attacking unit’s attacks, and one friendly Poxwalkers unit within 3\" of your unit and visible to both your unit and the attacking unit.\nEFFECT: Until the end of the phase, each time you would allocate an attack to a model in your DEATH GUARD unit, if your POXWALKERS unit is visible to the attacking model and is an eligible target for that attack, no saving throw is made for that attack; instead a number of POXWALKERS from your POXWALKERS unit equal to the Damage characteristic of that attack are destroyed."
+        },
+        {
+          "id": "000010140006",
+          "name": "SHOCK AND HORROR",
+          "cp": 1,
+          "type": "Shamblerot Vectorium – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your Charge phase, just after a Death Guard unit from your army ends a Charge move.\nTARGET: That DEATH GUARD unit.\nEFFECT: Each enemy unit within Engagement Range of your unit must take a Battle-shock test, subtracting 1 from that test."
+        },
+        {
+          "id": "000010140005",
+          "name": "HIDDEN AMONGST THE DEAD",
+          "cp": 1,
+          "type": "Shamblerot Vectorium – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: The Reinforcements step of your Movement phase.\nTARGET: One Poxwalkers unit from your army that is in Strategic Reserves and that is not an Attached unit.\nEFFECT: Until the end of the phase, models in that unit have the Deep Strike ability."
         },
         {
           "id": "000010140002",
@@ -613,6 +617,15 @@
           "text": "WHEN: Fight phase.\nTARGET: One Terminator unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets an enemy unit (excluding MONSTERS and VEHICLES) you can re-roll the Hit roll."
         },
         {
+          "id": "000010144002",
+          "name": "BLOOMING PESTILENCE",
+          "cp": 1,
+          "type": "Death Lord’s Chosen – Epic Deed Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Any phase",
+          "text": "WHEN: Start of any phase.\nTARGET: One Terminator unit from your army.\nEFFECT: Until the end of the phase, add 3\" to the Contagion Range of models in your unit."
+        },
+        {
           "id": "000010144005",
           "name": "SIGNAL POX",
           "cp": 1,
@@ -622,13 +635,13 @@
           "text": "WHEN: Your Command phase.\nTARGET: One Lord of Virulence model from your army.\nEFFECT: Select one objective marker within 30\" of and visible to your model. Until the start of your next turn, while an enemy unit is within range of that objective marker, that unit is Afflicted."
         },
         {
-          "id": "000010144002",
-          "name": "BLOOMING PESTILENCE",
+          "id": "000010144004",
+          "name": "UNDYING SPITE",
           "cp": 1,
-          "type": "Death Lord’s Chosen – Epic Deed Stratagem",
+          "type": "Death Lord’s Chosen – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Any phase",
-          "text": "WHEN: Start of any phase.\nTARGET: One Terminator unit from your army.\nEFFECT: Until the end of the phase, add 3\" to the Contagion Range of models in your unit."
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Terminator unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6. On a 4+, do not remove the destroyed model from play; it can fight after the attacking unit has finished making its attacks, and is then removed from play."
         },
         {
           "id": "000010144006",
@@ -647,15 +660,6 @@
           "turn": "Your turn",
           "phase": "Charge phase",
           "text": "WHEN: Your Charge phase, just after a Terminator unit from your army ends a Charge move.\nTARGET: That TERMINATOR unit.\nEFFECT: Select one enemy unit within Engagement Range of your unit, then roll one D6 for each model in your unit that is within Engagement Range of that enemy unit: for each 2+, that enemy unit suffers 1 mortal wound (to a maximum of 6 mortal wounds)."
-        },
-        {
-          "id": "000010144004",
-          "name": "UNDYING SPITE",
-          "cp": 1,
-          "type": "Death Lord’s Chosen – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Terminator unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6. On a 4+, do not remove the destroyed model from play; it can fight after the attacking unit has finished making its attacks, and is then removed from play."
         }
       ]
     },
@@ -745,15 +749,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010949002",
-          "name": "TERRITORIAL INFECTION",
-          "cp": 1,
-          "type": "Paragons of Putrescence Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Command phase",
-          "text": "WHEN: Start of the Command phase.\nTARGET: One friendly DEATH GUARD CHARACTER unit.\nEFFECT: Your unit has +1 OC until the end of the turn."
-        },
-        {
           "id": "000010949003",
           "name": "AGGRAVUS SPASMS",
           "cp": 1,
@@ -761,6 +756,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Start of your Shooting Phase.\nTARGET: One friendly DEATH GUARD CHARACTER unit.\nEFFECT: Select one visible enemy unit within Contagion Range of your unit. That enemy unit has +6\" detection range."
+        },
+        {
+          "id": "000010949002",
+          "name": "TERRITORIAL INFECTION",
+          "cp": 1,
+          "type": "Paragons of Putrescence Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Command phase",
+          "text": "WHEN: Start of the Command phase.\nTARGET: One friendly DEATH GUARD CHARACTER unit.\nEFFECT: Your unit has +1 OC until the end of the turn."
         },
         {
           "id": "000010949004",
@@ -780,12 +784,12 @@
       "name": "Plague Marines",
       "role": "Battleline",
       "keywords": [
+        "PLAGUE MARINES",
+        "NURGLE",
         "CHAOS",
         "GRENADES",
         "BATTLELINE",
-        "INFANTRY",
-        "PLAGUE MARINES",
-        "NURGLE"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -966,10 +970,7 @@
               "Icon of despair"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Boltgun"
-          ]
+          "max": 1
         }
       ],
       "weapons": [
@@ -1256,15 +1257,15 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
-        "HELBRUTE",
         "NURGLE",
         "WALKER",
         "VEHICLE",
-        "CHAOS"
+        "CHAOS",
+        "HELBRUTE"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -1639,14 +1640,14 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "DEDICATED TRANSPORT",
+        "RHINO",
         "TRANSPORT",
         "NURGLE",
-        "SMOKE",
         "CHAOS",
-        "VEHICLE",
+        "SMOKE",
         "FRAME",
-        "RHINO"
+        "VEHICLE",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "",
@@ -1824,7 +1825,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -1841,10 +1842,10 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
-        "NURGLE",
+        "BEAST",
         "CHAOS",
-        "CHAOS SPAWN",
-        "BEAST"
+        "NURGLE",
+        "SPAWN"
       ],
       "factionKeywords": [
         "",
@@ -1952,12 +1953,12 @@
       "role": "Transport",
       "keywords": [
         "TRANSPORT",
-        "FRAME",
         "LAND RAIDER",
         "VEHICLE",
         "NURGLE",
         "CHAOS",
-        "SMOKE"
+        "SMOKE",
+        "FRAME"
       ],
       "factionKeywords": [
         "",
@@ -2169,7 +2170,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2186,16 +2187,16 @@
       "name": "Chaos Predator Annihilator",
       "role": "Vehicle",
       "keywords": [
+        "FRAME",
+        "VEHICLE",
+        "SMOKE",
         "PREDATOR ANNIHILATOR",
         "NURGLE",
-        "CHAOS",
-        "SMOKE",
-        "VEHICLE",
-        "FRAME"
+        "CHAOS"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -2433,7 +2434,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2450,12 +2451,12 @@
       "name": "Daemon Prince of Nurgle",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
-        "CHAOS",
-        "NURGLE",
-        "DAEMON",
         "DAEMON PRINCE",
-        "MONSTER"
+        "CHARACTER",
+        "MONSTER",
+        "DAEMON",
+        "NURGLE",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -2480,10 +2481,10 @@
       ],
       "composition": [
         {
-          "name": "Daemon Prince of Nurgle",
+          "name": "Death Guard Daemon Prince",
           "min": 1,
           "max": 1,
-          "text": "1 Daemon Prince of Nurgle"
+          "text": "1 Death Guard Daemon Prince"
         }
       ],
       "loadout": {
@@ -2592,18 +2593,18 @@
       "name": "Typhus",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "PSYKER",
-        "INFANTRY",
-        "NURGLE",
         "CHAOS",
-        "TERMINATOR",
-        "EPIC HERO",
+        "TYPHUS",
+        "INFANTRY",
         "CHARACTER",
-        "TYPHUS"
+        "PSYKER",
+        "EPIC HERO",
+        "NURGLE",
+        "TERMINATOR"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -2697,8 +2698,8 @@
         }
       ],
       "leads": [
-        "Poxwalkers",
         "Deathshroud Terminators",
+        "Poxwalkers",
         "Blightlord Terminators"
       ],
       "isSupport": false,
@@ -2721,17 +2722,17 @@
       "name": "Lord of Contagion",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
-        "GRENADES",
         "CHAOS",
-        "NURGLE",
+        "GRENADES",
+        "CHARACTER",
         "TERMINATOR",
+        "NURGLE",
         "INFANTRY",
         "LORD OF CONTAGION"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -2849,15 +2850,15 @@
       "role": "Infantry Character",
       "keywords": [
         "CHARACTER",
-        "CHAOS",
+        "PSYKER",
         "NURGLE",
-        "MALIGNANT PLAGUECASTER",
         "INFANTRY",
-        "PSYKER"
+        "MALIGNANT PLAGUECASTER",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -2987,8 +2988,8 @@
         }
       ],
       "leads": [
-        "Poxwalkers",
-        "Plague Marines"
+        "Plague Marines",
+        "Poxwalkers"
       ],
       "isSupport": false,
       "points": [
@@ -3010,14 +3011,14 @@
       "name": "Poxwalkers",
       "role": "Infantry",
       "keywords": [
-        "NURGLE",
         "INFANTRY",
         "CHAOS",
+        "NURGLE",
         "POXWALKERS"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -3119,16 +3120,16 @@
       "name": "Foetid Bloat-drone",
       "role": "Vehicle",
       "keywords": [
-        "CHAOS",
-        "NURGLE",
+        "FLY",
+        "VEHICLE",
         "DAEMON",
         "FOETID BLOAT-DRONE",
-        "VEHICLE",
-        "FLY"
+        "NURGLE",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -3267,7 +3268,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3285,10 +3286,10 @@
       "role": "Infantry Character",
       "keywords": [
         "NOXIOUS BLIGHTBRINGER",
-        "NURGLE",
-        "CHAOS",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "CHAOS",
+        "NURGLE"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -3424,16 +3425,16 @@
       "name": "Foul Blightspawn",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "GRENADES",
         "CHAOS",
-        "NURGLE",
         "FOUL BLIGHTSPAWN",
-        "CHARACTER"
+        "CHARACTER",
+        "NURGLE",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -3550,12 +3551,12 @@
       "name": "Biologus Putrifier",
       "role": "Infantry Character",
       "keywords": [
+        "BIOLOGUS PUTRIFIER",
+        "NURGLE",
+        "INFANTRY",
         "CHAOS",
         "GRENADES",
-        "CHARACTER",
-        "INFANTRY",
-        "BIOLOGUS PUTRIFIER",
-        "NURGLE"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -3705,10 +3706,10 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "PLAGUE SURGEON",
         "NURGLE",
+        "CHARACTER",
         "CHAOS",
-        "CHARACTER"
+        "PLAGUE SURGEON"
       ],
       "factionKeywords": [
         "",
@@ -3830,15 +3831,15 @@
       "name": "Tallyman",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
-        "INFANTRY",
+        "NURGLE",
         "TALLYMAN",
         "CHAOS",
-        "NURGLE"
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -3968,9 +3969,9 @@
       "keywords": [
         "INFANTRY",
         "NURGLE",
+        "DEATHSHROUD TERMINATORS",
         "CHAOS",
-        "TERMINATOR",
-        "DEATHSHROUD TERMINATORS"
+        "TERMINATOR"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -4137,7 +4138,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -4158,11 +4159,11 @@
       "name": "Blightlord Terminators",
       "role": "Infantry",
       "keywords": [
-        "NURGLE",
-        "BLIGHTLORD TERMINATORS",
         "TERMINATOR",
-        "INFANTRY",
-        "CHAOS"
+        "BLIGHTLORD TERMINATORS",
+        "CHAOS",
+        "NURGLE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "",
@@ -4471,7 +4472,7 @@
       "isSupport": false,
       "points": [
         {
-          "label": "YOUR UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 3,
@@ -4486,6 +4487,23 @@
               "pts": 370
             }
           ]
+        },
+        {
+          "label": "YOUR 3RD+ UNIT COSTS",
+          "options": [
+            {
+              "models": 3,
+              "pts": 145
+            },
+            {
+              "models": 5,
+              "pts": 215
+            },
+            {
+              "models": 10,
+              "pts": 400
+            }
+          ]
         }
       ],
       "wargearCosts": [],
@@ -4496,12 +4514,12 @@
       "name": "Myphitic Blight-hauler",
       "role": "Vehicle",
       "keywords": [
-        "SMOKE",
-        "CHAOS",
-        "NURGLE",
-        "DAEMON",
         "MYPHITIC BLIGHT-HAULER",
-        "VEHICLE"
+        "NURGLE",
+        "SMOKE",
+        "DAEMON",
+        "VEHICLE",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -4667,16 +4685,16 @@
       "name": "Plagueburst Crawler",
       "role": "Vehicle",
       "keywords": [
-        "CHAOS",
         "NURGLE",
-        "DAEMON",
+        "CHAOS",
         "FRAME",
         "VEHICLE",
-        "PLAGUEBURST CRAWLER"
+        "PLAGUEBURST CRAWLER",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -4880,7 +4898,7 @@
       },
       "points": [
         {
-          "label": "YOUR 1ST UNIT COSTS",
+          "label": "YOUR 1ST TO 2ND UNITS COST",
           "options": [
             {
               "models": 1,
@@ -4889,7 +4907,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4906,17 +4924,17 @@
       "name": "Mortarion",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MORTARION",
-        "PRIMARCH",
-        "GRENADES",
-        "NURGLE",
-        "DAEMON",
-        "CHAOS",
-        "EPIC HERO",
-        "FLY",
-        "PSYKER",
         "CHARACTER",
-        "MONSTER"
+        "PSYKER",
+        "EPIC HERO",
+        "GRENADES",
+        "CHAOS",
+        "NURGLE",
+        "FLY",
+        "DAEMON",
+        "MONSTER",
+        "PRIMARCH",
+        "MORTARION"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -5107,16 +5125,16 @@
       "name": "Lord of Virulence",
       "role": "Infantry Character",
       "keywords": [
-        "TERMINATOR",
-        "NURGLE",
         "CHAOS",
-        "CHARACTER",
+        "NURGLE",
+        "TERMINATOR",
         "INFANTRY",
+        "CHARACTER",
         "LORD OF VIRULENCE"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -5242,16 +5260,16 @@
       "name": "Chaos Predator Destructor",
       "role": "Vehicle",
       "keywords": [
-        "PREDATOR DESTRUCTOR",
         "FRAME",
-        "SMOKE",
-        "CHAOS",
+        "VEHICLE",
+        "PREDATOR DESTRUCTOR",
         "NURGLE",
-        "VEHICLE"
+        "CHAOS",
+        "SMOKE"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -5490,7 +5508,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5508,14 +5526,14 @@
       "role": "Fortifications",
       "keywords": [
         "MIASMIC MALIGNIFIER",
+        "FORTIFICATION",
         "NURGLE",
         "CHAOS",
-        "FRAME",
-        "FORTIFICATION"
+        "FRAME"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -5590,7 +5608,7 @@
         {
           "name": "Diseased Cover",
           "type": "Datasheet",
-          "text": "Each time a ranged attack is allocated to a model, if that model is not fully visible to the attacking unit because of this Fortification, that model has the Benefit of Cover against that attack."
+          "text": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
         },
         {
           "name": "Fortification",
@@ -5624,13 +5642,13 @@
       "name": "Daemon Prince of Nurgle with Wings",
       "role": "Monster Character",
       "keywords": [
-        "CHAOS",
-        "DAEMON PRINCE WITH WINGS",
         "FLY",
-        "CHARACTER",
         "MONSTER",
+        "CHARACTER",
+        "CHAOS",
         "NURGLE",
-        "DAEMON"
+        "DAEMON",
+        "DAEMON PRINCE WITH WINGS"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -5767,12 +5785,12 @@
       "name": "Icon Bearer",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
-        "ICON BEARER",
-        "NURGLE",
-        "GRENADES",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "GRENADES",
+        "CHAOS",
+        "NURGLE",
+        "ICON BEARER"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -5895,10 +5913,10 @@
       "keywords": [
         "LORD OF POXES",
         "NURGLE",
-        "INFANTRY",
         "CHAOS",
         "GRENADES",
-        "CHARACTER"
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -6033,12 +6051,12 @@
       "name": "Foetid Bloat-drone with Heavy Blight Launcher",
       "role": "Vehicle",
       "keywords": [
-        "CHAOS",
-        "VEHICLE",
-        "FLY",
-        "FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER",
         "DAEMON",
-        "NURGLE"
+        "FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER",
+        "FLY",
+        "CHAOS",
+        "NURGLE",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -6146,7 +6164,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6163,15 +6181,15 @@
       "name": "Rotigus",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MONSTER",
-        "EPIC HERO",
-        "PSYKER",
-        "CHAOS",
         "CHARACTER",
-        "NURGLE",
-        "DAEMON",
+        "MONSTER",
         "SUMMONED",
-        "ROTIGUS"
+        "ROTIGUS",
+        "CHAOS",
+        "EPIC HERO",
+        "DAEMON",
+        "NURGLE",
+        "PSYKER"
       ],
       "factionKeywords": [
         "",
@@ -6322,14 +6340,14 @@
       "name": "Great Unclean One",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "CHAOS",
         "NURGLE",
+        "CHAOS",
+        "PSYKER",
+        "CHARACTER",
+        "MONSTER",
         "GREAT UNCLEAN ONE",
         "SUMMONED",
-        "DAEMON",
-        "CHARACTER",
-        "PSYKER"
+        "DAEMON"
       ],
       "factionKeywords": [
         "",
@@ -6556,7 +6574,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6573,17 +6591,17 @@
       "name": "Plaguebearers",
       "role": "Battleline",
       "keywords": [
-        "PLAGUEBEARERS",
-        "SUMMONED",
-        "DAEMON",
-        "CHAOS",
         "BATTLELINE",
+        "CHAOS",
         "NURGLE",
-        "INFANTRY"
+        "DAEMON",
+        "PLAGUEBEARERS",
+        "INFANTRY",
+        "SUMMONED"
       ],
       "factionKeywords": [
-        "PLAGUE LEGIONS",
-        ""
+        "",
+        "PLAGUE LEGIONS"
       ],
       "models": [
         {
@@ -6725,17 +6743,17 @@
       "name": "Plague Drones",
       "role": "Mounted",
       "keywords": [
-        "DAEMON",
-        "SUMMONED",
-        "CHAOS",
-        "FLY",
-        "MOUNTED",
         "NURGLE",
-        "PLAGUE DRONES"
+        "DAEMON",
+        "CHAOS",
+        "SUMMONED",
+        "PLAGUE DRONES",
+        "FLY",
+        "MOUNTED"
       ],
       "factionKeywords": [
-        "",
-        "PLAGUE LEGIONS"
+        "PLAGUE LEGIONS",
+        ""
       ],
       "models": [
         {
@@ -6919,12 +6937,12 @@
       "name": "Beasts of Nurgle",
       "role": "Beast",
       "keywords": [
-        "BEASTS OF NURGLE",
-        "SUMMONED",
-        "DAEMON",
         "BEAST",
+        "CHAOS",
         "NURGLE",
-        "CHAOS"
+        "DAEMON",
+        "SUMMONED",
+        "BEASTS OF NURGLE"
       ],
       "factionKeywords": [
         "PLAGUE LEGIONS",
@@ -7036,12 +7054,12 @@
       "name": "Nurglings",
       "role": "Swarm",
       "keywords": [
-        "DAEMON",
         "NURGLE",
         "CHAOS",
-        "SWARM",
+        "SUMMONED",
         "NURGLINGS",
-        "SUMMONED"
+        "DAEMON",
+        "SWARM"
       ],
       "factionKeywords": [
         "PLAGUE LEGIONS",
@@ -7118,7 +7136,7 @@
         {
           "name": "Mischief Makers",
           "type": "Datasheet",
-          "text": "Each time an enemy unit (excluding TITAN units) within Engagement Range of one or more units with this ability is selected to fight, until the end of the phase, each time a model in that enemy unit makes a melee attack, subtract 1 from the Hit roll."
+          "text": "Each time an enemy unit (excluding TITANIC units) within Engagement Range of one or more units with this ability is selected to fight, until the end of the phase, each time a model in that enemy unit makes a melee attack, subtract 1 from the Hit roll."
         }
       ],
       "leads": [],
@@ -7146,12 +7164,12 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "DAEMON",
-        "NURGLE",
-        "CHAOS",
         "WALKER",
-        "VEHICLE",
-        "DEFILER"
+        "CHAOS",
+        "NURGLE",
+        "DAEMON",
+        "DEFILER",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "",
@@ -7517,7 +7535,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7528,11 +7546,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Heavy reaper autocannon",
+          "name": "Hades lascannon",
           "pts": 15
         },
         {
-          "name": "Hades lascannon",
+          "name": "Heavy reaper autocannon",
           "pts": 15
         }
       ],

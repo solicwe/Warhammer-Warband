@@ -2338,5 +2338,18 @@
     }
    }
   ]
+ },
+ "Triarch Abilities": {
+  "choice": {
+   "name": "Triarch ability",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Phaeron of the Stars (Aura)",
+    "Phaeron of the Blades (Aura)",
+    "Relentless March (Aura)"
+   ]
+  },
+  "note": "Chosen in your Command phase (the card: at the start of the battle round)"
  }
 }

@@ -2,7 +2,7 @@
   "id": "AoI",
   "name": "Imperial Agents",
   "link": "https://wahapedia.ru/wh40k11ed/factions/imperial-agents",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Assigned Agents",
@@ -10,7 +10,7 @@
     },
     {
       "name": "Kill Team",
-      "text": "Each time an attack targets this unit, if it contains models with different Toughness characteristics, until the attacking unit has finished making its attacks, use the Toughness characteristic of the majority of the models in that unit when determining what roll is required for that attack to successfully wound. If two or more Toughness characteristics are tied for majority, use the highest value.\nFor the purposes of determining which models in this unit can embark within a TRANSPORT, Kill Team Terminator models, Kill Team Outrider models, Kill Team Biker models and models equipped with a jump pack each take up the space of 2 models, but can otherwise embark within any TRANSPORT their unit can embark within, even though similar models in other units have the TERMINATOR, MOUNTED keywords.\nFor the purposes of interacting with terrain features, all models in units with this ability are considered INFANTRY models, even though similar models in other units may have the MOUNTED or JUMP PACK keywords.\nDesigner’s Note: While the abstractions in the above rule cause some models to behave differently to similar models in other units, they are designed to minimise complicated movement, TRANSPORT and Benefit of Cover rules."
+      "text": "Each time an attack targets this unit, if it contains models with different Toughness characteristics, until the attacking unit has finished making its attacks, use the Toughness characteristic of the majority of the models in that unit when determining what roll is required for that attack to successfully wound. If two or more Toughness characteristics are tied for majority, use the highest value.\nFor the purposes of determining which models in this unit can embark within a Transport, Kill Team Terminator models, Kill Team Outrider models, Kill Team Biker models and models equipped with a jump pack each take up the space of 2 models, but can otherwise embark within any TRANSPORT their unit can embark within, even though similar models in other units have the Terminator, Mounted or Jump Pack keywords.\nFor the purposes of interacting with terrain features, all models in units with this ability are considered INFANTRY models, even though similar models in other units may have the MOUNTED or JUMP PACK keywords.\nDesigner’s Note: While the abstractions in the above rule cause some models to behave differently to similar models in other units, they are designed to minimise complicated movement, TRANSPORT and Benefit of Cover rules."
     }
   ],
   "detachments": [
@@ -22,7 +22,7 @@
       "rules": [
         {
           "name": "Deathwatch Mission Tactics",
-          "text": "At the start of your Command phase, you can select one of the Mission Tactics listed below. Until the start of your next Command phase, that Mission Tactic is active and its effects apply to all DEATHWATCH units from your army. Each Mission Tactic can only be selected once per battle.\nFuror Tactics\nThe warriors of the Deathwatch are often sorely outnumbered by swarming foes, yet by striking for maximum indiscriminate carnage they soon even the odds.\nWhile this Mission Tactic is active, weapons equipped by DEATHWATCH units from your army have the [SUSTAINED HITS 1] ability.\nMalleus Tactics\nEven the largest behemoth has a weak point, and the Deathwatch find them all.\nWhile this Mission Tactic is active, weapons equipped by DEATHWATCH units from your army have the [LETHAL HITS] ability.\nPurgatus Tactics\nAdopting Purgatus tactics, the Deathwatch focus their ire upon the commanders of the enemy host.\nWhile this Mission Tactic is active, each time a DEATHWATCH model from your army makes an attack, on a Critical Wound, that attack has the [PRECISION] ability."
+          "text": "At the start of your Command phase, you can select one of the Mission Tactics listed below. Until the start of your next Command phase, that Mission Tactic is active and its effects apply to all DEATHwATCH units from your army. Each Mission Tactic can only be selected once per battle.\nFuror Tactics\nThe warriors of the Deathwatch are often sorely outnumbered by swarming foes, yet by striking for maximum indiscriminate carnage they soon even the odds.\nWhile this Mission Tactic is active, weapons equipped by DEATHWATCH units from your army have the [SUSTAINED HITS 1] ability.\nMalleus Tactics\nEven the largest behemoth has a weak point, and the Deathwatch find them all.\nWhile this Mission Tactic is active, weapons equipped by DEATHWATCH units from your army have the [LETHAL HITS] ability.\nPurgatus Tactics\nAdopting Purgatus tactics, the Deathwatch focus their ire upon the commanders of the enemy host.\nWhile this Mission Tactic is active, each time a DEATHWATCH model from your army makes an attack, on a Critical Wound, that attack has the [PRECISION] ability."
         }
       ],
       "enhancements": [
@@ -52,7 +52,7 @@
           "name": "Universal Anathema",
           "pts": 10,
           "upgrade": false,
-          "text": "AGENTS OF THE IMPERIUM model only. Melee weapons equipped by the bearer have the [ANTI-INFANTRY 2+] and [ANTI-MONSTER 4+] abilities."
+          "text": "AGENTS OF THE IMPERIUM model only. Melee weapons equipped by the bearer have the [ANTI-INFANTRy 2+] and [ANTI-MONSTER 4+] abilities."
         }
       ],
       "stratagems": [
@@ -63,7 +63,7 @@
           "type": "Alien Hunters – Battle Tactic Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One DEATHWATCH unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One DEATHwATCH unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
         },
         {
           "id": "000009127003",
@@ -72,7 +72,7 @@
           "type": "Alien Hunters – Strategic Ploy Stratagem",
           "turn": "Your turn",
           "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One DEATHWATCH unit from your army.\nEFFECT: Select the Furor Tactics, Malleus Tactics or Purgatus Tactics. Until the start of your next Command phase, that Deathwatch Mission Tactic is active for your unit instead of any other Deathwatch Mission Tactic that is active for your army, even if you have already selected that Deathwatch Mission Tactic this battle."
+          "text": "WHEN: Your Command phase.\nTARGET: One DEATHwATCH unit from your army.\nEFFECT: Select the Furor Tactics, Malleus Tactics or Purgatus Tactics. Until the start of your next Command phase, that Deathwatch Mission Tactic is active for your unit instead of any other Deathwatch Mission Tactic that is active for your army, even if you have already selected that Deathwatch Mission Tactic this battle."
         },
         {
           "id": "000009127007",
@@ -81,16 +81,7 @@
           "type": "Alien Hunters – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Fight phase",
-          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One INQUISITOR or DEATHWATCH INFANTRY unit from your army.\nEFFECT: Remove your unit from the battlefield. In the Reinforcements step of your next Movement phase, set your unit up anywhere on the battlefield that is more than 8\" horizontally away from all enemy models.\nRESTRICTIONS: You cannot select a unit that is within Engagement Range of one or more enemy units."
-        },
-        {
-          "id": "000009127006",
-          "name": "KRAKEN ROUNDS",
-          "cp": 1,
-          "type": "Alien Hunters – Wargear Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHWATCH INFANTRY unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, improve the Armour Penetration characteristic of ranged weapons equipped by models in your unit by 1 and improve the Range characteristic of those weapons by 6\".\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Dragonfire Rounds or Hellfire Rounds Stratagems this phase."
+          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One INQUISITOR or DEATHwATCH INFANTRy unit from your army.\nEFFECT: Remove your unit from the battlefield. In the Reinforcements step of your next Movement phase, set your unit up anywhere on the battlefield that is more than 8\" horizontally away from all enemy models.\nRESTRICTIONS: You cannot select a unit that is within Engagement Range of one or more enemy units."
         },
         {
           "id": "000009127005",
@@ -99,7 +90,7 @@
           "type": "Alien Hunters – Wargear Stratagem",
           "turn": "Your turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHWATCH INFANTRY unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [ASSAULT] and [IGNORES COVER] abilities.\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Kraken Rounds or Hellfire Rounds Stratagems this phase."
+          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHwATCH INFANTRy unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [ASSAULT] and [IGNORES COVER] abilities.\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Kraken Rounds or Hellfire Rounds Stratagems this phase."
         },
         {
           "id": "000009127004",
@@ -108,7 +99,16 @@
           "type": "Alien Hunters – Wargear Stratagem",
           "turn": "Your turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHWATCH INFANTRY unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons (excluding Devastating Wounds weapons) equipped by models in your unit have the [ANTI-INFANTRY 2+] and [ANTI-MONSTER 5+] abilities.\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Kraken Rounds or Dragonfire Rounds Stratagems this phase."
+          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHwATCH INFANTRy unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons (excluding Devastating Wounds weapons) equipped by models in your unit have the [ANTI-INFANTRY 2+] and [ANTI-MONSTER 5+] abilities.\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Kraken Rounds or Dragonfire Rounds Stratagems this phase."
+        },
+        {
+          "id": "000009127006",
+          "name": "KRAKEN ROUNDS",
+          "cp": 1,
+          "type": "Alien Hunters – Wargear Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One DEATHwATCH INFANTRy unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, improve the Armour Penetration characteristic of ranged weapons equipped by models in your unit by 1 and improve the Range characteristic of those weapons by 6\".\nRESTRICTIONS: You cannot select any units that have already been targeted with either the Dragonfire Rounds or Hellfire Rounds Stratagems this phase."
         }
       ]
     },
@@ -120,7 +120,7 @@
       "rules": [
         {
           "name": "Root out Heresy",
-          "text": "Ranged weapons equipped by ADEPTUS ARBITES, INQUISITOR, INQUISITORIAL AGENTS and ORDO HERETICUS models from your army have the [IGNORES COVER] ability.\nEach time an ADEPTUS ARBITES, INQUISITOR, INQUISITORIAL AGENTS or ORDO HERETICUS model from your army makes an attack that targets a CHAOS unit containing 5 or more models, that attack has the [SUSTAINED HITS 1] ability."
+          "text": "Ranged weapons equipped by ADEPTUS ARbITES, INqUISITOR, INqUISITORIAl AGENTS and ORDO HERETICUS models from your army have the [IGNORES COvER] ability.\nEach time an ADEPTUS ARBITES, INQUISITOR, INQUISITORIAL AGENTS or ORDO HERETICUS model from your army makes an attack that targets a CHAOS unit containing 5 or more models, that attack has the [SUSTAINED HITS 1] ability."
         }
       ],
       "enhancements": [
@@ -129,28 +129,28 @@
           "name": "Ignis Judicium",
           "pts": 10,
           "upgrade": false,
-          "text": "INQUISITOR or MINISTORUM PRIEST model only. The bearers ranged weapons have the [DEVASTATING WOUNDS], [MELTA 1] and [PRECISION] abilities."
+          "text": "INqUISITOR or MINISTORUM PRIEST model only. The bearers ranged weapons have the [DEVASTATING WOUNDS], [MELTA 1] and [PRECISION] abilities."
         },
         {
           "id": "000009130003",
           "name": "Liber Heresius",
           "pts": 10,
           "upgrade": false,
-          "text": "INQUISITOR or MINISTORUM PRIEST model only. After both players have deployed their armies, select up to three AGENTS OF THE IMPERIUM units from your army and redeploy them. When doing so, you can set those units up in Strategic Reserves if you wish, regardless of how many units are already in Strategic Reserves."
+          "text": "INqUISITOR or MINISTORUM PRIEST model only. After both players have deployed their armies, select up to three AGENTS OF THE IMPERIUM units from your army and redeploy them. When doing so, you can set those units up in Strategic Reserves if you wish, regardless of how many units are already in Strategic Reserves."
         },
         {
           "id": "000009130004",
           "name": "No Escape (Aura)",
           "pts": 25,
           "upgrade": false,
-          "text": "INQUISITOR model only. While an enemy unit is within 6\" of the bearer, each time it is selected to Fall Back it must first take a Leadership test. If that test is failed, that unit must Remain Stationary this phase instead."
+          "text": "INqUISITOR model only. While an enemy unit is within 6\" of the bearer, each time it is selected to Fall Back it must first take a Leadership test. If that test is failed, that unit must Remain Stationary this phase instead."
         },
         {
           "id": "000009130005",
           "name": "Witch Hunter",
           "pts": 15,
           "upgrade": false,
-          "text": "INQUISITOR or MINISTORUM PRIEST model only. While the bearer is leading a unit, each time a model in that unit makes an attack that targets a PSYKER unit, you can re-roll the Hit roll."
+          "text": "INqUISITOR or MINISTORUM PRIEST model only. While the bearer is leading a unit, each time a model in that unit makes an attack that targets a PSyKER unit, you can re-roll the Hit roll."
         }
       ],
       "stratagems": [
@@ -161,7 +161,7 @@
           "type": "Purgation Force – Battle Tactic Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, weapons equipped by models in your unit have the [LETHAL HITS] ability."
+          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, weapons equipped by models in your unit have the [LETHAL HITS] ability."
         },
         {
           "id": "000009131005",
@@ -170,7 +170,7 @@
           "type": "Purgation Force – Epic Deed Stratagem",
           "turn": "Your turn",
           "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS INFANTRY unit from your army.\nEFFECT: Select one enemy CHARACTER unit on the battlefield. Until the start of your next Command phase, each time a model in your unit targets that CHARACTER unit, its weapons have the [PRECISION] ability."
+          "text": "WHEN: Your Command phase.\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS INFANTRy unit from your army.\nEFFECT: Select one enemy CHARACTER unit on the battlefield. Until the start of your next Command phase, each time a model in your unit targets that CHARACTER unit, its weapons have the [PRECISION] ability."
         },
         {
           "id": "000009131006",
@@ -179,16 +179,7 @@
           "type": "Purgation Force – Strategic Ploy Stratagem",
           "turn": "Your turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, models in your unit can target enemy units that are within Engagement Range of one or more friendly units with ranged weapons (excluding Blast weapons), provided the target is within 12\"."
-        },
-        {
-          "id": "000009131004",
-          "name": "INVIOLATE JURISDICTION",
-          "cp": 1,
-          "type": "Purgation Force – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS INFANTRY unit from your army within range of an objective marker and that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 5+ ability."
+          "text": "WHEN: Your Shooting phase.\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, models in your unit can target enemy units that are within Engagement Range of one or more friendly units with ranged weapons (excluding Blast weapons), provided the target is within 12\"."
         },
         {
           "id": "000009131007",
@@ -197,7 +188,16 @@
           "type": "Purgation Force – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an AGENTS OF THE IMPERIUM unit from your army is destroyed as the result of an enemy unit's attacks.\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS unit from your army that was within 6\" of the destroyed unit (you cannot target the destroyed unit with the Stratagem).\nEFFECT: After the attacking unit has shot, your unit can shoot as if it were your Shooting phase, but when resolving those attacks it can only target that enemy unit (and only if it is an eligible target)."
+          "text": "WHEN: Your opponent’s Shooting phase, just after an AGENTS OF THE IMpERIUM unit from your army is destroyed as the result of an enemy unit's attacks.\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS unit from your army that was within 6\" of the destroyed unit (you cannot target the destroyed unit with the Stratagem).\nEFFECT: After the attacking unit has shot, your unit can shoot as if it were your Shooting phase, but when resolving those attacks it can only target that enemy unit (and only if it is an eligible target)."
+        },
+        {
+          "id": "000009131004",
+          "name": "INVIOLATE JURISDICTION",
+          "cp": 1,
+          "type": "Purgation Force – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS INFANTRy unit from your army within range of an objective marker and that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 5+ ability."
         },
         {
           "id": "000009131002",
@@ -206,7 +206,7 @@
           "type": "Purgation Force – Wargear Stratagem",
           "turn": "Either player’s turn",
           "phase": "Any phase",
-          "text": "WHEN: Start of any phase (excluding the Command phase).\nTARGET: One ADEPTUS ARBITES, INQUISITORIAL AGENTS or ORDO HERETICUS GRENADES unit from your army that is not within Engagement Range of one or more enemy units.\nEFFECT: Select one enemy unit (excluding MONSTERS or VEHICLES) within 8\" of and visible to your unit. That enemy unit must take a Battle-shock test and, until the end of the phase, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
+          "text": "WHEN: Start of any phase (excluding the Command phase).\nTARGET: One ADEpTUS ARbITES, INQUISITORIAl AGENTS or ORDO HERETICUS GRENADES unit from your army that is not within Engagement Range of one or more enemy units.\nEFFECT: Select one enemy unit (excluding MONSTERS or VEHICLES) within 8\" of and visible to your unit. That enemy unit must take a Battle-shock test and, until the end of the phase, each time a model in that unit makes an attack, subtract 1 from the Hit roll."
         }
       ]
     },
@@ -218,7 +218,7 @@
       "rules": [
         {
           "name": "Destroy the Daemonic",
-          "text": "Each time an INQUISITOR, INQUISITORIAL AGENTS or ORDO MALLEUS model from your army makes an attack, re-roll a Hit roll of 1 and, if the target of that attack is a DAEMON unit, re-roll a Wound roll of 1 as well."
+          "text": "Each time an INqUISITOR, INqUISITORIAl AGENTS or ORDO MAllEUS model from your army makes an attack, re-roll a Hit roll of 1 and, if the target of that attack is a DAEMON unit, re-roll a Wound roll of 1 as well."
         }
       ],
       "enhancements": [
@@ -227,39 +227,39 @@
           "name": "Daemon Slayer",
           "pts": 10,
           "upgrade": false,
-          "text": "INQUISITOR model only. Add 1 to the Attacks characteristic of the bearers melee weapons, and those weapons have the [ANTI-DAEMON 3+] ability."
+          "text": "INqUISITOR model only. Add 1 to the Attacks characteristic of the bearers melee weapons, and those weapons have the [ANTI-DAEMON 3+] ability."
         },
         {
           "id": "000009134003",
           "name": "Formidable Resolve",
           "pts": 5,
           "upgrade": false,
-          "text": "INQUISITOR model only. Improve the bearer’s Leadership and Wounds characteristics by 1. Once per battle, at the start of any phase, you can select one friendly Battle-shocked unit within 12\" of the bearer. That unit is no longer Battle-shocked."
+          "text": "INqUISITOR model only. Improve the bearer’s Leadership and Wounds characteristics by 1. Once per battle, at the start of any phase, you can select one friendly Battle-shocked unit within 12\" of the bearer. That unit is no longer Battle-shocked."
         },
         {
           "id": "000009134004",
           "name": "Gift of the Prescient",
           "pts": 20,
           "upgrade": false,
-          "text": "INQUISITOR model only. Once per battle, if the bearer is on the battlefield, you can use the Rapid Ingress Stratagem for 0CP. When doing so, you must target a GREY KNIGHTS TERMINATOR SQUAD unit from your army, and when using that Stratagem, that unit can be set up anywhere on the battlefield that is more than 6\" away from all enemy units."
+          "text": "INqUISITOR model only. Once per battle, if the bearer is on the battlefield, you can use the Rapid Ingress Stratagem for 0CP. When doing so, you must target a GREy KNIGHTS TERMINATOR SqUAD unit from your army, and when using that Stratagem, that unit can be set up anywhere on the battlefield that is more than 6\" away from all enemy units."
         },
         {
           "id": "000009134005",
           "name": "Grimoire of True Names (Aura)",
           "pts": 10,
           "upgrade": false,
-          "text": "INQUISITOR model only. While an enemy unit is within 9\" of the bearer, worsen the Leadership characteristic of models in that unit by 1. In addition, while an enemy DAEMON unit is within 9\" of the bearer, each time a model in that DAEMON unit makes an attack, subtract 1 from the Hit roll and subtract 1 from the Wound roll."
+          "text": "INqUISITOR model only. While an enemy unit is within 9\" of the bearer, worsen the Leadership characteristic of models in that unit by 1. In addition, while an enemy DAEMON unit is within 9\" of the bearer, each time a model in that DAEMON unit makes an attack, subtract 1 from the Hit roll and subtract 1 from the Wound roll."
         }
       ],
       "stratagems": [
         {
-          "id": "000009135004",
-          "name": "STEEL HEART",
+          "id": "000009135002",
+          "name": "RITUAL OF WARDING",
           "cp": 1,
           "type": "Daemon Hunters – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase, just after a GREY KNIGHTS TERMINATOR SQUAD unit from your army Falls Back.\nTARGET: That GREY KNIGHTS TERMINATOR SQUAD unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
+          "turn": "Either player’s turn",
+          "phase": "Command phase",
+          "text": "WHEN: Start of any Command phase.\nTARGET: One INQUISITOR, INQUISITORIAl AGENTS or ORDO MAllEUS unit from your army that is within range of an objective marker you control.\nEFFECT: That objective marker is said to be Warded and remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn. While an objective marker is Warded and under your control, enemy DAEMON units cannot be set up on the battlefield within 6\" of it."
         },
         {
           "id": "000009135003",
@@ -268,16 +268,16 @@
           "type": "Daemon Hunters – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One INQUISITOR, INQUISITORIAL AGENTS or ORDO MALLEUS unit from your army.\nEFFECT: Select one enemy DAEMON unit within 12\" and visible to your unit. That unit must take a Battle-shock test. If that test is failed, then until the end of the phase, each time a friendly AGENTS OF THE IMPERIUM unit makes an attack that targets that DAEMON unit, that attack has the [DEVASTATING WOUNDS] ability."
+          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One INQUISITOR, INQUISITORIAl AGENTS or ORDO MAllEUS unit from your army.\nEFFECT: Select one enemy DAEMON unit within 12\" and visible to your unit. That unit must take a Battle-shock test. If that test is failed, then until the end of the phase, each time a friendly AGENTS OF THE IMpERIUM unit makes an attack that targets that DAEMON unit, that attack has the [DEVASTATING WOUNDS] ability."
         },
         {
-          "id": "000009135002",
-          "name": "RITUAL OF WARDING",
+          "id": "000009135004",
+          "name": "STEEL HEART",
           "cp": 1,
           "type": "Daemon Hunters – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Command phase",
-          "text": "WHEN: Start of any Command phase.\nTARGET: One INQUISITOR, INQUISITORIAL AGENTS or ORDO MALLEUS unit from your army that is within range of an objective marker you control.\nEFFECT: That objective marker is said to be Warded and remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn. While an objective marker is Warded and under your control, enemy DAEMON units cannot be set up on the battlefield within 6\" of it."
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase, just after a GREy KNIGHTS TERMINATOR SQUAD unit from your army Falls Back.\nTARGET: That GREY KNIGHTS TERMINATOR SQUAD unit.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
         },
         {
           "id": "000009135007",
@@ -286,7 +286,7 @@
           "type": "Daemon Hunters – Wargear Stratagem",
           "turn": "Your turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One GREY KNIGHTS TERMINATOR SQUAD unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [LETHAL HITS] and [PSYCHIC] abilities."
+          "text": "WHEN: Your Shooting phase.\nTARGET: One GREy KNIGHTS TERMINATOR SQUAD unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [LETHAL HITS] and [PSYCHIC] abilities."
         },
         {
           "id": "000009135005",
@@ -295,7 +295,7 @@
           "type": "Daemon Hunters – Wargear Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One GREY KNIGHTS TERMINATOR SQUAD unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
+          "text": "WHEN: Your opponent’s Shooting phase orthe Fight phase, just after an enemy unit has selected its targets.\nTARGET: One GREy KNIGHTS TERMINATOR SQUAD unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
         },
         {
           "id": "000009135006",
@@ -304,7 +304,7 @@
           "type": "Daemon Hunters – Wargear Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One ORDO MALLEUS unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, all Psychic weapons equipped by models in the attacking unit have the [HAZARDOUS] ability."
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One ORDO MAllEUS unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, all Psychic weapons equipped by models in the attacking unit have the [HAZARDOUS] ability."
         }
       ]
     },
@@ -325,7 +325,7 @@
           "name": "Clandestine Operation",
           "pts": 15,
           "upgrade": false,
-          "text": "AGENTS OF THE IMPERIUM model only. At the start of the Declare Battle Formations step, you can select up to three AGENTS OF THE IMPERIUM INFANTRY units from your army (excluding GREY KNIGHTS TERMINATOR SQUAD units) - those units gain the Infiltrators ability."
+          "text": "AGENTS OF THE IMPERIUM model only. At the start of the Declare Battle Formations step, you can select up to three AGENTS OF THE IMPERIUM INFANTRy units from your army (excluding GREy KNIGHTS TERMINATOR SqUAD units) - those units gain the Infiltrators ability."
         },
         {
           "id": "000009138003",
@@ -360,31 +360,22 @@
           "text": "WHEN: Your Shooting phase.\nTARGET: One VOIDFARERS unit from your army.\nEFFECT: Until the end of the phase, each time a model in your unit makes a ranged attack that targets a unit within 12\", improve the Strength and Armour Penetration characteristics of that attack by 1."
         },
         {
-          "id": "000009139007",
-          "name": "SELFLESS BODYGUARD",
-          "cp": 1,
-          "type": "Imperialis Fleet – Epic Deed Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One AGENTS OF THE IMPERIUM Attached unit that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack with the [PRECISION] ability is allocated to a CHARACTER model in your unit, if there are one or more Bodyguard models in your unit, roll one D6: on a 2+, that attack is allocated to a Bodyguard model of your choice in your unit instead."
-        },
-        {
           "id": "000009139003",
           "name": "MASTERS OF THE VOID",
           "cp": 1,
           "type": "Imperialis Fleet – Epic Deed Stratagem",
           "turn": "Your turn",
           "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One VOIDFARERS CHARACTER unit from your army.\nEFFECT: Until the end of the phase, each AGENTS OF THE IMPERIUM unit from your army that is arriving from Strategic Reserves this turn can be set up within your opponent’s deployment zone (all other restrictions still apply)."
+          "text": "WHEN: Your Movement phase.\nTARGET: One VOIDFARERS CHARACTER unit from your army.\nEFFECT: Until the end of the phase, each AGENTS OF THE IMpERIUM unit from your army that is arriving from Strategic Reserves this turn can be set up within your opponent’s deployment zone (all other restrictions still apply)."
         },
         {
-          "id": "000009139005",
-          "name": "EMPEROR’S WILL",
+          "id": "000009139007",
+          "name": "SELFLESS BODYGUARD",
           "cp": 1,
-          "type": "Imperialis Fleet – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One AGENTS OF THE IMPERIUM unit from your army.\nEFFECT: Until the end of the phase, your unit is eligible to shoot in a turn in which it Advanced or Fell Back."
+          "type": "Imperialis Fleet – Epic Deed Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One AGENTS OF THE IMpERIUM Attached unit that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack with the [PRECISION] ability is allocated to a CHARACTER model in your unit, if there are one or more Bodyguard models in your unit, roll one D6: on a 2+, that attack is allocated to a Bodyguard model of your choice in your unit instead."
         },
         {
           "id": "000009139002",
@@ -393,7 +384,16 @@
           "type": "Imperialis Fleet – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One AGENTS OF THE IMPERIUM unit from your army.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets an enemy unit within range of an objective marker, that attack has the [SUSTAINED HITS 1], [LANCE] and [IGNORES COVER] abilities."
+          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One AGENTS OF THE IMpERIUM unit from your army.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets an enemy unit within range of an objective marker, that attack has the [SUSTAINED HITS 1], [LANCE] and [IGNORES COVER] abilities."
+        },
+        {
+          "id": "000009139005",
+          "name": "EMPEROR’S WILL",
+          "cp": 1,
+          "type": "Imperialis Fleet – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One AGENTS OF THE IMpERIUM unit from your army.\nEFFECT: Until the end of the phase, your unit is eligible to shoot in a turn in which it Advanced or Fell Back."
         },
         {
           "id": "000009139006",
@@ -402,7 +402,7 @@
           "type": "Imperialis Fleet – Wargear Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
-          "text": "WHEN: Your opponent's Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One AGENTS OF THE IMPERIUM CHARACTER unit from your army (excluding OFFICIO ASSASSINORUM units) that was selected as the target of one or more of the attacking unit's attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save and, after the attacking unit has resolved its attacks, unless your unit is within Engagement Range of one or more enemy units, it can make a Normal move of up to 6\" (when doing so, models in this unit move as if they have the Fly keyword)."
+          "text": "WHEN: Your opponent's Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One AGENTS OF THE IMpERIUM CHARACTER unit from your army (excluding OFFICIO ASSASSINORUM units) that was selected as the target of one or more of the attacking unit's attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save and, after the attacking unit has resolved its attacks, unless your unit is within Engagement Range of one or more enemy units, it can make a Normal move of up to 6\" (when doing so, models in this unit move as if they have the Fly keyword)."
         }
       ]
     },
@@ -421,28 +421,28 @@
         {
           "id": "000009757002",
           "name": "Decoy Targets",
-          "pts": 40,
+          "pts": 15,
           "upgrade": false,
           "text": "Callidus Assassin models only. Twice per battle, in your Movement phase, you can select one other friendly Infantry model that is on the battlefield and not within Engagement Range of one or more enemy units. The selected model is destroyed (ignoring any rules that are triggered when a model is destroyed) and this model is removed from the battlefield and set up again as close as possible to where that destroyed model was and not within Engagement Range of one or more enemy units. This ability cannot be used more than once in the same battle round."
         },
         {
           "id": "000009757003",
           "name": "Esoteric Explosives",
-          "pts": 40,
+          "pts": 10,
           "upgrade": false,
-          "text": "Culexus Assassin models only. Each time this model is targeted with the Grenades Stratagem, 1 mortal wound is inflicted for each D6 roll of 3+ instead of for each 4+."
+          "text": "Culexus Assassin models only. Each time this model is targeted with the Explosives Stratagem, 1 mortal wound is inflicted for each D6 roll of 3+ instead of for each 4+."
         },
         {
           "id": "000009757004",
           "name": "Intraneural Biotech",
-          "pts": 35,
+          "pts": 15,
           "upgrade": false,
           "text": "EVERSOR ASSASSIN model only. You can target this unit with the Heroic Intervention stratagem, regardless of any other uses of that stratagem this phase. If you do:\n• That use is -1 CP.\n• That use does not prevent any uses of that stratagem on other units this phase."
         },
         {
           "id": "000009757005",
           "name": "Micromelta Rounds",
-          "pts": 45,
+          "pts": 20,
           "upgrade": false,
           "text": "Vindicare Assassin models only. This model’s exitus rifle has the [ANTI-MONSTER 4+] and [ANTI-VEHICLE 4+] abilities."
         }
@@ -473,16 +473,16 @@
           "type": "Veiled Blade Elimination Force – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Charge phase",
-          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One Agents of the Imperium Infantry unit from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units.\nEFFECT: Your unit can declare a charge. When doing so, you must select one or more of those enemy units as the targets of that charge, In addition, if it is a Callidus Assassin unit and it makes a Charge move as a result of this Stratagem, until the end of the turn, each time a model in your unit makes a melee attack, add 1 to the Wound roll."
+          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One Agents of the Imperium Infantry unit from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units.\nEFFECT: Your unit can declare a charge. When doing so, you must select one or more of those enemy units as the targets of that charge. In addition, if it is a CALLIDUS ASSASSIN unit and it makes a Charge move as a result of this Stratagem, until the end of the turn, each time a model in your unit makes a melee attack, add 1 to the Wound roll"
         },
         {
-          "id": "000009758006",
-          "name": "BLIND GRENADES",
+          "id": "000009758004",
+          "name": "WILL‑SAPPING SALVO",
           "cp": 1,
           "type": "Veiled Blade Elimination Force – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One Agents of the Imperium Grenades or Vindicare Assassin unit from your army that was selected as one of the targets of that charge and is not within Engagement Range of one or more enemy units.\nEFFECT: Until the end of the phase, subtract 1 from Charge rolls made for that enemy unit, or, if your unit is a VINDICARE ASSASSIN, subtract 2 from Charge rolls made for that enemy unit instead."
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Agents of the Imperium Infantry unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [SUSTAINED HITS 1] ability. In addition, if it is a Culexus Assassin unit, until the end of the phase, change the Damage characteristic of ranged weapons equipped by models in your unit to 3."
         },
         {
           "id": "000009758005",
@@ -494,13 +494,13 @@
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Agents of the Imperium Infantry unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\", or, if your unit has the Lone Operative ability, if the attacking model is within 6\"."
         },
         {
-          "id": "000009758004",
-          "name": "WILL-SAPPING SALVO",
+          "id": "000009758006",
+          "name": "BLIND GRENADES",
           "cp": 1,
           "type": "Veiled Blade Elimination Force – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Agents of the Imperium Infantry unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [SUSTAINED HITS 1] ability. In addition, if it is a Culexus Assassin unit, until the end of the phase, change the Damage characteristic of ranged weapons equipped by models in your unit to 3."
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One Agents of the Imperium Grenades or Vindicare Assassin unit from your army that was selected as one of the targets of that charge and is not within Engagement Range of one or more enemy units.\nEFFECT: Until the end of the phase, subtract 1 from Charge rolls made for that enemy unit, or, if your unit is a VINDICARE ASSASSIN, subtract 2 from Charge rolls made for that enemy unit instead."
         }
       ]
     }
@@ -511,12 +511,12 @@
       "name": "Vindicare Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "SMOKE",
-        "EPIC HERO",
         "CHARACTER",
         "INFANTRY",
-        "OFFICIO ASSASSINORUM",
+        "EPIC HERO",
+        "SMOKE",
         "IMPERIUM",
+        "OFFICIO ASSASSINORUM",
         "VINDICARE ASSASSIN"
       ],
       "factionKeywords": [
@@ -647,8 +647,8 @@
         },
         {
           "name": "SHADOW ASSIGNMENT",
-          "type": "Special",
-          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CULEXUS ASSASSIN, it cannot have more than 1 EVERSOR ASSASSIN and it cannot have more than 1 CALLIDUS ASSASSIN)."
+          "type": "Special (правая колонка)",
+          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CUlExUS ASSASSIN, it cannot have more than 1 EvERSOR ASSASSIN and it cannot have more than 1 CAllIDUS ASSASSIN)."
         }
       ],
       "leads": [],
@@ -681,12 +681,12 @@
       "name": "Callidus Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "CALLIDUS ASSASSIN",
         "OFFICIO ASSASSINORUM",
-        "IMPERIUM",
+        "CALLIDUS ASSASSIN",
         "CHARACTER",
-        "INFANTRY"
+        "INFANTRY",
+        "EPIC HERO",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -739,8 +739,8 @@
               "D": "1",
               "abilities": [
                 "anti-infantry 2+",
-                "torrent",
-                "blast 2"
+                "blast 2",
+                "torrent"
               ]
             }
           ]
@@ -802,8 +802,8 @@
         },
         {
           "name": "SHADOW ASSIGNMENT",
-          "type": "Special",
-          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CULEXUS ASSASSIN, it cannot have more than 1 EVERSOR ASSASSIN and it cannot have more than 1 CALLIDUS ASSASSIN)."
+          "type": "Special (правая колонка)",
+          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CUlExUS ASSASSIN, it cannot have more than 1 EvERSOR ASSASSIN and it cannot have more than 1 CALLIDUS ASSASSIN)."
         }
       ],
       "leads": [],
@@ -827,13 +827,13 @@
       "name": "Eversor Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "INFANTRY",
-        "EVERSOR ASSASSIN",
-        "OFFICIO ASSASSINORUM",
-        "IMPERIUM",
         "GRENADES",
-        "CHARACTER"
+        "INFANTRY",
+        "CHARACTER",
+        "EPIC HERO",
+        "IMPERIUM",
+        "OFFICIO ASSASSINORUM",
+        "EVERSOR ASSASSIN"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -948,8 +948,8 @@
         },
         {
           "name": "SHADOW ASSIGNMENT",
-          "type": "Special",
-          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CULEXUS ASSASSIN, it cannot have more than 1 EVERSOR ASSASSIN and it cannot have more than 1 CALLIDUS ASSASSIN)."
+          "type": "Special (правая колонка)",
+          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CUlExUS ASSASSIN, it cannot have more than 1 EvERSOR ASSASSIN and it cannot have more than 1 CAllIDUS ASSASSIN)."
         }
       ],
       "leads": [],
@@ -982,13 +982,13 @@
       "name": "Culexus Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "OFFICIO ASSASSINORUM",
-        "IMPERIUM",
-        "GRENADES",
-        "EPIC HERO",
-        "CHARACTER",
         "INFANTRY",
-        "CULEXUS ASSASSIN"
+        "CHARACTER",
+        "GRENADES",
+        "IMPERIUM",
+        "OFFICIO ASSASSINORUM",
+        "CULEXUS ASSASSIN",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1111,8 +1111,8 @@
         },
         {
           "name": "SHADOW ASSIGNMENT",
-          "type": "Special",
-          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CULEXUS ASSASSIN, it cannot have more than 1 EVERSOR ASSASSIN and it cannot have more than 1 CALLIDUS ASSASSIN)."
+          "type": "Special (правая колонка)",
+          "text": "This model cannot be selected to be your WARLORD.\nIf your army faction is AGENTS OF THE IMPERIUM, then during the Declare Battle Formations step, you can replace this model with a different OFFICIO ASSASSINORUM model, provided the total points value of the new model does not exceed the points value of the model it replaced. Your army cannot include duplicates of the same model (i.e. after replacing a model with this rule, your army cannot have more than 1 VINDICARE ASSASSIN, it cannot have more than 1 CUlExUS ASSASSIN, it cannot have more than 1 EvERSOR ASSASSIN and it cannot have more than 1 CAllIDUS ASSASSIN)."
         }
       ],
       "leads": [],
@@ -1136,15 +1136,15 @@
       "name": "Inquisitor Greyfax",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "INFANTRY",
+        "CHARACTER",
+        "EPIC HERO",
         "ORDO HERETICUS",
+        "GREYFAX",
+        "INQUISITOR",
         "IMPERIUM",
         "GRENADES",
-        "PSYKER",
-        "EPIC HERO",
-        "CHARACTER",
-        "INFANTRY",
-        "INQUISITOR",
-        "GREYFAX"
+        "PSYKER"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1269,15 +1269,15 @@
         }
       ],
       "leads": [
-        "Sanctifiers",
-        "Vigilant Squad",
         "Aquila Kill Team",
         "Exaction Squad",
-        "Imperial Navy Breachers",
-        "Deathwatch Kill Team",
+        "Sisters of Battle Squad",
         "Subductor Squad",
+        "Sanctifiers",
+        "Imperial Navy Breachers",
         "Inquisitorial Agents",
-        "Sisters of Battle Squad"
+        "Deathwatch Kill Team",
+        "Vigilant Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1299,14 +1299,14 @@
       "name": "Inquisitor Coteaz",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INQUISITOR",
-        "ORDO MALLEUS",
         "IMPERIUM",
-        "CHARACTER",
         "PSYKER",
+        "EPIC HERO",
+        "ORDO MALLEUS",
+        "CHARACTER",
         "INFANTRY",
-        "COTEAZ",
-        "EPIC HERO"
+        "INQUISITOR",
+        "COTEAZ"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1436,13 +1436,14 @@
         }
       ],
       "leads": [
-        "Exaction Squad",
+        "Vigilant Squad",
         "Imperial Navy Breachers",
-        "Subductor Squad",
         "Aquila Kill Team",
         "Inquisitorial Agents",
-        "Vigilant Squad",
-        "Deathwatch Kill Team"
+        "Grey Knights Terminator Squad",
+        "Subductor Squad",
+        "Deathwatch Kill Team",
+        "Exaction Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1474,10 +1475,10 @@
       "role": "Infantry Character",
       "keywords": [
         "IMPERIUM",
-        "INFANTRY",
         "GRENADES",
-        "INQUISITOR",
-        "CHARACTER"
+        "CHARACTER",
+        "INFANTRY",
+        "INQUISITOR"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1687,14 +1688,16 @@
         }
       ],
       "leads": [
-        "Sisters of Battle Squad",
-        "Exaction Squad",
         "Aquila Kill Team",
-        "Inquisitorial Agents",
-        "Imperial Navy Breachers",
-        "Vigilant Squad",
         "Sanctifiers",
-        "Subductor Squad"
+        "Sisters of Battle Squad",
+        "Deathwatch Kill Team",
+        "Grey Knights Terminator Squad",
+        "Exaction Squad",
+        "Subductor Squad",
+        "Imperial Navy Breachers",
+        "Inquisitorial Agents",
+        "Vigilant Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1725,15 +1728,15 @@
       "name": "Inquisitor Draxus",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "ORDO XENOS",
-        "INQUISITOR",
         "DRAXUS",
-        "PSYKER",
+        "INQUISITOR",
+        "ORDO XENOS",
         "IMPERIUM",
-        "GRENADES",
-        "INFANTRY",
+        "PSYKER",
+        "EPIC HERO",
         "CHARACTER",
-        "EPIC HERO"
+        "INFANTRY",
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1757,10 +1760,10 @@
       ],
       "composition": [
         {
-          "name": "Inquisitor Draxus – EPIC HERO",
+          "name": "Lord Inquisitor Kyria Draxus – EPIC HERO",
           "min": 1,
           "max": 1,
-          "text": "1 Inquisitor Draxus – EPIC HERO"
+          "text": "1 Lord Inquisitor Kyria Draxus – EPIC HERO"
         }
       ],
       "loadout": {
@@ -1855,12 +1858,13 @@
         }
       ],
       "leads": [
-        "Exaction Squad",
         "Vigilant Squad",
         "Aquila Kill Team",
+        "Subductor Squad",
         "Imperial Navy Breachers",
         "Inquisitorial Agents",
-        "Subductor Squad"
+        "Exaction Squad",
+        "Deathwatch Kill Team"
       ],
       "isSupport": false,
       "points": [
@@ -1891,11 +1895,11 @@
       "name": "Voidsmen-at-arms",
       "role": "Infantry",
       "keywords": [
-        "VOIDFARERS",
-        "RETINUE",
+        "INFANTRY",
         "GRENADES",
         "VOIDSMEN-AT-ARMS",
-        "INFANTRY",
+        "RETINUE",
+        "VOIDFARERS",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -2075,7 +2079,7 @@
         },
         {
           "name": "NAVY BODYGUARD",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "If your Army Faction is not AGENTS OF THE IMPERIUM, then for each Voidfarers Character unit you include in your army, you can include one VOIDSMEN-AT-ARMS unit in your army that does not count towards the number of RETINUE units your army can include (see Assigned Agents)"
         }
       ],
@@ -2113,10 +2117,10 @@
         "SMOKE",
         "GRENADES",
         "BATTLELINE",
-        "INFANTRY",
         "VOIDFARERS",
         "IMPERIUM",
-        "RETINUE"
+        "RETINUE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -2525,13 +2529,13 @@
       "name": "Vigilant Squad",
       "role": "Battleline",
       "keywords": [
-        "IMPERIUM",
-        "RETINUE",
+        "ADEPTUS ARBITES",
         "INFANTRY",
         "BATTLELINE",
         "GRENADES",
-        "VIGILANT SQUAD",
-        "ADEPTUS ARBITES"
+        "IMPERIUM",
+        "RETINUE",
+        "VIGILANT SQUAD"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -2809,12 +2813,12 @@
       "name": "Subductor Squad",
       "role": "Infantry",
       "keywords": [
+        "GRENADES",
+        "IMPERIUM",
+        "RETINUE",
         "SUBDUCTOR SQUAD",
         "ADEPTUS ARBITES",
-        "IMPERIUM",
-        "GRENADES",
-        "INFANTRY",
-        "RETINUE"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -2978,12 +2982,12 @@
       "name": "Exaction Squad",
       "role": "Infantry",
       "keywords": [
+        "RETINUE",
+        "INFANTRY",
+        "IMPERIUM",
         "ADEPTUS ARBITES",
         "EXACTION SQUAD",
-        "IMPERIUM",
-        "RETINUE",
-        "GRENADES",
-        "INFANTRY"
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3344,12 +3348,12 @@
       "name": "Rogue Trader Entourage",
       "role": "Infantry Character",
       "keywords": [
-        "ROGUE TRADER ENTOURAGE",
         "INFANTRY",
         "GRENADES",
+        "CHARACTER",
         "IMPERIUM",
-        "VOIDFARERS",
-        "CHARACTER"
+        "ROGUE TRADER ENTOURAGE",
+        "VOIDFARERS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3574,7 +3578,7 @@
         {
           "name": "Warrant of Trade",
           "type": "Datasheet",
-          "text": "If your army includes one or more units with this ability, after both players have deployed their armies, select upto D3 IMPERIUM BATTLELINE units from your army and redeploy them. When doing so, you can set those units up in Strategic Reserves, regardless of how many units are already in Strategic Reserves."
+          "text": "If your army includes one or more units with this ability, after both players have deployed their armies, select upto D3 IMpERIUM BATTlElINE units from your army and redeploy them. When doing so, you can set those units up in Strategic Reserves, regardless of how many units are already in Strategic Reserves."
         },
         {
           "name": "Healing Serum",
@@ -3615,12 +3619,12 @@
       "name": "Navigator",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "CHARACTER",
-        "PSYKER",
-        "IMPERIUM",
+        "NAVIGATOR",
         "VOIDFARERS",
-        "NAVIGATOR"
+        "IMPERIUM",
+        "PSYKER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3750,11 +3754,11 @@
       "name": "Inquisitorial Agents",
       "role": "Infantry",
       "keywords": [
+        "RETINUE",
         "INQUISITORIAL AGENTS",
-        "INFANTRY",
-        "GRENADES",
         "IMPERIUM",
-        "RETINUE"
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4068,7 +4072,7 @@
         },
         {
           "name": "INQUISITORIAL HENCHMEN",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "If your Army Faction is not AGENTS OF THE IMPERIUM, then for each Inquisitor unit you include in your army, you can include one INQUISITORIAL AGENTS unit in your army that does not count towards the number of RETINUE units your army can include (see Assigned Agents)."
         }
       ],
@@ -4083,6 +4087,10 @@
               "pts": 50
             },
             {
+              "models": 11,
+              "pts": 100
+            },
+            {
               "models": 12,
               "pts": 100
             }
@@ -4094,6 +4102,10 @@
             {
               "models": 6,
               "pts": 60
+            },
+            {
+              "models": 11,
+              "pts": 120
             },
             {
               "models": 12,
@@ -4110,11 +4122,11 @@
       "name": "Ministorum Priest",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
         "IMPERIUM",
+        "CHARACTER",
+        "MINISTORUM PRIEST",
         "ORDO HERETICUS",
-        "MINISTORUM PRIEST"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4240,7 +4252,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Assigned Agents",
@@ -4259,13 +4271,13 @@
         }
       ],
       "leads": [
-        "Sanctifiers",
-        "Imperial Navy Breachers",
-        "Vigilant Squad",
-        "Sisters of Battle Squad",
         "Inquisitorial Agents",
+        "Sisters of Battle Squad",
         "Subductor Squad",
-        "Exaction Squad"
+        "Exaction Squad",
+        "Imperial Navy Breachers",
+        "Sanctifiers",
+        "Vigilant Squad"
       ],
       "isSupport": true,
       "points": [
@@ -4288,13 +4300,13 @@
       "role": "Infantry",
       "keywords": [
         "ORDO MALLEUS",
-        "GRENADES",
-        "INFANTRY",
-        "REQUISITIONED",
-        "PSYKER",
         "IMPERIUM",
+        "GRENADES",
         "TERMINATOR",
-        "GREY KNIGHTS TERMINATOR SQUAD"
+        "PSYKER",
+        "INFANTRY",
+        "GREY KNIGHTS TERMINATOR SQUAD",
+        "REQUISITIONED"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4375,10 +4387,7 @@
               "Banner"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Storm bolter"
-          ]
+          "max": 1
         },
         {
           "text": "1 Grey Knights Terminator can have its storm bolter replaced with 1 narthecium.*",
@@ -4426,6 +4435,7 @@
               "AP": 0,
               "D": "1",
               "abilities": [
+                "precision",
                 "psychic",
                 "sustained hits 1"
               ]
@@ -4512,7 +4522,7 @@
         },
         {
           "name": "Rites of Teleportation",
-          "type": "Special",
+          "type": "Special (правая колонка)",
           "text": "If one or more INQUISITOR units are attached to this unit during the Declare Battle formations step, models in those units have the Deep Strike ability."
         }
       ],
@@ -4551,13 +4561,12 @@
       "name": "Watch Captain Artemis",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "ORDO XENOS",
-        "DEATHWATCH",
-        "WATCH CAPTAIN ARTEMIS",
+        "CAPTAIN",
         "INFANTRY",
+        "ORDO XENOS",
         "CHARACTER",
         "EPIC HERO",
-        "GRENADES",
+        "EXPLOSIVES",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -4567,7 +4576,7 @@
         {
           "name": "Watch Captain Artemis",
           "M": 6,
-          "T": 4,
+          "T": 5,
           "Sv": 3,
           "InSv": 4,
           "W": 4,
@@ -4604,7 +4613,7 @@
             {
               "name": "Hellfire Extremis",
               "range": 12,
-              "A": "D6",
+              "A": "3",
               "skill": null,
               "S": 4,
               "AP": -1,
@@ -4626,7 +4635,7 @@
               "range": "Melee",
               "A": "6",
               "skill": 2,
-              "S": 5,
+              "S": 6,
               "AP": -2,
               "D": "2",
               "abilities": []
@@ -4647,24 +4656,19 @@
           "text": "LEADER24.22\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
-          "name": "Assigned Agents",
-          "type": "Faction",
-          "text": "If your Army Faction is AGENTS OF THE IMPERIUM, then in the Select Detachment Rules step, you can select one of the available Detachments from this book as normal.\nIf your Army Faction is not AGENTS OF THE IMPERIUM, but every model in your army has the IMPERIUM keyword, you can include AGENTS OF THE IMPERIUM units in your army even if they do not have the Faction keyword you selected in the Select Army Faction step. In this case, the maximum number of AGENTS OF THE IMPERIUM units you can include in your army depends on the battle size, as shown below.\nBATTLE SIZE ¦ RETINUE UNITS ¦ CHARACTER UNITS ¦ REQUISITIONED UNITS\nIncursion ¦ 1 ¦ 1 ¦ 1\nStrike Force ¦ 2 ¦ 2 ¦ 1\nOnslaught ¦ 3 ¦ 3 ¦ 2\nNote that you can include AGENTS OF THE IMPERIUM DEDICATED TRANSPORT units in such an army as normal, but each unit must start the battle with one or more units embarked within it, or it cannot be deployed for that battle and will count as having been destroyed during the first battle round."
-        },
-        {
           "name": "Tactical Instinct",
           "type": "Datasheet",
-          "text": "While this model is leading a unit, weapons equipped by models in that unit have the [LETHAL HITS] ability."
+          "text": "This unit’s attacks have [Sustained Hits 1]."
         },
         {
-          "name": "Unstoppable Champion",
+          "name": "Unstoppable Champion (Once per battle, per army)",
           "type": "Datasheet",
-          "text": "The first time this model is destroyed, roll one D6 at the end of the phase. On a 2+, set this model back up on the battlefield, as close as possible to where it was destroyed and not within Engagement Range of any enemy units, with 1 wound remaining."
+          "text": "At the end of a phase in which this model is destroyed, roll one D6:\n• On a 2+, set this model back up on the battlefield as close as possible to where it was destroyed, unengaged with 3 wounds remaining."
         }
       ],
       "leads": [
-        "Aquila Kill Team",
-        "Deathwatch Kill Team"
+        "Deathwatch Kill Team",
+        "Aquila Kill Team"
       ],
       "isSupport": false,
       "points": [
@@ -4686,12 +4690,10 @@
       "name": "Watch Master",
       "role": "Infantry Character",
       "keywords": [
-        "DEATHWATCH",
-        "INFANTRY",
-        "WATCH MASTER",
-        "CHARACTER",
-        "GRENADES",
         "IMPERIUM",
+        "EXPLOSIVES",
+        "CHARACTER",
+        "INFANTRY",
         "ORDO XENOS"
       ],
       "factionKeywords": [
@@ -4701,7 +4703,7 @@
         {
           "name": "Watch Master",
           "M": 6,
-          "T": 4,
+          "T": 5,
           "Sv": 2,
           "InSv": 4,
           "W": 5,
@@ -4724,10 +4726,10 @@
       ],
       "loadout": {
         "*": [
-          "vigil spear"
+          "Vigil Spear"
         ]
       },
-      "loadoutText": "This model is equipped with: vigil spear.",
+      "loadoutText": "This model is equipped with: 1 Vigil Spear.",
       "options": [],
       "wargearOptions": [],
       "weapons": [
@@ -4739,7 +4741,7 @@
               "range": 24,
               "A": "2",
               "skill": 2,
-              "S": 4,
+              "S": 5,
               "AP": -1,
               "D": "2",
               "abilities": []
@@ -4751,7 +4753,7 @@
               "skill": 2,
               "S": 6,
               "AP": -2,
-              "D": "D3",
+              "D": "2",
               "abilities": [
                 "lance"
               ]
@@ -4766,24 +4768,24 @@
           "text": "LEADER24.22\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
-          "name": "Assigned Agents",
-          "type": "Faction",
-          "text": "If your Army Faction is AGENTS OF THE IMPERIUM, then in the Select Detachment Rules step, you can select one of the available Detachments from this book as normal.\nIf your Army Faction is not AGENTS OF THE IMPERIUM, but every model in your army has the IMPERIUM keyword, you can include AGENTS OF THE IMPERIUM units in your army even if they do not have the Faction keyword you selected in the Select Army Faction step. In this case, the maximum number of AGENTS OF THE IMPERIUM units you can include in your army depends on the battle size, as shown below.\nBATTLE SIZE ¦ RETINUE UNITS ¦ CHARACTER UNITS ¦ REQUISITIONED UNITS\nIncursion ¦ 1 ¦ 1 ¦ 1\nStrike Force ¦ 2 ¦ 2 ¦ 1\nOnslaught ¦ 3 ¦ 3 ¦ 2\nNote that you can include AGENTS OF THE IMPERIUM DEDICATED TRANSPORT units in such an army as normal, but each unit must start the battle with one or more units embarked within it, or it cannot be deployed for that battle and will count as having been destroyed during the first battle round."
+          "name": "Watch Master",
+          "type": "Datasheet",
+          "text": "This model’s attacks that target a CHARACTER unit can:\n• Re-roll hit rolls of 1.\n• Re-roll wound rolls of 1."
         },
         {
-          "name": "Strategic Knowledge",
+          "name": "Strategic Acumen",
           "type": "Datasheet",
-          "text": "While this model is leading a unit, that unit is eligible to shoot and declare a charge in a turn in which it Advanced or Fell Back."
+          "text": "In your Command phase, you can use this ability. If you do, select one combat doctrine to be active for this unit until the start of your next Command phase."
         },
         {
-          "name": "Rites of Battle",
+          "name": "Purgatus Quarry",
           "type": "Datasheet",
-          "text": "Once per battle round, one unit from your army with this ability can use it when its unit is targeted with a Stratagem. If it does, reduce the CP cost of that use of that Stratagem by 1CP."
+          "text": "At the start of the first battle round, select up to one enemy unit to be this unit’s hunted: \n• This unit’s attacks that target this unit’s hunted unit can re-roll wound rolls of 1. \n• Each time this unit’s hunted is destroyed, select up to one enemy unit to be this unit’s hunted."
         }
       ],
       "leads": [
-        "Aquila Kill Team",
-        "Deathwatch Kill Team"
+        "Deathwatch Kill Team",
+        "Aquila Kill Team"
       ],
       "isSupport": false,
       "points": [
@@ -4805,14 +4807,13 @@
       "name": "Deathwatch Kill Team",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
+        "EXPLOSIVES",
         "BATTLELINE",
-        "GRENADES",
-        "RETINUE",
-        "DEATHWATCH",
-        "KILL TEAM",
         "IMPERIUM",
-        "ORDO XENOS"
+        "INFANTRY",
+        "KILL TEAM",
+        "ORDO XENOS",
+        "RETINUE"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4821,7 +4822,7 @@
         {
           "name": "Deathwatch Veterans",
           "M": 6,
-          "T": 4,
+          "T": 5,
           "Sv": 3,
           "InSv": null,
           "W": 2,
@@ -4839,143 +4840,54 @@
           "name": "Watch Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Watch Sergeant"
+          "text": "1 Watch Sergeant model"
         },
         {
-          "name": "Deathwatch Veterans",
+          "name": "Deathwatch Veteran",
           "min": 4,
           "max": 9,
-          "text": "4-9 Deathwatch Veterans"
+          "text": "4-9 Deathwatch Veteran models"
         }
       ],
       "loadout": {
         "*": [
-          "boltgun",
-          "power weapon"
+          "Boltgun",
+          "Power Weapon"
         ]
       },
-      "loadoutText": "Every model is equipped with: boltgun; power weapon.",
+      "loadoutText": "Every model is equipped with: 1 Boltgun; 1 Power Weapon.",
       "options": [
-        "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with one of the following:• 1 boltgun and 1 Astartes shield\n• 1 power weapon and 1 Astartes shield",
-        "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with 1 Deathwatch thunder hammer.",
-        "For every 5 models in this unit, 1 model can have their boltgun and power weapon replaced with 1 stalker-pattern boltgun and 1 close combat weapon.",
-        "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with 1 Deathwatch shotgun and 1 close combat weapon.",
-        "For every 5 models in this unit, 1 model can have its boltgun and power weapon replaced with 1 frag cannon and 1 close combat weapon.",
-        "For every 5 models in this unit, 1 model can have its boltgun and power weapon replaced with 1 infernus heavy bolter and 1 close combat weapon.",
-        "One model's boltgun and power weapon can be replaced with 1 Black Shield blades.",
-        "The Watch Sergeant’s power weapon can be replaced with 1 xenophase blade.",
-        "The Watch Sergeant's boltgun can be replaced with 1 combi-weapon."
+        "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with 1 Heavy Thunder Hammer.",
+        "1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Black Shield Blades.",
+        "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Stalker-pattern Boltgun and 1 Knives and Fists.",
+        "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with 1 Deathwatch Shotgun and 1 Knives and Fists.",
+        "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with one of the following: 1 Boltgun and 1 Storm Shield, 1 Power Weapon and 1 Storm Shield",
+        "The Watch Sergeant can have their Boltgun replaced with 1 Combi-weapon.",
+        "The Watch Sergeant can have their Power Weapon replaced with 1 Xenophase Blade.",
+        "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Infernus Heavy Bolter and 1 Knives and Fists.",
+        "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Frag Cannon and 1 Knives and Fists."
       ],
       "wargearOptions": [
         {
-          "text": "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with one of the following:• 1 boltgun and 1 Astartes shield • 1 power weapon and 1 Astartes shield",
+          "text": "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with 1 Heavy Thunder Hammer.",
           "scope": "perN",
-          "who": "*",
+          "who": "Deathwatch Veteran",
           "replace": [
             "Boltgun",
             "Power weapon"
           ],
           "choices": [
             [
-              "Boltgun",
-              "Astartes shield"
-            ],
-            [
-              "Power weapon",
-              "Astartes shield"
+              "Heavy Thunder Hammer"
             ]
           ],
           "per": 5,
           "max": 2
         },
         {
-          "text": "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with 1 Deathwatch thunder hammer.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Boltgun",
-            "Power weapon"
-          ],
-          "choices": [
-            [
-              "Deathwatch thunder hammer"
-            ]
-          ],
-          "per": 5,
-          "max": 2
-        },
-        {
-          "text": "For every 5 models in this unit, 1 model can have their boltgun and power weapon replaced with 1 stalker-pattern boltgun and 1 close combat weapon.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Boltgun",
-            "Power weapon"
-          ],
-          "choices": [
-            [
-              "Stalker-pattern boltgun",
-              "Close combat weapon"
-            ]
-          ],
-          "per": 5,
-          "max": 1
-        },
-        {
-          "text": "For every 5 models in this unit, up to 2 models can each have their boltgun and power weapon replaced with 1 Deathwatch shotgun and 1 close combat weapon.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Boltgun",
-            "Power weapon"
-          ],
-          "choices": [
-            [
-              "Deathwatch shotgun",
-              "Close combat weapon"
-            ]
-          ],
-          "per": 5,
-          "max": 2
-        },
-        {
-          "text": "For every 5 models in this unit, 1 model can have its boltgun and power weapon replaced with 1 frag cannon and 1 close combat weapon.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Boltgun",
-            "Power weapon"
-          ],
-          "choices": [
-            [
-              "Frag cannon",
-              "Close combat weapon"
-            ]
-          ],
-          "per": 5,
-          "max": 1
-        },
-        {
-          "text": "For every 5 models in this unit, 1 model can have its boltgun and power weapon replaced with 1 infernus heavy bolter and 1 close combat weapon.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Boltgun",
-            "Power weapon"
-          ],
-          "choices": [
-            [
-              "Infernus heavy bolter",
-              "Close combat weapon"
-            ]
-          ],
-          "per": 5,
-          "max": 1
-        },
-        {
-          "text": "One model's boltgun and power weapon can be replaced with 1 Black Shield blades.",
+          "text": "1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Black Shield Blades.",
           "scope": "upTo",
-          "who": "*",
+          "who": "Deathwatch Veteran",
           "replace": [
             "Boltgun",
             "Power weapon"
@@ -4988,7 +4900,75 @@
           "max": 1
         },
         {
-          "text": "The Watch Sergeant's power weapon can be replaced with 1 xenophase blade.",
+          "text": "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Stalker-pattern Boltgun and 1 Knives and Fists.",
+          "scope": "perN",
+          "who": "Deathwatch Veteran",
+          "replace": [
+            "Boltgun",
+            "Power weapon"
+          ],
+          "choices": [
+            [
+              "Stalker-pattern boltgun",
+              "Knives",
+              "Fists"
+            ]
+          ],
+          "per": 5,
+          "max": 1
+        },
+        {
+          "text": "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with 1 Deathwatch Shotgun and 1 Knives and Fists.",
+          "scope": "perN",
+          "who": "Deathwatch Veteran",
+          "replace": [
+            "Boltgun",
+            "Power weapon"
+          ],
+          "choices": [
+            [
+              "Deathwatch shotgun",
+              "Knives",
+              "Fists"
+            ]
+          ],
+          "per": 5,
+          "max": 2
+        },
+        {
+          "text": "For every 5 models in this unit, up to 2 Deathwatch Veteran models can each have their Boltgun and Power Weapon replaced with one of the following: 1 Boltgun and 1 Storm Shield, 1 Power Weapon and 1 Storm Shield",
+          "scope": "perN",
+          "who": "Deathwatch Veteran",
+          "replace": [
+            "Boltgun",
+            "Power weapon"
+          ],
+          "choices": [
+            [
+              "Boltgun",
+              "Storm Shield",
+              "Power weapon",
+              "Storm Shield"
+            ]
+          ],
+          "per": 5,
+          "max": 2
+        },
+        {
+          "text": "The Watch Sergeant can have their Boltgun replaced with 1 Combi-weapon.",
+          "scope": "one",
+          "who": "Watch Sergeant",
+          "replace": [
+            "Boltgun"
+          ],
+          "choices": [
+            [
+              "Combi-weapon"
+            ]
+          ]
+        },
+        {
+          "text": "The Watch Sergeant can have their Power Weapon replaced with 1 Xenophase Blade.",
           "scope": "one",
           "who": "Watch Sergeant",
           "replace": [
@@ -5001,17 +4981,40 @@
           ]
         },
         {
-          "text": "The Watch Sergeant's boltgun can be replaced with 1 combi-weapon.",
-          "scope": "one",
-          "who": "Watch Sergeant",
+          "text": "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Infernus Heavy Bolter and 1 Knives and Fists.",
+          "scope": "perN",
+          "who": "Deathwatch Veteran",
           "replace": [
-            "Boltgun"
+            "Boltgun",
+            "Power weapon"
           ],
           "choices": [
             [
-              "Combi-weapon"
+              "Infernus Heavy Bolter",
+              "Knives",
+              "Fists"
             ]
-          ]
+          ],
+          "per": 5,
+          "max": 1
+        },
+        {
+          "text": "For every 5 models in this unit, 1 Deathwatch Veteran model can have their Boltgun and Power Weapon replaced with 1 Frag Cannon and 1 Knives and Fists.",
+          "scope": "perN",
+          "who": "Deathwatch Veteran",
+          "replace": [
+            "Boltgun",
+            "Power weapon"
+          ],
+          "choices": [
+            [
+              "Frag cannon",
+              "Knives",
+              "Fists"
+            ]
+          ],
+          "per": 5,
+          "max": 1
         }
       ],
       "weapons": [
@@ -5021,79 +5024,12 @@
             {
               "name": "Boltgun",
               "range": 24,
-              "A": "2",
-              "skill": 3,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Frag cannon",
-          "profiles": [
-            {
-              "name": "Frag cannon",
-              "range": 18,
-              "A": "D3",
-              "skill": 4,
-              "S": 7,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "blast",
-                "heavy",
-                "rapid fire d3"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Infernus heavy bolter",
-          "profiles": [
-            {
-              "name": "heavy bolter",
-              "range": 36,
-              "A": "3",
-              "skill": 4,
-              "S": 5,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "heavy",
-                "sustained hits 1"
-              ]
-            },
-            {
-              "name": "heavy flamer",
-              "range": 12,
-              "A": "D6",
-              "skill": null,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "ignores cover",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Combi-weapon",
-          "profiles": [
-            {
-              "name": "Combi-weapon",
-              "range": 24,
               "A": "1",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
               "D": "1",
               "abilities": [
-                "anti-infantry 4+",
-                "devastating wounds",
                 "rapid fire 1"
               ]
             }
@@ -5107,13 +5043,73 @@
               "range": 24,
               "A": "1",
               "skill": 3,
-              "S": 4,
+              "S": 5,
               "AP": -1,
               "D": "2",
               "abilities": [
                 "heavy",
                 "precision"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Frag cannon",
+          "profiles": [
+            {
+              "name": "Frag cannon",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "blast 1",
+                "heavy",
+                "lethal hits",
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Combi-weapon",
+          "profiles": [
+            {
+              "name": "damnatus",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 9,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 2"
+              ]
+            },
+            {
+              "name": "infernus",
+              "range": 12,
+              "A": "3",
+              "skill": null,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "blast 1",
+                "torrent"
+              ]
+            },
+            {
+              "name": "purgatus",
+              "range": 24,
+              "A": "2",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
             }
           ]
         },
@@ -5126,7 +5122,7 @@
               "A": "2",
               "skill": 3,
               "S": 4,
-              "AP": 0,
+              "AP": -1,
               "D": "2",
               "abilities": [
                 "assault"
@@ -5135,50 +5131,33 @@
           ]
         },
         {
-          "name": "Black Shield blades",
+          "name": "Infernus Heavy Bolter",
           "profiles": [
             {
-              "name": "Black Shield blades",
-              "range": "Melee",
-              "A": "4",
+              "name": "bolt",
+              "range": 36,
+              "A": "3",
               "skill": 3,
               "S": 5,
-              "AP": -2,
-              "D": "1",
+              "AP": -1,
+              "D": "2",
               "abilities": [
-                "twin-linked"
+                "heavy",
+                "rapid fire 2",
+                "sustained hits 1"
               ]
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
+            },
             {
-              "name": "Close combat weapon",
-              "range": "Melee",
+              "name": "infernus",
+              "range": 12,
               "A": "3",
-              "skill": 3,
-              "S": 4,
-              "AP": 0,
+              "skill": null,
+              "S": 5,
+              "AP": -1,
               "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Deathwatch thunder hammer",
-          "profiles": [
-            {
-              "name": "Deathwatch thunder hammer",
-              "range": "Melee",
-              "A": "3",
-              "skill": 4,
-              "S": 10,
-              "AP": -2,
-              "D": "3",
               "abilities": [
-                "devastating wounds"
+                "blast 1",
+                "torrent"
               ]
             }
           ]
@@ -5193,6 +5172,21 @@
               "skill": 3,
               "S": 5,
               "AP": -2,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Knives and Fists",
+          "profiles": [
+            {
+              "name": "Knives and Fists",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 5,
+              "AP": 0,
               "D": "1",
               "abilities": []
             }
@@ -5214,28 +5208,52 @@
               ]
             }
           ]
+        },
+        {
+          "name": "Heavy Thunder Hammer",
+          "profiles": [
+            {
+              "name": "Heavy Thunder Hammer",
+              "range": "Melee",
+              "A": "3",
+              "skill": 4,
+              "S": 10,
+              "AP": -2,
+              "D": "3",
+              "abilities": [
+                "devastating wounds"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Black Shield blades",
+          "profiles": [
+            {
+              "name": "Black Shield blades",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "twin-linked"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
         {
-          "name": "Assigned Agents",
-          "type": "Faction",
-          "text": "If your Army Faction is AGENTS OF THE IMPERIUM, then in the Select Detachment Rules step, you can select one of the available Detachments from this book as normal.\nIf your Army Faction is not AGENTS OF THE IMPERIUM, but every model in your army has the IMPERIUM keyword, you can include AGENTS OF THE IMPERIUM units in your army even if they do not have the Faction keyword you selected in the Select Army Faction step. In this case, the maximum number of AGENTS OF THE IMPERIUM units you can include in your army depends on the battle size, as shown below.\nBATTLE SIZE ¦ RETINUE UNITS ¦ CHARACTER UNITS ¦ REQUISITIONED UNITS\nIncursion ¦ 1 ¦ 1 ¦ 1\nStrike Force ¦ 2 ¦ 2 ¦ 1\nOnslaught ¦ 3 ¦ 3 ¦ 2\nNote that you can include AGENTS OF THE IMPERIUM DEDICATED TRANSPORT units in such an army as normal, but each unit must start the battle with one or more units embarked within it, or it cannot be deployed for that battle and will count as having been destroyed during the first battle round."
-        },
-        {
           "name": "Death to the Alien",
           "type": "Datasheet",
-          "text": "Each time a model in this unit makes an attack, re-roll a Hit roll of 1. If the target of that attack does not have the IMPERIUM or CHAOS keywords, you can re-roll the Hit roll instead."
-        },
-        {
-          "name": "Kill Team",
-          "type": "Datasheet",
-          "text": "Each time an attack targets this unit, if it contains models with different Toughness characteristics, until the attacking unit has finished making its attacks, use the Toughness characteristic of the majority of the models in that unit when determining what roll is required for that attack to successfully wound. If two or more Toughness characteristics are tied for majority, use the highest value.\nFor the purposes of determining which models in this unit can embark within a TRANSPORT, Kill Team Terminator models, Kill Team Outrider models, Kill Team Biker models and models equipped with a jump pack each take up the space of 2 models, but can otherwise embark within any TRANSPORT their unit can embark within, even though similar models in other units have the TERMINATOR, MOUNTED keywords.\nFor the purposes of interacting with terrain features, all models in units with this ability are considered INFANTRY models, even though similar models in other units may have the MOUNTED or JUMP PACK keywords.\nDesigner’s Note: While the abstractions in the above rule cause some models to behave differently to similar models in other units, they are designed to minimise complicated movement, TRANSPORT and Benefit of Cover rules."
+          "text": "This unit’s attacks can:\n• Re-roll hit rolls of 1.\n• Or: If the target of those attacks does not have IMPERIUM/CHAOS, re-roll hit rolls."
         },
         {
           "name": "Astartes Shield",
           "type": "Wargear",
-          "text": "The bearer has a 4+ invulnerable save."
+          "text": "This model has a 4+ InSv."
         }
       ],
       "leads": [],
@@ -5263,14 +5281,13 @@
       "name": "Corvus Blackstar",
       "role": "Transport",
       "keywords": [
-        "TRANSPORT",
-        "FLY",
         "VEHICLE",
-        "DEATHWATCH",
-        "CORVUS BLACKSTAR",
-        "RETINUE",
+        "SMOKE",
+        "FLY",
         "ORDO XENOS",
-        "IMPERIUM"
+        "IMPERIUM",
+        "RETINUE",
+        "TRANSPORT"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -5302,102 +5319,106 @@
       ],
       "loadout": {
         "*": [
-          "Blackstar rocket launchers",
-          "Blackstar rocket launchers",
-          "twin assault cannon",
-          "armoured hull"
+          "Armoured Hull",
+          "Auspex Array",
+          "Blackstar Rocket Launcher",
+          "Blackstar Rocket Launcher",
+          "Twin Assault Cannon"
         ]
       },
-      "loadoutText": "This model is equipped with: 2 Blackstar rocket launchers; twin assault cannon; armoured hull.",
+      "loadoutText": "This model is equipped with: 1 Armoured Hull; Auspex Array; 2 Blackstar Rocket Launcher; 1 Twin Assault Cannon.",
       "options": [
-        "This model’s twin assault cannon can be replaced with 1 twin lascannon.",
-        "This model’s 2 Blackstar rocket launchers can be replaced with 2 stormstrike missile launchers.",
-        "This model can be equipped with 1 hurricane bolter.",
-        "This model can be equipped with one of the following:• 1 auspex array\n• 1 infernum halo-launcher"
+        "This model can be equipped with 1 Hurricane Bolter",
+        "This model's Twin Assault Cannon can be replaced with 1 Twin Lascannon.",
+        "This model's 2 Blackstar Rocket Launchers can be replaced with 2 Stormstrike Missile Launchers."
       ],
       "wargearOptions": [
         {
-          "text": "This model's twin assault cannon can be replaced with 1 twin lascannon.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Twin assault cannon"
-          ],
-          "choices": [
-            [
-              "Twin lascannon"
-            ]
-          ]
-        },
-        {
-          "text": "This model's 2 Blackstar rocket launchers can be replaced with 2 stormstrike missile launchers.",
-          "scope": "one",
-          "who": "*",
-          "replace": [
-            "Blackstar rocket launcher",
-            "Blackstar rocket launcher"
-          ],
-          "choices": [
-            [
-              "Stormstrike missile launcher",
-              "Stormstrike missile launcher"
-            ]
-          ]
-        },
-        {
-          "text": "This model can be equipped with 1 hurricane bolter.",
+          "text": "This model can be equipped with 1 Hurricane Bolter",
           "scope": "one",
           "who": "*",
           "replace": [],
           "choices": [
             [
-              "Hurricane bolter"
+              "Hurricane Bolter"
             ]
           ]
         },
         {
-          "text": "This model can be equipped with one of the following:• 1 auspex array • 1 infernum halo-launcher",
+          "text": "This model's Twin Assault Cannon can be replaced with 1 Twin Lascannon.",
           "scope": "one",
           "who": "*",
-          "replace": [],
+          "replace": [
+            "Twin Assault Cannon"
+          ],
           "choices": [
             [
-              "Auspex array"
-            ],
+              "Twin Lascannon"
+            ]
+          ]
+        },
+        {
+          "text": "This model's 2 Blackstar Rocket Launchers can be replaced with 2 Stormstrike Missile Launchers.",
+          "scope": "one",
+          "who": "*",
+          "replace": [
+            "Blackstar Rocket Launcher",
+            "Blackstar Rocket Launcher"
+          ],
+          "choices": [
             [
-              "Infernum halo-launcher"
+              "Stormstrike Missile Launcher",
+              "Stormstrike Missile Launcher"
             ]
           ]
         }
       ],
       "weapons": [
         {
-          "name": "Blackstar rocket launcher",
+          "name": "Blackstar Rocket Launcher",
           "profiles": [
             {
-              "name": "Blackstar rocket launcher",
+              "name": "Blackstar Rocket Launcher",
               "range": 30,
-              "A": "D6+1",
+              "A": "4",
               "skill": 3,
               "S": 5,
               "AP": 0,
               "D": "1",
               "abilities": [
-                "blast"
+                "blast 1"
               ]
             }
           ]
         },
         {
-          "name": "Hurricane bolter",
+          "name": "Twin Assault Cannon",
           "profiles": [
             {
-              "name": "Hurricane bolter",
+              "name": "Twin Assault Cannon",
               "range": 24,
               "A": "6",
               "skill": 3,
-              "S": 4,
-              "AP": 0,
+              "S": 6,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "sustained hits 1",
+                "twin-linked"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Hurricane Bolter",
+          "profiles": [
+            {
+              "name": "Hurricane Bolter",
+              "range": 24,
+              "A": "6",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
               "D": "1",
               "abilities": [
                 "rapid fire 6",
@@ -5407,10 +5428,27 @@
           ]
         },
         {
-          "name": "Stormstrike missile launcher",
+          "name": "Twin Lascannon",
           "profiles": [
             {
-              "name": "Stormstrike missile launcher",
+              "name": "Twin Lascannon",
+              "range": 48,
+              "A": "1",
+              "skill": 3,
+              "S": 12,
+              "AP": -3,
+              "D": "D3+3",
+              "abilities": [
+                "twin-linked"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Stormstrike Missile Launcher",
+          "profiles": [
+            {
+              "name": "Stormstrike Missile Launcher",
               "range": 48,
               "A": "1",
               "skill": 3,
@@ -5422,45 +5460,10 @@
           ]
         },
         {
-          "name": "Twin assault cannon",
+          "name": "Armoured Hull",
           "profiles": [
             {
-              "name": "Twin assault cannon",
-              "range": 24,
-              "A": "6",
-              "skill": 3,
-              "S": 6,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "devastating wounds",
-                "twin-linked"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Twin lascannon",
-          "profiles": [
-            {
-              "name": "Twin lascannon",
-              "range": 48,
-              "A": "1",
-              "skill": 3,
-              "S": 12,
-              "AP": -3,
-              "D": "D6+1",
-              "abilities": [
-                "twin-linked"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Armoured hull",
-          "profiles": [
-            {
-              "name": "Armoured hull",
+              "name": "Armoured Hull",
               "range": "Melee",
               "A": "3",
               "skill": 4,
@@ -5480,6 +5483,12 @@
           "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, after the units embarked within it (if any) have made their emergency disembark moves, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X (if this is a random number, roll separately for each unit within 6\")."
         },
         {
+          "name": "Damaged",
+          "type": "Core",
+          "param": "5",
+          "text": "DAMAGED24.39\nThis ability always takes the form Damaged X. While a model’s remaining wounds are equal to or less than X, that model is damaged: while damaged, that model’s attacks have -1 to hit rolls."
+        },
+        {
           "name": "Hover",
           "type": "Core",
           "text": "HOVER24.17\nSome airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops.\nEach time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
@@ -5490,33 +5499,19 @@
           "text": "STEALTH24.33\nThe stealthiest warriors can evade the attentions, and the bullets, of their foes.\nIf every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
         },
         {
-          "name": "Assigned Agents",
-          "type": "Faction",
-          "text": "If your Army Faction is AGENTS OF THE IMPERIUM, then in the Select Detachment Rules step, you can select one of the available Detachments from this book as normal.\nIf your Army Faction is not AGENTS OF THE IMPERIUM, but every model in your army has the IMPERIUM keyword, you can include AGENTS OF THE IMPERIUM units in your army even if they do not have the Faction keyword you selected in the Select Army Faction step. In this case, the maximum number of AGENTS OF THE IMPERIUM units you can include in your army depends on the battle size, as shown below.\nBATTLE SIZE ¦ RETINUE UNITS ¦ CHARACTER UNITS ¦ REQUISITIONED UNITS\nIncursion ¦ 1 ¦ 1 ¦ 1\nStrike Force ¦ 2 ¦ 2 ¦ 1\nOnslaught ¦ 3 ¦ 3 ¦ 2\nNote that you can include AGENTS OF THE IMPERIUM DEDICATED TRANSPORT units in such an army as normal, but each unit must start the battle with one or more units embarked within it, or it cannot be deployed for that battle and will count as having been destroyed during the first battle round."
-        },
-        {
           "name": "Blackstar Cluster Launcher",
           "type": "Datasheet",
-          "text": "Each time this model ends a Normal move, you can select one enemy unit it moved over during that move and roll six D6: for each 5+, that unit suffers 1 mortal wound."
+          "text": "In your Movement phase, when this unit ends a normal move, select up to one enemy unit this unit moved over during that move and roll six D6:\n• For each 4+, that unit suffers 1 mortal wound."
         },
         {
           "name": "Auspex Array",
-          "type": "Wargear",
-          "text": "Ranged weapons equipped by the bearer have the [IGNORES COVER] ability."
-        },
-        {
-          "name": "Infernum Halo-launcher",
-          "type": "Wargear",
-          "text": "The bearer has the Smoke keyword."
+          "type": "Datasheet",
+          "text": "This unit’s ranged attacks have [IGNORES COVER]."
         }
       ],
       "leads": [],
       "isSupport": false,
-      "transport": "This model has a transport capacity of 12 DEATHWATCH INFANTRY models.",
-      "damaged": {
-        "w": "1-5",
-        "text": "While this model has 1-5 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll."
-      },
+      "transport": "This model has a transport capacity of 12 DEATHwATCH INFANTRy models.",
       "points": [
         {
           "label": "YOUR UNIT COSTS",
@@ -5536,12 +5531,12 @@
       "name": "Sisters of Battle Squad",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
-        "ORDO HERETICUS",
-        "SISTERS OF BATTLE SQUAD",
         "REQUISITIONED",
+        "IMPERIUM",
         "INFANTRY",
-        "IMPERIUM"
+        "GRENADES",
+        "SISTERS OF BATTLE SQUAD",
+        "ORDO HERETICUS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -5694,10 +5689,7 @@
               "Simulacrum imperialis"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Boltgun"
-          ]
+          "max": 1
         }
       ],
       "weapons": [
@@ -6002,7 +5994,7 @@
         {
           "name": "Defenders of the Faith",
           "type": "Datasheet",
-          "text": "If you control an objective marker at the end of your Command phase and this unit is within range of that objective marker, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+          "text": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
           "name": "Incensor Cherub",
@@ -6045,14 +6037,14 @@
       "name": "Sisters of Battle Immolator",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "DEDICATED TRANSPORT",
-        "FRAME",
         "TRANSPORT",
-        "SMOKE",
+        "FRAME",
+        "DEDICATED TRANSPORT",
+        "VEHICLE",
         "IMPERIUM",
         "ORDO HERETICUS",
-        "IMMOLATOR"
+        "SISTERS OF BATTLE IMMOLATOR",
+        "SMOKE"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -6076,10 +6068,10 @@
       ],
       "composition": [
         {
-          "name": "Immolator",
+          "name": "Sisters of Battle Immolator",
           "min": 1,
           "max": 1,
-          "text": "1 Immolator"
+          "text": "1 Sisters of Battle Immolator"
         }
       ],
       "loadout": {
@@ -6253,7 +6245,7 @@
       ],
       "leads": [],
       "isSupport": false,
-      "transport": "This model has a transport capacity of 6 ORDO HERETICUS INFANTRY models.\nAt the start of the Declare Battle Formations step, you can select one SISTERS OF BATTLE SQUAD from your army. If you do, that unit is split into two units, each containing as equal a number of models as possible (when splitting a unit in this way, make a note of which models form each of the two new units). One of these units must start the battle embarked within this TRANSPORT; the other can start the battle embarked within another TRANSPORT, or it can be deployed as a separate unit.",
+      "transport": "This model has a transport capacity of 6 ORDO HERETICUS INFANTRy models.\nAt the start of the Declare Battle Formations step, you can select one SISTERS OF BATTlE SQUAD from your army. If you do, that unit is split into two units, each containing as equal a number of models as possible (when splitting a unit in this way, make a note of which models form each of the two new units). One of these units must start the battle embarked within this TRANSPORT; the other can start the battle embarked within another TRANSPORT, or it can be deployed as a separate unit.",
       "points": [
         {
           "label": "YOUR 1ST TO 3RD UNITS COST",
@@ -6265,11 +6257,11 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
-              "pts": 115
+              "pts": 100
             }
           ]
         },
@@ -6283,7 +6275,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6579,7 +6571,7 @@
       ],
       "leads": [],
       "isSupport": false,
-      "transport": "This model has a transport capacity of 13 INQUISITOR INFANTRY and INQUISITORIAL AGENT models. It cannot transport TERMINATOR models.",
+      "transport": "This model has a transport capacity of 13 INQUISITOR INFANTRy and INQUISITORIAl AGENT models. It cannot transport TERMINATOR models.",
       "points": [
         {
           "label": "YOUR 1ST TO 3RD UNITS COST",
@@ -6591,7 +6583,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6608,12 +6600,12 @@
       "name": "Imperial Rhino",
       "role": "Dedicated Transports",
       "keywords": [
+        "IMPERIAL RHINO",
+        "TRANSPORT",
+        "DEDICATED TRANSPORT",
         "VEHICLE",
         "SMOKE",
-        "TRANSPORT",
         "FRAME",
-        "DEDICATED TRANSPORT",
-        "IMPERIAL RHINO",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -6739,7 +6731,7 @@
         {
           "name": "Self Repair",
           "type": "Datasheet",
-          "text": "At the end of your Command phase, this model regains 1 lost wound."
+          "text": "At the start of your Command phase, this model regains 1 lost wound."
         },
         {
           "name": "One Shot",
@@ -6749,7 +6741,7 @@
       ],
       "leads": [],
       "isSupport": false,
-      "transport": "This model has a transport capacity of 12 AGENTS OF THE IMPERIUM Infantry models. It cannot transport TERMINATOR or OFFICIO ASSASSINORUM models.",
+      "transport": "This model has a transport capacity of 12 AGENTS OF THE IMpERIUM Infantry models. It cannot transport TERMINATOR or OFFICIO ASSASSINORUM models.",
       "points": [
         {
           "label": "YOUR 1ST TO 3RD UNITS COST",
@@ -6761,7 +6753,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6778,18 +6770,18 @@
       "name": "Sanctifiers",
       "role": "Infantry",
       "keywords": [
+        "SANCTIFIERS",
         "IMPERIUM",
-        "INFANTRY",
-        "GRENADES",
         "RETINUE",
-        "SANCTIFIERS"
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
       ],
       "models": [
         {
-          "name": "Sanctifiers",
+          "name": "",
           "M": 6,
           "T": 3,
           "Sv": 6,
@@ -6889,10 +6881,7 @@
               "Holy fire"
             ]
           ],
-          "max": 1,
-          "requires": [
-            "Plasma gun"
-          ]
+          "max": 1
         },
         {
           "text": "1 Sanctifier model can have its 1 Sanctifier melee weapon replaced with 1 Ministorum hand flamer and 1 close combat weapon.",
@@ -7123,7 +7112,7 @@
         },
         {
           "name": "ATTACHED UNIT",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "If a Ministorum Priest or Inquisitor model from your army with the Leader ability can be attached to a Sisters of Battle Squad, it can be attached to this unit instead. If a MINISTORUM PRIEST or INQUISITOR model from your army is attached to this unit during the Declare Battle Formations step, that model gains the Scouts 6\" ability."
         },
         {
@@ -7158,16 +7147,15 @@
       "name": "Aquila Kill Team",
       "role": "Battleline",
       "keywords": [
+        "INFANTRY",
         "BATTLELINE",
+        "EXPLOSIVES",
         "IMPERIUM",
         "ORDO XENOS",
         "RETINUE",
-        "DEATHWATCH",
-        "AQUILA KILL TEAM",
+        "KILL TEAM",
         "TACTICUS",
-        "GRAVIS",
-        "GRENADES",
-        "INFANTRY"
+        "GRAVIS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -7176,7 +7164,7 @@
         {
           "name": "KILL TEAM SERGEANT, DEATHWATCH VETERAN",
           "M": 6,
-          "T": 4,
+          "T": 5,
           "Sv": 3,
           "InSv": null,
           "W": 2,
@@ -7206,133 +7194,121 @@
       ],
       "composition": [
         {
+          "name": "Deathwatch Veteran with Xenophase Blade and Special-issue Bolt Pistol",
+          "min": 1,
+          "max": 1,
+          "text": "1 Deathwatch Veteran with Xenophase Blade and Special-issue Bolt Pistol model"
+        },
+        {
           "name": "Kill Team Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Kill Team Sergeant"
+          "text": "1 Kill Team Sergeant model"
+        },
+        {
+          "name": "Deathwatch Veteran with Deathwatch Marksman Bolt Carbine, Special-issue Bolt Pistol and Knives and Fists",
+          "min": 1,
+          "max": 2,
+          "text": "1-2 Deathwatch Veteran with Deathwatch Marksman Bolt Carbine, Special-issue Bolt Pistol and Knives and Fists models"
+        },
+        {
+          "name": "Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol",
+          "min": 1,
+          "max": 2,
+          "text": "1-2 Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol models"
+        },
+        {
+          "name": "Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists",
+          "min": 1,
+          "max": 2,
+          "text": "1-2 Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists models"
         },
         {
           "name": "Gravis Veteran",
           "min": 1,
-          "max": 1,
-          "text": "1 Gravis Veteran"
-        },
-        {
-          "name": "Deathwatch Veterans",
-          "min": 3,
-          "max": 3,
-          "text": "3 Deathwatch Veterans"
-        },
-        {
-          "text": "OR"
-        },
-        {
-          "name": "Kill Team Sergeant",
-          "min": 1,
-          "max": 1,
-          "text": "1 Kill Team Sergeant"
-        },
-        {
-          "name": "Gravis Veterans",
-          "min": 2,
           "max": 2,
-          "text": "2 Gravis Veterans"
-        },
-        {
-          "name": "Deathwatch Veterans",
-          "min": 7,
-          "max": 7,
-          "text": "7 Deathwatch Veterans"
+          "text": "1-2 Gravis Veteran models"
         }
       ],
       "loadout": {
+        "Deathwatch Veteran with Xenophase Blade and Special-issue Bolt Pistol": [
+          "Special-issue Bolt Pistol",
+          "Xenophase Blade"
+        ],
         "Kill Team Sergeant": [
-          "plasma pistol",
-          "power weapon"
+          "Plasma Pistol",
+          "Power Weapon"
+        ],
+        "Deathwatch Veteran with Deathwatch Marksman Bolt Carbine, Special-issue Bolt Pistol and Knives and Fists": [
+          "Deathwatch Marksman Bolt Carbine",
+          "Knives and Fists",
+          "Special-issue Bolt Pistol"
+        ],
+        "Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol": [
+          "Bolt Pistol",
+          "Heavy Thunder Hammer"
+        ],
+        "Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists": [
+          "Bolt Pistol",
+          "Knives and Fists",
+          "Stalker Bolt Rifle"
         ],
         "Gravis Veteran": [
-          "infernus heavy bolter",
-          "bolt pistol",
-          "close combat weapon"
-        ],
-        "For every 5 models in the unit, 1 Deathwatch Veteran": [
-          "stalker bolt rifle",
-          "bolt pistol",
-          "close combat weapon"
-        ],
-        "If the unit contains 10 models, 1 Deathwatch Veteran": [
-          "special-issue bolt pistol",
-          "xenophase blade"
+          "Bolt Pistol",
+          "Infernus Heavy Bolter",
+          "Knives and Fists"
         ]
       },
-      "loadoutText": "The Kill Team Sergeant is equipped with: plasma pistol; power weapon.\nEach Gravis Veteran is equipped with: infernus heavy bolter; bolt pistol; close combat weapon.\nFor every 5 models in the unit, 1 Deathwatch Veteran is equipped with: stalker bolt rifle; bolt pistol; close combat weapon.\nFor every 5 models in the unit, 1 Deathwatch Veteran is equipped with: bolt pistol; heavy thunder hammer.\nFor every 5 models in the unit, 1 Deathwatch Veteran is equipped with: Deathwatch marksman bolt carbine; special-issue bolt pistol; close combat weapon.\nIf the unit contains 10 models, 1 Deathwatch Veteran is equipped with: special-issue bolt pistol; xenophase blade.",
+      "loadoutText": "The Deathwatch Veteran with Xenophase Blade and Special-issue Bolt Pistol is equipped with: 1 Special-issue Bolt Pistol; 1 Xenophase Blade.\nThe Kill Team Sergeant is equipped with: 1 Plasma Pistol; 1 Power Weapon.\nEvery Deathwatch Veteran with Deathwatch Marksman Bolt Carbine, Special-issue Bolt Pistol and Knives and Fists is equipped with: 1 Deathwatch Marksman Bolt Carbine; 1 Knives and Fists; 1 Special-issue Bolt Pistol.\nEvery Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol is equipped with: 1 Bolt Pistol; 1 Heavy Thunder Hammer.\nEvery Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists is equipped with: 1 Bolt Pistol; 1 Knives and Fists; 1 Stalker Bolt Rifle.\nEvery Gravis Veteran is equipped with: 1 Bolt Pistol; 1 Infernus Heavy Bolter; 1 Knives and Fists.",
       "options": [
-        "For every 5 models in the unit, up to 1 model’s infernus heavy bolter can be replaced with one of the following:• 1 frag cannon.\n• 1 hellstorm bolt rifle and 1 Astartes grenade launcher.",
-        "For every 5 models in the unit, up to 1 model’s heavy thunder hammer can be replaced with 1 power weapon and 1 Astartes shield.",
-        "For every 5 models in the unit, up to 1 model’s stalker bolt rifle can be replaced with 1 plasma incinerator.",
-        "For every 5 models in the unit, up to 1 model’s Deathwatch marksman bolt carbine can be replaced with 1 combat knife."
+        "For every 5 models in this unit, 1 Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists model can have their Stalker Bolt Rifle replaced with 1 Plasma Incinerator.",
+        "For every 5 models in this unit, 1 Gravis Veteran model can have their Infernus Heavy Bolter replaced with one of the following: 1 Frag Cannon, 1 Hellstorm Bolt Rifle and 1 Grenade Launcher",
+        "For every 5 models in this unit, 1 Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol model can have their Heavy Thunder Hammer replaced with 1 Power Weapon and 1 Storm Shield."
       ],
       "wargearOptions": [
         {
-          "text": "For every 5 models in the unit, up to 1 model's infernus heavy bolter can be replaced with one of the following:• 1 frag cannon. • 1 hellstorm bolt rifle and 1 Astartes grenade launcher.",
+          "text": "For every 5 models in this unit, 1 Deathwatch Veteran with Stalker Bolt Rifle, Bolt Pistol and Knives and Fists model can have their Stalker Bolt Rifle replaced with 1 Plasma Incinerator.",
           "scope": "perN",
           "who": "*",
           "replace": [
-            "Infernus heavy bolter"
+            "Stalker Bolt Rifle"
           ],
           "choices": [
             [
-              "Frag cannon"
-            ],
-            [
-              "Hellstorm bolt rifle",
-              "Astartes grenade launcher"
+              "Plasma Incinerator"
             ]
           ],
           "per": 5,
           "max": 1
         },
         {
-          "text": "For every 5 models in the unit, up to 1 model's heavy thunder hammer can be replaced with 1 power weapon and 1 Astartes shield.",
+          "text": "For every 5 models in this unit, 1 Gravis Veteran model can have their Infernus Heavy Bolter replaced with one of the following: 1 Frag Cannon, 1 Hellstorm Bolt Rifle and 1 Grenade Launcher",
           "scope": "perN",
-          "who": "*",
+          "who": "Gravis Veteran",
           "replace": [
-            "Heavy thunder hammer"
+            "Infernus Heavy Bolter"
           ],
           "choices": [
             [
-              "Power weapon",
-              "Astartes shield"
+              "Frag Cannon",
+              "Hellstorm Bolt Rifle",
+              "Grenade Launcher"
             ]
           ],
           "per": 5,
           "max": 1
         },
         {
-          "text": "For every 5 models in the unit, up to 1 model's stalker bolt rifle can be replaced with 1 plasma incinerator.",
+          "text": "For every 5 models in this unit, 1 Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol model can have their Heavy Thunder Hammer replaced with 1 Power Weapon and 1 Storm Shield.",
           "scope": "perN",
-          "who": "*",
+          "who": "Deathwatch Veteran with Heavy Thunder Hammer and Bolt Pistol",
           "replace": [
-            "Stalker bolt rifle"
+            "Heavy Thunder Hammer"
           ],
           "choices": [
             [
-              "Plasma incinerator"
-            ]
-          ],
-          "per": 5,
-          "max": 1
-        },
-        {
-          "text": "For every 5 models in the unit, up to 1 model's Deathwatch marksman bolt carbine can be replaced with 1 combat knife.",
-          "scope": "perN",
-          "who": "*",
-          "replace": [
-            "Deathwatch marksman bolt carbine"
-          ],
-          "choices": [
-            [
-              "Combat knife"
+              "Power Weapon",
+              "Storm Shield"
             ]
           ],
           "per": 5,
@@ -7341,93 +7317,27 @@
       ],
       "weapons": [
         {
-          "name": "Astartes grenade launcher",
+          "name": "Bolt Pistol",
           "profiles": [
             {
-              "name": "frag",
-              "range": 24,
-              "A": "D3",
-              "skill": 3,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "blast"
-              ]
-            },
-            {
-              "name": "krak",
-              "range": 24,
-              "A": "1",
-              "skill": 3,
-              "S": 9,
-              "AP": -2,
-              "D": "D3",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
+              "name": "Bolt Pistol",
               "range": 12,
               "A": "1",
-              "skill": 3,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "pistol",
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Deathwatch marksman bolt carbine",
-          "profiles": [
-            {
-              "name": "Deathwatch marksman bolt carbine",
-              "range": 24,
-              "A": "2",
               "skill": 3,
               "S": 5,
               "AP": -1,
               "D": "1",
               "abilities": [
-                "heavy",
-                "lethal hits"
+                "close-quarters"
               ]
             }
           ]
         },
         {
-          "name": "Frag cannon",
+          "name": "Stalker Bolt Rifle",
           "profiles": [
             {
-              "name": "Frag cannon",
-              "range": 18,
-              "A": "D3",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "blast",
-                "heavy",
-                "lethal hits",
-                "rapid fire d3"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Hellstorm bolt rifle",
-          "profiles": [
-            {
-              "name": "Hellstorm bolt rifle",
+              "name": "Stalker Bolt Rifle",
               "range": 30,
               "A": "2",
               "skill": 3,
@@ -7435,18 +7345,37 @@
               "AP": -2,
               "D": "2",
               "abilities": [
-                "assault",
                 "heavy",
+                "lethal hits",
+                "precision"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Special-issue Bolt Pistol",
+          "profiles": [
+            {
+              "name": "Special-issue Bolt Pistol",
+              "range": 18,
+              "A": "1",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "close-quarters",
+                "precision",
                 "lethal hits"
               ]
             }
           ]
         },
         {
-          "name": "Infernus heavy bolter",
+          "name": "Infernus Heavy Bolter",
           "profiles": [
             {
-              "name": "heavy bolter",
+              "name": "bolt",
               "range": 36,
               "A": "3",
               "skill": 3,
@@ -7454,26 +7383,46 @@
               "AP": -1,
               "D": "2",
               "abilities": [
+                "heavy",
+                "rapid fire 2",
                 "sustained hits 1"
               ]
             },
             {
-              "name": "heavy flamer",
+              "name": "infernus",
               "range": 12,
-              "A": "D6",
+              "A": "3",
               "skill": null,
               "S": 5,
               "AP": -1,
               "D": "1",
               "abilities": [
-                "ignores cover",
+                "blast 1",
                 "torrent"
               ]
             }
           ]
         },
         {
-          "name": "Plasma incinerator",
+          "name": "Deathwatch Marksman Bolt Carbine",
+          "profiles": [
+            {
+              "name": "Deathwatch Marksman Bolt Carbine",
+              "range": 24,
+              "A": "2",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "heavy",
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma Incinerator",
           "profiles": [
             {
               "name": "standard",
@@ -7482,10 +7431,10 @@
               "skill": 3,
               "S": 7,
               "AP": -2,
-              "D": "1",
+              "D": "2",
               "abilities": [
                 "assault",
-                "heavy"
+                "rapid fire 1"
               ]
             },
             {
@@ -7499,7 +7448,75 @@
               "abilities": [
                 "assault",
                 "hazardous",
-                "heavy"
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Frag Cannon",
+          "profiles": [
+            {
+              "name": "Frag Cannon",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "blast",
+                "heavy",
+                "lethal hits",
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Astartes Grenade Launcher",
+          "profiles": [
+            {
+              "name": "frag",
+              "range": 24,
+              "A": "4",
+              "skill": 3,
+              "S": 4,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "blast 1"
+              ]
+            },
+            {
+              "name": "krak",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 10,
+              "AP": -2,
+              "D": "3",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Hellstorm Bolt Rifle",
+          "profiles": [
+            {
+              "name": "Hellstorm Bolt Rifle",
+              "range": 30,
+              "A": "2",
+              "skill": 3,
+              "S": 5,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "assault",
+                "heavy",
+                "lethal hits"
               ]
             }
           ]
@@ -7516,7 +7533,7 @@
               "AP": -2,
               "D": "1",
               "abilities": [
-                "pistol"
+                "close-quarters"
               ]
             },
             {
@@ -7528,59 +7545,38 @@
               "AP": -3,
               "D": "2",
               "abilities": [
-                "hazardous",
-                "pistol"
+                "close-quarters",
+                "hazardous"
               ]
             }
           ]
         },
         {
-          "name": "Special-issue bolt pistol",
+          "name": "Power Weapon",
           "profiles": [
             {
-              "name": "Special-issue bolt pistol",
-              "range": 18,
-              "A": "1",
-              "skill": 3,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "pistol",
-                "precision",
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Stalker bolt rifle",
-          "profiles": [
-            {
-              "name": "Stalker bolt rifle",
-              "range": 30,
-              "A": "2",
+              "name": "Power Weapon",
+              "range": "Melee",
+              "A": "4",
               "skill": 3,
               "S": 5,
               "AP": -2,
-              "D": "2",
+              "D": "1",
               "abilities": [
-                "heavy",
-                "lethal hits",
-                "precision"
+                "sustained hits 1"
               ]
             }
           ]
         },
         {
-          "name": "Close combat weapon",
+          "name": "Knives and Fists",
           "profiles": [
             {
-              "name": "Close combat weapon",
+              "name": "Knives and Fists",
               "range": "Melee",
               "A": "3",
               "skill": 3,
-              "S": 4,
+              "S": 5,
               "AP": 0,
               "D": "1",
               "abilities": []
@@ -7588,27 +7584,27 @@
           ]
         },
         {
-          "name": "Combat knife",
+          "name": "Xenophase Blade",
           "profiles": [
             {
-              "name": "Combat knife",
+              "name": "Xenophase Blade",
               "range": "Melee",
               "A": "4",
               "skill": 3,
-              "S": 4,
-              "AP": -1,
+              "S": 5,
+              "AP": -2,
               "D": "1",
               "abilities": [
-                "precision"
+                "devastating wounds"
               ]
             }
           ]
         },
         {
-          "name": "Heavy thunder hammer",
+          "name": "Heavy Thunder Hammer",
           "profiles": [
             {
-              "name": "Heavy thunder hammer",
+              "name": "Heavy Thunder Hammer",
               "range": "Melee",
               "A": "3",
               "skill": 4,
@@ -7620,66 +7616,27 @@
               ]
             }
           ]
-        },
-        {
-          "name": "Power weapon",
-          "profiles": [
-            {
-              "name": "Power weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 5,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "sustained hits 1"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Xenophase blade",
-          "profiles": [
-            {
-              "name": "Xenophase blade",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "devastating wounds"
-              ]
-            }
-          ]
         }
       ],
       "abilities": [
         {
-          "name": "Assigned Agents",
-          "type": "Faction",
-          "text": "If your Army Faction is AGENTS OF THE IMPERIUM, then in the Select Detachment Rules step, you can select one of the available Detachments from this book as normal.\nIf your Army Faction is not AGENTS OF THE IMPERIUM, but every model in your army has the IMPERIUM keyword, you can include AGENTS OF THE IMPERIUM units in your army even if they do not have the Faction keyword you selected in the Select Army Faction step. In this case, the maximum number of AGENTS OF THE IMPERIUM units you can include in your army depends on the battle size, as shown below.\nBATTLE SIZE ¦ RETINUE UNITS ¦ CHARACTER UNITS ¦ REQUISITIONED UNITS\nIncursion ¦ 1 ¦ 1 ¦ 1\nStrike Force ¦ 2 ¦ 2 ¦ 1\nOnslaught ¦ 3 ¦ 3 ¦ 2\nNote that you can include AGENTS OF THE IMPERIUM DEDICATED TRANSPORT units in such an army as normal, but each unit must start the battle with one or more units embarked within it, or it cannot be deployed for that battle and will count as having been destroyed during the first battle round."
-        },
-        {
           "name": "Death to the Alien",
           "type": "Datasheet",
-          "text": "Each time a model in this unit makes an attack, re-roll a Hit roll of 1. If the target of that attack does not have the IMPERIUM or CHAOS keywords, you can re-roll the Hit roll instead."
+          "text": "This unit’s attacks can:\n• Re-roll hit rolls of 1.\n• Or: If the target of those attacks does not have IMPERIUM/CHAOS, re-roll hit rolls."
         },
         {
           "name": "Kill Team",
           "type": "Datasheet",
-          "text": "Each time an attack targets this unit, if it contains models with different Toughness characteristics, until the attacking unit has finished making its attacks, use the Toughness characteristic of the majority of the models in that unit when determining what roll is required for that attack to successfully wound. If two or more Toughness characteristics are tied for majority, use the highest value.\nFor the purposes of determining which models in this unit can embark within a Transport, Gravis Veteran models take up the space of 2 models, but can otherwise embark within any TRANSPORT their unit can embark within, even though similar models in other units have the GRAVIS keyword.\nDesigner’s Note: While the abstractions in the above rule cause some models to behave differently to similar models in other units, they are designed to minimise complicated Transport rules."
+          "text": "Each time an attack targets this unit, if it contains models with different T characteristics, until the attacking models has finished making it’s attacks, use the T characteristic of the majority of the models in the unit when determining what roll is required for that attack to successfully wound. If two or more T characteristics are tied for majority, use the highest value.\nFor the purpose of determining which models in this unit can embark within a Transport, Gravis Veteran models take up the space of 2 models, but can otherwise embark within any Transport their unit can embark within, even though similar models in other units have the Gravis keyword."
         },
         {
           "name": "Astartes Shield",
           "type": "Wargear",
-          "text": "The bearer has a 4+ invulnerable save."
+          "text": "This model has a 4+ InSv."
         },
         {
           "name": "ATTACHED UNIT",
-          "type": "Datasheet",
+          "type": "Fortification (левая колонка)",
           "text": "If a Character unit from your army can be attached to a Deathwatch Kill Team unit, it can be attached to this unit instead."
         }
       ],
@@ -7709,13 +7666,13 @@
       "role": "Mounted Epic Hero",
       "keywords": [
         "KROYLE",
-        "EPIC HERO",
-        "CHARACTER",
-        "IMPERIUM",
         "GRENADES",
-        "ORDO XENOS",
+        "INQUISITOR",
         "MOUNTED",
-        "INQUISITOR"
+        "CHARACTER",
+        "EPIC HERO",
+        "IMPERIUM",
+        "ORDO XENOS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"

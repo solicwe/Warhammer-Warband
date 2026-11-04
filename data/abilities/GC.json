@@ -3400,5 +3400,14 @@
    }
   ],
   "note": "Psychic Familiar: once per battle it reaches 24\" when no enemy is within 18\""
+ },
+ "Airborne Insertion": {
+  "effects": [
+   {
+    "transport": {
+     "disembarkAfterNormal": true
+    }
+   }
+  ]
  }
 }

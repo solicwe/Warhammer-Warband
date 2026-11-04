@@ -2,7 +2,7 @@
   "id": "NEC",
   "name": "Necrons",
   "link": "https://wahapedia.ru/wh40k11ed/factions/necrons",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Reanimation Protocols",
@@ -14,7 +14,7 @@
       "id": "000000756",
       "name": "Awakened Dynasty",
       "dp": 3,
-      "forceDisposition": "Take and Hold",
+      "forceDisposition": "Take and Hold, Priority Assets",
       "rules": [
         {
           "name": "Command Protocols",
@@ -80,15 +80,6 @@
           "text": "WHEN: Any phase.\nTARGET: One NECRONS INFANTRY CHARACTER model from your army that was just destroyed. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: At the end of the phase, set up the destroyed model on the battlefield, unengaged and as close as possible to where it was destroyed. That model is not part of an attached unit and its unit has a starting strength of 1. That model has half of its starting number of wounds remaining.\nRESTRICTION: Each model can only be targeted with this Stratagem once per battle."
         },
         {
-          "id": "000008371005",
-          "name": "PROTOCOL OF THE SUDDEN STORM",
-          "cp": 1,
-          "type": "Awakened Dynasty – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One NECRONS unit from your army.\nEFFECT: Until the end of the turn, ranged weapons equipped by models in your unit have the [ASSAULT] ability. In addition, if a Necrons Character is leading your unit, until the end of the phase, you can re-roll Advance rolls made for your unit."
-        },
-        {
           "id": "000008371007",
           "name": "PROTOCOL OF THE VENGEFUL STARS",
           "cp": 2,
@@ -96,6 +87,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit destroys a NECRONS unit from your army.\nTARGET: One NECRONS CHARACTER unit from your army that was within 6\" of that NECRONS unit when it was destroyed.\nEFFECT: After the attacking unit has resolved its attacks, your unit can shoot as if it were your Shooting phase, but it must target only that enemy unit when doing so, and can only do so if that enemy unit is an eligible target."
+        },
+        {
+          "id": "000008371005",
+          "name": "PROTOCOL OF THE SUDDEN STORM",
+          "cp": 1,
+          "type": "Awakened Dynasty – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One NECRONS unit from your army.\nEFFECT: Until the end of the turn, ranged weapons equipped by models in your unit have the [ASSAULT] ability. In addition, if a Necrons Character is leading your unit, until the end of the phase, you can re-roll Advance rolls made for your unit."
         },
         {
           "id": "000008371003",
@@ -151,15 +151,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008405007",
-          "name": "INSANITY’S IRE",
-          "cp": 1,
-          "type": "Annihilation Legion  – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit that targeted a friendly unengaged DESTROYER CULT/FLAYED ONES unit this phase has shot.\nTARGET: That DESTROYER CULT/FLAYED ONES unit.\nEFFECT: Your unit can make a surge move of up to D6\"."
-        },
-        {
           "id": "000008405002",
           "name": "MASKS OF DEATH",
           "cp": 1,
@@ -167,6 +158,15 @@
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One DESTROYER CULT or FLAYED ONES unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
+        },
+        {
+          "id": "000008405007",
+          "name": "INSANITY’S IRE",
+          "cp": 1,
+          "type": "Annihilation Legion  – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit that targeted a friendly unengaged DESTROYER CULT/FLAYED ONES unit this phase has shot.\nTARGET: That DESTROYER CULT/FLAYED ONES unit.\nEFFECT: Your unit can make a surge move of up to D6\"."
         },
         {
           "id": "000008405006",
@@ -209,7 +209,7 @@
     {
       "id": "000000816",
       "name": "Canoptek Court",
-      "dp": 3,
+      "dp": 2,
       "forceDisposition": "Take and Hold",
       "rules": [
         {
@@ -267,15 +267,6 @@
           "text": "WHEN: The start of your Shooting phase or the start of the Fight phase.\nTARGET: One CRYPTEK or CANOPTEK unit from your army that is wholly within your army’s Power Matrix.\nEFFECT: Until the end of the phase, weapons equipped by CRYPTEK or CANOPTEK models in your unit have the [DEVASTATING WOUNDS] ability."
         },
         {
-          "id": "000008547007",
-          "name": "SUBOPTIMAL FACADE",
-          "cp": 1,
-          "type": "Canoptek Court – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One CANOPTEK unit from your army that was selected as a target of that charge and is wholly within your army’s Power Matrix.\nEFFECT: Your unit’s Reanimation Protocols activate."
-        },
-        {
           "id": "000008547004",
           "name": "SOLAR PULSE",
           "cp": 1,
@@ -285,13 +276,13 @@
           "text": "WHEN: Start of your Shooting phase.\nTARGET: One CRYPTEK model from your army.\nEFFECT: Select one objective marker within 18\" of your CRYPTEK model. Until the end of the phase, weapons equipped by friendly NECRONS models have the [IGNORES COVER] ability while targeting units within range of that objective marker."
         },
         {
-          "id": "000008547005",
-          "name": "REACTIVE SUBROUTINES",
+          "id": "000008547007",
+          "name": "SUBOPTIMAL FACADE",
           "cp": 1,
           "type": "Canoptek Court – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One CANOPTEK unit from your army that is within 8\" of that enemy unit.\nEFFECT: Your unit can make a Normal move of up to 6\"."
+          "phase": "Charge phase",
+          "text": "WHEN: Your opponent’s Charge phase, just after an enemy unit has declared a charge.\nTARGET: One CANOPTEK unit from your army that was selected as a target of that charge and is wholly within your army’s Power Matrix.\nEFFECT: Your unit’s Reanimation Protocols activate."
         },
         {
           "id": "000008547006",
@@ -301,6 +292,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One CANOPTEK unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\"."
+        },
+        {
+          "id": "000008547005",
+          "name": "REACTIVE SUBROUTINES",
+          "cp": 1,
+          "type": "Canoptek Court – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: One CANOPTEK unit from your army that is within 8\" of that enemy unit.\nEFFECT: Your unit can make a Normal move of up to 6\"."
         }
       ]
     },
@@ -347,6 +347,15 @@
       ],
       "stratagems": [
         {
+          "id": "000008551004",
+          "name": "NANOASSEMBLY PROTOCOLS",
+          "cp": 1,
+          "type": "Obeisance Phalanx – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One NECRONS VEHICLE unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit, subtract 1 from the Damage characteristic of that attack."
+        },
+        {
           "id": "000008551006",
           "name": "SUFFER NO RIVAL",
           "cp": 1,
@@ -365,13 +374,13 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One NECRONS unit from your army (excluding TITANIC units) that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, an unmodified Hit roll of 5+ scores a Critical Hit."
         },
         {
-          "id": "000008551004",
-          "name": "NANOASSEMBLY PROTOCOLS",
+          "id": "000008551005",
+          "name": "SENTINELS OF ETERNITY",
           "cp": 1,
-          "type": "Obeisance Phalanx – Battle Tactic Stratagem",
+          "type": "Obeisance Phalanx – Epic Deed Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One NECRONS VEHICLE unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack is allocated to a model in your unit, subtract 1 from the Damage characteristic of that attack."
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One LYCHGUARD or TRIARCH PRAETORIANS unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6: on a 4+, do not remove it from play. The destroyed model can fight after the attacking model’s unit has finished making attacks, and is then removed from play."
         },
         {
           "id": "000008551002",
@@ -381,15 +390,6 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase, just after your opponent’s WARLORD is destroyed.\nTARGET: Your NECRONS WARLORD.\nEFFECT: Until the end of the battle, each time an enemy unit takes a Battle-shock or Leadership test, subtract 1 from the result."
-        },
-        {
-          "id": "000008551005",
-          "name": "SENTINELS OF ETERNITY",
-          "cp": 1,
-          "type": "Obeisance Phalanx – Epic Deed Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One LYCHGUARD or TRIARCH PRAETORIANS unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, roll one D6: on a 4+, do not remove it from play. The destroyed model can fight after the attacking model’s unit has finished making attacks, and is then removed from play."
         },
         {
           "id": "000008551007",
@@ -445,13 +445,13 @@
       ],
       "stratagems": [
         {
-          "id": "000008555005",
-          "name": "COSMIC PRECISION",
-          "cp": 1,
+          "id": "000008555002",
+          "name": "HYPERPHASIC RECALL",
+          "cp": 2,
           "type": "Hypercrypt Legion – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One NECRONS unit from your army (excluding MONSTER units) that is arriving using an ingress move this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy models.\nRESTRICTIONS: A unit targeted with this Stratagem is not eligible to declare a charge in the same turn."
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has shot or fought.\nTARGET: One NECRONS INFANTRY unit from your army that had one or more of its models destroyed as a result of the attacking unit’s attacks and one friendly MONOLITH model.\nEFFECT: Remove your INFANTRY unit from the battlefield and then set it back up anywhere on the battlefield that is wholly within 6\" of your MONOLITH model and not within Engagement Range of one or more enemy units."
         },
         {
           "id": "000008555004",
@@ -463,13 +463,13 @@
           "text": "WHEN: Your Command phase.\nTARGET: Your NECRONS WARLORD.\nEFFECT: For each of your NECRONS units in Reserves, that Reserves unit’s Reanimation Protocols activate."
         },
         {
-          "id": "000008555002",
-          "name": "HYPERPHASIC RECALL",
-          "cp": 2,
+          "id": "000008555005",
+          "name": "COSMIC PRECISION",
+          "cp": 1,
           "type": "Hypercrypt Legion – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has shot or fought.\nTARGET: One NECRONS INFANTRY unit from your army that had one or more of its models destroyed as a result of the attacking unit’s attacks and one friendly MONOLITH model.\nEFFECT: Remove your INFANTRY unit from the battlefield and then set it back up anywhere on the battlefield that is wholly within 6\" of your MONOLITH model and not within Engagement Range of one or more enemy units."
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One NECRONS unit from your army (excluding MONSTER units) that is arriving using an ingress move this phase.\nEFFECT: Your unit can be set up anywhere on the battlefield that is more than 6\" horizontally away from all enemy models.\nRESTRICTIONS: A unit targeted with this Stratagem is not eligible to declare a charge in the same turn."
         },
         {
           "id": "000008555006",
@@ -481,15 +481,6 @@
           "text": "WHEN: Your Charge phase.\nTARGET: One NECRONS unit from your army that was set up on the battlefield this turn using the Eternity Gate ability of a MONOLITH model that started the turn on the battlefield.\nEFFECT: Your unit is eligible to charge this phase."
         },
         {
-          "id": "000008555003",
-          "name": "QUANTUM DEFLECTION",
-          "cp": 1,
-          "type": "Hypercrypt Legion – Wargear Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One NECRONS VEHICLE unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save."
-        },
-        {
           "id": "000008555007",
           "name": "ENTROPIC DAMPING",
           "cp": 1,
@@ -497,6 +488,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One TITANIC model from your army that was selected as the target of one or more of the attacking unit’s attacks and is within 18\" of the attacking unit.\nEFFECT: Until the end of the phase, weapons equipped by models in the attacking unit have the [HAZARDOUS] ability."
+        },
+        {
+          "id": "000008555003",
+          "name": "QUANTUM DEFLECTION",
+          "cp": 1,
+          "type": "Hypercrypt Legion – Wargear Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One NECRONS VEHICLE unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have a 4+ invulnerable save."
         }
       ]
     },
@@ -504,7 +504,7 @@
       "id": "000000985",
       "name": "Starshatter Arsenal",
       "dp": 3,
-      "forceDisposition": "Priority Assets",
+      "forceDisposition": "Priority Assets, Purge the Foe",
       "rules": [
         {
           "name": "Relentless Onslaught",
@@ -561,15 +561,6 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One NECRONS unit (excluding Monster and Titanic units) from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, if the target of that attack is within range of one or more objective markers, add 1 to the Wound roll."
         },
         {
-          "id": "000009750004",
-          "name": "CHRONOSHIFT",
-          "cp": 1,
-          "type": "Starshatter Arsenal – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One Necrons Vehicle or Necrons Mounted unit (excluding Titanic units) from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, if your unit Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
-        },
-        {
           "id": "000009750005",
           "name": "DIMENSIONAL TUNNEL",
           "cp": 1,
@@ -579,13 +570,13 @@
           "text": "WHEN: Your Movement phase.\nTARGET: One Necrons Vehicle or Necrons Mounted unit (excluding Titanic units) from your army.\nEFFECT: Until the end of the phase, models in your unit can move horizontally through models and terrain features."
         },
         {
-          "id": "000009750006",
-          "name": "ENDLESS SERVITUDE",
+          "id": "000009750004",
+          "name": "CHRONOSHIFT",
           "cp": 1,
           "type": "Starshatter Arsenal – Strategic Ploy Stratagem",
           "turn": "Your turn",
-          "phase": "Fight phase",
-          "text": "WHEN: End of your Fight phase.\nTARGET: One NECRONS unit (excluding Monster and Titanic units) from your army that is within range of one or more objective markers you control.\nEFFECT: Your unit’s Reanimation Protocols activate."
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One Necrons Vehicle or Necrons Mounted unit (excluding Titanic units) from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, if your unit Advances, do not make an Advance roll for it. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
         },
         {
           "id": "000009750007",
@@ -595,6 +586,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One NECRONS unit from your army (excluding Monster and Titanic units) that was the target of one or more of the attacking unit’s attacks.\nEFFECT: Your unit can make a Normal move of up to D6\"."
+        },
+        {
+          "id": "000009750006",
+          "name": "ENDLESS SERVITUDE",
+          "cp": 1,
+          "type": "Starshatter Arsenal – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Fight phase",
+          "text": "WHEN: End of your Fight phase.\nTARGET: One NECRONS unit (excluding Monster and Titanic units) from your army that is within range of one or more objective markers you control.\nEFFECT: Your unit’s Reanimation Protocols activate."
         }
       ]
     },
@@ -641,15 +641,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010665006",
-          "name": "UNTAPPED POWER",
-          "cp": 1,
-          "type": "Cryptek Conclave – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Cryptek unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time your unit is selected to shoot, when selecting an ability for the Technosorcerous Augmentations Detachment Rule, you can select one additional ability from those available."
-        },
-        {
           "id": "000010665002",
           "name": "MOLECULAR TARGETING",
           "cp": 1,
@@ -657,6 +648,15 @@
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One NECRONS unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack, you can ignore any or all modifiers to the following: that attack’s Ballistic Skill or Weapon Skill characteristic; the Hit roll. If your unit has the Cryptek keyword, you can also ignore any or all modifiers to the Wound roll."
+        },
+        {
+          "id": "000010665006",
+          "name": "UNTAPPED POWER",
+          "cp": 1,
+          "type": "Cryptek Conclave – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Cryptek unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time your unit is selected to shoot, when selecting an ability for the Technosorcerous Augmentations Detachment Rule, you can select one additional ability from those available."
         },
         {
           "id": "000010665005",
@@ -677,15 +677,6 @@
           "text": "WHEN: Your opponent’s Command phase.\nTARGET: One NECRONS unit from your army within range of one or more objective markers.\nEFFECT: Your unit’s Reanimation Protocols activate. If it is a Cryptek unit, it reanimates an additional 1 wound."
         },
         {
-          "id": "000010665004",
-          "name": "ANIMUS CURSE",
-          "cp": 1,
-          "type": "Cryptek Conclave – Wargear Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has shot or fought.\nTARGET: One Cryptek model from your army that was destroyed by one of the attacking unit’s attacks. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a friendly NECRONS model makes an attack that targets the attacking unit, you can re-roll the Hit roll."
-        },
-        {
           "id": "000010665003",
           "name": "MICROSCARAB SWARM",
           "cp": 1,
@@ -693,6 +684,15 @@
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Cryptek Infantry unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: If your unit has the Necron Warriors keyword, until the end of the phase, models in your unit have a 5+ invulnerable save. If your unit has the Immortals keyword, until the end of the phase, models in your unit have a 4+ invulnerable save."
+        },
+        {
+          "id": "000010665004",
+          "name": "ANIMUS CURSE",
+          "cp": 1,
+          "type": "Cryptek Conclave – Wargear Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has shot or fought.\nTARGET: One Cryptek model from your army that was destroyed by one of the attacking unit’s attacks. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a friendly NECRONS model makes an attack that targets the attacking unit, you can re-roll the Hit roll."
         }
       ]
     },
@@ -739,6 +739,15 @@
       ],
       "stratagems": [
         {
+          "id": "000010669006",
+          "name": "SPREADING MADNESS",
+          "cp": 1,
+          "type": "Cursed Legion – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your Charge phase.\nTARGET: One NECRONS unit (excluding Monsters and Vehicles) from your army that has not declared a charge this phase.\nEFFECT: Until the end of the phase, each time your unit declares a charge, if one or more targets of that charge are within Engagement Range of one or more friendly units, add 2 to the Charge roll."
+        },
+        {
           "id": "000010669002",
           "name": "METHODICAL MURDER",
           "cp": 1,
@@ -757,22 +766,13 @@
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Destroyer Cult unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
         },
         {
-          "id": "000010669006",
-          "name": "SPREADING MADNESS",
-          "cp": 1,
-          "type": "Cursed Legion – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Charge phase.\nTARGET: One NECRONS unit (excluding Monsters and Vehicles) from your army that has not declared a charge this phase.\nEFFECT: Until the end of the phase, each time your unit declares a charge, if one or more targets of that charge are within Engagement Range of one or more friendly units, add 2 to the Charge roll."
-        },
-        {
-          "id": "000010669004",
-          "name": "MORTIS PROTOCOLS",
-          "cp": 1,
+          "id": "000010669007",
+          "name": "UNNATURAL AGGRESSION",
+          "cp": 2,
           "type": "Cursed Legion – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase, just after the first time a Destroyer Cult unit from your army destroys an enemy unit this turn.\nTARGET: One friendly NECRONS unit (excluding Monsters and Vehicles) within 9\" of that DESTROYER CULT unit.\nEFFECT: The friendly unit’s Reanimation Protocols activate."
+          "turn": "Opponent’s turn",
+          "phase": "Charge phase",
+          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One NECRONS unit (excluding Monsters and Vehicles) from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units if it were your Charge phase.\nEFFECT: Your unit now declares a charge that only targets one or more of those enemy units, and you resolve that charge."
         },
         {
           "id": "000010669005",
@@ -784,13 +784,13 @@
           "text": "WHEN: Your Shooting phase or your Charge phase.\nTARGET: One Destroyer Cult unit from your army.\nEFFECT: Until the end of the turn, your unit is eligible to shoot and declare a charge in a turn in which it Advanced.\nRESTRICTIONS: You can only use this Stratagem once per turn."
         },
         {
-          "id": "000010669007",
-          "name": "UNNATURAL AGGRESSION",
-          "cp": 2,
+          "id": "000010669004",
+          "name": "MORTIS PROTOCOLS",
+          "cp": 1,
           "type": "Cursed Legion – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Charge phase",
-          "text": "WHEN: End of your opponent’s Charge phase.\nTARGET: One NECRONS unit (excluding Monsters and Vehicles) from your army that is within 6\" of one or more enemy units and would be eligible to declare a charge against one or more of those enemy units if it were your Charge phase.\nEFFECT: Your unit now declares a charge that only targets one or more of those enemy units, and you resolve that charge."
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your Shooting phase or the Fight phase, just after the first time a Destroyer Cult unit from your army destroys an enemy unit this turn.\nTARGET: One friendly NECRONS unit (excluding Monsters and Vehicles) within 9\" of that DESTROYER CULT unit.\nEFFECT: The friendly unit’s Reanimation Protocols activate."
         }
       ]
     },
@@ -811,7 +811,7 @@
           "name": "Singularity Matrix",
           "pts": 45,
           "upgrade": false,
-          "text": "C’tan Shard of the Deceiver model only. This model has the following ability:\nLord of Deceit (Aura): Each time your opponent targets a unit from their army with a Stratagem, if that unit is within 12\" of this model, increase the cost of that use of that Stratagem by 1CP."
+          "text": "C’tan Shard of the Deceiver model only. This model has the following ability:\nLord of Deceit (Aura): Once per turn, when your opponent targets a unit from their army within 12\" of this model with a stratagem, you can use this ability. If you do increase the CP cost of that use of that stratagem by 1CP."
         },
         {
           "id": "000010672003",
@@ -873,15 +873,6 @@
           "text": "WHEN: Any phase, just after a Necrons Monster model from your army is destroyed, before making its Deadly Demise roll.\nTARGET: That NECRONS MONSTER model. You can use this Stratagem on that model even though it was just destroyed.\nEFFECT: Until the end of the phase, your model’s Deadly Demise ability inflicts mortal wounds on a D6 roll of 3+ instead of on a 6."
         },
         {
-          "id": "000010673007",
-          "name": "PHASE MELDING",
-          "cp": 1,
-          "type": "Pantheon of Woe – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, when an unravelling enemy unit is selected to Fall Back.\nTARGET: One NECRONS unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: When that enemy unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, subtract 1 from each of those tests."
-        },
-        {
           "id": "000010673003",
           "name": "MOLECULAR EROSION",
           "cp": 1,
@@ -889,6 +880,15 @@
           "turn": "Either player’s turn",
           "phase": "Command phase",
           "text": "WHEN: Command phase.\nTARGET: One Necrons Monster unit from your army.\nEFFECT: Select one unravelling enemy unit visible to your unit. That enemy unit must take a Battle-shock test. When doing so, subtract 1 from the result. If that test is failed, that enemy unit suffers D3+1 mortal wounds.\nRESTRICTIONS: You can only use this Stratagem once per battle round."
+        },
+        {
+          "id": "000010673007",
+          "name": "PHASE MELDING",
+          "cp": 1,
+          "type": "Pantheon of Woe – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, when an unravelling enemy unit is selected to Fall Back.\nTARGET: One NECRONS unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: When that enemy unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, subtract 1 from each of those tests."
         }
       ]
     },
@@ -935,7 +935,7 @@
           "cp": 1,
           "type": "Hand of the Dynasty Stratagem",
           "turn": "Your turn",
-          "phase": "Fight phase",
+          "phase": "Movement phase",
           "text": "WHEN: End of your Movement phase.\nTARGET: One friendly IMMORTALS/NECRON WARRIORS unit.\nEFFECT: Select one objective your unit is controlling. That objective is secured."
         },
         {
@@ -978,13 +978,13 @@
       ],
       "stratagems": [
         {
-          "id": "000010888002",
-          "name": "OMNILOCKED STRAFING",
+          "id": "000010888004",
+          "name": "EVASIVE PROTOCOLS",
           "cp": 1,
           "type": "Skyshroud Spearhead Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase, when a friendly NECRONS MOUNTED unit is selected to make a fall-back move.\nTARGET: That NECRONS MOUNTED unit.\nEFFECT: That move does not prevent your unit from being eligible to shoot."
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly NECRONS MOUNTED unit.\nTARGET: That NECRONS MOUNTED unit.\nEFFECT: Ranged attacks that target your unit with a S greater than your unit’s T have -1 to wound rolls."
         },
         {
           "id": "000010888003",
@@ -996,13 +996,13 @@
           "text": "WHEN: Your opponent’s Movement phase, when an enemy unit ends a move within 8\" of a friendly unengaged NECRONS MOUNTED unit.\nTARGET: That NECRONS MOUNTED unit.\nEFFECT: Your unit can make a normal move of up to D3+3\"."
         },
         {
-          "id": "000010888004",
-          "name": "EVASIVE PROTOCOLS",
+          "id": "000010888002",
+          "name": "OMNILOCKED STRAFING",
           "cp": 1,
           "type": "Skyshroud Spearhead Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, when an enemy unit targets a friendly NECRONS MOUNTED unit.\nTARGET: That NECRONS MOUNTED unit.\nEFFECT: Ranged attacks that target your unit with a S greater than your unit’s T have -1 to wound rolls."
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase, when a friendly NECRONS MOUNTED unit is selected to make a fall-back move.\nTARGET: That NECRONS MOUNTED unit.\nEFFECT: That move does not prevent your unit from being eligible to shoot."
         }
       ]
     },
@@ -1035,15 +1035,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010892002",
-          "name": "SUBSURFACE QUANTUMWEAVE",
-          "cp": 1,
-          "type": "The Phaeron's Armoury Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, when an enemy unit targets a friendly NECRONS TITANIC FLY unit.\nTARGET: That NECRONS TITANIC FLY unit.\nEFFECT: Attacks that target your unit have -1 AP until that enemy unit has attacked."
-        },
-        {
           "id": "000010892003",
           "name": "PARTICLE PULSE",
           "cp": 1,
@@ -1060,6 +1051,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase, when a friendly OBELISK/TESSERACT VAULT unit is selected to shoot.\nTARGET: That OBELISK/TESSERACT VAULT unit.\nEFFECT: Your unit’s Tesla Sphere weapons have +1 AP."
+        },
+        {
+          "id": "000010892002",
+          "name": "SUBSURFACE QUANTUMWEAVE",
+          "cp": 1,
+          "type": "The Phaeron's Armoury Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, when an enemy unit targets a friendly NECRONS TITANIC FLY unit.\nTARGET: That NECRONS TITANIC FLY unit.\nEFFECT: Attacks that target your unit have -1 AP until that enemy unit has attacked."
         }
       ]
     }
@@ -1070,10 +1070,10 @@
       "name": "Imotekh The Stormlord",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "EPIC HERO",
         "NOBLE",
+        "INFANTRY",
+        "EPIC HERO",
+        "CHARACTER",
         "IMOTEKH THE STORMLORD"
       ],
       "factionKeywords": [
@@ -1207,10 +1207,10 @@
       "name": "Overlord",
       "role": "Infantry Character",
       "keywords": [
-        "OVERLORD",
-        "INFANTRY",
+        "NOBLE",
         "CHARACTER",
-        "NOBLE"
+        "INFANTRY",
+        "OVERLORD"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1396,8 +1396,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Immortals",
-        "Lychguard"
+        "Lychguard",
+        "Immortals"
       ],
       "isSupport": false,
       "points": [
@@ -1419,10 +1419,10 @@
       "name": "Orikan The Diviner",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CRYPTEK",
-        "EPIC HERO",
         "INFANTRY",
         "CHARACTER",
+        "EPIC HERO",
+        "CRYPTEK",
         "CHRONOMANCER",
         "ORIKAN THE DIVINER"
       ],
@@ -1485,7 +1485,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -1527,11 +1527,11 @@
       "name": "Trazyn The Infinite",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "EPIC HERO",
-        "NOBLE",
         "TRAZYN THE INFINITE",
-        "CHARACTER"
+        "NOBLE",
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1602,7 +1602,7 @@
         {
           "name": "Ancient Collector",
           "type": "Datasheet",
-          "text": "While this model is leading a unit, at the end of your Command phase, if that unit is within range of an objective marker you control, it remains under your control, even if you have no models within range of it, until your opponent controls it at start or end of any turn."
+          "text": "While this model is leading a unit, at the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
           "name": "Surrogate Hosts",
@@ -1612,8 +1612,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Immortals",
-        "Lychguard"
+        "Lychguard",
+        "Immortals"
       ],
       "isSupport": false,
       "points": [
@@ -1635,12 +1635,12 @@
       "name": "Catacomb Command Barge",
       "role": "Vehicle Character",
       "keywords": [
-        "CATACOMB COMMAND BARGE",
-        "FLY",
-        "NOBLE",
-        "CHARACTER",
         "VEHICLE",
-        "FRAME"
+        "CHARACTER",
+        "NOBLE",
+        "FLY",
+        "FRAME",
+        "CATACOMB COMMAND BARGE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1994,8 +1994,8 @@
       "name": "Immortals",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
         "BATTLELINE",
+        "INFANTRY",
         "IMMORTALS"
       ],
       "factionKeywords": [
@@ -2381,7 +2381,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -2668,11 +2668,11 @@
       "name": "Triarch Stalker",
       "role": "Walker",
       "keywords": [
+        "STALKER",
         "VEHICLE",
-        "WALKER",
         "TRIARCH",
-        "FRAME",
-        "STALKER"
+        "WALKER",
+        "FRAME"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -2849,7 +2849,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2866,11 +2866,11 @@
       "name": "C’tan Shard of the Nightbringer",
       "role": "Monster Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "MONSTER",
         "CHARACTER",
+        "EPIC HERO",
         "FLY",
-        "C’TAN SHARD OF THE NIGHTBRINGER"
+        "C’TAN SHARD OF THE NIGHTBRINGER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3013,11 +3013,11 @@
       "name": "C’tan Shard of the Deceiver",
       "role": "Monster Epic Hero",
       "keywords": [
+        "MONSTER",
         "CHARACTER",
-        "C’TAN SHARD OF THE DECEIVER",
-        "EPIC HERO",
         "FLY",
-        "MONSTER"
+        "C’TAN SHARD OF THE DECEIVER",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3157,12 +3157,12 @@
       "name": "Ghost Ark",
       "role": "Dedicated Transports",
       "keywords": [
+        "VEHICLE",
+        "FLY",
+        "FRAME",
         "TRANSPORT",
         "GHOST ARK",
-        "DEDICATED TRANSPORT",
-        "FRAME",
-        "FLY",
-        "VEHICLE"
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3277,10 +3277,10 @@
       "name": "Night Scythe",
       "role": "Transport",
       "keywords": [
+        "VEHICLE",
         "FLY",
-        "NIGHT SCYTHE",
         "TRANSPORT",
-        "VEHICLE"
+        "NIGHT SCYTHE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3380,6 +3380,11 @@
           "name": "Quantum Invader",
           "type": "Datasheet",
           "text": "This model can be set up in the Reinforcements step of your first, second or third Movement phase, regardless of any mission rules."
+        },
+        {
+          "name": "Hover",
+          "type": "Core",
+          "text": "HOVER24.17\nSome airborne vehicles can use vectored thrusters or anti-gravity technology to hover and skim over the battlefield, the better to hunt their prey or deploy embarked troops.\nEach time this unit takes to the skies (21.03), do not subtract 2\" from the maximum distance."
         }
       ],
       "leads": [],
@@ -3408,10 +3413,10 @@
       "name": "Doom Scythe",
       "role": "Aircraft",
       "keywords": [
-        "DOOM SCYTHE",
-        "AIRCRAFT",
         "VEHICLE",
-        "FLY"
+        "FLY",
+        "DOOM SCYTHE",
+        "AIRCRAFT"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3548,8 +3553,8 @@
       "keywords": [
         "BEASTS",
         "CANOPTEK",
-        "FLY",
-        "WRAITHS"
+        "WRAITHS",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3712,7 +3717,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -3733,9 +3738,9 @@
       "name": "Tomb Blades",
       "role": "Mounted",
       "keywords": [
+        "MOUNTED",
         "FLY",
-        "TOMB BLADES",
-        "MOUNTED"
+        "TOMB BLADES"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3942,7 +3947,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -3963,10 +3968,10 @@
       "name": "Canoptek Spyders",
       "role": "Vehicle",
       "keywords": [
-        "SPYDERS",
-        "VEHICLE",
+        "CANOPTEK",
         "FLY",
-        "CANOPTEK"
+        "VEHICLE",
+        "SPYDERS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4131,12 +4136,12 @@
       "name": "Monolith",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
-        "MONOLITH",
-        "TOWERING",
-        "VEHICLE",
         "TITANIC",
-        "FLY"
+        "FLY",
+        "FRAME",
+        "TOWERING",
+        "MONOLITH",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4311,7 +4316,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4328,10 +4333,10 @@
       "name": "Annihilation Barge",
       "role": "Vehicle",
       "keywords": [
-        "ANNIHILATION BARGE",
-        "FRAME",
+        "VEHICLE",
         "FLY",
-        "VEHICLE"
+        "FRAME",
+        "ANNIHILATION BARGE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4495,9 +4500,9 @@
       "name": "Doomsday Ark",
       "role": "Vehicle",
       "keywords": [
+        "FLY",
         "FRAME",
         "DOOMSDAY ARK",
-        "FLY",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -4627,7 +4632,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4644,10 +4649,10 @@
       "name": "Transcendent C’tan",
       "role": "Monster Character",
       "keywords": [
-        "TRANSCENDENT C’TAN",
-        "MONSTER",
         "CHARACTER",
-        "FLY"
+        "FLY",
+        "TRANSCENDENT C’TAN",
+        "MONSTER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4780,7 +4785,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4797,12 +4802,12 @@
       "name": "Tesseract Vault",
       "role": "Titanic",
       "keywords": [
-        "TESSERACT VAULT",
+        "VEHICLE",
         "TITANIC",
         "FLY",
-        "TOWERING",
+        "TESSERACT VAULT",
         "FRAME",
-        "VEHICLE"
+        "TOWERING"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4973,7 +4978,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4991,11 +4996,11 @@
       "role": "Titanic",
       "keywords": [
         "FRAME",
+        "OBELISK",
+        "TOWERING",
         "FLY",
         "TITANIC",
-        "VEHICLE",
-        "OBELISK",
-        "TOWERING"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5112,7 +5117,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5129,11 +5134,11 @@
       "name": "Illuminor Szeras",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "EPIC HERO",
         "CHARACTER",
+        "EPIC HERO",
+        "ILLUMINOR SZERAS",
         "CRYPTEK",
-        "ILLUMINOR SZERAS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5241,7 +5246,7 @@
         {
           "name": "Atomic Energy Manipulator",
           "type": "Datasheet",
-          "text": "At the end of the Fight phase, if this model destroyed one or more models this phase, until the end of the battle, add 3\" to the range of its Mechanical Augmentation ability to a max of 12."
+          "text": "At the end of the Fight phase, if this model destroyed one or more models this phase, until the end of the battle, add 3\" to the range of its Mechanical Augmentation ability (to a maximum of 12\")."
         }
       ],
       "leads": [],
@@ -5265,9 +5270,9 @@
       "name": "Plasmancer",
       "role": "Infantry Character",
       "keywords": [
-        "CRYPTEK",
         "INFANTRY",
         "CHARACTER",
+        "CRYPTEK",
         "PLASMANCER"
       ],
       "factionKeywords": [
@@ -5337,7 +5342,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -5379,10 +5384,10 @@
       "name": "Skorpekh Lord",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
+        "SKORPEKH LORD",
         "CHARACTER",
-        "DESTROYER CULT",
-        "SKORPEKH LORD"
+        "INFANTRY",
+        "DESTROYER CULT"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5508,7 +5513,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5525,9 +5530,9 @@
       "name": "Skorpekh Destroyers",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "SKORPEKH DESTROYERS",
-        "DESTROYER CULT",
-        "INFANTRY"
+        "DESTROYER CULT"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5618,7 +5623,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -5730,7 +5735,7 @@
         {
           "name": "CRYPTEK RETINUE",
           "type": "Special (правая колонка)",
-          "text": "At the start of the Declare Battle Formations step, this unit can join one other unit from your army that is being led by a Cryptek Infantry model (a unit cannot have more than one CRYPTOTHRALLS unit joined to it). If it does, until the end of the battle, every model in this unit counts as being part of that Bodyguard unit, and that Bodyguard unit’s Starting Strength is increased accordingly."
+          "text": "At the start of the Declare Battle Formations step, this unit can join one other unit from your army that is being led by a Cryptek model (a unit cannot have more than one CRYPTOTHRALLS unit joined to it). If it does, until the end of the battle, every model in this unit counts as being part of that Bodyguard unit, and that Bodyguard unit’s Starting Strength is increased accordingly."
         }
       ],
       "leads": [],
@@ -5754,10 +5759,10 @@
       "name": "Canoptek Reanimator",
       "role": "Walker",
       "keywords": [
-        "CANOPTEK",
         "WALKER",
-        "REANIMATOR",
-        "VEHICLE"
+        "VEHICLE",
+        "CANOPTEK",
+        "REANIMATOR"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5770,7 +5775,7 @@
           "Sv": 3,
           "InSv": null,
           "W": 6,
-          "Ld": 7,
+          "Ld": 8,
           "OC": 3,
           "base": {
             "w": 60,
@@ -5868,10 +5873,10 @@
       "name": "Canoptek Scarab Swarms",
       "role": "Swarm",
       "keywords": [
-        "SWARM",
-        "FLY",
         "CANOPTEK",
-        "SCARAB SWARMS"
+        "SCARAB SWARMS",
+        "SWARM",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5971,8 +5976,8 @@
       "role": "Walker",
       "keywords": [
         "DOOMSTALKER",
-        "CANOPTEK",
         "WALKER",
+        "CANOPTEK",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -6110,10 +6115,10 @@
       "name": "Lokhust Heavy Destroyers",
       "role": "Mounted",
       "keywords": [
-        "LOKHUST HEAVY DESTROYERS",
         "DESTROYER CULT",
-        "FLY",
-        "MOUNTED"
+        "MOUNTED",
+        "LOKHUST HEAVY DESTROYERS",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6255,7 +6260,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6402,11 +6407,11 @@
       "name": "Lokhust Lord",
       "role": "Mounted Character",
       "keywords": [
-        "LOKHUST LORD",
-        "DESTROYER CULT",
         "FLY",
         "MOUNTED",
-        "CHARACTER"
+        "CHARACTER",
+        "DESTROYER CULT",
+        "LOKHUST LORD"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6575,11 +6580,11 @@
       "name": "Technomancer",
       "role": "Infantry Character",
       "keywords": [
-        "TECHNOMANCER",
+        "FLY",
         "INFANTRY",
         "CHARACTER",
         "CRYPTEK",
-        "FLY"
+        "TECHNOMANCER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6648,7 +6653,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -6683,7 +6688,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6772,7 +6777,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -6814,8 +6819,8 @@
       "name": "Chronomancer",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "CHARACTER",
+        "INFANTRY",
         "CHRONOMANCER",
         "CRYPTEK"
       ],
@@ -6849,10 +6854,10 @@
       ],
       "loadout": {
         "*": [
-          "aeonstave"
+          "Chronomancer’s stave"
         ]
       },
-      "loadoutText": "This model is equipped with: aeonstave.",
+      "loadoutText": "This model is equipped with: Chronomancer’s stave.",
       "options": [],
       "wargearOptions": [],
       "weapons": [
@@ -6888,7 +6893,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -6922,7 +6927,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6939,10 +6944,10 @@
       "name": "Hexmark Destroyer",
       "role": "Infantry Character",
       "keywords": [
-        "HEXMARK DESTROYER",
-        "DESTROYER CULT",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "DESTROYER CULT",
+        "HEXMARK DESTROYER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7064,11 +7069,11 @@
       "name": "C’tan Shard of the Void Dragon",
       "role": "Monster Epic Hero",
       "keywords": [
-        "CHARACTER",
         "C’TAN SHARD OF THE VOID DRAGON",
         "FLY",
-        "EPIC HERO",
-        "MONSTER"
+        "MONSTER",
+        "CHARACTER",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7342,7 +7347,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -7363,10 +7368,10 @@
       "name": "Lokhust Destroyers",
       "role": "Mounted",
       "keywords": [
-        "LOKHUST DESTROYERS",
-        "DESTROYER CULT",
+        "MOUNTED",
         "FLY",
-        "MOUNTED"
+        "DESTROYER CULT",
+        "LOKHUST DESTROYERS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7476,7 +7481,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7505,11 +7510,11 @@
       "name": "The Silent King",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "VEHICLE",
         "THE SILENT KING",
-        "EPIC HERO",
+        "VEHICLE",
+        "CHARACTER",
         "TRIARCH",
-        "CHARACTER"
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7670,7 +7675,7 @@
           "text": "If your Army Faction is NECRONS, at the end of your Command phase, each friendly unit with this ability that is on the battlefield activates its Reanimation Protocols:\n• When a unit’s Reanimation Protocols activate, that unit heals D3 wounds.\nExample: A unit of Lokhust Destroyers (which have a Wounds characteristic of 3) activates its Reanimation Protocols. The unit had a Starting Strength of 3, but currently contains 2 models, and one of those models has lost 1 wound. A 3 is rolled to see how many wounds are reanimated. The first of these reanimated wounds restores the wounded Lokhust Destroyer back to 3 wounds. The second of these reanimated wounds returns the destroyed Lokhust Destroyer to the battlefield with 1 wound remaining. The third of these reanimated wounds restores one of the remaining lost wounds to the same Lokhust Destroyer that was just returned. The unit now contains 3 models, two of which have 3 wounds remaining and one of which has 2 wounds remaining."
         },
         {
-          "name": "Voice of the Triarch",
+          "name": "Triarch Abilities",
           "type": "Datasheet",
           "text": "At the start of the battle round, select one Triarch ability (see left). Until the start of the next battle round, this unit has that ability."
         },
@@ -7732,8 +7737,8 @@
       "keywords": [
         "VEHICLE",
         "FORTIFICATION",
-        "FRAME",
-        "CONVERGENCE OF DOMINION"
+        "CONVERGENCE OF DOMINION",
+        "FRAME"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7845,10 +7850,10 @@
       "role": "Infantry Character",
       "keywords": [
         "CHARACTER",
-        "OVERLORD WITH TRANSLOCATION SHROUD",
-        "OVERLORD",
+        "INFANTRY",
         "NOBLE",
-        "INFANTRY"
+        "OVERLORD",
+        "OVERLORD WITH TRANSLOCATION SHROUD"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7958,10 +7963,10 @@
       "name": "Canoptek Macrocytes",
       "role": "Beast",
       "keywords": [
-        "MACROCYTES",
-        "CANOPTEK",
+        "BEASTS",
         "FLY",
-        "BEASTS"
+        "CANOPTEK",
+        "MACROCYTES"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -8159,9 +8164,9 @@
       "name": "Canoptek Tomb Crawlers",
       "role": "Beast",
       "keywords": [
+        "CANOPTEK",
         "BEASTS",
-        "TOMB CRAWLERS",
-        "CANOPTEK"
+        "TOMB CRAWLERS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -8307,8 +8312,8 @@
       "keywords": [
         "INFANTRY",
         "CHARACTER",
-        "GEOMANCER",
-        "CRYPTEK"
+        "CRYPTEK",
+        "GEOMANCER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -8392,7 +8397,7 @@
         {
           "name": "Support",
           "type": "Core",
-          "text": "SUPPORT24.34\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
+          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
         },
         {
           "name": "Reanimation Protocols",
@@ -8416,9 +8421,9 @@
         }
       ],
       "leads": [
-        "Canoptek Macrocytes",
         "Immortals",
-        "Necron Warriors"
+        "Necron Warriors",
+        "Canoptek Macrocytes"
       ],
       "isSupport": true,
       "points": [
@@ -8440,11 +8445,11 @@
       "name": "Nekrosor Ammentar",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "NEKROSOR AMMENTAR",
-        "DESTROYER CULT",
-        "EPIC HERO",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "EPIC HERO",
+        "DESTROYER CULT",
+        "NEKROSOR AMMENTAR"
       ],
       "factionKeywords": [
         "NECRONS"

@@ -2,7 +2,7 @@
   "id": "EC",
   "name": "Emperor’s Children",
   "link": "https://wahapedia.ru/wh40k11ed/factions/emperor-s-children",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Thrill Seekers",
@@ -57,15 +57,6 @@
       ],
       "stratagems": [
         {
-          "id": "000009999004",
-          "name": "HONOUR THE PRINCE",
-          "cp": 1,
-          "type": "Mercurial Host – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One Emperor’s Children Infantry unit from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, if your unit Advances, do not make an Advance roll. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
-        },
-        {
           "id": "000009999006",
           "name": "CAPRICIOUS REACTIONS",
           "cp": 1,
@@ -73,6 +64,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
+        },
+        {
+          "id": "000009999004",
+          "name": "HONOUR THE PRINCE",
+          "cp": 1,
+          "type": "Mercurial Host – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One Emperor’s Children Infantry unit from your army that has not been selected to move this phase.\nEFFECT: Until the end of the phase, if your unit Advances, do not make an Advance roll. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
         },
         {
           "id": "000009999003",
@@ -182,6 +182,15 @@
           "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
         },
         {
+          "id": "000010003003",
+          "name": "DEATH ECSTASY",
+          "cp": 2,
+          "type": "Peerless Bladesmen – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play."
+        },
+        {
           "id": "000010003006",
           "name": "TERRIFYING SPECTACLE",
           "cp": 1,
@@ -198,15 +207,6 @@
           "turn": "Opponent’s turn",
           "phase": "Movement phase",
           "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit Falls Back.\nTARGET: One Emperor’s Children unit from your army (you can only select a Vehicle if it is a Walker) that is within 6\" of that enemy unit and would be eligible to declare a charge against that enemy unit if it were your Charge phase.\nEFFECT: Your unit can declare a charge. When doing so, you must select that enemy unit as a target of that charge, and your unit does not receive a Charge bonus this turn."
-        },
-        {
-          "id": "000010003003",
-          "name": "DEATH ECSTASY",
-          "cp": 2,
-          "type": "Peerless Bladesmen – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time a model in your unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play."
         }
       ]
     },
@@ -271,13 +271,13 @@
           "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One Emperor’s Children Transport from your army, or up to two Emperor’s Children Dedicated Transports from your army.\nEFFECT: For each of those TRANSPORTS wholly within 9\" of one or more battlefield edges, remove it from the battlefield and place it into Strategic Reserves."
         },
         {
-          "id": "000010007003",
-          "name": "ADVANCE AND CLAIM",
+          "id": "000010007006",
+          "name": "REACTIVE DISEMBARKATION",
           "cp": 1,
           "type": "Rapid Evisceration – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One Emperor’s Children Transport from your army that has one or more Tormentors units embarked within it (excluding Battle-shocked units).\nEFFECT: Select one objective marker you control that your TRANSPORT is within range of. That objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
+          "turn": "Opponent’s turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children Transport from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: One Emperor’s Children unit embarked within your TRANSPORT can disembark. When doing so, models in that unit can be set up anywhere on the battlefield wholly within 6\" of that TRANSPORT and not within Engagement Range of one or more enemy units."
         },
         {
           "id": "000010007002",
@@ -298,21 +298,21 @@
           "text": "WHEN: Your Charge phase.\nTARGET: One Emperor’s Children unit from your army that disembarked from a Transport that made a Normal move this turn.\nEFFECT: Your EMPEROR’S CHILDREN unit is treated as having made an assault disembark move (Core Rules, 18.06) for that disembarkation."
         },
         {
-          "id": "000010007006",
-          "name": "REACTIVE DISEMBARKATION",
+          "id": "000010007003",
+          "name": "ADVANCE AND CLAIM",
           "cp": 1,
           "type": "Rapid Evisceration – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Emperor’s Children Transport from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: One Emperor’s Children unit embarked within your TRANSPORT can disembark. When doing so, models in that unit can be set up anywhere on the battlefield wholly within 6\" of that TRANSPORT and not within Engagement Range of one or more enemy units."
+          "turn": "Your turn",
+          "phase": "Command phase",
+          "text": "WHEN: Your Command phase.\nTARGET: One Emperor’s Children Transport from your army that has one or more Tormentors units embarked within it (excluding Battle-shocked units).\nEFFECT: Select one objective marker you control that your TRANSPORT is within range of. That objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         }
       ]
     },
     {
       "id": "000001036",
       "name": "Carnival of Excess",
-      "dp": 2,
-      "forceDisposition": "Disruption",
+      "dp": 3,
+      "forceDisposition": "Priority Assets, Disruption",
       "rules": [
         {
           "name": "Daemonic Empowerment",
@@ -378,15 +378,6 @@
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Slaanesh unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
         },
         {
-          "id": "000010011004",
-          "name": "VIOLENT CRESCENDO",
-          "cp": 2,
-          "type": "Carnival of Excess – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One Slaanesh Beasts, Slaanesh Infantry or SLAANESH Mounted unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes a Pile-in or Consolidation move, it can move up to 6\" instead of up to 3\". When doing so, it does not need to end that move closer to the closest enemy model, provided it ends that move as close as possible to the closest enemy unit."
-        },
-        {
           "id": "000010011003",
           "name": "ECSTATIC SLAUGHTER",
           "cp": 1,
@@ -394,6 +385,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, just after a LEGIONS OF EXCESS unit from your army destroys an enemy unit.\nTARGET: That Legions OF Excess unit and one friendly Emperor’s Children unit within 6\" of it that is not within Engagement Range of one or more enemy units.\nEFFECT: Your EMPEROR’S CHILDREN unit can declare a charge. If it does so and it has already been selected to fight this phase, it cannot fight again this phase."
+        },
+        {
+          "id": "000010011004",
+          "name": "VIOLENT CRESCENDO",
+          "cp": 2,
+          "type": "Carnival of Excess – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One Slaanesh Beasts, Slaanesh Infantry or SLAANESH Mounted unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes a Pile-in or Consolidation move, it can move up to 6\" instead of up to 3\". When doing so, it does not need to end that move closer to the closest enemy model, provided it ends that move as close as possible to the closest enemy unit."
         },
         {
           "id": "000010011007",
@@ -410,7 +410,7 @@
       "id": "000001037",
       "name": "Coterie of the Conceited",
       "dp": 3,
-      "forceDisposition": "Priority Assets",
+      "forceDisposition": "Priority Assets, Purge the Foe",
       "rules": [
         {
           "name": "Pledges to the Dark Prince",
@@ -507,7 +507,7 @@
     {
       "id": "000001038",
       "name": "Slaanesh’s Chosen",
-      "dp": 2,
+      "dp": 1,
       "forceDisposition": "Purge the Foe",
       "rules": [
         {
@@ -547,13 +547,13 @@
       ],
       "stratagems": [
         {
-          "id": "000010019002",
-          "name": "DEVOTED DUELLISTS",
+          "id": "000010019006",
+          "name": "REFUSAL TO BE OUTDONE",
           "cp": 1,
           "type": "Slaanesh’s Chosen – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One or more Emperor’s Children Character units from your army that have not been selected to fight this phase.\nEFFECT: Select one enemy unit. Until the end of the phase, melee weapons equipped by models in those CHARACTER units have the [SUSTAINED HITS 1] ability while targeting that enemy unit."
+          "turn": "Your turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your Charge phase, when a friendly EMPEROR’S CHILDREN CHARACTER unit within 12\" of an engaged enemy unit declares a charge.\nTARGET: That EMPEROR’S CHILDREN CHARACTER unit.\nEFFECT: Your unit can re-roll charge rolls. Your unit must end that charge move engaged with one or more of those enemy units."
         },
         {
           "id": "000010019004",
@@ -565,13 +565,13 @@
           "text": "WHEN: Your Shooting phase or the Fight phase, just after an Emperor’s Children Character unit becomes your army’s Favoured Champions, or just after your army’s Favoured Champions unit destroys an enemy unit.\nTARGET: Your army’s Favoured Champions unit.\nEFFECT: Until the end of the phase, each time a model in an EMPEROR’S CHILDREN CHARACTER unit from your army that is not your army’s Favoured Champions makes an attack, add 1 to the Strength characteristic of that attack."
         },
         {
-          "id": "000010019006",
-          "name": "REFUSAL TO BE OUTDONE",
+          "id": "000010019002",
+          "name": "DEVOTED DUELLISTS",
           "cp": 1,
           "type": "Slaanesh’s Chosen – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Charge phase, when a friendly EMPEROR’S CHILDREN CHARACTER unit within 12\" of an engaged enemy unit declares a charge.\nTARGET: That EMPEROR’S CHILDREN CHARACTER unit.\nEFFECT: Your unit can re-roll charge rolls. Your unit must end that charge move engaged with one or more of those enemy units."
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One or more Emperor’s Children Character units from your army that have not been selected to fight this phase.\nEFFECT: Select one enemy unit. Until the end of the phase, melee weapons equipped by models in those CHARACTER units have the [SUSTAINED HITS 1] ability while targeting that enemy unit."
         },
         {
           "id": "000010019005",
@@ -649,24 +649,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010655002",
-          "name": "CONTEMPTUOUS DISREGARD",
-          "cp": 1,
-          "type": "Court of the Phoenician Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase.\nTARGET: One Emperor’s Children unit from your army.\nEFFECT: Until the end of the phase, each time an attack targets your unit, if the Strength characteristic of that attack is greater than the Toughness characteristic of your unit, subtract 1 from the Wound roll."
-        },
-        {
-          "id": "000010655003",
-          "name": "PRIDEFUL SUPERIORITY",
-          "cp": 2,
-          "type": "Court of the Phoenician Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One Emperor’s Children unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a CHARACTER unit, you can re-roll the Hit roll and you can re-roll the Wound roll."
-        },
-        {
           "id": "000010655005",
           "name": "CLOSE-QUARTERS EXCRUCIATION",
           "cp": 1,
@@ -674,15 +656,6 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase.\nTARGET: One Emperor’s Children unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, each time an EMPEROR’S CHILDREN model in your unit makes an attack that targets an eligible unit within 12\", improve the Strength and Armour Penetration characteristics of that attack by 1."
-        },
-        {
-          "id": "000010655006",
-          "name": "EUPHORIC INSPIRATION",
-          "cp": 1,
-          "type": "Court of the Phoenician Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Charge phase.\nTARGET: One Emperor’s Children Daemon unit from your army.\nEFFECT: Until the end of the phase, you can re-roll Charge rolls for friendly Emperor’s Children units within 6\" of your unit."
         },
         {
           "id": "000010655004",
@@ -694,6 +667,24 @@
           "text": "WHEN: Your Movement phase or your Charge phase.\nTARGET: One Emperor’s Children Daemon unit from your army that has not been selected to move or charge this phase.\nEFFECT: Until the end of the phase, each time your unit makes a Normal, Advance or Charge move, it can move horizontally through terrain features."
         },
         {
+          "id": "000010655003",
+          "name": "PRIDEFUL SUPERIORITY",
+          "cp": 2,
+          "type": "Court of the Phoenician Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One Emperor’s Children unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a CHARACTER unit, you can re-roll the Hit roll and you can re-roll the Wound roll."
+        },
+        {
+          "id": "000010655002",
+          "name": "CONTEMPTUOUS DISREGARD",
+          "cp": 1,
+          "type": "Court of the Phoenician Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase.\nTARGET: One Emperor’s Children unit from your army.\nEFFECT: Until the end of the phase, each time an attack targets your unit, if the Strength characteristic of that attack is greater than the Toughness characteristic of your unit, subtract 1 from the Wound roll."
+        },
+        {
           "id": "000010655007",
           "name": "CATALYTIC STIMULUS",
           "cp": 1,
@@ -701,6 +692,15 @@
           "turn": "Opponent’s turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has shot.\nTARGET: One EMPEROR’S CHILDREN unit from your army that lost one or more wounds as a result of those attacks.\nEFFECT: Your unit can make a surge move of up to D6\"."
+        },
+        {
+          "id": "000010655006",
+          "name": "EUPHORIC INSPIRATION",
+          "cp": 1,
+          "type": "Court of the Phoenician Stratagem",
+          "turn": "Your turn",
+          "phase": "Charge phase",
+          "text": "WHEN: Your Charge phase.\nTARGET: One Emperor’s Children Daemon unit from your army.\nEFFECT: Until the end of the phase, you can re-roll Charge rolls for friendly Emperor’s Children units within 6\" of your unit."
         }
       ]
     },
@@ -733,6 +733,15 @@
       ],
       "stratagems": [
         {
+          "id": "000010953004",
+          "name": "WARP PLUNGE",
+          "cp": 1,
+          "type": "Elegant Brutes Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One friendly unengaged EMPEROR’S CHILDREN TERMINATOR unit.\nEFFECT: Place your unit in strategic reserves."
+        },
+        {
           "id": "000010953002",
           "name": "DELIGHT IN AGONY",
           "cp": 1,
@@ -749,15 +758,6 @@
           "turn": "Either player’s turn",
           "phase": "Shooting or Fight phase",
           "text": "WHEN: Your Shooting phase or the Fight phase, when a friendly EMPEROR’S CHILDREN TERMINATOR unit is selected to attack.\nTARGET: That EMPEROR’S CHILDREN TERMINATOR unit\nEFFECT: Your unit’s attacks have +2 S."
-        },
-        {
-          "id": "000010953004",
-          "name": "WARP PLUNGE",
-          "cp": 1,
-          "type": "Elegant Brutes Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One friendly unengaged EMPEROR’S CHILDREN TERMINATOR unit.\nEFFECT: Place your unit in strategic reserves."
         }
       ]
     },
@@ -847,6 +847,15 @@
       ],
       "stratagems": [
         {
+          "id": "000010961002",
+          "name": "HONOUR IS FOR FOOLS",
+          "cp": 1,
+          "type": "Spectacle of Slaughter Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, when a friendly FLAWLESS BLADES unit is selected to fight.\nTARGET: That FLAWLESS BLADES unit.\nEFFECT: Your unit’s melee attacks have [PRECISION]."
+        },
+        {
           "id": "000010961003",
           "name": "SINGLE-MINDED STRIKE",
           "cp": 1,
@@ -863,15 +872,6 @@
           "turn": "Opponent’s turn",
           "phase": "Movement phase",
           "text": "WHEN: Your opponent’s Movement phase, when an enemy unit that was engaged with a friendly FLAWLESS BLADES unit ends a fall-back move, if that FLAWLESS BLADES unit is unengaged.\nTARGET: That FLAWLESS BLADES unit.\nEFFECT: Your unit can make a normal move of up to D3+3\"."
-        },
-        {
-          "id": "000010961002",
-          "name": "HONOUR IS FOR FOOLS",
-          "cp": 1,
-          "type": "Spectacle of Slaughter Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, when a friendly FLAWLESS BLADES unit is selected to fight.\nTARGET: That FLAWLESS BLADES unit.\nEFFECT: Your unit’s melee attacks have [PRECISION]."
         }
       ]
     }
@@ -882,20 +882,20 @@
       "name": "Fulgrim",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MOBILE",
-        "MONSTER",
-        "CHAOS",
-        "SLAANESH",
-        "FULGRIM",
         "PRIMARCH",
+        "SLAANESH",
+        "CHAOS",
         "DAEMON",
         "EPIC HERO",
         "CHARACTER",
-        "FLY"
+        "FULGRIM",
+        "FLY",
+        "MOBILE",
+        "MONSTER"
       ],
       "factionKeywords": [
-        "",
-        "EMPEROR’S CHILDREN"
+        "EMPEROR’S CHILDREN",
+        ""
       ],
       "models": [
         {
@@ -1070,12 +1070,12 @@
       "name": "Lord Exultant",
       "role": "Infantry Character",
       "keywords": [
-        "SLAANESH",
         "GRENADES",
-        "LORD EXULTANT",
-        "CHAOS",
         "CHARACTER",
-        "INFANTRY"
+        "LORD EXULTANT",
+        "INFANTRY",
+        "SLAANESH",
+        "CHAOS"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -1344,7 +1344,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -1361,16 +1361,16 @@
       "name": "Tormentors",
       "role": "Battleline",
       "keywords": [
-        "GRENADES",
-        "BATTLELINE",
-        "TORMENTORS",
         "SLAANESH",
         "CHAOS",
-        "INFANTRY"
+        "BATTLELINE",
+        "INFANTRY",
+        "GRENADES",
+        "TORMENTORS"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -1702,12 +1702,12 @@
       "name": "Infractors",
       "role": "Battleline",
       "keywords": [
-        "INFRACTORS",
         "CHAOS",
         "GRENADES",
         "BATTLELINE",
+        "INFANTRY",
         "SLAANESH",
-        "INFANTRY"
+        "INFRACTORS"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -1948,11 +1948,11 @@
       "name": "Chaos Terminators",
       "role": "Infantry",
       "keywords": [
+        "TERMINATOR",
         "INFANTRY",
         "CHAOS",
-        "TERMINATOR",
-        "TERMINATOR SQUAD",
-        "SLAANESH"
+        "SLAANESH",
+        "TERMINATOR SQUAD"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -2254,13 +2254,13 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "LAND RAIDER",
-        "TRANSPORT",
-        "VEHICLE",
-        "FRAME",
         "SMOKE",
         "CHAOS",
-        "SLAANESH"
+        "LAND RAIDER",
+        "SLAANESH",
+        "VEHICLE",
+        "TRANSPORT",
+        "FRAME"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -2470,7 +2470,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2487,12 +2487,12 @@
       "name": "Lucius the Eternal",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "LUCIUS THE ETERNAL",
-        "CHARACTER",
-        "SLAANESH",
-        "CHAOS",
         "EPIC HERO",
-        "INFANTRY"
+        "CHARACTER",
+        "CHAOS",
+        "INFANTRY",
+        "SLAANESH",
+        "LUCIUS THE ETERNAL"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -2624,12 +2624,12 @@
       "name": "Lord Kakophonist",
       "role": "Infantry Character",
       "keywords": [
-        "LORD KAKOPHONIST",
+        "INFANTRY",
+        "CHARACTER",
+        "GRENADES",
         "SLAANESH",
         "CHAOS",
-        "GRENADES",
-        "CHARACTER",
-        "INFANTRY"
+        "LORD KAKOPHONIST"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -2782,17 +2782,17 @@
       "name": "Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "SORCERER",
         "SLAANESH",
-        "INFANTRY",
-        "CHARACTER",
-        "PSYKER",
+        "SORCERER",
+        "CHAOS",
         "GRENADES",
-        "CHAOS"
+        "PSYKER",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "",
-        "EMPEROR’S CHILDREN"
+        "EMPEROR’S CHILDREN",
+        ""
       ],
       "models": [
         {
@@ -2920,8 +2920,8 @@
       ],
       "leads": [
         "Tormentors",
-        "Infractors",
-        "Noise Marines"
+        "Noise Marines",
+        "Infractors"
       ],
       "isSupport": false,
       "points": [
@@ -2943,12 +2943,12 @@
       "name": "Daemon Prince of Slaanesh",
       "role": "Monster Character",
       "keywords": [
+        "DAEMON PRINCE",
+        "DAEMON",
+        "CHAOS",
         "CHARACTER",
         "MONSTER",
-        "CHAOS",
-        "DAEMON",
-        "SLAANESH",
-        "DAEMON PRINCE"
+        "SLAANESH"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -3066,12 +3066,12 @@
           "options": [
             {
               "models": 1,
-              "pts": 165
+              "pts": 180
             }
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3088,13 +3088,13 @@
       "name": "Daemon Prince of Slaanesh with Wings",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "FLY",
-        "CHARACTER",
-        "CHAOS",
         "DAEMON",
-        "SLAANESH",
-        "DAEMON PRINCE WITH WINGS"
+        "CHAOS",
+        "CHARACTER",
+        "FLY",
+        "MONSTER",
+        "DAEMON PRINCE WITH WINGS",
+        "SLAANESH"
       ],
       "factionKeywords": [
         "",
@@ -3217,7 +3217,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3235,9 +3235,9 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "CHAOS",
         "SLAANESH",
-        "NOISE MARINES"
+        "NOISE MARINES",
+        "CHAOS"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -3436,7 +3436,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 6,
@@ -3460,8 +3460,8 @@
         "FLAWLESS BLADES"
       ],
       "factionKeywords": [
-        "",
-        "EMPEROR’S CHILDREN"
+        "EMPEROR’S CHILDREN",
+        ""
       ],
       "models": [
         {
@@ -3568,14 +3568,14 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
+        "CHAOS",
         "SLAANESH",
         "CHAOS SPAWN",
-        "BEAST",
-        "CHAOS"
+        "BEAST"
       ],
       "factionKeywords": [
-        "",
-        "EMPEROR’S CHILDREN"
+        "EMPEROR’S CHILDREN",
+        ""
       ],
       "models": [
         {
@@ -3666,12 +3666,12 @@
       "name": "Maulerfiend",
       "role": "Walker",
       "keywords": [
-        "CHAOS",
-        "DAEMON",
-        "VEHICLE",
-        "SLAANESH",
         "MAULERFIEND",
-        "WALKER"
+        "SLAANESH",
+        "VEHICLE",
+        "WALKER",
+        "CHAOS",
+        "DAEMON"
       ],
       "factionKeywords": [
         "",
@@ -3814,7 +3814,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3831,12 +3831,12 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
-        "CHAOS",
-        "SLAANESH",
-        "HELDRAKE",
         "VEHICLE",
-        "FLY",
-        "DAEMON"
+        "HELDRAKE",
+        "SLAANESH",
+        "DAEMON",
+        "CHAOS",
+        "FLY"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -3993,13 +3993,13 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "CHAOS",
         "RHINO",
         "SLAANESH",
-        "SMOKE",
-        "DEDICATED TRANSPORT",
-        "FRAME",
         "TRANSPORT",
+        "FRAME",
+        "DEDICATED TRANSPORT",
+        "SMOKE",
+        "CHAOS",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -4177,7 +4177,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4194,6 +4194,7 @@
       "name": "Shalaxi Helbane",
       "role": "Monster Epic Hero",
       "keywords": [
+        "SHALAXI HELBANE",
         "SUMMONED",
         "DAEMON",
         "CHAOS",
@@ -4201,12 +4202,11 @@
         "EPIC HERO",
         "CHARACTER",
         "MONSTER",
-        "SLAANESH",
-        "SHALAXI HELBANE"
+        "SLAANESH"
       ],
       "factionKeywords": [
-        "LEGIONS OF EXCESS",
-        ""
+        "",
+        "LEGIONS OF EXCESS"
       ],
       "models": [
         {
@@ -4384,13 +4384,13 @@
       "name": "Daemonettes",
       "role": "Battleline",
       "keywords": [
-        "CHAOS",
         "INFANTRY",
-        "BATTLELINE",
-        "DAEMON",
-        "SUMMONED",
+        "DAEMONETTES",
         "SLAANESH",
-        "DAEMONETTES"
+        "SUMMONED",
+        "DAEMON",
+        "CHAOS",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "LEGIONS OF EXCESS",
@@ -4541,12 +4541,12 @@
       "name": "Fiends",
       "role": "Beast",
       "keywords": [
-        "FIENDS",
-        "SLAANESH",
         "SUMMONED",
-        "BEAST",
+        "SLAANESH",
+        "FIENDS",
+        "DAEMON",
         "CHAOS",
-        "DAEMON"
+        "BEAST"
       ],
       "factionKeywords": [
         "LEGIONS OF EXCESS",
@@ -4652,18 +4652,18 @@
       "name": "Keeper of Secrets",
       "role": "Monster Character",
       "keywords": [
-        "PSYKER",
-        "CHARACTER",
         "MONSTER",
-        "KEEPER OF SECRETS",
+        "CHARACTER",
+        "PSYKER",
+        "CHAOS",
         "SLAANESH",
+        "KEEPER OF SECRETS",
         "SUMMONED",
-        "DAEMON",
-        "CHAOS"
+        "DAEMON"
       ],
       "factionKeywords": [
-        "LEGIONS OF EXCESS",
-        ""
+        "",
+        "LEGIONS OF EXCESS"
       ],
       "models": [
         {
@@ -4871,7 +4871,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4888,16 +4888,16 @@
       "name": "Seekers",
       "role": "Mounted",
       "keywords": [
+        "SEEKERS",
+        "MOUNTED",
         "CHAOS",
         "DAEMON",
         "SUMMONED",
-        "SLAANESH",
-        "SEEKERS",
-        "MOUNTED"
+        "SLAANESH"
       ],
       "factionKeywords": [
-        "LEGIONS OF EXCESS",
-        ""
+        "",
+        "LEGIONS OF EXCESS"
       ],
       "models": [
         {
@@ -5068,16 +5068,16 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "WALKER",
-        "VEHICLE",
-        "DAEMON",
         "DEFILER",
+        "DAEMON",
         "SLAANESH",
-        "CHAOS"
+        "CHAOS",
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -5426,7 +5426,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5437,11 +5437,11 @@
       ],
       "wargearCosts": [
         {
-          "name": "Heavy reaper autocannon",
+          "name": "Hades lascannon",
           "pts": 15
         },
         {
-          "name": "Hades lascannon",
+          "name": "Heavy reaper autocannon",
           "pts": 15
         }
       ],

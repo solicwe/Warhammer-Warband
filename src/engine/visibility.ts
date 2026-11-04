@@ -390,7 +390,7 @@ export function getUnitLoneOpRange(s: GameState, u: UnitState): number | null {
   if (isInfantryBeastLoneOpActive(s, u)) return 15;
   // If attached to a bodyguard squad (sources > 1), Lone Operative is suppressed under 10th rules
   if (u.sources && u.sources.length > 1) return null;
-  if (u.core.loneOperative !== undefined) return u.core.loneOperative;
+  if (u.core?.loneOperative !== undefined) return u.core.loneOperative;
   const hasKw = u.keywords.some((k) => k.toLowerCase() === 'lone operative') ||
     u.models.some((m) => m.keywords.some((k) => k.toLowerCase() === 'lone operative')) ||
     (u.abilities ?? []).some((a) => a.name.toLowerCase() === 'lone operative');

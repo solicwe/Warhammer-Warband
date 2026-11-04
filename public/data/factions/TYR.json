@@ -2,7 +2,7 @@
   "id": "TYR",
   "name": "Tyranids",
   "link": "https://wahapedia.ru/wh40k11ed/factions/tyranids",
-  "lastUpdate": "2026-09-28 02:38:04",
+  "lastUpdate": "2026-10-30 22:19:16",
   "armyRules": [
     {
       "name": "Synapse",
@@ -18,7 +18,7 @@
       "id": "000000748",
       "name": "Invasion Fleet",
       "dp": 3,
-      "forceDisposition": "Take and Hold",
+      "forceDisposition": "Priority Assets, Take and Hold",
       "rules": [
         {
           "name": "Hyper-adaptations",
@@ -155,15 +155,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008422006",
-          "name": "SWARM-GUIDED SALVOES",
-          "cp": 1,
-          "type": "Crusher Stampede – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Shooting phase.\nTARGET: One Tyranids Monster unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability, and until the end of the phase each time a model in your unit makes an attack, you can ignore any or all modifiers to that model’s Ballistic Skill characteristic and any or all modifiers to the Hit roll."
-        },
-        {
           "id": "000008422003",
           "name": "RAMPAGING MONSTROSITIES",
           "cp": 1,
@@ -180,6 +171,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Tyranids Monster unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: That enemy unit must take a Battle-shock test and, until the end of the phase, each time a model in that enemy unit makes an attack that targets your unit, subtract 1 from the Hit roll. If that Battle-shock test was failed, subtract 1 from the Wound roll as well."
+        },
+        {
+          "id": "000008422006",
+          "name": "SWARM-GUIDED SALVOES",
+          "cp": 1,
+          "type": "Crusher Stampede – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Shooting phase.\nTARGET: One Tyranids Monster unit from your army that has not been selected to shoot this phase.\nEFFECT: Until the end of the phase, ranged weapons equipped by models in your unit have the [IGNORES COVER] ability, and until the end of the phase each time a model in your unit makes an attack, you can ignore any or all modifiers to that model’s Ballistic Skill characteristic and any or all modifiers to the Hit roll."
         },
         {
           "id": "000008422007",
@@ -253,13 +253,13 @@
       ],
       "stratagems": [
         {
-          "id": "000008409006",
-          "name": "BOUNDING ADVANCE",
+          "id": "000008409004",
+          "name": "TEEMING MASSES",
           "cp": 1,
           "type": "Unending Swarm – Battle Tactic Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One Endless Multitude unit from your army.\nEFFECT: Until the end of the phase, each time your unit Advances, do not make an Advance roll. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Endless Multitude unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
         },
         {
           "id": "000008409005",
@@ -271,13 +271,22 @@
           "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Endless Multitude unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, weapons equipped by models in your unit have the [SUSTAINED HITS 1] ability, and If your unit contains 15 or more models, each time a model in your unit makes an attack, an unmodified Hit roll of 5+ scores a Critical Hit."
         },
         {
-          "id": "000008409004",
-          "name": "TEEMING MASSES",
+          "id": "000008409006",
+          "name": "BOUNDING ADVANCE",
           "cp": 1,
           "type": "Unending Swarm – Battle Tactic Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One Endless Multitude unit from your army.\nEFFECT: Until the end of the phase, each time your unit Advances, do not make an Advance roll. Instead, until the end of the phase, add 6\" to the Move characteristic of models in your unit."
+        },
+        {
+          "id": "000008409002",
+          "name": "SYNAPTIC GOADING",
+          "cp": 1,
+          "type": "Unending Swarm – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Endless Multitude unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, each time an attack targets your unit, subtract 1 from the Hit roll."
+          "phase": "Any phase",
+          "text": "WHEN: Any phase, just before an Endless Multitude unit from your army that is within Synapse Range of your army makes a surge move.\nTARGET: That ENDLESS MULTITUDE unit.\nEFFECT: When making that surge move, you can re-roll the D6 to determine how far your unit moves, and your unit can end that move as close as possible to the closest objective marker (instead of as close as possible to the closest enemy unit]. All other rules for making surge moves still apply."
         },
         {
           "id": "000008409007",
@@ -296,15 +305,6 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase.\nTARGET: One Endless Multitude unit from your army that was just destroyed. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Add a new unit to your army identical to your destroyed unit, in Strategic Reserves, at its Starting Strength.\nRESTRICTIONS: Any destroyed Character units that were attached to your unit are not returned. You can only use this Stratagem once per battle."
-        },
-        {
-          "id": "000008409002",
-          "name": "SYNAPTIC GOADING",
-          "cp": 1,
-          "type": "Unending Swarm – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Any phase",
-          "text": "WHEN: Any phase, just before an Endless Multitude unit from your army that is within Synapse Range of your army makes a surge move.\nTARGET: That ENDLESS MULTITUDE unit.\nEFFECT: When making that surge move, you can re-roll the D6 to determine how far your unit moves, and your unit can end that move as close as possible to the closest objective marker (instead of as close as possible to the closest enemy unit]. All other rules for making surge moves still apply."
         }
       ]
     },
@@ -360,15 +360,6 @@
           "text": "WHEN: Your Fight phase.\nTARGET: One TYRANIDS unit from your army that just destroyed an enemy unit.\nEFFECT: Your unit immediately Regenerates (See Feed the Swarm). When doing so, if your unit is a Harvester unit and you choose for one model to regain up to D3 lost wounds, that model regains up to 3 lost wounds instead."
         },
         {
-          "id": "000008413005",
-          "name": "ABLATIVE CARAPACE",
-          "cp": 2,
-          "type": "Assimilation Swarm – Epic Deed Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Harvester unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 5+ ability. If your unit is within range of an objective marker you control, until the end of the phase models in your unit have the Feel No Pain 4+ ability instead."
-        },
-        {
           "id": "000008413002",
           "name": "BROODGUARD IMPULSE",
           "cp": 1,
@@ -378,13 +369,13 @@
           "text": "WHEN: Any phase.\nTARGET: One Harvester unit from your army that was just destroyed. You can use this Stratagem on that unit even though it was just destroyed.\nEFFECT: Until the end of the battle, each time a friendly TYRANIDS model makes an attack that targets the enemy unit that just destroyed your HARVESTER unit, add 1 to the Wound roll."
         },
         {
-          "id": "000008413006",
-          "name": "SECURE BIOMASS",
-          "cp": 1,
-          "type": "Assimilation Swarm – Strategic Ploy Stratagem",
+          "id": "000008413005",
+          "name": "ABLATIVE CARAPACE",
+          "cp": 2,
+          "type": "Assimilation Swarm – Epic Deed Stratagem",
           "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One TYRANIDS unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, melee weapons equipped by models in your unit have the [LETHAL HITS] ability. If your unit is a Harvester unit, each time a model in that unit makes a melee attack, a successful unmodified Hit roll of 5+ scores a Critical Hit as well."
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Harvester unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, models in your unit have the Feel No Pain 5+ ability. If your unit is within range of an objective marker you control, until the end of the phase models in your unit have the Feel No Pain 4+ ability instead."
         },
         {
           "id": "000008413004",
@@ -393,7 +384,7 @@
           "type": "Assimilation Swarm – Strategic Ploy Stratagem",
           "turn": "Either player’s turn",
           "phase": "Command phase",
-          "text": "WHEN: Command phase.\nTARGET: One Harvester unit from your army that is within range of an objective marker you control.\nEFFECT: That objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
+          "text": "WHEN: Command phase.\nTARGET: One Harvester unit from your army that is within range of an objective marker you control.\nEFFECT: That objective marker remains under your control until your opponent’s Level of Control over that objective marker is greater than yours at the end of a phase."
         },
         {
           "id": "000008413003",
@@ -403,6 +394,15 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase, when a TYRANIDS unit from your army is destroyed, before the last model in it is removed from play.\nTARGET: One Harvester unit from your army that is within 6\" of that destroyed unit.\nEFFECT: Regenerate one friendly TYRANIDS unit within 6\" of your HARVESTER unit (See Feed the Swarm)."
+        },
+        {
+          "id": "000008413006",
+          "name": "SECURE BIOMASS",
+          "cp": 1,
+          "type": "Assimilation Swarm – Strategic Ploy Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One TYRANIDS unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, melee weapons equipped by models in your unit have the [LETHAL HITS] ability. If your unit is a Harvester unit, each time a model in that unit makes a melee attack, a successful unmodified Hit roll of 5+ scores a Critical Hit as well."
         }
       ]
     },
@@ -449,15 +449,6 @@
       ],
       "stratagems": [
         {
-          "id": "000008418002",
-          "name": "SURPRISE ASSAULT",
-          "cp": 1,
-          "type": "Vanguard Onslaught – Battle Tactic Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase, just after a Vanguard Invader unit from your army has selected its targets.\nTARGET: That VANGUARD INVADER unit.\nEFFECT: Select one enemy unit that was selected as the target of one or more of your unit’s attacks. That enemy unit must take a Battle-shock test. Until the end of the phase, each time a model in your unit makes an attack that targets that enemy unit, add 1 to the Hit roll. If the Battle-shock test was failed, add 1 to the Wound roll as well."
-        },
-        {
           "id": "000008418003",
           "name": "ASSASSIN BEASTS",
           "cp": 1,
@@ -467,13 +458,13 @@
           "text": "WHEN: Fight phase.\nTARGET: One Vanguard Invader Infantry unit from your army that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, melee weapons equipped by models in your unit have the [PRECISION] ability."
         },
         {
-          "id": "000008418007",
-          "name": "INVISIBLE HUNTER",
+          "id": "000008418002",
+          "name": "SURPRISE ASSAULT",
           "cp": 1,
-          "type": "Vanguard Onslaught – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: Up to two Vanguard Invader units from your army, or one Tyranids Infantry unit from your army.\nEFFECT: Remove the targeted units from the battlefield and place them into Strategic Reserves.\nRESTRICTIONS: The targeted units must be more than 3\" away from all enemy units."
+          "type": "Vanguard Onslaught – Battle Tactic Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your Shooting phase or the Fight phase, just after a Vanguard Invader unit from your army has selected its targets.\nTARGET: That VANGUARD INVADER unit.\nEFFECT: Select one enemy unit that was selected as the target of one or more of your unit’s attacks. That enemy unit must take a Battle-shock test. Until the end of the phase, each time a model in your unit makes an attack that targets that enemy unit, add 1 to the Hit roll. If the Battle-shock test was failed, add 1 to the Wound roll as well."
         },
         {
           "id": "000008418006",
@@ -485,13 +476,13 @@
           "text": "WHEN: Your opponent’s Shooting phase, just after an enemy unit has selected its targets.\nTARGET: One Vanguard Invader unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the end of the phase, your unit can only be selected as the target of a ranged attack if the attacking model is within 18\" or, if your unit has the Lone Operative ability, if the attacking model is within 6\". Your opponent can select new targets for the attacking unit’s attacks."
         },
         {
-          "id": "000008418005",
-          "name": "HYPERSENSORY SCILLIA",
-          "cp": 2,
+          "id": "000008418007",
+          "name": "INVISIBLE HUNTER",
+          "cp": 1,
           "type": "Vanguard Onslaught – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: Up to two Vanguard Invader units from your army that are within 8\" of that enemy unit, or one other Tyranids Infantry unit from your army that is within 8\" of that enemy unit.\nEFFECT: Those selected units can each make a Normal move of up to 6\".\nRESTRICTIONS: You cannot target units that are within Engagement Range of one or more enemy units."
+          "phase": "Fight phase",
+          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: Up to two Vanguard Invader units from your army, or one Tyranids Infantry unit from your army.\nEFFECT: Remove the targeted units from the battlefield and place them into Strategic Reserves.\nRESTRICTIONS: The targeted units must be more than 3\" away from all enemy units."
         },
         {
           "id": "000008418004",
@@ -501,6 +492,15 @@
           "turn": "Your turn",
           "phase": "Movement phase",
           "text": "WHEN: Your Movement phase.\nTARGET: One TYRANIDS unit from your army that is in Reserves, or up to two Vanguard Invader units from your army that are in Reserves.\nEFFECT: Until the end of the phase, for the purposes of setting up those selected units on the battlefield, treat the current battle round number as being one higher than it actually is."
+        },
+        {
+          "id": "000008418005",
+          "name": "HYPERSENSORY SCILLIA",
+          "cp": 2,
+          "type": "Vanguard Onslaught – Strategic Ploy Stratagem",
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall Back move.\nTARGET: Up to two Vanguard Invader units from your army that are within 8\" of that enemy unit, or one other Tyranids Infantry unit from your army that is within 8\" of that enemy unit.\nEFFECT: Those selected units can each make a Normal move of up to 6\".\nRESTRICTIONS: You cannot target units that are within Engagement Range of one or more enemy units."
         }
       ]
     },
@@ -574,6 +574,15 @@
           "text": "WHEN: Your opponent’s Shooting phase or the Fight phase, just after an enemy unit has selected its targets.\nTARGET: One Synapse unit from your army that was selected as the target of one or more of the attacking unit’s attacks.\nEFFECT: Until the attacking unit has finished making its attacks, each time an attack targets your unit, worsen the Armour Penetration characteristic of that attack by 1."
         },
         {
+          "id": "000008556006",
+          "name": "IMPERATIVE DOMINANCE",
+          "cp": 1,
+          "type": "Synaptic Nexus – Strategic Ploy Stratagem",
+          "turn": "Your turn",
+          "phase": "Command phase",
+          "text": "WHEN: Your Command phase.\nTARGET: One TYRANIDS unit from your army that is within Synapse Range of your army.\nEFFECT: Select one Synaptic Imperative, even if you have already selected that imperative this battle. Until the start of your next Command phase, that Synaptic Imperative is active for your unit instead of any other Synaptic Imperative that is active for your army."
+        },
+        {
           "id": "000008556007",
           "name": "OVERRIDE INSTINCTS",
           "cp": 1,
@@ -590,15 +599,6 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase, just after an enemy unit fails a Battle-shock test.\nTARGET: One Synapse unit from your army within 12\" of that enemy unit.\nEFFECT: Roll six D6: for each 3+, that enemy unit suffers 1 mortal wound."
-        },
-        {
-          "id": "000008556006",
-          "name": "IMPERATIVE DOMINANCE",
-          "cp": 1,
-          "type": "Synaptic Nexus – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Command phase",
-          "text": "WHEN: Your Command phase.\nTARGET: One TYRANIDS unit from your army that is within Synapse Range of your army.\nEFFECT: Select one Synaptic Imperative, even if you have already selected that imperative this battle. Until the start of your next Command phase, that Synaptic Imperative is active for your unit instead of any other Synaptic Imperative that is active for your army."
         }
       ]
     },
@@ -631,15 +631,6 @@
       ],
       "stratagems": [
         {
-          "id": "000009738003",
-          "name": "SYNAPTIC MICRONODES",
-          "cp": 1,
-          "type": "Warrior Bioform Onslaught Stratagem",
-          "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: End of your Movement phase.\nTARGET: One friendly TYRANID WARRIORS unit.\nEFFECT: Select one objective your unit is controlling. That objective is secured."
-        },
-        {
           "id": "000009738004",
           "name": "PARASITIC PAYLOAD",
           "cp": 1,
@@ -647,6 +638,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Your Shooting phase, when a friendly TYRANID WARRIORS unit is selected to shoot.\nTARGET: That TYRANID WARRIORS unit.\nEFFECT: Your unit’s ranged attacks have [IGNORE COVER]."
+        },
+        {
+          "id": "000009738003",
+          "name": "SYNAPTIC MICRONODES",
+          "cp": 1,
+          "type": "Warrior Bioform Onslaught Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: End of your Movement phase.\nTARGET: One friendly TYRANID WARRIORS unit.\nEFFECT: Select one objective your unit is controlling. That objective is secured."
         },
         {
           "id": "000009738002",
@@ -663,7 +663,7 @@
       "id": "000001057",
       "name": "Subterranean Assault",
       "dp": 3,
-      "forceDisposition": "Disruption",
+      "forceDisposition": "Reconnaissance, Disruption",
       "rules": [
         {
           "name": "Surprise Assault",
@@ -702,13 +702,13 @@
       ],
       "stratagems": [
         {
-          "id": "000010148006",
-          "name": "SWARMING ASSAULT",
+          "id": "000010148007",
+          "name": "RETREAT BELOW",
           "cp": 1,
           "type": "Subterranean Assault – Strategic Ploy Stratagem",
-          "turn": "Your turn",
-          "phase": "Charge phase",
-          "text": "WHEN: Your Charge phase.\nTARGET: One Tyranids Monster unit from your army that was set up as Reinforcements this turn.\nEFFECT: Until the end of the phase, friendly Tyranids units within 6\" of your unit can re-roll Charge rolls."
+          "turn": "Opponent’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One Tyranids unit or up to two Burrower units from your army that are not within Engagement Range of one or more enemy units.\nEFFECT: Remove your unit from the battlefield and place it into Strategic Reserves."
         },
         {
           "id": "000010148004",
@@ -729,22 +729,13 @@
           "text": "WHEN: End of your Movement phase.\nTARGET: One Tyranids unit from your army that is wholly within 9\" of one or more of your Tunnel Markers and not within Engagement Range of one or more enemy units.\nEFFECT: Remove your unit from the battlefield and set it up again, wholly within 9\" of another Tunnel Marker you placed, and more than 6\" horizontally away from all enemy units."
         },
         {
-          "id": "000010148007",
-          "name": "RETREAT BELOW",
+          "id": "000010148006",
+          "name": "SWARMING ASSAULT",
           "cp": 1,
           "type": "Subterranean Assault – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: End of your opponent’s Fight phase.\nTARGET: One Tyranids unit or up to two Burrower units from your army that are not within Engagement Range of one or more enemy units.\nEFFECT: Remove your unit from the battlefield and place it into Strategic Reserves."
-        },
-        {
-          "id": "000010148003",
-          "name": "REPLENISHING SWARMS",
-          "cp": 1,
-          "type": "Subterranean Assault – Wargear Stratagem",
           "turn": "Your turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your Movement phase.\nTARGET: One Tyranids unit from your army, wholly within 9\" of one or more Tunnel Markers you placed.\nEFFECT: One model in your unit regains up to D3+1 lost wounds, or you can return up to D3+1 destroyed models with a Wounds characteristic of 1 to your unit, with their full wounds remaining, instead."
+          "phase": "Charge phase",
+          "text": "WHEN: Your Charge phase.\nTARGET: One Tyranids Monster unit from your army that was set up as Reinforcements this turn.\nEFFECT: Until the end of the phase, friendly Tyranids units within 6\" of your unit can re-roll Charge rolls."
         },
         {
           "id": "000010148002",
@@ -754,6 +745,15 @@
           "turn": "Either player’s turn",
           "phase": "Command phase",
           "text": "WHEN: Command phase.\nTARGET: One Mawloc or Trygon unit from your army.\nEFFECT: Until the start of your next Command phase, your unit has the Synapse keyword."
+        },
+        {
+          "id": "000010148003",
+          "name": "REPLENISHING SWARMS",
+          "cp": 1,
+          "type": "Subterranean Assault – Wargear Stratagem",
+          "turn": "Your turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your Movement phase.\nTARGET: One Tyranids unit from your army, wholly within 9\" of one or more Tunnel Markers you placed.\nEFFECT: One model in your unit regains up to D3+1 lost wounds, or you can return up to D3+1 destroyed models with a Wounds characteristic of 1 to your unit, with their full wounds remaining, instead."
         }
       ]
     },
@@ -786,15 +786,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010937002",
-          "name": "COUNTERPREDATION",
-          "cp": 1,
-          "type": "Ambush Predators Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, when a friendly DEATHLEAPER/LICTOR/ NEUROLICTOR/VON RYAN’S LEAPERS unit is selected to fight.\nTARGET: That DEATHLEAPER/LICTOR/NEUROLICTOR/VON RYAN’S LEAPERS unit.\nEFFECT: Your unit’s attacks that target a hidden unit have +1 S and AP."
-        },
-        {
           "id": "000010937004",
           "name": "SCANNER GHEIST",
           "cp": 1,
@@ -811,6 +802,15 @@
           "turn": "Your turn",
           "phase": "Shooting phase",
           "text": "WHEN: Start of your Shooting phase.\nTARGET: One friendly DEATHLEAPER/LICTOR/NEUROLICTOR/VON RYAN’S LEAPERS unit.\nEFFECT: Select one visible enemy unit within 12\" of your unit. That enemy unit has +6\" detection range."
+        },
+        {
+          "id": "000010937002",
+          "name": "COUNTERPREDATION",
+          "cp": 1,
+          "type": "Ambush Predators Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, when a friendly DEATHLEAPER/LICTOR/ NEUROLICTOR/VON RYAN’S LEAPERS unit is selected to fight.\nTARGET: That DEATHLEAPER/LICTOR/NEUROLICTOR/VON RYAN’S LEAPERS unit.\nEFFECT: Your unit’s attacks that target a hidden unit have +1 S and AP."
         }
       ]
     },
@@ -852,15 +852,6 @@
           "text": "WHEN: Your Shooting phase, when a friendly NORN ASSIMILATOR unit has shot.\nTARGET: That NORN ASSIMILATOR unit.\nEFFECT: Select one enemy unit hit by those attacks. That enemy unit is tethered until the start of your next Command phase:\n• While a unit is tethered, that unit has -2\" M."
         },
         {
-          "id": "000010941003",
-          "name": "LESSER PREY",
-          "cp": 1,
-          "type": "Talons of the Norn Queen Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase, when a friendly NORN ASSIMILATOR/NORN EMISSARY unit is selected to fight.\nTARGET: That NORN ASSIMILATOR/NORN EMISSARY unit.\nEFFECT: Your unit’s melee attacks have +2 S."
-        },
-        {
           "id": "000010941002",
           "name": "CATALYTIC BIOFORTIFICATION",
           "cp": 1,
@@ -868,6 +859,15 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase, when a friendly NORN ASSIMILATOR unit suffers a mortal wound.\nTARGET: That NORN ASSIMILATOR unit.\nEFFECT: Your unit has Feel No Pain 4+ against mortal wounds."
+        },
+        {
+          "id": "000010941003",
+          "name": "LESSER PREY",
+          "cp": 1,
+          "type": "Talons of the Norn Queen Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase, when a friendly NORN ASSIMILATOR/NORN EMISSARY unit is selected to fight.\nTARGET: That NORN ASSIMILATOR/NORN EMISSARY unit.\nEFFECT: Your unit’s melee attacks have +2 S."
         }
       ]
     }
@@ -878,12 +878,12 @@
       "name": "Hive Tyrant",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
+        "GREAT DEVOURER",
         "MONSTER",
         "HIVE TYRANT",
+        "PSYKER",
         "SYNAPSE",
-        "GREAT DEVOURER",
-        "PSYKER"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1089,14 +1089,14 @@
       "name": "The Swarmlord",
       "role": "Monster Epic Hero",
       "keywords": [
-        "SYNAPSE",
-        "MONSTER",
-        "CHARACTER",
         "EPIC HERO",
-        "PSYKER",
         "GREAT DEVOURER",
+        "SYNAPSE",
         "HIVE TYRANT",
-        "THE SWARMLORD"
+        "THE SWARMLORD",
+        "CHARACTER",
+        "MONSTER",
+        "PSYKER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1202,7 +1202,7 @@
         {
           "name": "Malign Presence (Aura)",
           "type": "Datasheet",
-          "text": "Once per turn, when your opponent targets a unit from their army within 12\" of this model with a stratagem, you can use this ability. If you do increase the CP cost of that use of that stratagem by 1CP."
+          "text": "If this model is your WARLORD, each time your opponent targets a unit from their army with a Stratagem, if that unit is within 12\" of this model, increase the cost of that use of that Stratagem by 1CP.\nDesigner’s Note: This ability takes precedence over the Lord of Deceit ability presented in the Balance Dataslate June 2024."
         },
         {
           "name": "Domination of the Hive Mind (Aura)",
@@ -1233,11 +1233,11 @@
       "name": "Old One Eye",
       "role": "Monster Epic Hero",
       "keywords": [
+        "MONSTER",
         "OLD ONE EYE",
         "GREAT DEVOURER",
-        "CHARACTER",
-        "MONSTER",
-        "EPIC HERO"
+        "EPIC HERO",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1340,7 +1340,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 140
+              "pts": 130
             }
           ]
         }
@@ -1353,13 +1353,13 @@
       "name": "Broodlord",
       "role": "Infantry Character",
       "keywords": [
+        "VANGUARD INVADER",
+        "CHARACTER",
         "INFANTRY",
         "BROODLORD",
-        "VANGUARD INVADER",
         "SYNAPSE",
         "GREAT DEVOURER",
-        "PSYKER",
-        "CHARACTER"
+        "PSYKER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1473,12 +1473,12 @@
       "name": "Tervigon",
       "role": "Monster Character",
       "keywords": [
-        "TERVIGON",
         "SYNAPSE",
-        "GREAT DEVOURER",
-        "PSYKER",
+        "MONSTER",
         "CHARACTER",
-        "MONSTER"
+        "PSYKER",
+        "TERVIGON",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1630,7 +1630,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 160
+              "pts": 150
             }
           ]
         }
@@ -1645,8 +1645,8 @@
       "keywords": [
         "INFANTRY",
         "GREAT DEVOURER",
-        "GENESTEALERS",
-        "VANGUARD INVADER"
+        "VANGUARD INVADER",
+        "GENESTEALERS"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1736,7 +1736,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -1757,9 +1757,9 @@
       "name": "Termagants",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
         "BATTLELINE",
         "GREAT DEVOURER",
+        "INFANTRY",
         "ENDLESS MULTITUDE",
         "TERMAGANTS"
       ],
@@ -2020,7 +2020,7 @@
           "options": [
             {
               "models": 10,
-              "pts": 60
+              "pts": 55
             },
             {
               "models": 20,
@@ -2037,11 +2037,11 @@
       "name": "Hormagaunts",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "ENDLESS MULTITUDE",
-        "BATTLELINE",
         "HORMAGAUNTS",
-        "GREAT DEVOURER"
+        "ENDLESS MULTITUDE",
+        "GREAT DEVOURER",
+        "INFANTRY",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2133,10 +2133,10 @@
       "name": "Ripper Swarms",
       "role": "Swarm",
       "keywords": [
-        "SWARM",
-        "GREAT DEVOURER",
         "RIPPER SWARMS",
-        "HARVESTER"
+        "GREAT DEVOURER",
+        "HARVESTER",
+        "SWARM"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2270,9 +2270,9 @@
       "name": "Tyrant Guard",
       "role": "Infantry",
       "keywords": [
-        "TYRANT GUARD",
+        "INFANTRY",
         "GREAT DEVOURER",
-        "INFANTRY"
+        "TYRANT GUARD"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2419,9 +2419,9 @@
       "name": "Hive Guard",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "GREAT DEVOURER",
-        "HIVE GUARD",
-        "INFANTRY"
+        "HIVE GUARD"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2537,7 +2537,7 @@
         {
           "name": "Defensive Stance",
           "type": "Datasheet",
-          "text": "Each time you target this unit with the Fire Overwatch Stratagem, while resolving that Stratagem, hits are scored on unmodified Hit rolls of 5+, or unmodified Hit rolls of 4+ instead if this unit is within range of an objective marker."
+          "text": "Each time you target this unit with the Fire Overwatch Stratagem, while resolving that Stratagem, hits are scored on unmodified Hit rolls of 5+, or unmodified Hit rolls of 4+ instead if this unit is within range of an objective marker that you control."
         }
       ],
       "leads": [],
@@ -2557,7 +2557,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 3,
@@ -2578,10 +2578,10 @@
       "name": "Lictor",
       "role": "Infantry",
       "keywords": [
-        "GREAT DEVOURER",
         "INFANTRY",
-        "LICTOR",
-        "VANGUARD INVADER"
+        "VANGUARD INVADER",
+        "GREAT DEVOURER",
+        "LICTOR"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2696,11 +2696,11 @@
       "name": "Maleceptor",
       "role": "Monster",
       "keywords": [
-        "MALECEPTOR",
         "MONSTER",
         "PSYKER",
-        "GREAT DEVOURER",
-        "SYNAPSE"
+        "MALECEPTOR",
+        "SYNAPSE",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2824,7 +2824,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -2841,12 +2841,12 @@
       "name": "Zoanthropes",
       "role": "Infantry",
       "keywords": [
+        "SYNAPSE",
+        "INFANTRY",
         "PSYKER",
         "FLY",
-        "ZOANTHROPES",
         "GREAT DEVOURER",
-        "SYNAPSE",
-        "INFANTRY"
+        "ZOANTHROPES"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2986,10 +2986,10 @@
       "name": "Venomthropes",
       "role": "Infantry",
       "keywords": [
+        "VENOMTHROPES",
         "INFANTRY",
         "FLY",
-        "GREAT DEVOURER",
-        "VENOMTHROPES"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3089,8 +3089,8 @@
       "role": "Infantry",
       "keywords": [
         "PYROVORES",
-        "GREAT DEVOURER",
         "INFANTRY",
+        "GREAT DEVOURER",
         "HARVESTER"
       ],
       "factionKeywords": [
@@ -3205,7 +3205,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3231,8 +3231,8 @@
       "role": "Monster",
       "keywords": [
         "HARUSPEX",
-        "HARVESTER",
         "GREAT DEVOURER",
+        "HARVESTER",
         "MONSTER"
       ],
       "factionKeywords": [
@@ -3359,7 +3359,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -3376,12 +3376,12 @@
       "name": "Deathleaper",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "DEATHLEAPER",
-        "VANGUARD INVADER",
         "GREAT DEVOURER",
         "EPIC HERO",
-        "INFANTRY"
+        "INFANTRY",
+        "CHARACTER",
+        "VANGUARD INVADER",
+        "DEATHLEAPER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3501,11 +3501,11 @@
       "name": "Raveners",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "VANGUARD INVADER",
         "BURROWERS",
+        "RAVENERS",
+        "INFANTRY",
         "GREAT DEVOURER",
-        "RAVENERS"
+        "VANGUARD INVADER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3594,7 +3594,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -3611,13 +3611,13 @@
       "name": "Gargoyles",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "BATTLELINE",
-        "FLY",
-        "GREAT DEVOURER",
-        "VANGUARD INVADER",
+        "GARGOYLES",
         "ENDLESS MULTITUDE",
-        "GARGOYLES"
+        "GREAT DEVOURER",
+        "FLY",
+        "INFANTRY",
+        "VANGUARD INVADER",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3715,11 +3715,11 @@
           "options": [
             {
               "models": 10,
-              "pts": 80
+              "pts": 75
             },
             {
               "models": 20,
-              "pts": 155
+              "pts": 150
             }
           ]
         }
@@ -3733,11 +3733,11 @@
       "role": "Monster",
       "keywords": [
         "MONSTER",
-        "HARPY",
         "FLY",
         "AIRCRAFT",
         "GREAT DEVOURER",
-        "VANGUARD INVADER"
+        "VANGUARD INVADER",
+        "HARPY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3904,11 +3904,11 @@
       "name": "Hive Crone",
       "role": "Monster",
       "keywords": [
-        "VANGUARD INVADER",
+        "MONSTER",
         "FLY",
         "AIRCRAFT",
         "GREAT DEVOURER",
-        "MONSTER",
+        "VANGUARD INVADER",
         "HIVE CRONE"
       ],
       "factionKeywords": [
@@ -4079,10 +4079,10 @@
       "name": "Mucolid Spores",
       "role": "Beast",
       "keywords": [
+        "BEAST",
         "FLY",
-        "GREAT DEVOURER",
         "MUCOLID SPORES",
-        "BEAST"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4289,14 +4289,14 @@
       "name": "Tyrannocyte",
       "role": "Dedicated Transports",
       "keywords": [
-        "FLY",
-        "VANGUARD INVADER",
-        "GREAT DEVOURER",
-        "TRANSPORT",
-        "FRAME",
         "MONSTER",
+        "FLY",
+        "TRANSPORT",
+        "DEDICATED TRANSPORT",
+        "GREAT DEVOURER",
+        "VANGUARD INVADER",
         "TYRANNOCYTE",
-        "DEDICATED TRANSPORT"
+        "FRAME"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4404,7 +4404,7 @@
           ]
         },
         {
-          "label": "YOUR 4TH + UNIT COSTS",
+          "label": "YOUR 4TH+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -4421,8 +4421,8 @@
       "name": "Carnifexes",
       "role": "Monster",
       "keywords": [
-        "MONSTER",
         "GREAT DEVOURER",
+        "MONSTER",
         "CARNIFEXES"
       ],
       "factionKeywords": [
@@ -4741,9 +4741,9 @@
       "name": "Biovores",
       "role": "Infantry",
       "keywords": [
-        "GREAT DEVOURER",
+        "BIOVORES",
         "INFANTRY",
-        "BIOVORES"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4972,7 +4972,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 140
+              "pts": 135
             }
           ]
         }
@@ -4988,8 +4988,8 @@
         "MAWLOC",
         "BURROWER",
         "VANGUARD INVADER",
-        "MONSTER",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5093,7 +5093,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 135
+              "pts": 130
             }
           ]
         }
@@ -5107,8 +5107,8 @@
       "role": "Monster",
       "keywords": [
         "EXOCRINE",
-        "GREAT DEVOURER",
-        "MONSTER"
+        "MONSTER",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5217,7 +5217,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5236,8 +5236,8 @@
       "keywords": [
         "GREAT DEVOURER",
         "MONSTER",
-        "FRAME",
-        "TYRANNOFEX"
+        "TYRANNOFEX",
+        "FRAME"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5416,7 +5416,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -5444,8 +5444,8 @@
       "keywords": [
         "MONSTER",
         "GREAT DEVOURER",
-        "TOXICRENE",
-        "FRAME"
+        "FRAME",
+        "TOXICRENE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5558,9 +5558,9 @@
       "name": "Sporocyst",
       "role": "Monster",
       "keywords": [
-        "MONSTER",
+        "SPOROCYST",
         "GREAT DEVOURER",
-        "SPOROCYST"
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5675,15 +5675,15 @@
       "name": "Winged Hive Tyrant",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "GREAT DEVOURER",
-        "PSYKER",
-        "CHARACTER",
-        "SYNAPSE",
-        "FLY",
         "WINGED HIVE TYRANT",
         "HIVE TYRANT",
-        "VANGUARD INVADER"
+        "VANGUARD INVADER",
+        "SYNAPSE",
+        "GREAT DEVOURER",
+        "FLY",
+        "PSYKER",
+        "MONSTER",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5884,12 +5884,12 @@
       "name": "Parasite Of Mortrex",
       "role": "Infantry Character",
       "keywords": [
-        "SYNAPSE",
-        "FLY",
-        "CHARACTER",
         "INFANTRY",
-        "PARASITE OF MORTREX",
         "VANGUARD INVADER",
+        "PARASITE OF MORTREX",
+        "CHARACTER",
+        "FLY",
+        "SYNAPSE",
         "GREAT DEVOURER"
       ],
       "factionKeywords": [
@@ -6009,7 +6009,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 70
+              "pts": 65
             }
           ]
         }
@@ -6022,9 +6022,9 @@
       "name": "Barbgaunts",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "BARBGAUNTS",
         "GREAT DEVOURER",
-        "BARBGAUNTS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6118,11 +6118,11 @@
           "options": [
             {
               "models": 5,
-              "pts": 55
+              "pts": 50
             },
             {
               "models": 10,
-              "pts": 110
+              "pts": 100
             }
           ]
         }
@@ -6135,10 +6135,10 @@
       "name": "Neurogaunts",
       "role": "Infantry",
       "keywords": [
-        "ENDLESS MULTITUDE",
-        "NEUROGAUNTS",
+        "GREAT DEVOURER",
         "INFANTRY",
-        "GREAT DEVOURER"
+        "ENDLESS MULTITUDE",
+        "NEUROGAUNTS"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6222,6 +6222,10 @@
               "pts": 45
             },
             {
+              "models": 21,
+              "pts": 90
+            },
+            {
               "models": 22,
               "pts": 90
             }
@@ -6236,13 +6240,13 @@
       "name": "Neurotyrant",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "CHARACTER",
-        "FLY",
-        "PSYKER",
         "NEUROTYRANT",
+        "SYNAPSE",
         "GREAT DEVOURER",
-        "SYNAPSE"
+        "PSYKER",
+        "FLY",
+        "CHARACTER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6352,8 +6356,8 @@
         }
       ],
       "leads": [
-        "Tyrant Guard",
         "Zoanthropes",
+        "Tyrant Guard",
         "Neurogaunts"
       ],
       "isSupport": false,
@@ -6363,7 +6367,7 @@
           "options": [
             {
               "models": 1,
-              "pts": 130
+              "pts": 120
             }
           ]
         }
@@ -6376,11 +6380,11 @@
       "name": "Psychophage",
       "role": "Monster",
       "keywords": [
-        "PSYCHOPHAGE",
+        "HARVESTER",
         "GREAT DEVOURER",
+        "PSYCHOPHAGE",
         "MONSTER",
-        "SMOKE",
-        "HARVESTER"
+        "SMOKE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6507,9 +6511,9 @@
       "name": "Screamer-killer",
       "role": "Monster",
       "keywords": [
-        "SCREAMER-KILLER",
         "GREAT DEVOURER",
-        "MONSTER"
+        "MONSTER",
+        "SCREAMER-KILLER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6614,7 +6618,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -6632,9 +6636,9 @@
       "role": "Infantry",
       "keywords": [
         "GREAT DEVOURER",
-        "INFANTRY",
         "TYRANID WARRIORS WITH MELEE BIO-WEAPONS",
-        "SYNAPSE"
+        "SYNAPSE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6739,10 +6743,10 @@
       "name": "Tyranid Warriors With Ranged Bio-weapons",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "GREAT DEVOURER",
+        "TYRANID WARRIORS WITH RANGED BIO-WEAPONS",
         "SYNAPSE",
-        "TYRANID WARRIORS WITH RANGED BIO-WEAPONS"
+        "GREAT DEVOURER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6980,10 +6984,10 @@
       "name": "Von Ryan’s Leapers",
       "role": "Infantry",
       "keywords": [
-        "VON RYAN’S LEAPERS",
-        "INFANTRY",
         "VANGUARD INVADER",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "INFANTRY",
+        "VON RYAN’S LEAPERS"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7090,11 +7094,11 @@
       "name": "Winged Tyranid Prime",
       "role": "Infantry Character",
       "keywords": [
+        "SYNAPSE",
         "INFANTRY",
         "CHARACTER",
         "FLY",
         "GREAT DEVOURER",
-        "SYNAPSE",
         "VANGUARD INVADER",
         "WINGED TYRANID PRIME"
       ],
@@ -7186,8 +7190,8 @@
         }
       ],
       "leads": [
-        "Gargoyles",
         "Tyranid Warriors With Ranged Bio-weapons",
+        "Gargoyles",
         "Tyranid Warriors With Melee Bio-weapons"
       ],
       "isSupport": false,
@@ -7210,10 +7214,10 @@
       "name": "Norn Emissary",
       "role": "Monster",
       "keywords": [
-        "PSYKER",
         "GREAT DEVOURER",
         "MONSTER",
         "NORN EMISSARY",
+        "PSYKER",
         "SYNAPSE"
       ],
       "factionKeywords": [
@@ -7377,7 +7381,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7397,8 +7401,8 @@
         "GREAT DEVOURER",
         "MONSTER",
         "SYNAPSE",
-        "NORN ASSIMILATOR",
-        "HARVESTER"
+        "HARVESTER",
+        "NORN ASSIMILATOR"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7533,7 +7537,7 @@
           ]
         },
         {
-          "label": "YOUR 2ND + UNIT COSTS",
+          "label": "YOUR 2ND+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7550,11 +7554,11 @@
       "name": "Neurolictor",
       "role": "Infantry",
       "keywords": [
-        "NEUROLICTOR",
-        "SYNAPSE",
-        "VANGUARD INVADER",
+        "INFANTRY",
         "GREAT DEVOURER",
-        "INFANTRY"
+        "VANGUARD INVADER",
+        "SYNAPSE",
+        "NEUROLICTOR"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7666,7 +7670,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 1,
@@ -7684,12 +7688,12 @@
       "role": "Infantry Character",
       "keywords": [
         "VANGUARD INVADER",
-        "HYPERADAPTED RAVENERS",
         "CHARACTER",
         "SYNAPSE",
+        "HYPERADAPTED RAVENERS",
+        "BURROWERS",
         "INFANTRY",
-        "GREAT DEVOURER",
-        "BURROWERS"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7861,7 +7865,7 @@
           ]
         },
         {
-          "label": "YOUR 3RD + UNIT COSTS",
+          "label": "YOUR 3RD+ UNIT COSTS",
           "options": [
             {
               "models": 5,
@@ -7878,11 +7882,11 @@
       "name": "Tyranid Prime with Lash Whip",
       "role": "Infantry Character",
       "keywords": [
+        "INFANTRY",
+        "CHARACTER",
         "GREAT DEVOURER",
         "SYNAPSE",
-        "TYRANID PRIME WITH LASH WHIP",
-        "INFANTRY",
-        "CHARACTER"
+        "TYRANID PRIME WITH LASH WHIP"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -8026,9 +8030,9 @@
       "name": "The Red Terror",
       "role": "Monster Epic Hero",
       "keywords": [
+        "GREAT DEVOURER",
         "CHARACTER",
         "EPIC HERO",
-        "GREAT DEVOURER",
         "MONSTER",
         "MOBILE",
         "BURROWER",
@@ -8139,304 +8143,13 @@
           "options": [
             {
               "models": 1,
-              "pts": 130
+              "pts": 120
             }
           ]
         }
       ],
       "wargearCosts": [],
       "link": "https://wahapedia.ru/wh40k11ed/factions/tyranids/The-Red-Terror"
-    },
-    {
-      "id": "000000840051",
-      "name": "Harridan",
-      "faction_id": "TYR",
-      "source_id": "TYR",
-      "role": "Other",
-      "keywords": [
-        "MONSTER",
-        "TITANIC",
-        "FLY",
-        "TRANSPORT",
-        "GREAT DEVOURER",
-        "HARRIDAN"
-      ],
-      "factionKeywords": [
-        "TYRANIDS"
-      ],
-      "models": [
-        {
-          "name": "Harridan",
-          "M": 14,
-          "T": 10,
-          "Sv": 3,
-          "inv": null,
-          "W": 30,
-          "Ld": 8,
-          "OC": 0,
-          "base": {
-            "w": 120,
-            "h": 92,
-            "text": "120 x 92mm oval"
-          }
-        }
-      ],
-      "weapons": [
-        {
-          "name": "Dire bio-cannon",
-          "profiles": [
-            {
-              "name": "Dire bio-cannon",
-              "range": 48,
-              "A": "D6+6",
-              "skill": 3,
-              "S": 10,
-              "AP": -3,
-              "D": "3",
-              "abilities": [
-                "blast"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Gargantuan scything talons",
-          "profiles": [
-            {
-              "name": "Gargantuan scything talons",
-              "range": "Melee",
-              "A": "6",
-              "skill": 3,
-              "S": 14,
-              "AP": -2,
-              "D": "D6",
-              "abilities": []
-            }
-          ]
-        }
-      ],
-      "abilities": [
-        {
-          "name": "Deadly Demise",
-          "type": "Core",
-          "param": "2D6",
-          "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X."
-        },
-        {
-          "name": "Synapse",
-          "type": "Faction",
-          "text": "If your Army Faction is TYRANIDS, while a TYRANIDS unit from your army is within 6\" of one or more friendly Synapse models, that TYRANIDS unit is said to be within Synapse Range of that model and of your army. While a TYRANIDS unit from your army is within Synapse Range of your army:\n• Each time that unit takes a Battle-shock test, take that test on 3D6 instead of 2D6.\n• Each time a model in that unit makes a melee attack, add 1 to the Strength characteristic of that attack."
-        },
-        {
-          "name": "Frenzied Metabolism",
-          "type": "Datasheet",
-          "text": "Each time this model is selected to shoot, you can use this ability. If you do, until the end of the phase, each time this model makes an attack, add 1 to the Wound roll. After resolving those attacks, roll one D6: on a 2+, this model suffers D3 mortal wounds."
-        }
-      ],
-      "damaged": {
-        "w": 10,
-        "text": "While this model has 1-10 wounds remaining, each time this model makes an attack, subtract 1 from the Hit roll."
-      },
-      "composition": [
-        {
-          "text": "1 Harridan",
-          "min": 1,
-          "max": 1,
-          "name": "Harridan"
-        }
-      ],
-      "loadout": {
-        "*": [
-          "Dire bio-cannon",
-          "Dire bio-cannon",
-          "Gargantuan scything talons"
-        ]
-      },
-      "wargear": [],
-      "leads": [],
-      "isSupport": false,
-      "points": [
-        {
-          "label": "YOUR UNIT COSTS",
-          "options": [
-            {
-              "models": 1,
-              "pts": 610
-            }
-          ]
-        }
-      ],
-      "transport": "This model has a transport capacity of 20 Gargoyles models and 1 Winged Tyranid Prime model.",
-      "loadoutText": "This model is equipped with: 2 dire bio-cannons; gargantuan scything talons.",
-      "link": "https://wahapedia.ru/wh40k10ed/factions/tyranids/Harridan",
-      "options": []
-    },
-    {
-      "id": "000000840052",
-      "name": "Hierophant",
-      "faction_id": "TYR",
-      "source_id": "TYR",
-      "role": "Other",
-      "keywords": [
-        "MONSTER",
-        "TITANIC",
-        "TOWERING",
-        "FRAME",
-        "TRANSPORT",
-        "GREAT DEVOURER",
-        "HIEROPHANT"
-      ],
-      "factionKeywords": [
-        "TYRANIDS"
-      ],
-      "models": [
-        {
-          "name": "Hierophant",
-          "M": 12,
-          "T": 14,
-          "Sv": 2,
-          "inv": 5,
-          "W": 30,
-          "Ld": 8,
-          "OC": 12,
-          "base": {
-            "w": 0,
-            "h": 0,
-            "text": "Use model"
-          }
-        }
-      ],
-      "weapons": [
-        {
-          "name": "Bio-plasma torrent",
-          "profiles": [
-            {
-              "name": "Bio-plasma torrent",
-              "range": 12,
-              "A": "3D6",
-              "skill": null,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "assault",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Dire bio-cannon",
-          "profiles": [
-            {
-              "name": "Dire bio-cannon",
-              "range": 48,
-              "A": "D6+6",
-              "skill": 3,
-              "S": 10,
-              "AP": -3,
-              "D": "3",
-              "abilities": [
-                "blast"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Lashwhip pods",
-          "profiles": [
-            {
-              "name": "Lashwhip pods",
-              "range": "Melee",
-              "A": "10",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "extra attacks"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Titanic scything talons",
-          "profiles": [
-            {
-              "name": "Titanic scything talons",
-              "range": "Melee",
-              "A": "8",
-              "skill": 3,
-              "S": 20,
-              "AP": -2,
-              "D": "D6+1",
-              "abilities": []
-            }
-          ]
-        }
-      ],
-      "abilities": [
-        {
-          "name": "Deadly Demise",
-          "type": "Core",
-          "param": "2D6",
-          "text": "DEADLY DEMISE24.08\nFrom detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat.\nThis ability always takes the form Deadly Demise X. Each time a model with this ability is destroyed, roll one D6. On a 6, that model suffers a deadly demise; each unit within 6\" of that model suffers a number of mortal wounds denoted by X."
-        },
-        {
-          "name": "Synapse",
-          "type": "Faction",
-          "text": "If your Army Faction is TYRANIDS, while a TYRANIDS unit from your army is within 6\" of one or more friendly Synapse models, that TYRANIDS unit is said to be within Synapse Range of that model and of your army. While a TYRANIDS unit from your army is within Synapse Range of your army:\n• Each time that unit takes a Battle-shock test, take that test on 3D6 instead of 2D6.\n• Each time a model in that unit makes a melee attack, add 1 to the Strength characteristic of that attack."
-        },
-        {
-          "name": "Apex-beast",
-          "type": "Datasheet",
-          "text": "Each time this model makes an attack that targets a unit that is Battle-shocked, add 1 to the Hit roll."
-        },
-        {
-          "name": "Stalking Forward",
-          "type": "Datasheet",
-          "text": "Each time this model makes a Normal, Advance or Fall Back move, it can move over models (excluding Titanic models) and terrain features that are 4\" or less in height as if they were not there."
-        }
-      ],
-      "damaged": {
-        "w": 10,
-        "text": "While this model has 1-10 wounds remaining, subtract 6 from this model’s Objective Control characteristic and each time this model makes an attack, subtract 1 from the Hit roll."
-      },
-      "composition": [
-        {
-          "text": "1 Hierophant",
-          "min": 1,
-          "max": 1,
-          "name": "Hierophant"
-        }
-      ],
-      "loadout": {
-        "*": [
-          "Bio-plasma torrent",
-          "Dire bio-cannon",
-          "Dire bio-cannon",
-          "Lashwhip pods",
-          "Titanic scything talons"
-        ]
-      },
-      "wargear": [],
-      "leads": [],
-      "isSupport": false,
-      "points": [
-        {
-          "label": "YOUR UNIT COSTS",
-          "options": [
-            {
-              "models": 1,
-              "pts": 810
-            }
-          ]
-        }
-      ],
-      "transport": "This model has a transport capacity of 20 Tyranids Infantry models. Each model with a Wounds characteristic of more than 1 takes up the space of 3 models. This model cannot transport models that can Fly.",
-      "loadoutText": "This model is equipped with: bio-plasma torrent; 2 dire bio-cannons; lashwhip pods; titanic scything talons.",
-      "link": "https://wahapedia.ru/wh40k10ed/factions/tyranids/Hierophant",
-      "options": []
     }
   ]
 }
