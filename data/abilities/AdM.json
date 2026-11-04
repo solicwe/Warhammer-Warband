@@ -1,1677 +1,1674 @@
 {
-  "Doctrina Imperatives": {
-    "code": true,
-    "status": "auto",
-    "note": "The Imperative chosen for the battle round (army rule)"
-  },
-  "Canticles of the Omnissiah": {
-    "choice": {
-      "name": "Canticles of the Omnissiah",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Invocation of Machine Vengeance",
-        "Mantra of Discipline",
-        "Shroudpsalm (Aura)"
-      ]
+ "Doctrina Imperatives": {
+  "code": true,
+  "status": "auto",
+  "note": "The Imperative chosen for the battle round (army rule)"
+ },
+ "Canticles of the Omnissiah": {
+  "choice": {
+   "name": "Canticles of the Omnissiah",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Invocation of Machine Vengeance",
+    "Mantra of Discipline",
+    "Shroudpsalm (Aura)"
+   ]
+  }
+ },
+ "Mechanicus Bodyguard": {
+  "effects": [
+   {
+    "if": [
+     "near:3:ADEPTUS MECHANICUS"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Self-repair Mechanisms": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "if": [
+    "belowStartingW"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
     }
-  },
-  "Mechanicus Bodyguard": {
-    "effects": [
-      {
-        "if": [
-          "near:3:ADEPTUS MECHANICUS"
-        ],
-        "loneOperative": true
-      }
-    ]
-  },
-  "Self-repair Mechanisms": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "if": [
-        "belowStartingW"
+   ]
+  }
+ },
+ "SUPREME COMMANDER": {
+  "status": "info",
+  "note": "Army building: must be your WARLORD"
+ },
+ "Invocation of Machine Vengeance": {
+  "act": {
+   "when": "command",
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "anywhere": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "ADEPTUS MECHANICUS"
       ],
-      "do": [
-        {
-          "on": "self",
-          "heal": "D3"
-        }
-      ]
+      "reroll": "hits"
+     },
+     "until": "nextCommand",
+     "mark": "Machine Vengeance"
     }
+   ]
   },
-  "SUPREME COMMANDER": {
-    "status": "info",
-    "note": "Army building: must be your WARLORD"
-  },
-  "Invocation of Machine Vengeance": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "limit": "turn",
-      "target": {
-        "side": "enemy",
-        "anywhere": true,
-        "closest": true
+  "note": "The closest enemy unit"
+ },
+ "Mantra of Discipline": {
+  "effects": [
+   {
+    "addKeywords": [
+     "BATTLELINE"
+    ]
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS MECHANICUS"
+    ],
+    "oc": 1,
+    "shockBonus": 1
+   }
+  ]
+ },
+ "Shroudpsalm (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS MECHANICUS"
+    ],
+    "stealth": true
+   }
+  ]
+ },
+ "Lord of the Machine Cult": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "!kw:ELECTRO-PRIESTS"
+    ],
+    "defend": {
+     "fnp": 5
+    }
+   },
+   {
+    "scope": "led",
+    "if": [
+     "kw:ELECTRO-PRIESTS"
+    ],
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ]
+ },
+ "Data-spike": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "units": [
+     "VEHICLE"
+    ],
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D6"
       },
-      "do": [
+      {
+       "on": "target",
+       "buff": [
         {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "ADEPTUS MECHANICUS"
-            ],
-            "reroll": "hits"
-          },
-          "until": "nextCommand",
-          "mark": "Machine Vengeance"
+         "attack": "melee",
+         "skill": -1
         }
-      ]
+       ],
+       "until": "phase"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Enginseer": {
+  "effects": [
+   {
+    "if": [
+     "near:3:ADEPTUS MECHANICUS+VEHICLE",
+     "!leaderAttached"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Omnissiah’s Blessing": {
+  "act": {
+   "when": "command",
+   "limit": "turn",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "ADEPTUS MECHANICUS"
+    ],
+    "damaged": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "heal": "D3"
     },
-    "note": "The closest enemy unit"
-  },
-  "Mantra of Discipline": {
-    "effects": [
+    {
+     "on": "target",
+     "if": [
+      "targetKw:VEHICLE"
+     ],
+     "buff": [
       {
-        "addKeywords": [
-          "BATTLELINE"
+       "defend": {
+        "fnp": 5
+       }
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Vengeance for the Omnissiah": {
+  "act": {
+   "when": "friendlyDeath",
+   "auto": true,
+   "range": 12,
+   "deathUnits": [
+    "ADEPTUS MECHANICUS",
+    "VEHICLE"
+   ],
+   "needUnitDestroyed": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "weapon": "Omnissian axe",
+       "attacksTo": 6
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  },
+  "note": "When a whole ADEPTUS MECHANICUS VEHICLE unit within 12\" is destroyed"
+ },
+ "Breaching Command": {
+  "effects": [
+   {
+    "if": [
+     "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Sentinel Directives": {
+  "effects": [
+   {
+    "overwatchHitOn": 5
+   }
+  ]
+ },
+ "Electro-infusion": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "defend": {
+     "wound": -1
+    }
+   }
+  ]
+ },
+ "Electro-shock": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "advanceBonus": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "endOfNextTurn",
+     "mark": "shocked"
+    }
+   ]
+  }
+ },
+ "Robotic Bodyguard": {
+  "effects": [
+   {
+    "if": [
+     "leader:Cybernetica Datasmith"
+    ],
+    "defend": {
+     "fnp": 4,
+     "charOnly": true
+    }
+   }
+  ]
+ },
+ "Repulsor Grid": {
+  "effects": [
+   {
+    "defend": {
+     "reflect6": true
+    }
+   }
+  ]
+ },
+ "Battle Protocols": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "phase",
+    "if": [
+     "contains:Kastelan"
+    ],
+    "botUse": "always",
+    "label": "Battle Protocols: Protector Protocol (+2 A ranged)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "attacks": 2,
+        "if": [
+         "modelKw:KASTELAN ROBOT"
         ]
-      },
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "ADEPTUS MECHANICUS"
-        ],
-        "oc": 1,
-        "shockBonus": 1
-      }
-    ]
-  },
-  "Shroudpsalm (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "ADEPTUS MECHANICUS"
-        ],
-        "stealth": true
-      }
-    ]
-  },
-  "Lord of the Machine Cult": {
-    "effects": [
-      {
-        "scope": "led",
-        "if": [
-          "!kw:ELECTRO-PRIESTS"
-        ],
-        "defend": {
-          "fnp": 5
-        }
-      },
-      {
-        "scope": "led",
-        "if": [
-          "kw:ELECTRO-PRIESTS"
-        ],
-        "defend": {
-          "fnp": 4
-        }
-      }
-    ]
-  },
-  "Data-spike": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "units": [
-          "VEHICLE"
-        ],
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D6"
-            },
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "attack": "melee",
-                  "skill": -1
-                }
-              ],
-              "until": "phase"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Enginseer": {
-    "effects": [
-      {
-        "if": [
-          "near:3:ADEPTUS MECHANICUS+VEHICLE",
-          "!leaderAttached"
-        ],
-        "loneOperative": true
-      }
-    ]
-  },
-  "Omnissiah’s Blessing": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "friendly",
-        "range": 3,
-        "units": [
-          "ADEPTUS MECHANICUS"
-        ],
-        "damaged": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "heal": "D3"
-        },
-        {
-          "on": "target",
-          "if": [
-            "targetKw:VEHICLE"
-          ],
-          "buff": [
-            {
-              "defend": {
-                "fnp": 5
-              }
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "Vengeance for the Omnissiah": {
-    "act": {
-      "when": "friendlyDeath",
-      "auto": true,
-      "range": 12,
-      "deathUnits": [
-        "ADEPTUS MECHANICUS",
-        "VEHICLE"
+       }
       ],
-      "needUnitDestroyed": true,
-      "limit": "battle",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "weapon": "Omnissian axe",
-              "attacksTo": 6
-            }
-          ],
-          "until": "battle"
-        }
-      ]
-    },
-    "note": "When a whole ADEPTUS MECHANICUS VEHICLE unit within 12\" is destroyed"
-  },
-  "Breaching Command": {
-    "effects": [
-      {
-        "if": [
-          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "reroll": "hits1"
-      },
-      {
-        "if": [
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "reroll": "hits"
-      }
+      "until": "nextCommand"
+     }
     ]
-  },
-  "Sentinel Directives": {
-    "effects": [
-      {
-        "overwatchHitOn": 5
-      }
-    ]
-  },
-  "Electro-infusion": {
-    "effects": [
-      {
-        "if": [
-          "leaderAttached"
-        ],
-        "defend": {
-          "wound": -1
-        }
-      }
-    ]
-  },
-  "Electro-shock": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "units": [
-          "!MONSTER",
-          "!VEHICLE"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "move": -2,
-              "advanceBonus": -2,
-              "chargeBonus": -2
-            }
-          ],
-          "until": "endOfNextTurn",
-          "mark": "shocked"
-        }
-      ]
-    }
-  },
-  "Robotic Bodyguard": {
-    "effects": [
-      {
-        "if": [
-          "leader:Cybernetica Datasmith"
-        ],
-        "defend": {
-          "fnp": 4,
-          "charOnly": true
-        }
-      }
-    ]
-  },
-  "Repulsor Grid": {
-    "effects": [
-      {
-        "defend": {
-          "reflect6": true
-        }
-      }
-    ]
-  },
-  "Battle Protocols": {
-    "act": [
-      {
-        "when": "command",
-        "limit": "phase",
-        "if": [
-          "contains:Kastelan"
-        ],
-        "botUse": "always",
-        "label": "Battle Protocols: Protector Protocol (+2 A ranged)",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "ranged",
-                "attacks": 2,
-                "if": [
-                  "modelKw:KASTELAN ROBOT"
-                ]
-              }
-            ],
-            "until": "nextCommand"
-          }
-        ]
-      },
-      {
-        "when": "command",
-        "limit": "phase",
-        "if": [
-          "contains:Kastelan"
-        ],
-        "botUse": "never",
-        "label": "Battle Protocols: Conqueror Protocol (+2 A melee)",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "melee",
-                "attacks": 2,
-                "if": [
-                  "modelKw:KASTELAN ROBOT"
-                ]
-              }
-            ],
-            "until": "nextCommand"
-          }
-        ]
-      },
-      {
-        "when": "command",
-        "limit": "phase",
-        "if": [
-          "contains:Kastelan"
-        ],
-        "botUse": "never",
-        "label": "Battle Protocols: Aegis Protocol (+1 T)",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "toughness": 1
-              }
-            ],
-            "until": "nextCommand"
-          }
-        ]
-      }
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "if": [
+     "contains:Kastelan"
     ],
-    "note": "Picked again each Command phase (the card: it lasts until another is picked; Aegis at the start)"
-  },
-  "Data-severed": {
-    "status": "info",
-    "note": "Without KASTELAN ROBOT models the Datasmith counts as INFANTRY"
-  },
-  "Enhanced data-tether": {
-    "effects": [
-      {
-        "stratCpChance": 5
-      }
-    ],
-    "gear": true
-  },
-  "Omnispex": {
-    "gear": true,
-    "effects": [
-      {
-        "attack": "ranged",
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Objective Scouted": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "onControlledObjective"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "secure": true
-        }
-      ]
-    }
-  },
-  "Rad-saturation (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 3,
-        "if": [
-          "!kw:VEHICLE"
-        ],
-        "oc": -1
-      }
-    ]
-  },
-  "Voices in the Code": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Neurostatic Interference (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 6,
-        "shockBonus": -1
-      },
-      {
-        "if": [
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "scope": "enemyAura",
-        "range": 6,
-        "shockBonus": -1
-      }
-    ],
-    "note": "-2 near an ADEPTUS MECHANICUS BATTLELINE unit"
-  },
-  "Optimised Gait": {
-    "effects": [
-      {
-        "advanceBonus": 1,
-        "chargeBonus": 1
-      },
-      {
-        "if": [
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "advanceBonus": 1,
-        "chargeBonus": 1
-      }
-    ]
-  },
-  "Elevated Strider": {
-    "effects": [
-      {
-        "eligible": [
-          "shootAfterFallBack",
-          "shootAfterAdvance"
-        ]
-      }
-    ],
-    "note": "Re-rolling Desperate Escape tests is not applied"
-  },
-  "Broad Spectrum Data-tether": {
-    "effects": [
-      {
-        "stratCpChance": 5
-      }
-    ]
-  },
-  "Broad spectrum data-tether": {
-    "effects": [
-      {
-        "stratCpChance": 5
-      }
-    ],
-    "gear": true
-  },
-  "Dynamic Efficiency": {
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance",
-          "chargeAfterFallBack"
-        ]
-      }
-    ],
-    "note": "Re-rolling Desperate Escape tests is not applied"
-  },
-  "Emanatus Force Field (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "ADEPTUS MECHANICUS",
-          "BATTLELINE"
-        ],
-        "defend": {
-          "vs": "ranged",
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "Scuttling Walker": {
-    "effects": [
-      {
-        "mobile": true
-      }
-    ]
-  },
-  "Galvanic Field": {
-    "effects": [
-      {
-        "scope": "led",
-        "abilities": [
-          "lethal hits"
-        ]
-      }
-    ]
-  },
-  "Defend the Divine Work": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Defend the Divine Work: 4+ invulnerable save this phase",
-      "botUse": "damaged",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "defend": {
-                "inv": 4
-              }
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Fire Support": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "reroll": "wounds"
-          },
-          "fromThisTransport": true,
-          "until": "phase",
-          "mark": "Fire Support"
-        }
-      ]
-    }
-  },
-  "Blistering Salvoes": {
-    "effects": [
-      {
-        "weapon": "belleros energy cannon",
-        "if": [
-          "targetInfantry"
-        ],
-        "hit": 1
-      },
-      {
-        "weapon": "ferrumite cannon",
-        "if": [
-          "targetMV"
-        ],
-        "hit": 1
-      }
-    ]
-  },
-  "Line-breakers": {
-    "act": {
-      "when": "endOfCharge",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "mortalRoll": {
-            "on": 4,
-            "all": true,
-            "plusIf": [
-              "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-            ],
-            "plus": 2
-          }
-        }
-      ]
-    },
-    "note": "+2 when within 6\" of a BATTLELINE unit after the charge (the card: when it started the charge)"
-  },
-  "Tactica Obliqua": {
-    "act": [
-      {
-        "when": "enemyMovedNear",
-        "range": 8,
-        "limit": "phase",
-        "if": [
-          "unengaged",
-          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "move": "D6"
-          }
-        ]
-      },
-      {
-        "when": "enemyMovedNear",
-        "range": 8,
-        "limit": "phase",
-        "if": [
-          "unengaged",
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "move": "6"
-          }
-        ]
-      }
-    ],
-    "note": "6\" when it starts near a BATTLELINE unit (the card: when it ends wholly within 6\" of one)"
-  },
-  "Searing Conflagration": {
-    "effects": [
-      {
-        "weapon": "phosphor torch",
-        "if": [
-          "targetInRangeOfObjective",
-          "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "reroll": "wounds1"
-      },
-      {
-        "weapon": "phosphor torch",
-        "if": [
-          "targetInRangeOfObjective",
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Ride the Thermals": {
-    "act": [
-      {
-        "when": "afterShootingButton",
-        "if": [
-          "notEngaged"
-        ],
-        "label": "Ride the Thermals: Normal move of up to 6\" (no charge)",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "move": "6",
-            "noCharge": true
-          }
-        ]
-      },
-      {
-        "when": "afterShootingButton",
-        "if": [
-          "notEngaged",
-          "near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "label": "Ride the Thermals: Normal move of up to 12\" ending wholly within 6\" of a BATTLELINE unit (no charge)",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "move": "12",
-            "noCharge": true
-          }
-        ]
-      }
-    ]
-  },
-  "Chaff Launcher": {
-    "gear": true,
-    "effects": [
-      {
-        "addKeywords": [
-          "SMOKE"
-        ]
-      }
-    ]
-  },
-  "Command Uplink": {
-    "effects": [
-      {
-        "stratCpChance": 5
-      }
-    ],
-    "gear": true
-  },
-  "Aerial Deployment": {
-    "effects": [
-      {
-        "arriveFromRound": 1
-      }
-    ]
-  },
-  "Strafing Run": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "targetNotFly"
-        ],
-        "hit": 1
-      }
-    ]
-  },
-  "Bomb Rack": {
-    "act": {
-      "when": "opponentFightEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 24,
-        "visible": true,
-        "notLoneOperative": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "rollCount": 6,
-      "each": {
-        "on": 4,
-        "do": [
-          {
-            "on": "target",
-            "mortals": "1"
-          }
-        ]
-      }
-    }
-  },
-  "Seekers of Divine Arcana": {
-    "effects": [
-      {
-        "scope": "led",
-        "oc": 1
-      }
-    ]
-  },
-  "Cogitative Instincts": {
-    "effects": [
-      {
-        "omniScrambler": 12
-      }
-    ]
-  },
-  "Control Edict": {
-    "effects": [
-      {
-        "scope": "led",
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Servo-skull Uplink": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Servo-skull Uplink: a Battle-shocked SKITARII unit within 6\" recovers",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "shocked": true,
-        "units": [
-          "SKITARII"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "unshock": true
-        }
-      ]
-    }
-  },
-  "Focused Hunters": {
-    "effects": [
-      {
-        "if": [
-          "targetQuarry"
-        ],
-        "reroll": "hits"
-      }
-    ],
-    "act": {
-      "when": "battleStart",
-      "auto": true,
-      "limit": "battle",
-      "target": {
-        "side": "enemy",
-        "anywhere": true
-      },
-      "do": [
-        {
-          "setQuarry": true
-        }
-      ]
-    }
-  },
-  "Dread Snipers": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Achillan Eye": {
-    "effects": [
-      {
-        "weapon": "radium jezzail",
-        "if": [
-          "targetInfantry"
-        ],
-        "reroll": "wounds"
-      },
-      {
-        "weapon": "transuranic arquebus",
-        "if": [
-          "targetMV"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "SYDONIAN SENTINEL": {
-    "status": "info",
-    "note": "Army building: cannot be your WARLORD"
-  },
-  "Network Override": {
-    "effects": [
-      {
-        "if": [
-          "contains:Tech-Priest"
-        ],
-        "eligible": [
-          "actionAfterAdvance",
-          "shootAfterAction"
-        ]
-      }
-    ]
-  },
-  "ATTACHED UNIT": {
-    "status": "info",
-    "note": "Army building: Leaders can join this unit"
-  },
-  "Rod of the War Forge": {
-    "choice": {
-      "name": "Rod of the War Forge",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Fanatical Devotion",
-        "Adaptive Tactics",
-        "The Fires of Mars"
-      ]
-    }
-  },
-  "Secutor of Olympus": {
-    "act": {
-      "when": "shootingStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "units": [
-          "VEHICLE"
-        ],
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3+1"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Fanatical Devotion": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Fanatical Devotion: a SKITARII unit within 6\" can shoot and charge after Advancing",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "SKITARII|THULIA GHULD"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "eligible": [
-                "shootAfterAdvance",
-                "chargeAfterAdvance"
-              ]
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "Adaptive Tactics": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Adaptive Tactics: a SKITARII unit within 6\" can shoot and charge after Falling Back",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "SKITARII|THULIA GHULD"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "eligible": [
-                "shootAfterFallBack",
-                "chargeAfterFallBack"
-              ]
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "The Fires of Mars": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "The Fires of Mars: both Imperatives for a SKITARII unit within 6\"",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "SKITARII|THULIA GHULD"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "if": [
-                "!detActive:protector"
-              ],
-              "attack": "ranged",
-              "abilities": [
-                "heavy"
-              ],
-              "skill": 1
-            },
-            {
-              "if": [
-                "!detActive:protector",
-                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-              ],
-              "defend": {
-                "vs": "melee",
-                "hit": -1
-              }
-            },
-            {
-              "if": [
-                "!detActive:conqueror"
-              ],
-              "attack": "ranged",
-              "abilities": [
-                "assault"
-              ]
-            },
-            {
-              "if": [
-                "!detActive:conqueror"
-              ],
-              "attack": "melee",
-              "skill": 1
-            },
-            {
-              "if": [
-                "!detActive:conqueror",
-                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-              ],
-              "ap": 1
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "Broad-spectrum Targeting Augurs": {
-    "effects": [
-      {
-        "weapon": "eradication caster",
-        "if": [
-          "targetNotMV"
-        ],
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Monocular Targeting Helms": {
-    "effects": [
-      {
-        "weapon": "neutron fusil",
-        "if": [
-          "targetMV"
-        ],
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Radial Suffusion": {
-    "code": true,
-    "status": "auto",
-    "note": "Fallout also rolls for enemy units within 6\" of their deployment zone (detachment rule acts)"
-  },
-  "Malphonic Susurrus": {
-    "effects": [
-      {
-        "scope": "led",
-        "stealth": true
-      }
-    ]
-  },
-  "Peerless Eradicator": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "ranged",
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Autoclavic Denunciation": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "ranged",
-        "abilities": [
-          "anti-infantry 2+",
-          "anti-monster 4+"
-        ]
-      }
-    ]
-  },
-  "Cantic Thrallnet": {
-    "act": {
-      "when": "command",
-      "limit": "round",
-      "label": "Cantic Thrallnet: both Imperatives for a SKITARII unit within 12\"",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 12,
-        "units": [
-          "SKITARII"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "if": [
-                "!detActive:protector"
-              ],
-              "attack": "ranged",
-              "abilities": [
-                "heavy"
-              ],
-              "skill": 1
-            },
-            {
-              "if": [
-                "!detActive:protector",
-                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-              ],
-              "defend": {
-                "vs": "melee",
-                "hit": -1
-              }
-            },
-            {
-              "if": [
-                "!detActive:conqueror"
-              ],
-              "attack": "ranged",
-              "abilities": [
-                "assault"
-              ]
-            },
-            {
-              "if": [
-                "!detActive:conqueror"
-              ],
-              "attack": "melee",
-              "skill": 1
-            },
-            {
-              "if": [
-                "!detActive:conqueror",
-                "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-              ],
-              "ap": 1
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    },
-    "note": "Picked in your Command phase (the card: at the start of the battle round)"
-  },
-  "Clandestine Infiltrator": {
-    "effects": [
-      {
-        "infiltrators": true,
-        "scouts": 6
-      }
-    ]
-  },
-  "Veiled Hunter": {
-    "code": true,
-    "status": "auto",
-    "note": "After deployment: up to three SKITARII INFANTRY units can be redeployed"
-  },
-  "Battle-sphere Uplink": {
-    "act": {
-      "when": "afterShootingButton",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Battle-sphere Uplink: Normal move of up to 6\" (no charge)",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "move": "6",
-          "noCharge": true
-        }
-      ]
-    }
-  },
-  "Mechanicus Locum": {
-    "effects": [
-      {
-        "scope": "model",
-        "ldSet": 6
-      }
-    ],
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Mechanicus Locum: a Battle-shocked CULT MECHANICUS unit within 12\" recovers",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 12,
-        "shocked": true,
-        "units": [
-          "CULT MECHANICUS"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "unshock": true
-        }
-      ]
-    }
-  },
-  "Mantle of the Gnosticarch": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "damage": -99
-        }
-      }
-    ],
-    "note": "Every attack allocated to it has Damage 1"
-  },
-  "Data-blessed Autosermon": {
-    "act": [
-      {
-        "when": "command",
-        "limit": "battle",
-        "if": [
-          "detActive:savagery"
-        ],
-        "label": "Data-blessed Autosermon: Panegyric Procession for this unit too",
-        "botUse": "round2",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "ranged",
-                "if": [
-                  "halfRange"
-                ],
-                "ap": 1
-              }
-            ],
-            "until": "nextCommand"
-          }
-        ]
-      },
-      {
-        "when": "command",
-        "limit": "battle",
-        "if": [
-          "detActive:procession"
-        ],
-        "label": "Data-blessed Autosermon: Citation in Savagery for this unit too",
-        "botUse": "round2",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "melee",
-                "if": [
-                  "charged"
-                ],
-                "strength": 1,
-                "attacks": 1
-              }
-            ],
-            "until": "nextCommand"
-          }
-        ]
-      }
-    ]
-  },
-  "Temporcopia": {
-    "effects": [
-      {
-        "fightsFirst": true
-      }
-    ]
-  },
-  "Magos": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "onAcquisition"
-      ],
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "cp": 1
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Genetor": {
-    "effects": [
-      {
-        "scope": "led",
-        "if": [
-          "onAcquisition"
-        ],
-        "defend": {
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "Logis": {
-    "effects": [
-      {
-        "scope": "led",
-        "if": [
-          "targetOnAcquisition"
-        ],
-        "hit": 1
-      }
-    ]
-  },
-  "Artisan": {
-    "freeDie": {
-      "kind": "setSix",
-      "stage": "any",
-      "limit": "phase",
-      "if": [
-        "leaderAttached",
-        "onAcquisition"
-      ]
-    },
-    "status": "auto",
-    "note": "One Hit, Wound or saving throw roll becomes a 6, once per phase"
-  },
-  "Necromechanic": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 12,
-        "units": [
-          "LEGIO CYBERNETICA|VEHICLE"
-        ],
-        "defend": {
-          "negateOnce": "round"
-        }
-      }
-    ],
-    "note": "The first failed save each battle round (the card: you choose which)"
-  },
-  "Lord of Machines": {
-    "act": {
-      "when": "oppShootingStart",
-      "auto": true,
-      "limit": "turn",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "visible": true,
-        "units": [
-          "VEHICLE"
-        ],
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "ldBranch": {
-            "pass": [
-              {
-                "hit": -1
-              }
-            ],
-            "fail": [
-              {
-                "hit": -6
-              }
-            ]
-          }
-        }
-      ],
-      "until": "phase"
-    },
-    "note": "A failed test leaves the unit hitting only on 6s (the card: it cannot shoot)"
-  },
-  "Emotionless Clarity": {
-    "effects": [
-      {
-        "demiseSure": {
-          "range": 12,
-          "units": [
-            "VEHICLE|LEGIO CYBERNETICA"
-          ]
-        }
-      }
-    ]
-  },
-  "Arch-negator": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "ranged",
-        "abilities": [
-          "anti-vehicle 4+"
-        ]
-      }
-    ]
-  },
-  "Transoracular Dyad Wafers": {
-    "effects": [
-      {
-        "if": [
-          "contains:Kastelan"
-        ],
-        "addKeywords": [
-          "HALO OVERRIDE"
-        ]
-      }
-    ]
-  },
-  "Cognitive Reinforcement": {
-    "effects": [
-      {
-        "if": [
-          "!detActive:protector"
-        ],
-        "attack": "ranged",
-        "abilities": [
-          "heavy"
-        ],
-        "skill": 1
-      },
-      {
-        "if": [
-          "!detActive:protector",
-          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      },
-      {
-        "if": [
-          "!detActive:conqueror"
-        ],
-        "attack": "ranged",
-        "abilities": [
-          "assault"
-        ]
-      },
-      {
-        "if": [
-          "!detActive:conqueror"
-        ],
-        "attack": "melee",
-        "skill": 1
-      },
-      {
-        "if": [
-          "!detActive:conqueror",
-          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "ap": 1
-      }
-    ]
-  },
-  "Sanctified Ordnance": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "weaponRange": 6
-      }
-    ],
-    "note": "Re-rolling Hazardous tests is not applied"
-  },
-  "Inloaded Lethality": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "attacks": 3,
-        "damage": 1
-      }
-    ]
-  },
-  "Omnicogitator": {
-    "effects": [
-      {
-        "if": [
-          "!detActive:protector"
-        ],
-        "attack": "ranged",
-        "abilities": [
-          "heavy"
-        ],
-        "skill": 1
-      },
-      {
-        "if": [
-          "!detActive:protector",
-          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      },
-      {
-        "if": [
-          "!detActive:conqueror"
-        ],
-        "attack": "ranged",
-        "abilities": [
-          "assault"
-        ]
-      },
-      {
-        "if": [
-          "!detActive:conqueror"
-        ],
-        "attack": "melee",
-        "skill": 1
-      },
-      {
-        "if": [
-          "!detActive:conqueror",
-          "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
-        ],
-        "ap": 1
-      }
-    ]
-  },
-  "Martial Signatum Amplificator": {
-    "effects": [
-      {
-        "addKeywords": [
-          "SKITARII"
-        ]
-      }
-    ]
-  },
-  "Belicosa-Class Capacitor Vanes": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "weaponRange": 6,
-        "strength": 1
-      }
-    ]
-  },
-  "Omnissiah’s Fury": {
-    "effects": [
-      {
-        "scope": "model",
+    "botUse": "never",
+    "label": "Battle Protocols: Conqueror Protocol (+2 A melee)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
         "attack": "melee",
         "attacks": 2,
-        "ap": 1,
-        "damage": 1
-      }
-    ]
-  },
-  "Explorator Dispensation": {
-    "effects": [
-      {
-        "infiltrators": true
-      }
-    ]
-  },
-  "Stealth-Screened Cybercanids": {
-    "effects": [
-      {
-        "loneOperative": true
-      }
-    ],
-    "note": "Lone Operative (the card: 15\")"
-  },
-  "Vingh’s Wafers of Dynamism": {
-    "effects": [
-      {
         "if": [
-          "leaderAttached"
-        ],
-        "mobile": true
-      }
+         "modelKw:KASTELAN ROBOT"
+        ]
+       }
+      ],
+      "until": "nextCommand"
+     }
     ]
-  },
-  "TL-4Ø9": {
-    "status": "info",
-    "note": "No rule text"
-  },
-  "Voltagheist Reliquary": {
-    "effects": [
-      {
-        "noSnapTarget": true
-      }
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "if": [
+     "contains:Kastelan"
+    ],
+    "botUse": "never",
+    "label": "Battle Protocols: Aegis Protocol (+1 T)",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "toughness": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
     ]
-  },
-  "Electromiasmic Brazier": {
-    "effects": [
-      {
-        "stealth": true
-      }
+   }
+  ],
+  "note": "Picked again each Command phase (the card: it lasts until another is picked; Aegis at the start)"
+ },
+ "Data-severed": {
+  "status": "info",
+  "note": "Without KASTELAN ROBOT models the Datasmith counts as INFANTRY"
+ },
+ "Enhanced data-tether": {
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ],
+  "gear": true
+ },
+ "Omnispex": {
+  "gear": true,
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
     ]
+   }
+  ]
+ },
+ "Objective Scouted": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
   }
+ },
+ "Rad-saturation (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 3,
+    "if": [
+     "!kw:VEHICLE"
+    ],
+    "oc": -1
+   }
+  ]
+ },
+ "Voices in the Code": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Neurostatic Interference (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "shockBonus": -1
+   },
+   {
+    "if": [
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "scope": "enemyAura",
+    "range": 6,
+    "shockBonus": -1
+   }
+  ],
+  "note": "-2 near an ADEPTUS MECHANICUS BATTLELINE unit"
+ },
+ "Optimised Gait": {
+  "effects": [
+   {
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   },
+   {
+    "if": [
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "advanceBonus": 1,
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Elevated Strider": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack",
+     "shootAfterAdvance"
+    ]
+   }
+  ],
+  "note": "Re-rolling Desperate Escape tests is not applied"
+ },
+ "Broad Spectrum Data-tether": {
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ]
+ },
+ "Broad spectrum data-tether": {
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ],
+  "gear": true
+ },
+ "Dynamic Efficiency": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ]
+   }
+  ],
+  "note": "Re-rolling Desperate Escape tests is not applied"
+ },
+ "Emanatus Force Field (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "ADEPTUS MECHANICUS",
+     "BATTLELINE"
+    ],
+    "defend": {
+     "vs": "ranged",
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "mobile": true
+   }
+  ]
+ },
+ "Galvanic Field": {
+  "effects": [
+   {
+    "scope": "led",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Defend the Divine Work": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Defend the Divine Work: 4+ invulnerable save this phase",
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "inv": 4
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Fire Support": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "reroll": "wounds"
+     },
+     "fromThisTransport": true,
+     "until": "phase",
+     "mark": "Fire Support"
+    }
+   ]
+  }
+ },
+ "Blistering Salvoes": {
+  "effects": [
+   {
+    "weapon": "belleros energy cannon",
+    "if": [
+     "targetInfantry"
+    ],
+    "hit": 1
+   },
+   {
+    "weapon": "ferrumite cannon",
+    "if": [
+     "targetMV"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Line-breakers": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "all": true,
+      "plusIf": [
+       "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+      ],
+      "plus": 2
+     }
+    }
+   ]
+  },
+  "note": "+2 when within 6\" of a BATTLELINE unit after the charge (the card: when it started the charge)"
+ },
+ "Tactica Obliqua": {
+  "act": [
+   {
+    "when": "enemyMovedNear",
+    "range": 8,
+    "limit": "phase",
+    "if": [
+     "unengaged",
+     "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "move": "D6"
+     }
+    ]
+   },
+   {
+    "when": "enemyMovedNear",
+    "range": 8,
+    "limit": "phase",
+    "if": [
+     "unengaged",
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "move": "6"
+     }
+    ]
+   }
+  ],
+  "note": "6\" when it starts near a BATTLELINE unit (the card: when it ends wholly within 6\" of one)"
+ },
+ "Searing Conflagration": {
+  "effects": [
+   {
+    "weapon": "phosphor torch",
+    "if": [
+     "targetInRangeOfObjective",
+     "!near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "reroll": "wounds1"
+   },
+   {
+    "weapon": "phosphor torch",
+    "if": [
+     "targetInRangeOfObjective",
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Ride the Thermals": {
+  "act": [
+   {
+    "when": "afterShootingButton",
+    "if": [
+     "notEngaged"
+    ],
+    "label": "Ride the Thermals: Normal move of up to 6\" (no charge)",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "move": "6",
+      "noCharge": true
+     }
+    ]
+   },
+   {
+    "when": "afterShootingButton",
+    "if": [
+     "notEngaged",
+     "near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "label": "Ride the Thermals: Normal move of up to 12\" ending wholly within 6\" of a BATTLELINE unit (no charge)",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "move": "12",
+      "noCharge": true
+     }
+    ]
+   }
+  ]
+ },
+ "Chaff Launcher": {
+  "gear": true,
+  "effects": [
+   {
+    "addKeywords": [
+     "SMOKE"
+    ]
+   }
+  ]
+ },
+ "Command Uplink": {
+  "effects": [
+   {
+    "stratCpChance": 5
+   }
+  ],
+  "gear": true
+ },
+ "Aerial Deployment": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Strafing Run": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotFly"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Bomb Rack": {
+  "act": {
+   "when": "opponentFightEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true,
+    "notLoneOperative": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "rollCount": 6,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "on": "target",
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "Seekers of Divine Arcana": {
+  "effects": [
+   {
+    "scope": "led",
+    "oc": 1
+   }
+  ]
+ },
+ "Cogitative Instincts": {
+  "effects": [
+   {
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "Control Edict": {
+  "effects": [
+   {
+    "scope": "led",
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Servo-skull Uplink": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Servo-skull Uplink: a Battle-shocked SKITARII unit within 6\" recovers",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "shocked": true,
+    "units": [
+     "SKITARII"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Focused Hunters": {
+  "effects": [
+   {
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": "hits"
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setQuarry": true
+    }
+   ]
+  }
+ },
+ "Dread Snipers": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Achillan Eye": {
+  "effects": [
+   {
+    "weapon": "radium jezzail",
+    "if": [
+     "targetInfantry"
+    ],
+    "reroll": "wounds"
+   },
+   {
+    "weapon": "transuranic arquebus",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "SYDONIAN SENTINEL": {
+  "status": "info",
+  "note": "Army building: cannot be your WARLORD"
+ },
+ "Network Override": {
+  "effects": [
+   {
+    "if": [
+     "contains:Tech-Priest"
+    ],
+    "eligible": [
+     "actionAfterAdvance",
+     "shootAfterAction"
+    ]
+   }
+  ]
+ },
+ "ATTACHED UNIT": {
+  "status": "info",
+  "note": "Army building: Leaders can join this unit"
+ },
+ "Rod of the War Forge": {
+  "choice": {
+   "name": "Rod of the War Forge",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Fanatical Devotion",
+    "Adaptive Tactics",
+    "The Fires of Mars"
+   ]
+  }
+ },
+ "Secutor of Olympus": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "units": [
+     "VEHICLE"
+    ],
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3+1"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Fanatical Devotion": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Fanatical Devotion: a SKITARII unit within 6\" can shoot and charge after Advancing",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "SKITARII|THULIA GHULD"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "eligible": [
+        "shootAfterAdvance",
+        "chargeAfterAdvance"
+       ]
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Adaptive Tactics": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Adaptive Tactics: a SKITARII unit within 6\" can shoot and charge after Falling Back",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "SKITARII|THULIA GHULD"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "eligible": [
+        "shootAfterFallBack",
+        "chargeAfterFallBack"
+       ]
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "The Fires of Mars": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "The Fires of Mars: both Imperatives for a SKITARII unit within 6\"",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "SKITARII|THULIA GHULD"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "if": [
+        "!detActive:protector"
+       ],
+       "attack": "ranged",
+       "abilities": [
+        "heavy"
+       ],
+       "skill": 1
+      },
+      {
+       "if": [
+        "!detActive:protector",
+        "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+       ],
+       "defend": {
+        "vs": "melee",
+        "hit": -1
+       }
+      },
+      {
+       "if": [
+        "!detActive:conqueror"
+       ],
+       "attack": "ranged",
+       "abilities": [
+        "assault"
+       ]
+      },
+      {
+       "if": [
+        "!detActive:conqueror"
+       ],
+       "attack": "melee",
+       "skill": 1
+      },
+      {
+       "if": [
+        "!detActive:conqueror",
+        "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+       ],
+       "ap": 1
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Broad-spectrum Targeting Augurs": {
+  "effects": [
+   {
+    "weapon": "eradication caster",
+    "if": [
+     "targetNotMV"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Monocular Targeting Helms": {
+  "effects": [
+   {
+    "weapon": "neutron fusil",
+    "if": [
+     "targetMV"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Radial Suffusion": {
+  "code": true,
+  "status": "auto",
+  "note": "Fallout also rolls for enemy units within 6\" of their deployment zone (detachment rule acts)"
+ },
+ "Malphonic Susurrus": {
+  "effects": [
+   {
+    "scope": "led",
+    "stealth": true
+   }
+  ]
+ },
+ "Peerless Eradicator": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Autoclavic Denunciation": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "abilities": [
+     "anti-infantry 2+",
+     "anti-monster 4+"
+    ]
+   }
+  ]
+ },
+ "Cantic Thrallnet": {
+  "act": {
+   "when": "command",
+   "limit": "round",
+   "label": "Cantic Thrallnet: both Imperatives for a SKITARII unit within 12\"",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "units": [
+     "SKITARII"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "if": [
+        "!detActive:protector"
+       ],
+       "attack": "ranged",
+       "abilities": [
+        "heavy"
+       ],
+       "skill": 1
+      },
+      {
+       "if": [
+        "!detActive:protector",
+        "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+       ],
+       "defend": {
+        "vs": "melee",
+        "hit": -1
+       }
+      },
+      {
+       "if": [
+        "!detActive:conqueror"
+       ],
+       "attack": "ranged",
+       "abilities": [
+        "assault"
+       ]
+      },
+      {
+       "if": [
+        "!detActive:conqueror"
+       ],
+       "attack": "melee",
+       "skill": 1
+      },
+      {
+       "if": [
+        "!detActive:conqueror",
+        "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+       ],
+       "ap": 1
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  },
+  "note": "Picked in your Command phase (the card: at the start of the battle round)"
+ },
+ "Clandestine Infiltrator": {
+  "effects": [
+   {
+    "infiltrators": true,
+    "scouts": 6
+   }
+  ]
+ },
+ "Veiled Hunter": {
+  "code": true,
+  "status": "auto",
+  "note": "After deployment: up to three SKITARII INFANTRY units can be redeployed"
+ },
+ "Battle-sphere Uplink": {
+  "act": {
+   "when": "afterShootingButton",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Battle-sphere Uplink: Normal move of up to 6\" (no charge)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Mechanicus Locum": {
+  "effects": [
+   {
+    "scope": "model",
+    "ldSet": 6
+   }
+  ],
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Mechanicus Locum: a Battle-shocked CULT MECHANICUS unit within 12\" recovers",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "shocked": true,
+    "units": [
+     "CULT MECHANICUS"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Mantle of the Gnosticarch": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -99
+    }
+   }
+  ],
+  "note": "Every attack allocated to it has Damage 1"
+ },
+ "Data-blessed Autosermon": {
+  "act": [
+   {
+    "when": "command",
+    "limit": "battle",
+    "if": [
+     "detActive:savagery"
+    ],
+    "label": "Data-blessed Autosermon: Panegyric Procession for this unit too",
+    "botUse": "round2",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "if": [
+         "halfRange"
+        ],
+        "ap": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "battle",
+    "if": [
+     "detActive:procession"
+    ],
+    "label": "Data-blessed Autosermon: Citation in Savagery for this unit too",
+    "botUse": "round2",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "if": [
+         "charged"
+        ],
+        "strength": 1,
+        "attacks": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   }
+  ]
+ },
+ "Temporcopia": {
+  "effects": [
+   {
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Magos": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onAcquisition"
+   ],
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "cp": 1
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Genetor": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "onAcquisition"
+    ],
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Logis": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "targetOnAcquisition"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Artisan": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "any",
+   "limit": "phase",
+   "if": [
+    "leaderAttached",
+    "onAcquisition"
+   ]
+  },
+  "status": "auto",
+  "note": "One Hit, Wound or saving throw roll becomes a 6, once per phase"
+ },
+ "Necromechanic": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "LEGIO CYBERNETICA|VEHICLE"
+    ],
+    "defend": {
+     "negateOnce": "round"
+    }
+   }
+  ],
+  "note": "The first failed save each battle round (the card: you choose which)"
+ },
+ "Lord of Machines": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true,
+    "units": [
+     "VEHICLE"
+    ],
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "ldBranch": {
+      "pass": [
+       {
+        "hit": -1
+       }
+      ],
+      "fail": [
+       {
+        "hit": -6
+       }
+      ]
+     }
+    }
+   ],
+   "until": "phase"
+  },
+  "note": "A failed test leaves the unit hitting only on 6s (the card: it cannot shoot)"
+ },
+ "Emotionless Clarity": {
+  "effects": [
+   {
+    "demiseSure": {
+     "range": 12,
+     "units": [
+      "VEHICLE|LEGIO CYBERNETICA"
+     ]
+    }
+   }
+  ]
+ },
+ "Arch-negator": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "abilities": [
+     "anti-vehicle 4+"
+    ]
+   }
+  ]
+ },
+ "Transoracular Dyad Wafers": {
+  "effects": [
+   {
+    "if": [
+     "contains:Kastelan"
+    ],
+    "addKeywords": [
+     "HALO OVERRIDE"
+    ]
+   }
+  ]
+ },
+ "Cognitive Reinforcement": {
+  "effects": [
+   {
+    "if": [
+     "!detActive:protector"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "heavy"
+    ],
+    "skill": 1
+   },
+   {
+    "if": [
+     "!detActive:protector",
+     "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   },
+   {
+    "if": [
+     "!detActive:conqueror"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "if": [
+     "!detActive:conqueror"
+    ],
+    "attack": "melee",
+    "skill": 1
+   },
+   {
+    "if": [
+     "!detActive:conqueror",
+     "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Sanctified Ordnance": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "weaponRange": 6
+   }
+  ],
+  "note": "Re-rolling Hazardous tests is not applied"
+ },
+ "Inloaded Lethality": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 3,
+    "damage": 1
+   }
+  ]
+ },
+ "Omnicogitator": {
+  "effects": [
+   {
+    "if": [
+     "!detActive:protector"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "heavy"
+    ],
+    "skill": 1
+   },
+   {
+    "if": [
+     "!detActive:protector",
+     "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   },
+   {
+    "if": [
+     "!detActive:conqueror"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   },
+   {
+    "if": [
+     "!detActive:conqueror"
+    ],
+    "attack": "melee",
+    "skill": 1
+   },
+   {
+    "if": [
+     "!detActive:conqueror",
+     "any:kw:BATTLELINE||near:6:ADEPTUS MECHANICUS+BATTLELINE"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Martial Signatum Amplificator": {
+  "effects": [
+   {
+    "addKeywords": [
+     "SKITARII"
+    ]
+   }
+  ]
+ },
+ "Belicosa-Class Capacitor Vanes": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "weaponRange": 6,
+    "strength": 1
+   }
+  ]
+ },
+ "Omnissiah’s Fury": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 2,
+    "ap": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Explorator Dispensation": {
+  "effects": [
+   {
+    "infiltrators": true
+   }
+  ]
+ },
+ "Stealth-Screened Cybercanids": {
+  "effects": [
+   {
+    "loneOperative": true
+   }
+  ],
+  "note": "Lone Operative (the card: 15\")"
+ },
+ "Vingh’s Wafers of Dynamism": {
+  "effects": [
+   {
+    "if": [
+     "leaderAttached"
+    ],
+    "mobile": true
+   }
+  ]
+ },
+ "TL-4Ø9": {
+  "status": "info",
+  "note": "No rule text"
+ },
+ "Voltagheist Reliquary": {
+  "effects": [
+   {
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Electromiasmic Brazier": {
+  "effects": [
+   {
+    "stealth": true
+   }
+  ]
+ }
 }

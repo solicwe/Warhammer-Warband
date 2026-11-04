@@ -1,2343 +1,2342 @@
 {
-  "Reanimation Protocols": {
-    "code": true,
-    "status": "auto",
-    "note": "End of your Command phase: heals D3 wounds, returning destroyed models one wound at a time"
-  },
-  "Their Number is Legion": {
-    "code": true,
-    "status": "auto",
-    "note": "A result of 1 is re-rolled"
-  },
-  "Grand Strategist": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "do": [
-        {
-          "cp": 1
-        }
-      ]
+ "Reanimation Protocols": {
+  "code": true,
+  "status": "auto",
+  "note": "End of your Command phase: heals D3 wounds, returning destroyed models one wound at a time"
+ },
+ "Their Number is Legion": {
+  "code": true,
+  "status": "auto",
+  "note": "A result of 1 is re-rolled"
+ },
+ "Grand Strategist": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "do": [
+    {
+     "cp": 1
     }
-  },
-  "Lord of the Storm": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "limit": "battle",
-      "if": [
-        "enemyBetween:-1:12"
-      ],
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "each": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3+3"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Resurrection Orb": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "if": [
-        "belowStarting"
-      ],
-      "label": "Resurrection Orb: this unit resurrects (Reanimation Protocols with D6)",
-      "botUse": "damaged",
-      "do": [
-        {
-          "on": "self",
-          "nec": "resurrect"
-        }
-      ]
-    }
-  },
-  "Resurrection Orb@Catacomb Command Barge": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Resurrection Orb: a NECRONS INFANTRY / MOUNTED unit within 6\" resurrects",
-      "botUse": "round3",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "INFANTRY|MOUNTED"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "nec": "resurrect"
-        }
-      ]
-    }
-  },
-  "My Will Be Done": {
-    "effects": [
-      {
-        "stratDiscount": {
-          "ids": [
-            "*"
-          ],
-          "cp": 1,
-          "limit": "round",
-          "perArmy": true
-        }
-      }
-    ]
-  },
-  "Implacable Resilience": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "damage": -1
-        }
-      }
-    ]
-  },
-  "Master Chronomancer": {
-    "effects": [
-      {
-        "scope": "led",
-        "defend": {
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "The Stars Are Right": {
-    "act": {
-      "when": "fightStartButton",
-      "limit": "battle",
-      "label": "The Stars Are Right: Staff of Tomorrow triple A and S, every successful Wound roll is a Critical Wound",
-      "botUse": "valuable",
-      "if": [
-        "engaged"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "buff": [
-            {
-              "weapon": "Staff of Tomorrow",
-              "attacks": 4,
-              "strength": 8,
-              "critWoundOn": 2
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    },
-    "note": "Staff of Tomorrow A2 S4 becomes A6 S12"
-  },
-  "Ancient Collector": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "leaderAttached",
-        "onControlledObjective"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "secure": true
-        }
-      ]
-    }
-  },
-  "Surrogate Hosts": {
-    "act": {
-      "when": "commandStart",
-      "limit": "phase",
-      "label": "Surrogate Hosts: take the place of another NECRONS INFANTRY CHARACTER",
-      "target": {
-        "side": "friendly",
-        "units": [
-          "NECRONS",
-          "INFANTRY",
-          "CHARACTER",
-          "!EPIC HERO",
-          "!SKORPEKH LORD"
-        ],
-        "notSelf": true
-      },
-      "botUse": "always",
-      "botIf": [
-        "farFromEnemies:18"
-      ],
-      "do": [
-        {
-          "on": "target",
-          "surrogate": true
-        }
-      ]
-    },
-    "status": "auto",
-    "note": "The bot uses it when Trazyn is more than 18\" from the enemy, swapping into the character closest to the enemy"
-  },
-  "Carrier Wave (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS"
-        ],
-        "oc": 1
-      }
-    ]
-  },
-  "Advanced Quantum Shielding": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "woundIfStronger": -1
-        }
-      }
-    ]
-  },
-  "Implacable Eradication": {
-    "effects": [
-      {
-        "if": [
-          "!targetInRangeOfObjective"
-        ],
-        "reroll": "wounds1"
-      },
-      {
-        "if": [
-          "targetInRangeOfObjective"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Dispersion Shield": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "Guardian Protocols": {
-    "effects": [
-      {
-        "if": [
-          "kw:NOBLE"
-        ],
-        "defend": {
-          "woundIfStronger": -1
-        }
-      }
-    ]
-  },
-  "Hyperspace Hunters": {
-    "code": true,
-    "status": "auto",
-    "note": "An enemy unit set up from Reserves within 18\" and visible in your opponent's Movement phase is shot at once (once per turn)"
-  },
-  "Flesh Hunger": {
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "targetBelowHalf"
-        ],
-        "critHitOn": 3
-      }
-    ],
-    "note": "Flayed Ones hit on 3+, so every successful Hit roll is a Critical Hit"
-  },
-  "Relentless Combatants": {
-    "effects": [
-      {
-        "rerollCharge": true,
-        "eligible": [
-          "chargeAfterFallBack"
-        ]
-      }
-    ]
-  },
-  "Targeting Relay": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "noCover": true
-          },
-          "until": "phase",
-          "mark": "Targeting Relay"
-        }
-      ]
-    }
-  },
-  "Drain Life": {
-    "act": {
-      "when": "fightEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 6,
-        "each": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Necrodermis": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "damage": -1
-        }
-      }
-    ]
-  },
-  "ENSLAVED STAR GOD": {
-    "status": "info",
-    "note": "Army building: this model cannot be your WARLORD"
-  },
-  "C’TAN SHARD": {
-    "status": "info",
-    "note": "Army building: this model cannot be given Enhancements"
-  },
-  "SUPREME COMMANDER": {
-    "status": "info",
-    "note": "Army building: this unit must be your WARLORD"
-  },
-  "Grand Illusion": {
-    "code": true,
-    "status": "auto",
-    "note": "After deployment: up to three NECRONS units can be redeployed"
-  },
-  "Repair Barge": {
-    "code": true,
-    "status": "auto",
-    "note": "After an enemy unit's attacks, a NECRON WARRIORS unit within 3\" that lost wounds activates its Reanimation Protocols (once per turn)"
-  },
-  "Invasion Beams": {
-    "act": {
-      "when": "fightEndButton",
-      "if": [
-        "!hasEmbarked"
-      ],
-      "label": "Invasion Beams: embark a NECRONS INFANTRY unit within 6\"",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "INFANTRY"
-        ],
-        "notSelf": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "if": [
-            "!engaged"
-          ],
-          "embarkNear": 6
-        }
-      ]
-    },
-    "note": "Within 6\" (the card: wholly within)"
-  },
-  "Quantum Invader": {
-    "effects": [
-      {
-        "arriveFromRound": 1
-      }
-    ]
-  },
-  "Atavistic Instigation": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "hitWeapon": "heavy death ray"
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "hit": -1
-            }
-          ],
-          "until": "nextTurnStart",
-          "mark": "ducked for cover"
-        }
-      ]
-    },
-    "note": "The target always ducks for cover (-1 to Hit until your next turn); standing firm (Critical Hits on 5+) is not offered"
-  },
-  "Wraith Form": {
-    "act": {
-      "when": "endOfNormalMove",
-      "limit": "phase",
-      "label": "Wraith Form: 1 D6 per model, 4+ = 1 mortal wound",
-      "target": {
-        "side": "enemy",
-        "movedOver": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "mortalRoll": {
-            "on": 4,
-            "all": true
-          }
-        }
-      ]
-    }
-  },
-  "Nebuloscope": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "ranged",
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Shadowloom": {
-    "gear": true,
-    "effects": [
-      {
-        "stealth": true
-      }
-    ]
-  },
-  "Shieldvanes": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "svSet": 3,
-        "statM": -4
-      }
-    ]
-  },
-  "Evasion Engrams": {
-    "act": {
-      "when": "afterShootingButton",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Evasion Engrams: Normal move of up to 6\" (no charge this turn)",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "move": "6",
-          "noCharge": true
-        }
-      ]
-    }
-  },
-  "Fabricator Claw Array (Aura)": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "VEHICLE"
-        ],
-        "defend": {
-          "fnp": 6
-        }
-      }
-    ]
-  },
-  "Gloom Prism (Aura)": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS"
-        ],
-        "defend": {
-          "fnp": 5,
-          "fnpVs": "mortalPsychic"
-        }
-      }
-    ]
-  },
-  "Canoptek Swarm": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Canoptek Swarm: return a destroyed model to a Scarab Swarm within 6\"",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "CANOPTEK SCARAB SWARM"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "revive": 1
-        }
-      ]
-    },
-    "note": "One model (the card: one per SPYDER model in this unit)"
-  },
-  "Eternity Gate": {
-    "act": [
-      {
-        "when": "movement",
-        "limit": "phase",
-        "if": [
-          "roundAtLeast:2",
-          "!marked:Gate Opened"
-        ],
-        "label": "Eternity Gate: a NECRONS INFANTRY unit in Reserves is set up within 6\"",
-        "botUse": "always",
-        "target": {
-          "side": "friendly",
-          "units": [
-            "NECRONS",
-            "INFANTRY"
-          ],
-          "inReserves": true
-        },
-        "do": [
-          {
-            "on": "target",
-            "gateWithin": 6
-          },
-          {
-            "on": "self",
-            "buff": [],
-            "mark": "Gate Opened",
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "movement",
-        "limit": "phase",
-        "if": [
-          "roundAtLeast:2",
-          "!marked:Gate Opened"
-        ],
-        "label": "Eternity Gate: a NECRONS INFANTRY unit on the battlefield is set up within 6\"",
-        "botUse": "never",
-        "target": {
-          "side": "friendly",
-          "units": [
-            "NECRONS",
-            "INFANTRY"
-          ],
-          "notSelf": true
-        },
-        "do": [
-          {
-            "on": "target",
-            "gateWithin": 6
-          },
-          {
-            "on": "self",
-            "buff": [],
-            "mark": "Gate Opened",
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Malevolent Arcing": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "hitWeapon": "twin tesla destructor"
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 5,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "Only the target unit is rolled for (not other enemy units within 3\")"
-  },
-  "Overwhelming Obliteration": {
-    "effects": [
-      {
-        "weapon": "doomsday cannon",
-        "if": [
-          "stationary"
-        ],
-        "abilities": [
-          "devastating wounds"
-        ]
-      }
-    ]
-  },
-  "Transdimensional Displacement": {
-    "act": {
-      "when": "movement",
-      "limit": "phase",
-      "label": "Transdimensional Displacement: Advance anywhere more than 8\" from the enemy",
-      "botUse": "always",
-      "botIf": [
-        "farFromEnemies:16"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "displace": 8
-        }
-      ]
-    },
-    "status": "auto",
-    "note": "Counts as an Advance; the bot uses it to close in when the enemy is more than 16\" away"
-  },
-  "Powers of the C’tan": {
-    "status": "info",
-    "note": "Pick the two C'tan Powers weapons yourself (all are listed)"
-  },
-  "Gravitic Pulse": {
-    "act": {
-      "when": "eachCommandStart",
-      "auto": true,
-      "if": [
-        "!ownTurn"
-      ],
-      "limit": "turn",
-      "target": {
-        "side": "enemy",
-        "range": 18,
-        "visible": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "moveHalve": true
-            }
-          ],
-          "until": "turn",
-          "mark": "Gravitic Pulse"
-        },
-        {
-          "on": "target",
-          "if": [
-            "targetFly"
-          ],
-          "buff": [
-            {
-              "graviticFly": true
-            }
-          ],
-          "until": "nextTurnStart"
-        }
-      ]
-    },
-    "note": "Chosen at the start of the opponent's Command phase (the card: Movement phase); a FLY unit rolls each time it starts a move (the card: ends a move)"
-  },
-  "Illuminor": {
-    "effects": [
-      {
-        "if": [
-          "near:3:NECRONS"
-        ],
-        "loneOperative": true
-      }
-    ]
-  },
-  "Mechanical Augmentation (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 3,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "ap": 1
-      },
-      {
-        "scope": "aura",
-        "range": 3,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "defend": {
-          "ap": 1
-        }
-      }
-    ],
-    "note": "Atomic Energy Manipulator's longer range is not added"
-  },
-  "Atomic Energy Manipulator": {
-    "act": [
-      {
-        "when": "fightEnd",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "killedModelThisPhase",
-          "friendMarked:atomic2",
-          "!friendMarked:atomic3"
-        ],
-        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 12\"",
-        "do": [
-          {
-            "on": "self",
-            "buff": [],
-            "mark": "atomic3",
-            "until": "battle"
-          }
-        ]
-      },
-      {
-        "when": "fightEnd",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "killedModelThisPhase",
-          "friendMarked:atomic1",
-          "!friendMarked:atomic2"
-        ],
-        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 9\"",
-        "do": [
-          {
-            "on": "self",
-            "buff": [],
-            "mark": "atomic2",
-            "until": "battle"
-          }
-        ]
-      },
-      {
-        "when": "fightEnd",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "killedModelThisPhase",
-          "!friendMarked:atomic1"
-        ],
-        "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 6\"",
-        "do": [
-          {
-            "on": "self",
-            "buff": [],
-            "mark": "atomic1",
-            "until": "battle"
-          }
-        ]
-      }
-    ],
-    "status": "auto"
-  },
-  "Harbinger of Destruction": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "ranged",
-        "critHitOn": 5
-      }
-    ]
-  },
-  "Living Lightning": {
-    "act": {
-      "when": "shooting",
-      "limit": "phase",
-      "label": "Living Lightning: 4D6 at an enemy unit within 18\", 4+ = 1 mortal wound",
-      "botUse": "always",
-      "target": {
-        "side": "enemy",
-        "range": 18,
-        "visible": true,
-        "notLoneOperative": true
-      },
-      "roll": "D6",
-      "rollCount": 4,
-      "each": {
-        "on": 4,
-        "do": [
-          {
-            "on": "target",
-            "mortals": "1"
-          }
-        ]
-      }
-    }
-  },
-  "United In Destruction": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "abilities": [
-          "lethal hits"
-        ]
-      }
-    ]
-  },
-  "Crimson Harvest": {
-    "act": {
-      "when": "endOfCharge",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3+3"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Plasmacyte": {
-    "act": {
-      "when": "selectedToFight",
-      "limit": "battle",
-      "label": "Plasmacyte: melee weapons have [DEVASTATING WOUNDS] this phase",
-      "botUse": "valuable",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "attack": "melee",
-              "abilities": [
-                "devastating wounds"
-              ]
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    },
-    "note": "Once per battle (the card: once per Plasmacyte)"
-  },
-  "Whirling Onslaught": {
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "!charged"
-        ],
-        "reroll": "hits1"
-      },
-      {
-        "attack": "melee",
-        "if": [
-          "charged"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Bound Creation": {
-    "effects": [
-      {
-        "if": [
-          "kw:CRYPTEK"
-        ],
-        "defend": {
-          "fnp": 4,
-          "charOnly": true
-        }
-      }
-    ]
-  },
-  "Systematic Vigour": {
-    "effects": [
-      {
-        "if": [
-          "notCharacterModel"
-        ],
-        "fightOnDeath": 2
-      }
-    ],
-    "note": "CRYPTOTHRALL models"
-  },
-  "CRYPTEK RETINUE": {
-    "status": "info",
-    "note": "Army building: joins a unit led by a CRYPTEK INFANTRY model"
-  },
-  "CANOPTEK RETINUE": {
-    "status": "info",
-    "note": "Army building: joins a unit led by a CRYPTEK model"
-  },
-  "Nanoscarab Reanimation Beam (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Units within 3\" heal an extra D3 wounds when their Reanimation Protocols activate"
-  },
-  "Self-destruction": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "if": [
-        "engaged"
-      ],
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "self",
-          "sacrifice": {
-            "n": "1",
-            "name": "Canoptek Scarab Swarms"
-          }
-        },
-        {
-          "on": "target",
-          "mortalsTable": [
-            {
-              "min": 2,
-              "expr": "D3"
-            },
-            {
-              "min": 6,
-              "expr": "3"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "A VEHICLE target does not get +1 to the roll"
-  },
-  "Chittering swarm": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 1,
-        "oc": -1
-      },
-      {
-        "if": [
-          "near:6:CRYPTEK"
-        ],
-        "ocSet": 1
-      }
-    ]
-  },
-  "Sentinel Construct": {
-    "effects": [
-      {
-        "overwatchHitOn": 5
-      }
-    ]
-  },
-  "Optimised for Slaughter": {
-    "effects": [
-      {
-        "weapon": "enmitic exterminator",
-        "if": [
-          "targetNotMV"
-        ],
-        "reroll": "wounds1"
-      },
-      {
-        "weapon": "gauss destructor",
-        "if": [
-          "targetMV"
-        ],
-        "reroll": "wounds1"
-      }
-    ]
-  },
-  "Adaptive Strategy": {
-    "effects": [
-      {
-        "eligible": [
-          "shootAfterFallBack",
-          "chargeAfterFallBack"
-        ]
-      }
-    ]
-  },
-  "Engrammatic Logic": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Engrammatic Logic: a Battle-shocked NECRONS unit within 12\" recovers",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 12,
-        "shocked": true,
-        "units": [
-          "NECRONS"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "unshock": true
-        }
-      ]
-    }
-  },
-  "Nanoscarab Amulet": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "fnp": 5
-        }
-      }
-    ]
-  },
-  "Destroyer Cult": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "ranged",
-        "critHitOn": 5
-      }
-    ]
-  },
-  "Driven by Hatred": {
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "targetBelowHalf"
-        ],
-        "reroll": [
-          "hits",
-          "wounds"
-        ]
-      }
-    ]
-  },
-  "Rites of Reanimation": {
-    "effects": [
-      {
-        "scope": "led",
-        "defend": {
-          "fnp": 5
-        }
-      }
-    ]
-  },
-  "Technomancer": {
-    "act": {
-      "when": "movementEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "damaged": true,
-        "units": [
-          "NECRONS"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "heal": "D3"
-        }
-      ]
-    }
-  },
-  "Nightmare Shroud (Aura)": {
-    "effects": [
-      {
-        "terrorBelow": 6,
-        "terrorBelowMod": -1
-      }
-    ],
-    "note": "Enemy units below Starting Strength within 6\" take a Battle-shock test at -1 in their Command phase"
-  },
-  "Harbinger of Despair": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "turn",
-      "if": [
-        "ownTurn"
-      ],
-      "label": "Harbinger of Despair: an enemy unit within 18\" takes a Battle-shock test at -1",
-      "botUse": "always",
-      "target": {
-        "side": "enemy",
-        "range": 18
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": -1
-        }
-      ]
-    }
-  },
-  "Timesplinter Mantle": {
-    "effects": [
-      {
-        "stealth": true
-      },
-      {
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      }
-    ]
-  },
-  "Chronometron": {
-    "act": {
-      "when": "afterShootingButton",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Chronometron: Normal move of up to 5\" (no charge this turn)",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "move": "5",
-          "noCharge": true
-        }
-      ]
-    }
-  },
-  "Inescapable Death": {
-    "effects": [
-      {
-        "overwatchHitOn": 2
-      },
-      {
-        "stratDiscount": {
-          "ids": [
-            "fire-overwatch"
-          ],
-          "cp": 1,
-          "limit": "turn",
-          "perArmy": true
-        },
-        "stratRepeat": {
-          "ids": [
-            "fire-overwatch"
-          ],
-          "limit": "turn"
-        }
-      }
-    ]
-  },
-  "Multi-threat Eliminator": {
-    "act": {
-      "when": "friendlyTargeted",
-      "auto": true,
-      "limit": "turn",
-      "range": 3,
-      "oppShooting": true,
-      "deathUnits": [
-        "NECRONS"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "shootBack": true
-        }
-      ]
-    }
-  },
-  "Matter Absorption": {
-    "act": {
-      "when": "shootingStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "units": [
-          "VEHICLE"
-        ],
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            },
-            {
-              "on": "self",
-              "heal": "3"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "Regains 3 wounds (the card: as many as the mortal wounds)"
-  },
-  "Tunnelling Horrors": {
-    "act": {
-      "when": "opponentTurnEnd",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Tunnelling Horrors: into Strategic Reserves (must arrive next Movement phase)",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "reserves": true
-        }
-      ]
-    }
-  },
-  "Hard-wired for Destruction": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "targetClosest",
-          "!targetOnUncontrolledObjective"
-        ],
-        "reroll": "hits1"
-      },
-      {
-        "attack": "ranged",
-        "if": [
-          "targetClosest",
-          "targetOnUncontrolledObjective"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Voice of the Triarch": {
-    "choice": {
-      "name": "Triarch ability",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Phaeron of the Stars (Aura)",
-        "Phaeron of the Blades (Aura)",
-        "Relentless March (Aura)"
-      ]
-    },
-    "note": "Chosen in your Command phase (the card: at the start of the battle round)"
-  },
-  "The Silent King": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS"
-        ],
-        "ld": 1
-      }
-    ]
-  },
-  "TRIARCHAL MENHIRS": {
-    "code": true,
-    "status": "auto",
-    "note": "Like a Crewed Platform: the Menhirs go with Szarekh"
-  },
-  "Phaeron of the Stars (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER"
-        ],
-        "reroll": [
-          "hits1",
-          "wounds1"
-        ]
-      }
-    ]
-  },
-  "Phaeron of the Blades (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER"
-        ],
-        "rerollCharge": true
-      },
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER"
-        ],
-        "attack": "melee",
-        "strength": 1
-      }
-    ]
-  },
-  "Relentless March (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER"
-        ],
-        "move": 2
-      }
-    ]
-  },
-  "Reanimation Nodes (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "INFANTRY"
-        ],
-        "defend": {
-          "fnp": 6
-        }
-      }
-    ]
-  },
-  "Ancient Cover": {
-    "status": "info",
-    "note": "Cover from the Fortification is worked out by the terrain rules"
-  },
-  "Fortification": {
-    "status": "info",
-    "note": "Core FORTIFICATION rules"
-  },
-  "DEPLOYMENT": {
-    "status": "manual",
-    "note": "Not automated: the models set up apart and count as separate units"
-  },
-  "Translocation Shroud": {
-    "effects": [
-      {
-        "advanceFixed": 6,
-        "moveThroughModels": true
-      }
-    ],
-    "note": "Moves through models (terrain is not ignored)"
-  },
-  "Harassment Swarm (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 3,
-        "if": [
-          "!kw:MONSTER",
-          "!kw:VEHICLE"
-        ],
-        "hit": -1
-      }
-    ]
-  },
-  "Accelerator Mandible": {
-    "gear": true,
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "friendly",
-        "range": 3,
-        "units": [
-          "CANOPTEK"
-        ],
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "attack": "melee",
-              "skill": 1
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Nanoscarab Projector": {
-    "gear": true,
-    "code": true,
-    "status": "auto",
-    "note": "Once per battle round, a unit within 3\" reanimates 1 more wound"
-  },
-  "Weapon Sentinels": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "targetWithin:12"
-        ],
-        "ignoreHitMods": true,
-        "ignoreWoundMods": true
-      }
-    ],
-    "note": "Only bad modifiers are ignored"
-  },
-  "Tectonic Reverberations": {
-    "act": {
-      "when": "movement",
-      "limit": "phase",
-      "label": "Tectonic Reverberations: pin an enemy unit within 18\" (-2\" Move and Charge)",
-      "botUse": "always",
-      "target": {
-        "side": "enemy",
-        "range": 18,
-        "visible": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "move": -2,
-              "chargeBonus": -2
-            }
-          ],
-          "until": "nextMovement",
-          "mark": "pinned"
-        }
-      ]
-    }
-  },
-  "Obelisk Node Control": {
-    "effects": [
-      {
-        "if": [
-          "onControlledObjective"
-        ],
-        "omniScrambler": 12
-      }
-    ]
-  },
-  "VANGUARD PROTOCOLS": {
-    "effects": [
-      {
-        "if": [
-          "kw:CANOPTEK MACROCYTES"
-        ],
-        "scouts": 8
-      }
-    ]
-  },
-  "Protective Disciples": {
-    "effects": [
-      {
-        "if": [
-          "near:3:DESTROYER CULT"
-        ],
-        "loneOperative": true
-      }
-    ]
-  },
-  "Infectious Murder-madness (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER",
-          "!TITANIC",
-          "DESTROYER CULT"
-        ],
-        "abilities": [
-          "sustained hits 1"
-        ]
-      },
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER",
-          "!TITANIC",
-          "!DESTROYER CULT"
-        ],
-        "if": [
-          "targetClosest"
-        ],
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Prophet of Destruction": {
-    "act": {
-      "when": "afterFighting",
-      "auto": true,
-      "limit": "phase",
-      "if": [
-        "destroyedUnitThisPhase"
-      ],
-      "target": {
-        "side": "friendly",
-        "range": 9,
-        "units": [
-          "DESTROYER CULT"
-        ],
-        "notSelf": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "reroll": "wounds1"
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    },
-    "note": "Checked after it fights (the card: also after it shoots)"
-  },
-  "Nullstone Field Generator (Aura)": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS"
-        ],
-        "defend": {
-          "fnp": 5,
-          "fnpVs": "mortalPsychic"
-        }
-      }
-    ]
-  },
-  "Veil of Darkness": {
-    "act": {
-      "when": "opponentTurnEnd",
-      "if": [
-        "notEngaged"
-      ],
-      "limit": "battle",
-      "per": "army",
-      "label": "Veil of Darkness: into Strategic Reserves with Deep Strike",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "reserves": true
-        },
-        {
-          "on": "self",
-          "buff": [
-            {
-              "deepStrike": true
-            }
-          ],
-          "until": "endOfNextTurn"
-        }
-      ]
-    },
-    "note": "It must arrive in your next Movement phase (not enforced)"
-  },
-  "Nether-realm Casket": {
-    "effects": [
-      {
-        "scope": "led",
-        "stealth": true
-      }
-    ]
-  },
-  "Phasal Subjugator (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!CHARACTER"
-        ],
-        "hit": 1
-      }
-    ]
-  },
-  "Enaegic Dermal Bond": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "fnp": 4
-        }
-      }
-    ]
-  },
-  "Eternal Madness": {
-    "effects": [
-      {
-        "attack": "melee",
-        "fightOnDeath": 4
-      }
-    ]
-  },
-  "Ingrained Superiority": {
-    "effects": [
-      {
-        "critWoundAp": 1
-      }
-    ]
-  },
-  "Soulless Reaper": {
-    "effects": [
-      {
-        "fallBackLdTest": true
-      }
-    ],
-    "note": "Enemy units Falling Back from it take a Leadership test (the card: a D6, 3+ they must Remain Stationary)"
-  },
-  "Eldritch Nightmare": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Dimensional Sanctum": {
-    "effects": [
-      {
-        "infiltrators": true
-      }
-    ]
-  },
-  "Hyperphasic Fulcrum": {
-    "effects": [
-      {
-        "scope": "led",
-        "if": [
-          "powerMatrix"
-        ],
-        "reroll": "wounds1"
-      }
-    ]
-  },
-  "Autodivinator": {
-    "code": true,
-    "status": "auto",
-    "note": "Each time your opponent gains CP from an ability: 2+, you gain 1CP"
-  },
-  "Metalodermal Tesla Weave": {
-    "code": true,
-    "status": "auto",
-    "note": "Once per phase, an enemy unit charging the bearer's unit: 2-5 D3 mortal wounds, 6: 3"
-  },
-  "Honourable Combatant": {
-    "act": [
-      {
-        "when": "afterFighting",
-        "auto": true,
-        "needCharacterKill": true,
-        "do": [
-          {
-            "on": "self",
-            "oppCp": -1
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "needCharacterKill": true,
-        "do": [
-          {
-            "on": "self",
-            "oppCp": -1
-          }
-        ]
-      }
-    ]
-  },
-  "Unflinching Will": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "abilities": [
-          "precision",
-          "anti-infantry 5+"
-        ]
-      }
-    ]
-  },
-  "Warrior Noble": {
-    "effects": [
-      {
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      }
-    ]
-  },
-  "Eternal Conqueror": {
-    "effects": [
-      {
-        "if": [
-          "targetInRangeOfObjective"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Dimensional Overseer": {
-    "act": {
-      "when": "opponentTurnEnd",
-      "limit": "turn",
-      "if": [
-        "detachment:Hypercrypt Legion"
-      ],
-      "label": "Dimensional Overseer: one more NECRONS unit into Strategic Reserves (Hyperphasing)",
-      "botUse": "never",
-      "target": {
-        "side": "friendly",
-        "range": 99,
-        "units": [
-          "NECRONS"
-        ],
-        "unengaged": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "reserves": true
-        }
-      ]
-    }
-  },
-  "Arisen Tyrant": {
-    "effects": [
-      {
-        "if": [
-          "!setUpThisTurn"
-        ],
-        "reroll": "hits1"
-      },
-      {
-        "if": [
-          "setUpThisTurn"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Hyperspatial Transfer Node": {
-    "effects": [
-      {
-        "advanceFixed": 6
-      }
-    ]
-  },
-  "Osteoclave Fulcrum": {
-    "effects": [
-      {
-        "deepStrike": true
-      }
-    ]
-  },
-  "Dread Majesty (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "!MONSTER",
-          "!TITANIC"
-        ],
-        "reroll": [
-          "hits1",
-          "wounds1"
-        ]
-      }
-    ]
-  },
-  "Miniaturised Nebuloscope": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Demanding Leader": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Demanding Leader: a NECRONS VEHICLE / MOUNTED unit within 6\" can shoot after Falling Back",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "VEHICLE|MOUNTED",
-          "!TITANIC"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "eligible": [
-                "shootAfterFallBack"
-              ]
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "Chrono-impedance Fields": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Chrono-impedance Fields: -1 Damage for a NECRONS VEHICLE / MOUNTED unit within 6\"",
-      "botUse": "always",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "VEHICLE|MOUNTED",
-          "!TITANIC"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "defend": {
-                "damage": -1
-              }
-            }
-          ],
-          "until": "nextCommand"
-        }
-      ]
-    }
-  },
-  "Quantum Abacus": {
-    "effects": [
-      {
-        "stratCpChance": 4
-      }
-    ],
-    "note": "The +1 near an objective is not added"
-  },
-  "Atomic Disintegrators": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "if": [
-          "detachment:Cryptek Conclave"
-        ],
-        "botUse": "never",
-        "label": "Technosorcerous Augmentations: [ANTI-MONSTER 5+]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "ranged",
-                "abilities": [
-                  "anti-monster 5+"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "if": [
-          "detachment:Cryptek Conclave"
-        ],
-        "botUse": "never",
-        "label": "Technosorcerous Augmentations: [ANTI-VEHICLE 5+]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "ranged",
-                "abilities": [
-                  "anti-vehicle 5+"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Gauntlet of Compression": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "weaponRange": 6
-      }
-    ]
-  },
-  "Gravitic Bolas": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "units": [
-          "!TITANIC"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "move": -2,
-              "chargeBonus": -2
-            }
-          ],
-          "until": "nextTurnStart",
-          "mark": "pinned"
-        }
-      ]
-    }
-  },
-  "Destroyer Ankh": {
-    "effects": [
-      {
-        "addKeywords": [
-          "DESTROYER CULT"
-        ],
-        "move": 2
-      },
-      {
-        "scope": "model",
-        "attack": "melee",
-        "attacks": 2
-      }
-    ]
-  },
-  "Murdermind": {
-    "effects": [
-      {
-        "scope": "model",
-        "addKeywords": [
-          "DESTROYER CULT"
-        ],
-        "statM": 3
-      }
-    ]
-  },
-  "Mark of the Nekrosor": {
-    "effects": [
-      {
-        "hit": 1
-      }
-    ]
-  },
-  "Cursed Circlet": {
-    "act": {
-      "when": "shotByEnemy",
-      "if": [
-        "lostModelsThisPhase",
-        "notEngaged"
-      ],
-      "limit": "phase",
-      "label": "Cursed Circlet: surge move of up to D6\"",
-      "do": [
-        {
-          "on": "self",
-          "surge": "D6"
-        }
-      ]
-    }
-  },
-  "Singularity Matrix": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 12,
-        "stratTax": {
-          "cp": 1
-        }
-      }
-    ]
-  },
-  "Quantum Goad": {
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance"
-        ]
-      }
-    ]
-  },
-  "Animus Damper": {
-    "act": {
-      "when": "oppShootingStart",
-      "auto": true,
-      "limit": "turn",
-      "target": {
-        "side": "enemy",
-        "visible": true,
-        "units": [
-          "VEHICLE"
-        ],
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "hit": -1
-            }
-          ],
-          "until": "phase"
-        },
-        {
-          "on": "target",
-          "ldFail": [
-            {
-              "wound": -1
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Reletavistic Tether": {
-    "code": true,
-    "status": "auto",
-    "note": "Transdimensional Displacement ends more than 6\" away; no charge this turn if it ends within 8\""
-  },
-  "Enlivened Sentinels": {
-    "effects": [
-      {
-        "scouts": 5
-      }
-    ]
-  },
-  "Tools of Dominion": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "abilities": [
-          "rapid fire 1"
-        ]
-      }
-    ]
-  },
-  "Recursive Reanimation": {
-    "code": true,
-    "status": "auto",
-    "note": "+1 wound each time its Reanimation Protocols activate"
-  },
-  "Deepening Madness": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "abilities": [
-          "assault"
-        ]
-      }
-    ]
-  },
-  "Relocational Optimiser": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "marked:Eternity Gate",
-          "hardToWound"
-        ],
-        "abilities": [
-          "lethal hits"
-        ]
-      },
-      {
-        "attack": "ranged",
-        "if": [
-          "marked:Eternity Gate",
-          "!hardToWound"
-        ],
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ],
-    "status": "auto",
-    "note": "After arriving through the Eternity Gate: [LETHAL HITS] when the weapon wounds on a 4+ or worse, otherwise [SUSTAINED HITS 1]"
-  },
-  "Mortality Shroud (Aura)": {
-    "effects": [
-      {
-        "terrorBelow": 8,
-        "terrorBelowMod": 0
-      }
-    ]
-  },
-  "One Shot": {
-    "code": true,
-    "status": "auto",
-    "note": "The bearer can only shoot with this weapon once per battle."
-  },
-  "Mechanical Augmentation (Aura)@Illuminor Szeras": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 3,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "!friendMarked:atomic1"
-        ],
-        "ap": 1
-      },
-      {
-        "scope": "aura",
-        "range": 3,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "!friendMarked:atomic1"
-        ],
-        "defend": {
-          "ap": 1
-        }
-      },
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic1",
-          "!friendMarked:atomic2"
-        ],
-        "ap": 1
-      },
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic1",
-          "!friendMarked:atomic2"
-        ],
-        "defend": {
-          "ap": 1
-        }
-      },
-      {
-        "scope": "aura",
-        "range": 9,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic2",
-          "!friendMarked:atomic3"
-        ],
-        "ap": 1
-      },
-      {
-        "scope": "aura",
-        "range": 9,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic2",
-          "!friendMarked:atomic3"
-        ],
-        "defend": {
-          "ap": 1
-        }
-      },
-      {
-        "scope": "aura",
-        "range": 12,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic3"
-        ],
-        "ap": 1
-      },
-      {
-        "scope": "aura",
-        "range": 12,
-        "units": [
-          "NECRONS",
-          "BATTLELINE"
-        ],
-        "if": [
-          "friendMarked:atomic3"
-        ],
-        "defend": {
-          "ap": 1
-        }
-      }
-    ]
+   ]
   }
+ },
+ "Lord of the Storm": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "limit": "battle",
+   "if": [
+    "enemyBetween:-1:12"
+   ],
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "each": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Resurrection Orb": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "if": [
+    "belowStarting"
+   ],
+   "label": "Resurrection Orb: this unit resurrects (Reanimation Protocols with D6)",
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "nec": "resurrect"
+    }
+   ]
+  }
+ },
+ "Resurrection Orb@Catacomb Command Barge": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Resurrection Orb: a NECRONS INFANTRY / MOUNTED unit within 6\" resurrects",
+   "botUse": "round3",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "INFANTRY|MOUNTED"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "nec": "resurrect"
+    }
+   ]
+  }
+ },
+ "My Will Be Done": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Implacable Resilience": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "Master Chronomancer": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "The Stars Are Right": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "label": "The Stars Are Right: Staff of Tomorrow triple A and S, every successful Wound roll is a Critical Wound",
+   "botUse": "valuable",
+   "if": [
+    "engaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "weapon": "Staff of Tomorrow",
+       "attacks": 4,
+       "strength": 8,
+       "critWoundOn": 2
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  },
+  "note": "Staff of Tomorrow A2 S4 becomes A6 S12"
+ },
+ "Ancient Collector": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "leaderAttached",
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Surrogate Hosts": {
+  "act": {
+   "when": "command",
+   "limit": "turn",
+   "label": "Surrogate Hosts: take the place of another NECRONS INFANTRY CHARACTER",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "NECRONS",
+     "INFANTRY",
+     "CHARACTER",
+     "!EPIC HERO",
+     "!SKORPEKH LORD"
+    ],
+    "notSelf": true
+   },
+   "botUse": "always",
+   "botIf": [
+    "farFromEnemies:18"
+   ],
+   "do": [
+    {
+     "on": "target",
+     "surrogate": true
+    }
+   ]
+  },
+  "status": "auto",
+  "note": "The bot uses it when Trazyn is more than 18\" from the enemy, swapping into the character closest to the enemy"
+ },
+ "Carrier Wave (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Advanced Quantum Shielding": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Implacable Eradication": {
+  "effects": [
+   {
+    "if": [
+     "!targetInRangeOfObjective"
+    ],
+    "reroll": "wounds1"
+   },
+   {
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Dispersion Shield": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Guardian Protocols": {
+  "effects": [
+   {
+    "if": [
+     "kw:NOBLE"
+    ],
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Hyperspace Hunters": {
+  "code": true,
+  "status": "auto",
+  "note": "An enemy unit set up from Reserves within 18\" and visible in your opponent's Movement phase is shot at once (once per turn)"
+ },
+ "Flesh Hunger": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "critHitOn": 3
+   }
+  ],
+  "note": "Flayed Ones hit on 3+, so every successful Hit roll is a Critical Hit"
+ },
+ "Relentless Combatants": {
+  "effects": [
+   {
+    "rerollCharge": true,
+    "eligible": [
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Targeting Relay": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "noCover": true
+     },
+     "until": "phase",
+     "mark": "Targeting Relay"
+    }
+   ]
+  }
+ },
+ "Drain Life": {
+  "act": {
+   "when": "fightEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Necrodermis": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "damage": -1
+    }
+   }
+  ]
+ },
+ "ENSLAVED STAR GOD": {
+  "status": "info",
+  "note": "Army building: this model cannot be your WARLORD"
+ },
+ "C’TAN SHARD": {
+  "status": "info",
+  "note": "Army building: this model cannot be given Enhancements"
+ },
+ "SUPREME COMMANDER": {
+  "status": "info",
+  "note": "Army building: this unit must be your WARLORD"
+ },
+ "Grand Illusion": {
+  "code": true,
+  "status": "auto",
+  "note": "After deployment: up to three NECRONS units can be redeployed"
+ },
+ "Repair Barge": {
+  "code": true,
+  "status": "auto",
+  "note": "After an enemy unit's attacks, a NECRON WARRIORS unit within 3\" that lost wounds activates its Reanimation Protocols (once per turn)"
+ },
+ "Invasion Beams": {
+  "act": {
+   "when": "fightEndButton",
+   "if": [
+    "!hasEmbarked"
+   ],
+   "label": "Invasion Beams: embark a NECRONS INFANTRY unit within 6\"",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "INFANTRY"
+    ],
+    "notSelf": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "if": [
+      "!engaged"
+     ],
+     "embarkNear": 6
+    }
+   ]
+  },
+  "note": "Within 6\" (the card: wholly within)"
+ },
+ "Quantum Invader": {
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ]
+ },
+ "Atavistic Instigation": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "heavy death ray"
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "ducked for cover"
+    }
+   ]
+  },
+  "note": "The target always ducks for cover (-1 to Hit until your next turn); standing firm (Critical Hits on 5+) is not offered"
+ },
+ "Wraith Form": {
+  "act": {
+   "when": "endOfNormalMove",
+   "limit": "phase",
+   "label": "Wraith Form: 1 D6 per model, 4+ = 1 mortal wound",
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "all": true
+     }
+    }
+   ]
+  }
+ },
+ "Nebuloscope": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Shadowloom": {
+  "gear": true,
+  "effects": [
+   {
+    "stealth": true
+   }
+  ]
+ },
+ "Shieldvanes": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "svSet": 3,
+    "statM": -4
+   }
+  ]
+ },
+ "Evasion Engrams": {
+  "act": {
+   "when": "afterShootingButton",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Evasion Engrams: Normal move of up to 6\" (no charge this turn)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Fabricator Claw Array (Aura)": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "VEHICLE"
+    ],
+    "defend": {
+     "fnp": 6
+    }
+   }
+  ]
+ },
+ "Gloom Prism (Aura)": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS"
+    ],
+    "defend": {
+     "fnp": 5,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Canoptek Swarm": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Canoptek Swarm: return a destroyed model to a Scarab Swarm within 6\"",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "CANOPTEK SCARAB SWARM"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "revive": 1
+    }
+   ]
+  },
+  "note": "One model (the card: one per SPYDER model in this unit)"
+ },
+ "Eternity Gate": {
+  "act": [
+   {
+    "when": "movement",
+    "limit": "phase",
+    "if": [
+     "roundAtLeast:2",
+     "!marked:Gate Opened"
+    ],
+    "label": "Eternity Gate: a NECRONS INFANTRY unit in Reserves is set up within 6\"",
+    "botUse": "always",
+    "target": {
+     "side": "friendly",
+     "units": [
+      "NECRONS",
+      "INFANTRY"
+     ],
+     "inReserves": true
+    },
+    "do": [
+     {
+      "on": "target",
+      "gateWithin": 6
+     },
+     {
+      "on": "self",
+      "buff": [],
+      "mark": "Gate Opened",
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "movement",
+    "limit": "phase",
+    "if": [
+     "roundAtLeast:2",
+     "!marked:Gate Opened"
+    ],
+    "label": "Eternity Gate: a NECRONS INFANTRY unit on the battlefield is set up within 6\"",
+    "botUse": "never",
+    "target": {
+     "side": "friendly",
+     "units": [
+      "NECRONS",
+      "INFANTRY"
+     ],
+     "notSelf": true
+    },
+    "do": [
+     {
+      "on": "target",
+      "gateWithin": 6
+     },
+     {
+      "on": "self",
+      "buff": [],
+      "mark": "Gate Opened",
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Malevolent Arcing": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "twin tesla destructor"
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "Only the target unit is rolled for (not other enemy units within 3\")"
+ },
+ "Overwhelming Obliteration": {
+  "effects": [
+   {
+    "weapon": "doomsday cannon",
+    "if": [
+     "stationary"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Transdimensional Displacement": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "label": "Transdimensional Displacement: Advance anywhere more than 8\" from the enemy",
+   "botUse": "always",
+   "botIf": [
+    "farFromEnemies:16"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "displace": 8
+    }
+   ]
+  },
+  "status": "auto",
+  "note": "Counts as an Advance; the bot uses it to close in when the enemy is more than 16\" away"
+ },
+ "Powers of the C’tan": {
+  "status": "info",
+  "note": "Pick the two C'tan Powers weapons yourself (all are listed)"
+ },
+ "Gravitic Pulse": {
+  "act": {
+   "when": "eachCommandStart",
+   "auto": true,
+   "if": [
+    "!ownTurn"
+   ],
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "moveHalve": true
+      }
+     ],
+     "until": "turn",
+     "mark": "Gravitic Pulse"
+    },
+    {
+     "on": "target",
+     "if": [
+      "targetFly"
+     ],
+     "buff": [
+      {
+       "graviticFly": true
+      }
+     ],
+     "until": "nextTurnStart"
+    }
+   ]
+  },
+  "note": "Chosen at the start of the opponent's Command phase (the card: Movement phase); a FLY unit rolls each time it starts a move (the card: ends a move)"
+ },
+ "Illuminor": {
+  "effects": [
+   {
+    "if": [
+     "near:3:NECRONS"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Mechanical Augmentation (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "ap": 1
+   },
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "defend": {
+     "ap": 1
+    }
+   }
+  ],
+  "note": "Atomic Energy Manipulator's longer range is not added"
+ },
+ "Atomic Energy Manipulator": {
+  "act": [
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "killedModelThisPhase",
+     "friendMarked:atomic2",
+     "!friendMarked:atomic3"
+    ],
+    "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 12\"",
+    "do": [
+     {
+      "on": "self",
+      "buff": [],
+      "mark": "atomic3",
+      "until": "battle"
+     }
+    ]
+   },
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "killedModelThisPhase",
+     "friendMarked:atomic1",
+     "!friendMarked:atomic2"
+    ],
+    "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 9\"",
+    "do": [
+     {
+      "on": "self",
+      "buff": [],
+      "mark": "atomic2",
+      "until": "battle"
+     }
+    ]
+   },
+   {
+    "when": "fightEnd",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "killedModelThisPhase",
+     "!friendMarked:atomic1"
+    ],
+    "label": "Atomic Energy Manipulator: Mechanical Augmentation reaches 6\"",
+    "do": [
+     {
+      "on": "self",
+      "buff": [],
+      "mark": "atomic1",
+      "until": "battle"
+     }
+    ]
+   }
+  ],
+  "status": "auto"
+ },
+ "Harbinger of Destruction": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Living Lightning": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "label": "Living Lightning: 4D6 at an enemy unit within 18\", 4+ = 1 mortal wound",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true,
+    "notLoneOperative": true
+   },
+   "roll": "D6",
+   "rollCount": 4,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "on": "target",
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "United In Destruction": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Crimson Harvest": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3+3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Plasmacyte": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "battle",
+   "label": "Plasmacyte: melee weapons have [DEVASTATING WOUNDS] this phase",
+   "botUse": "valuable",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "devastating wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  },
+  "note": "Once per battle (the card: once per Plasmacyte)"
+ },
+ "Whirling Onslaught": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "!charged"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Bound Creation": {
+  "effects": [
+   {
+    "if": [
+     "kw:CRYPTEK"
+    ],
+    "defend": {
+     "fnp": 4,
+     "charOnly": true
+    }
+   }
+  ]
+ },
+ "Systematic Vigour": {
+  "effects": [
+   {
+    "if": [
+     "notCharacterModel"
+    ],
+    "fightOnDeath": 2
+   }
+  ],
+  "note": "CRYPTOTHRALL models"
+ },
+ "CRYPTEK RETINUE": {
+  "status": "info",
+  "note": "Army building: joins a unit led by a CRYPTEK INFANTRY model"
+ },
+ "CANOPTEK RETINUE": {
+  "status": "info",
+  "note": "Army building: joins a unit led by a CRYPTEK model"
+ },
+ "Nanoscarab Reanimation Beam (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Units within 3\" heal an extra D3 wounds when their Reanimation Protocols activate"
+ },
+ "Self-destruction": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "engaged"
+   ],
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "self",
+     "sacrifice": {
+      "n": "1",
+      "name": "Canoptek Scarab Swarms"
+     }
+    },
+    {
+     "on": "target",
+     "mortalsTable": [
+      {
+       "min": 2,
+       "expr": "D3"
+      },
+      {
+       "min": 6,
+       "expr": "3"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "A VEHICLE target does not get +1 to the roll"
+ },
+ "Chittering swarm": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 1,
+    "oc": -1
+   },
+   {
+    "if": [
+     "near:6:CRYPTEK"
+    ],
+    "ocSet": 1
+   }
+  ]
+ },
+ "Sentinel Construct": {
+  "effects": [
+   {
+    "overwatchHitOn": 5
+   }
+  ]
+ },
+ "Optimised for Slaughter": {
+  "effects": [
+   {
+    "weapon": "enmitic exterminator",
+    "if": [
+     "targetNotMV"
+    ],
+    "reroll": "wounds1"
+   },
+   {
+    "weapon": "gauss destructor",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Adaptive Strategy": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Engrammatic Logic": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Engrammatic Logic: a Battle-shocked NECRONS unit within 12\" recovers",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "shocked": true,
+    "units": [
+     "NECRONS"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Nanoscarab Amulet": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Destroyer Cult": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Driven by Hatred": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ]
+ },
+ "Rites of Reanimation": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "Technomancer": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "damaged": true,
+    "units": [
+     "NECRONS"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Nightmare Shroud (Aura)": {
+  "effects": [
+   {
+    "terrorBelow": 6,
+    "terrorBelowMod": -1
+   }
+  ],
+  "note": "Enemy units below Starting Strength within 6\" take a Battle-shock test at -1 in their Command phase"
+ },
+ "Harbinger of Despair": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "turn",
+   "if": [
+    "ownTurn"
+   ],
+   "label": "Harbinger of Despair: an enemy unit within 18\" takes a Battle-shock test at -1",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 18
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Timesplinter Mantle": {
+  "effects": [
+   {
+    "stealth": true
+   },
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Chronometron": {
+  "act": {
+   "when": "afterShootingButton",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Chronometron: Normal move of up to 5\" (no charge this turn)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "5",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Inescapable Death": {
+  "effects": [
+   {
+    "overwatchHitOn": 2
+   },
+   {
+    "stratDiscount": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "cp": 1,
+     "limit": "turn",
+     "perArmy": true
+    },
+    "stratRepeat": {
+     "ids": [
+      "fire-overwatch"
+     ],
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Multi-threat Eliminator": {
+  "act": {
+   "when": "friendlyTargeted",
+   "auto": true,
+   "limit": "turn",
+   "range": 3,
+   "oppShooting": true,
+   "deathUnits": [
+    "NECRONS"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "shootBack": true
+    }
+   ]
+  }
+ },
+ "Matter Absorption": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "units": [
+     "VEHICLE"
+    ],
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      },
+      {
+       "on": "self",
+       "heal": "3"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "Regains 3 wounds (the card: as many as the mortal wounds)"
+ },
+ "Tunnelling Horrors": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Tunnelling Horrors: into Strategic Reserves (must arrive next Movement phase)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Hard-wired for Destruction": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest",
+     "!targetOnUncontrolledObjective"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "attack": "ranged",
+    "if": [
+     "targetClosest",
+     "targetOnUncontrolledObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Voice of the Triarch": {
+  "choice": {
+   "name": "Triarch ability",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Phaeron of the Stars (Aura)",
+    "Phaeron of the Blades (Aura)",
+    "Relentless March (Aura)"
+   ]
+  },
+  "note": "Chosen in your Command phase (the card: at the start of the battle round)"
+ },
+ "The Silent King": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS"
+    ],
+    "ld": 1
+   }
+  ]
+ },
+ "TRIARCHAL MENHIRS": {
+  "code": true,
+  "status": "auto",
+  "note": "Like a Crewed Platform: the Menhirs go with Szarekh"
+ },
+ "Phaeron of the Stars (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Phaeron of the Blades (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER"
+    ],
+    "rerollCharge": true
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER"
+    ],
+    "attack": "melee",
+    "strength": 1
+   }
+  ]
+ },
+ "Relentless March (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER"
+    ],
+    "move": 2
+   }
+  ]
+ },
+ "Reanimation Nodes (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "INFANTRY"
+    ],
+    "defend": {
+     "fnp": 6
+    }
+   }
+  ]
+ },
+ "Ancient Cover": {
+  "status": "info",
+  "note": "Cover from the Fortification is worked out by the terrain rules"
+ },
+ "Fortification": {
+  "status": "info",
+  "note": "Core FORTIFICATION rules"
+ },
+ "DEPLOYMENT": {
+  "status": "manual",
+  "note": "Not automated: the models set up apart and count as separate units"
+ },
+ "Translocation Shroud": {
+  "effects": [
+   {
+    "advanceFixed": 6,
+    "moveThroughModels": true
+   }
+  ],
+  "note": "Moves through models (terrain is not ignored)"
+ },
+ "Harassment Swarm (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 3,
+    "if": [
+     "!kw:MONSTER",
+     "!kw:VEHICLE"
+    ],
+    "hit": -1
+   }
+  ]
+ },
+ "Accelerator Mandible": {
+  "gear": true,
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 3,
+    "units": [
+     "CANOPTEK"
+    ],
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "attack": "melee",
+       "skill": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Nanoscarab Projector": {
+  "gear": true,
+  "code": true,
+  "status": "auto",
+  "note": "Once per battle round, a unit within 3\" reanimates 1 more wound"
+ },
+ "Weapon Sentinels": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetWithin:12"
+    ],
+    "ignoreHitMods": true,
+    "ignoreWoundMods": true
+   }
+  ],
+  "note": "Only bad modifiers are ignored"
+ },
+ "Tectonic Reverberations": {
+  "act": {
+   "when": "movement",
+   "limit": "phase",
+   "label": "Tectonic Reverberations: pin an enemy unit within 18\" (-2\" Move and Charge)",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "nextMovement",
+     "mark": "pinned"
+    }
+   ]
+  }
+ },
+ "Obelisk Node Control": {
+  "effects": [
+   {
+    "if": [
+     "onControlledObjective"
+    ],
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "VANGUARD PROTOCOLS": {
+  "effects": [
+   {
+    "if": [
+     "kw:CANOPTEK MACROCYTES"
+    ],
+    "scouts": 8
+   }
+  ]
+ },
+ "Protective Disciples": {
+  "effects": [
+   {
+    "if": [
+     "near:3:DESTROYER CULT"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Infectious Murder-madness (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER",
+     "!TITANIC",
+     "DESTROYER CULT"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER",
+     "!TITANIC",
+     "!DESTROYER CULT"
+    ],
+    "if": [
+     "targetClosest"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Prophet of Destruction": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "destroyedUnitThisPhase"
+   ],
+   "target": {
+    "side": "friendly",
+    "range": 9,
+    "units": [
+     "DESTROYER CULT"
+    ],
+    "notSelf": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "reroll": "wounds1"
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  },
+  "note": "Checked after it fights (the card: also after it shoots)"
+ },
+ "Nullstone Field Generator (Aura)": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS"
+    ],
+    "defend": {
+     "fnp": 5,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Veil of Darkness": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "limit": "battle",
+   "per": "army",
+   "label": "Veil of Darkness: into Strategic Reserves with Deep Strike",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    },
+    {
+     "on": "self",
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "endOfNextTurn"
+    }
+   ]
+  },
+  "note": "It must arrive in your next Movement phase (not enforced)"
+ },
+ "Nether-realm Casket": {
+  "effects": [
+   {
+    "scope": "led",
+    "stealth": true
+   }
+  ]
+ },
+ "Phasal Subjugator (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!CHARACTER"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Enaegic Dermal Bond": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 4
+    }
+   }
+  ]
+ },
+ "Eternal Madness": {
+  "effects": [
+   {
+    "attack": "melee",
+    "fightOnDeath": 4
+   }
+  ]
+ },
+ "Ingrained Superiority": {
+  "effects": [
+   {
+    "critWoundAp": 1
+   }
+  ]
+ },
+ "Soulless Reaper": {
+  "effects": [
+   {
+    "fallBackLdTest": true
+   }
+  ],
+  "note": "Enemy units Falling Back from it take a Leadership test (the card: a D6, 3+ they must Remain Stationary)"
+ },
+ "Eldritch Nightmare": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Dimensional Sanctum": {
+  "effects": [
+   {
+    "infiltrators": true
+   }
+  ]
+ },
+ "Hyperphasic Fulcrum": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "powerMatrix"
+    ],
+    "reroll": "wounds1"
+   }
+  ]
+ },
+ "Autodivinator": {
+  "code": true,
+  "status": "auto",
+  "note": "Each time your opponent gains CP from an ability: 2+, you gain 1CP"
+ },
+ "Metalodermal Tesla Weave": {
+  "code": true,
+  "status": "auto",
+  "note": "Once per phase, an enemy unit charging the bearer's unit: 2-5 D3 mortal wounds, 6: 3"
+ },
+ "Honourable Combatant": {
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "on": "self",
+      "oppCp": -1
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "on": "self",
+      "oppCp": -1
+     }
+    ]
+   }
+  ]
+ },
+ "Unflinching Will": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "precision",
+     "anti-infantry 5+"
+    ]
+   }
+  ]
+ },
+ "Warrior Noble": {
+  "effects": [
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Eternal Conqueror": {
+  "effects": [
+   {
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Dimensional Overseer": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "limit": "turn",
+   "if": [
+    "detachment:Hypercrypt Legion"
+   ],
+   "label": "Dimensional Overseer: one more NECRONS unit into Strategic Reserves (Hyperphasing)",
+   "botUse": "never",
+   "target": {
+    "side": "friendly",
+    "range": 99,
+    "units": [
+     "NECRONS"
+    ],
+    "unengaged": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Arisen Tyrant": {
+  "effects": [
+   {
+    "if": [
+     "!setUpThisTurn"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "setUpThisTurn"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Hyperspatial Transfer Node": {
+  "effects": [
+   {
+    "advanceFixed": 6
+   }
+  ]
+ },
+ "Osteoclave Fulcrum": {
+  "effects": [
+   {
+    "deepStrike": true
+   }
+  ]
+ },
+ "Dread Majesty (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "!MONSTER",
+     "!TITANIC"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
+ },
+ "Miniaturised Nebuloscope": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Demanding Leader": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Demanding Leader: a NECRONS VEHICLE / MOUNTED unit within 6\" can shoot after Falling Back",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "VEHICLE|MOUNTED",
+     "!TITANIC"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "eligible": [
+        "shootAfterFallBack"
+       ]
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Chrono-impedance Fields": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Chrono-impedance Fields: -1 Damage for a NECRONS VEHICLE / MOUNTED unit within 6\"",
+   "botUse": "always",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "VEHICLE|MOUNTED",
+     "!TITANIC"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "defend": {
+        "damage": -1
+       }
+      }
+     ],
+     "until": "nextCommand"
+    }
+   ]
+  }
+ },
+ "Quantum Abacus": {
+  "effects": [
+   {
+    "stratCpChance": 4
+   }
+  ],
+  "note": "The +1 near an objective is not added"
+ },
+ "Atomic Disintegrators": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "if": [
+     "detachment:Cryptek Conclave"
+    ],
+    "botUse": "never",
+    "label": "Technosorcerous Augmentations: [ANTI-MONSTER 5+]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "abilities": [
+         "anti-monster 5+"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "if": [
+     "detachment:Cryptek Conclave"
+    ],
+    "botUse": "never",
+    "label": "Technosorcerous Augmentations: [ANTI-VEHICLE 5+]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "abilities": [
+         "anti-vehicle 5+"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Gauntlet of Compression": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "weaponRange": 6
+   }
+  ]
+ },
+ "Gravitic Bolas": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!TITANIC"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "pinned"
+    }
+   ]
+  }
+ },
+ "Destroyer Ankh": {
+  "effects": [
+   {
+    "addKeywords": [
+     "DESTROYER CULT"
+    ],
+    "move": 2
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 2
+   }
+  ]
+ },
+ "Murdermind": {
+  "effects": [
+   {
+    "scope": "model",
+    "addKeywords": [
+     "DESTROYER CULT"
+    ],
+    "statM": 3
+   }
+  ]
+ },
+ "Mark of the Nekrosor": {
+  "effects": [
+   {
+    "hit": 1
+   }
+  ]
+ },
+ "Cursed Circlet": {
+  "act": {
+   "when": "shotByEnemy",
+   "if": [
+    "lostModelsThisPhase",
+    "notEngaged"
+   ],
+   "limit": "phase",
+   "label": "Cursed Circlet: surge move of up to D6\"",
+   "do": [
+    {
+     "on": "self",
+     "surge": "D6"
+    }
+   ]
+  }
+ },
+ "Singularity Matrix": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Quantum Goad": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "Animus Damper": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "visible": true,
+    "units": [
+     "VEHICLE"
+    ],
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "phase"
+    },
+    {
+     "on": "target",
+     "ldFail": [
+      {
+       "wound": -1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Reletavistic Tether": {
+  "code": true,
+  "status": "auto",
+  "note": "Transdimensional Displacement ends more than 6\" away; no charge this turn if it ends within 8\""
+ },
+ "Enlivened Sentinels": {
+  "effects": [
+   {
+    "scouts": 5
+   }
+  ]
+ },
+ "Tools of Dominion": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "rapid fire 1"
+    ]
+   }
+  ]
+ },
+ "Recursive Reanimation": {
+  "code": true,
+  "status": "auto",
+  "note": "+1 wound each time its Reanimation Protocols activate"
+ },
+ "Deepening Madness": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Relocational Optimiser": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "marked:Eternity Gate",
+     "hardToWound"
+    ],
+    "abilities": [
+     "lethal hits"
+    ]
+   },
+   {
+    "attack": "ranged",
+    "if": [
+     "marked:Eternity Gate",
+     "!hardToWound"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ],
+  "status": "auto",
+  "note": "After arriving through the Eternity Gate: [LETHAL HITS] when the weapon wounds on a 4+ or worse, otherwise [SUSTAINED HITS 1]"
+ },
+ "Mortality Shroud (Aura)": {
+  "effects": [
+   {
+    "terrorBelow": 8,
+    "terrorBelowMod": 0
+   }
+  ]
+ },
+ "One Shot": {
+  "code": true,
+  "status": "auto",
+  "note": "The bearer can only shoot with this weapon once per battle."
+ },
+ "Mechanical Augmentation (Aura)@Illuminor Szeras": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "!friendMarked:atomic1"
+    ],
+    "ap": 1
+   },
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "!friendMarked:atomic1"
+    ],
+    "defend": {
+     "ap": 1
+    }
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic1",
+     "!friendMarked:atomic2"
+    ],
+    "ap": 1
+   },
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic1",
+     "!friendMarked:atomic2"
+    ],
+    "defend": {
+     "ap": 1
+    }
+   },
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic2",
+     "!friendMarked:atomic3"
+    ],
+    "ap": 1
+   },
+   {
+    "scope": "aura",
+    "range": 9,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic2",
+     "!friendMarked:atomic3"
+    ],
+    "defend": {
+     "ap": 1
+    }
+   },
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic3"
+    ],
+    "ap": 1
+   },
+   {
+    "scope": "aura",
+    "range": 12,
+    "units": [
+     "NECRONS",
+     "BATTLELINE"
+    ],
+    "if": [
+     "friendMarked:atomic3"
+    ],
+    "defend": {
+     "ap": 1
+    }
+   }
+  ]
+ }
 }

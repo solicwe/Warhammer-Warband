@@ -59,7 +59,9 @@
    {
     "scope": "model",
     "attack": "ranged",
-    "if": ["targetClosest"],
+    "if": [
+     "targetClosest"
+    ],
     "ap": 1
    }
   ]
@@ -69,7 +71,9 @@
    {
     "scope": "model",
     "attack": "ranged",
-    "if": ["targetClosest"],
+    "if": [
+     "targetClosest"
+    ],
     "hit": 1
    }
   ]
@@ -79,8 +83,12 @@
    {
     "scope": "model",
     "attack": "ranged",
-    "if": ["targetNotKw:MONSTER|VEHICLE"],
-    "abilities": ["devastating wounds"]
+    "if": [
+     "targetNotKw:MONSTER|VEHICLE"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
    }
   ]
  },
@@ -91,7 +99,9 @@
    "target": {
     "side": "friendly",
     "range": 12,
-    "units": ["IMPERIUM"],
+    "units": [
+     "IMPERIUM"
+    ],
     "shocked": true
    },
    "label": "Remove Battle-shock from a friendly IMPERIUM unit within 12\"",
@@ -202,8 +212,12 @@
    {
     "scope": "model",
     "attack": "ranged",
-    "if": ["targetInRangeOfObjective"],
-     "abilities": ["ignores cover"]
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "abilities": [
+     "ignores cover"
+    ]
    }
   ]
  },
@@ -697,7 +711,8 @@
    }
   ]
  },
- "Magos Questoris": { "code": true,
+ "Magos Questoris": {
+  "code": true,
   "status": "auto",
   "note": "Sacristan Pledge heals 2 more wounds"
  },
@@ -779,8 +794,7 @@
  },
  "Bearer of the Judicant’s Helm": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "limit": "phase",
    "target": {
     "side": "friendly",

@@ -791,8 +791,7 @@
  },
  "Blight Bombardment": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "range": 30,
@@ -810,7 +809,8 @@
      },
      "until": "phase"
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Putrescent Fog (Aura)": {

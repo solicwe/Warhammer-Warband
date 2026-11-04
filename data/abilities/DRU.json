@@ -1,2834 +1,2834 @@
 {
-  "_comment": "Drukhari Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
-  "Leader": {
-    "code": true,
-    "status": "auto",
-    "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
-  },
-  "Power from Pain": {
-    "status": "auto",
-    "note": "Pain Abilities All Drukhari units have a Pain ability, tagged with the word ‘Pain’. Pain abilities only apply to a unit while it is Empowered. If your Army Faction is DRUKHARI, you can Empower units from your army with Pain abilities by spending Pain tokens (see below)."
-  },
-  "Hatred Eternal (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      }
+ "_comment": "Drukhari Faction Pack v1.2. Complete datasheet, detachment, enhancement, and army rules.",
+ "Leader": {
+  "code": true,
+  "status": "auto",
+  "note": "LEADER24.22 Mighty heroes fight at the forefront of battle. Before the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead."
+ },
+ "Power from Pain": {
+  "status": "auto",
+  "note": "Pain Abilities All Drukhari units have a Pain ability, tagged with the word ‘Pain’. Pain abilities only apply to a unit while it is Empowered. If your Army Faction is DRUKHARI, you can Empower units from your army with Pain abilities by spending Pain tokens (see below)."
+ },
+ "Hatred Eternal (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
     ],
-    "effects": [
-      {
-        "reroll": "hits",
-        "if": [
-          "painEmpowered"
-        ]
-      }
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
     ]
-  },
-  "Overlord": {
-    "effects": [
-      {
-        "scope": "led",
-        "reroll": "wounds1"
-      },
-      {
-        "scope": "led",
-        "if": [
-          "belowStarting"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Devious Mastermind": {
-    "effects": [
-      {
-        "stratDiscount": {
-          "ids": [
-            "*"
-          ],
-          "cp": 1,
-          "limit": "round",
-          "perArmy": true
-        }
-      }
-    ]
-  },
-  "Shadowfield": {
-    "code": true,
-    "status": "auto",
-    "note": "The 2+ invulnerable save is lost for the rest of the battle once the bearer loses wounds to an attack"
-  },
-  "Soul Trap": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "attacks": 1,
-        "strength": 1
-      },
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "marked:soulTrap"
-        ],
-        "attacks": 1,
-        "strength": 1
-      }
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
     ],
-    "act": {
-      "when": "afterFighting",
-      "auto": true,
-      "limit": "battle",
-      "if": [
-        "killedModelThisPhase"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "buff": [],
-          "until": "battle",
-          "mark": "soulTrap"
-        }
-      ]
-    }
-  },
-  "Lithe Agility (Pain)": {
-    "act": [
-      {
-        "when": "movement",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "charge",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      }
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   }
+  ],
+  "effects": [
+   {
+    "reroll": "hits",
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Overlord": {
+  "effects": [
+   {
+    "scope": "led",
+    "reroll": "wounds1"
+   },
+   {
+    "scope": "led",
+    "if": [
+     "belowStarting"
     ],
-    "effects": [
-      {
-        "rerollAdvance": true,
-        "rerollCharge": true,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Storm of Blades": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Bloody Spectacle": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "targetCharacter"
-        ],
-        "reroll": [
-          "hits",
-          "wounds"
-        ]
-      }
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Devious Mastermind": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "*"
+     ],
+     "cp": 1,
+     "limit": "round",
+     "perArmy": true
+    }
+   }
+  ]
+ },
+ "Shadowfield": {
+  "code": true,
+  "status": "auto",
+  "note": "The 2+ invulnerable save is lost for the rest of the battle once the bearer loses wounds to an attack"
+ },
+ "Soul Trap": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "marked:soulTrap"
     ],
-    "act": {
-      "when": "afterFighting",
-      "auto": true,
-      "needCharacterKill": true,
-      "do": [
-        {
-          "cp": 1
-        }
-      ]
+    "attacks": 1,
+    "strength": 1
+   }
+  ],
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "limit": "battle",
+   "if": [
+    "killedModelThisPhase"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [],
+     "until": "battle",
+     "mark": "soulTrap"
     }
-  },
-  "Fights First": {
-    "code": true,
-    "status": "auto",
-    "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
-  },
-  "Brides of Death (Pain)": {
-    "act": {
-      "when": "selectedToFight",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "melee",
-        "strength": 1,
-        "ap": 1,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Blur of Blades": {
-    "effects": [
-      {
-        "scope": "led",
-        "fightsFirst": true
-      }
-    ]
-  },
-  "Thrilling Spectacle": {
-    "act": {
-      "when": "fightStartButton",
-      "limit": "battle",
-      "label": "Thrilling Spectacle: 3+ invulnerable save, 12 melee Attacks",
-      "botUse": "valuable",
-      "do": [
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "buff": [
-            {
-              "defend": {
-                "inv": 3
-              }
-            },
-            {
-              "attack": "melee",
-              "attacksTo": 12
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Feel No Pain": {
-    "code": true,
-    "status": "auto",
-    "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
-  },
-  "Fleshcraft (Pain)": {
-    "act": {
-      "when": "command",
-      "if": [
-        "painReady",
-        "belowStarting"
-      ],
-      "label": "Fleshcraft: spend 1 Pain token, return D3+1 (Master Regenesist: D3+3) Bodyguard models",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        },
-        {
-          "on": "self",
-          "if": [
-            "!enh:Master Regenesist"
-          ],
-          "reviveRoll": "D3+1"
-        },
-        {
-          "on": "self",
-          "if": [
-            "enh:Master Regenesist"
-          ],
-          "reviveRoll": "D3+3"
-        }
-      ]
-    }
-  },
-  "Fear Incarnate (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 6,
-        "ld": -1
-      },
-      {
-        "scope": "model",
-        "if": [
-          "!enh:Master Repugnomancer"
-        ],
-        "terrorBelow": 6
-      },
-      {
-        "scope": "model",
-        "if": [
-          "enh:Master Repugnomancer"
-        ],
-        "terrorBelow": 9
-      },
-      {
-        "scope": "enemyAura",
-        "range": 3,
-        "if": [
-          "enh:Master Repugnomancer"
-        ],
-        "ld": -1
-      }
-    ],
-    "note": "Master Repugnomancer: 9\""
-  },
-  "Pain Adept": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "per": "army",
-      "limit": "phase",
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "self",
-              "dru": "gain"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Master of Blades (Pain)": {
-    "act": {
-      "when": "selectedToFight",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "melee",
-        "wound": 1,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Onslaught": {
-    "effects": [
-      {
-        "scope": "led",
-        "pileIn": 6,
-        "consolidate": 6
-      }
-    ]
-  },
-  "Silent Executioner": {
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "targetBelowStarting"
-        ],
-        "reroll": "hits"
-      },
-      {
-        "scope": "model",
-        "if": [
-          "targetBelowHalf"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Sadistic Raiders (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      }
-    ],
-    "effects": [
-      {
-        "reroll": "wounds1",
-        "if": [
-          "painEmpowered"
-        ]
-      },
-      {
-        "if": [
-          "painEmpowered",
-          "targetOnObjective"
-        ],
-        "reroll": "wounds"
-      }
-    ]
-  },
-  "Cruel Enforcers": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "onOwnObjective"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "secure": true
-        }
-      ]
-    }
-  },
-  "Kabalite Icon": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "notBattleShocked"
-        ],
-        "oc": 1
-      }
-    ]
-  },
-  "Phantasm Grenade Launcher": {
-    "gear": true,
-    "effects": [
-      {
-        "addKeywords": [
-          "GRENADES"
-        ]
-      }
-    ]
-  },
-  "Acrobatic Gladiators (Pain)": {
-    "act": {
-      "when": "charge",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ],
-      "botIf": [
-        "any:advanced||fellBack"
-      ]
-    },
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance",
-          "chargeAfterFallBack"
-        ],
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "No Escape": {
-    "effects": [
-      {
-        "forceDesperate": true
-      },
-      {
-        "if": [
-          "targetBattleShocked"
-        ],
-        "desperateMinus": 1
-      }
-    ]
-  },
-  "Decapitating Strikes (Pain)": {
-    "act": {
-      "when": "selectedToFight",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "painEmpowered",
-          "targetInfantry"
-        ],
-        "abilities": [
-          "devastating wounds"
-        ]
-      }
-    ]
-  },
-  "Tormentors": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Incubi Shrine Token": {
-    "freeDie": {
-      "kind": "setSix",
-      "stage": "hit",
-      "limit": "battle"
-    },
-    "note": "One token: one Hit roll becomes a 6 once per battle"
-  },
-  "Deep Strike": {
-    "code": true,
-    "status": "auto",
-    "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
-  },
-  "Infiltrators": {
-    "code": true,
-    "status": "auto",
-    "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
-  },
-  "Stealth": {
-    "code": true,
-    "status": "auto",
-    "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
-  },
-  "Fade Away (Pain)": {
-    "act": {
-      "when": "opponentFightEnd",
-      "if": [
-        "painReady",
-        "!engaged"
-      ],
-      "label": "Fade Away: spend 1 Pain token, into Strategic Reserves",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        },
-        {
-          "on": "self",
-          "reserves": true
-        }
-      ]
-    }
-  },
-  "Shade Weavers": {
-    "effects": [
-      {
-        "targetableWithin": 18
-      }
-    ]
-  },
-  "Experimental Enhancements (Pain)": {
-    "act": [
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: melee Attacks 3",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "melee",
-                "if": [
-                  "notCharacterModel"
-                ],
-                "attacksTo": 3
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: melee Attacks 4 and [HAZARDOUS]",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "attack": "melee",
-                "if": [
-                  "notCharacterModel"
-                ],
-                "attacksTo": 4,
-                "abilities": [
-                  "hazardous"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Torturer’s Craft": {
-    "act": [
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "limit": "phase",
-        "target": {
-          "side": "enemy",
-          "hit": true,
-          "units": [
-            "!VEHICLE"
-          ]
-        },
-        "do": [
-          {
-            "shock": 0
-          }
-        ]
-      },
-      {
-        "when": "afterFighting",
-        "auto": true,
-        "limit": "phase",
-        "target": {
-          "side": "enemy",
-          "hit": true,
-          "units": [
-            "!VEHICLE"
-          ]
-        },
-        "do": [
-          {
-            "shock": 0
-          }
-        ]
-      }
-    ]
-  },
-  "Deadly Demise": {
-    "code": true,
-    "status": "auto",
-    "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
-  },
-  "Firing Deck": {
-    "code": true,
-    "status": "auto",
-    "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
-  },
-  "Splinter Racks (Pain)": {
-    "act": {
-      "when": "selectedToShoot",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "painEmpowered",
-          "hasEmbarked",
-          "weaponHas:anti"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Vanguard of the Dark City": {
-    "choice": {
-      "name": "Vanguard of the Dark City",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Masters of the Shadowed Sky",
-        "Speed of the Kill",
-        "Visions of Butchery",
-        "Aethersails"
-      ]
-    }
-  },
-  "Masters of the Shadowed Sky": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "onOwnObjective",
-        "embarkedKw:KABALITE WARRIORS"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "secure": true
-        }
-      ]
-    }
-  },
-  "Speed of the Kill": {
-    "status": "info",
-    "note": "Disembarking Wyches must be set up wholly within 6\" (the normal 3\" rule is stricter in this app)"
-  },
-  "Visions of Butchery": {
-    "effects": [
-      {
-        "weapon": "bladevanes",
-        "attacksPerEmbarked": {
-          "per": 1,
-          "max": 20
-        }
-      },
-      {
-        "weapon": "chainsnares",
-        "attacksPerEmbarked": {
-          "per": 1,
-          "max": 20
-        }
-      }
-    ],
-    "note": "Every embarked model counts (the card: WRACKS models)"
-  },
-  "Aethersails": {
-    "effects": [
-      {
-        "advanceFixed": 6
-      }
-    ]
-  },
-  "Rapid Deployment (Pain)": {
-    "act": {
-      "when": "movement",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "disembarkAfterAdvance": true,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Aerialists": {
-    "act": {
-      "when": "fightEndButton",
-      "if": [
-        "!hasEmbarked"
-      ],
-      "label": "Embark a DRUKHARI INFANTRY unit within 6\"",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "DRUKHARI",
-          "INFANTRY",
-          "!FLY"
-        ],
-        "notSelf": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "if": [
-            "!engaged"
-          ],
-          "embarkNear": 6
-        }
-      ]
-    },
-    "note": "The unit must have 6 or fewer models"
-  },
-  "Matchless Swiftness (Pain)": {
-    "act": {
-      "when": "movement",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "advanceFixed": 8,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Eviscerating Fly-by": {
-    "act": {
-      "when": "endOfNormalMove",
-      "limit": "phase",
-      "label": "Eviscerating Fly-by: 1 D6 per model, 4+ = 1 mortal wound",
-      "target": {
-        "side": "enemy",
-        "movedOver": true,
-        "units": [
-          "!MONSTER",
-          "!VEHICLE"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "mortalRoll": {
-            "on": 4,
-            "all": true,
-            "rerollIf": [
-              "hasAbility:Cluster Caltrops"
-            ]
-          }
-        }
-      ]
-    }
-  },
-  "Cluster Caltrops": {
-    "code": true,
-    "status": "auto",
-    "note": "Eviscerating Fly-by re-rolls its failed dice (all of the unit's dice, not only the bearer's)"
-  },
-  "Grav-talon": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "abilities": [
-          "lance"
-        ]
-      }
-    ]
-  },
-  "Battlefield Butchery (Pain)": {
-    "act": {
-      "when": "selectedToFight",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "melee",
-        "attacks": 1,
-        "strength": 1,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Skyboard Evasion": {
-    "act": {
-      "when": "enemyMovedNear",
-      "range": 8,
-      "limit": "phase",
-      "if": [
-        "unengaged"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "move": "D6"
-        }
-      ]
-    }
-  },
-  "Nowhere to Run (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "painEmpowered"
-        ],
-        "target": {
-          "side": "enemy",
-          "hit": true,
-          "units": [
-            "!MONSTER",
-            "!VEHICLE"
-          ]
-        },
-        "do": [
-          {
-            "on": "target",
-            "buff": [
-              {
-                "move": -2,
-                "chargeBonus": -2
-              }
-            ],
-            "until": "nextTurnStart",
-            "mark": "pinned"
-          }
-        ]
-      }
-    ]
-  },
-  "Ground Attack Craft": {
-    "effects": [
-      {
-        "attack": "ranged",
-        "if": [
-          "targetNotFly"
-        ],
-        "hit": 1
-      }
-    ]
-  },
-  "Nowhere to Hide (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "painEmpowered"
-        ],
-        "target": {
-          "side": "enemy",
-          "hit": true
-        },
-        "do": [
-          {
-            "incoming": {
-              "noCover": true
-            },
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Void Mine": {
-    "act": {
-      "when": "opponentFightEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 24,
-        "visible": true,
-        "units": [
-          "!LONE OPERATIVE"
-        ]
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D6"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "Only the selected model's unit is rolled for (the card: every enemy unit within D6\" of it)"
-  },
-  "Winged Strike (Pain)": {
-    "act": {
-      "when": "selectedToShoot",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "attack": "ranged",
-        "reroll": "hits",
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Airborne Evasion": {
-    "act": {
-      "when": "afterShootingButton",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Normal move of up to 6\" (no charge this turn)",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "move": "6",
-          "noCharge": true
-        }
-      ]
-    }
-  },
-  "Mindless Killing Machines (Pain)": {
-    "act": {
-      "when": "fightStartButton",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "fightOnDeath": 2,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Devoted to Pain": {
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "twoMeleeWeapons"
-        ],
-        "weapon": "macro-scalpel",
-        "abilities": [
-          "twin-linked"
-        ]
-      }
-    ]
-  },
-  "Torture Device": {
-    "code": true,
-    "status": "auto",
-    "note": "One more Pain token each time this unit destroys an enemy unit"
-  },
-  "Pain Parasite (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "if": [
-          "painEmpowered",
-          "killedModelThisPhase"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "if": [
-              "!belowStarting"
-            ],
-            "heal": "3"
-          },
-          {
-            "on": "self",
-            "if": [
-              "belowStarting"
-            ],
-            "heal": "3"
-          }
-        ]
-      },
-      {
-        "when": "afterFighting",
-        "auto": true,
-        "if": [
-          "painEmpowered",
-          "killedModelThisPhase"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "heal": "3"
-          }
-        ]
-      }
-    ]
-  },
-  "Pain Engine (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Each Pain token spent to Empower a unit within 9\": 5+ (+1 without a spirit vortex) gets it back"
-  },
-  "Agonising Suppression (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "limit": "phase",
-        "if": [
-          "painEmpowered"
-        ],
-        "target": {
-          "side": "enemy",
-          "hit": true
-        },
-        "do": [
-          {
-            "on": "target",
-            "buff": [
-              {
-                "hit": -1
-              }
-            ],
-            "until": "nextTurnStart",
-            "mark": "suppressed"
-          }
-        ]
-      }
-    ]
-  },
-  "Eradicate the Foe": {
-    "effects": [
-      {
-        "if": [
-          "targetFullStrength"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Archon of the Poisoned Tongue (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: [SUSTAINED HITS 1]",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "abilities": [
-                  "sustained hits 1"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: [LETHAL HITS]",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "abilities": [
-                  "lethal hits"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: [SUSTAINED HITS 1]",
-        "botUse": "never",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "abilities": [
-                  "sustained hits 1"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: [LETHAL HITS]",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          },
-          {
-            "on": "self",
-            "buff": [
-              {
-                "abilities": [
-                  "lethal hits"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Precognisant": {
-    "code": true,
-    "status": "auto",
-    "note": "After deployment: redeploy up to three DRUKHARI units (set up again or into Strategic Reserves)"
-  },
-  "Mind Like a Steel Trap (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 12,
-        "stratTax": {
-          "cp": 1,
-          "limit": "turn"
-        }
-      }
-    ]
-  },
-  "Scouts": {
-    "code": true,
-    "status": "auto",
-    "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
-  },
-  "Assassins’ Poisons (Pain)": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "if": [
-          "painReady"
-        ],
-        "label": "Spend 1 Pain token: Empower",
-        "botUse": "always",
-        "do": [
-          {
-            "on": "self",
-            "dru": "empower"
-          }
-        ]
-      }
-    ],
-    "effects": [
-      {
-        "if": [
-          "painEmpowered",
-          "!weaponHas:blast pistol",
-          "!weaponHas:blaster",
-          "!weaponHas:dark lance"
-        ],
-        "abilities": [
-          "lethal hits",
-          "precision"
-        ]
-      }
-    ]
-  },
-  "Archon’s Will": {
-    "effects": [
-      {
-        "if": [
-          "marked:archonsWill",
-          "notBattleShocked",
-          "onObjective"
-        ],
-        "defend": {
-          "inv": 5
-        }
-      },
-      {
-        "if": [
-          "marked:archonsWill",
-          "notBattleShocked",
-          "onObjective"
-        ],
-        "ocSet": 3
-      }
-    ],
-    "act": {
-      "when": "battleStart",
-      "auto": true,
-      "limit": "battle",
-      "do": [
-        {
-          "on": "self",
-          "buff": [],
-          "until": "battle",
-          "mark": "archonsWill"
-        }
-      ]
-    },
-    "note": "Any objective counts (the card: the one selected at the start of the first battle round)"
-  },
-  "Stimm-needler": {
-    "gear": true,
-    "effects": [
-      {
-        "defend": {
-          "negateOnce": "turn"
-        }
-      }
-    ]
-  },
-  "ARCHON’S RETINUE": {
-    "effects": [
-      {
-        "scope": "led",
-        "if": [
-          "leaderAttached",
-          "kw:ARCHON"
-        ],
-        "scouts": 7
-      }
-    ],
-    "note": "The attached Leader gains Scouts 7\""
-  },
-  "Swooping Descent (Pain)": {
-    "act": {
-      "when": "movement",
-      "if": [
-        "painReady"
-      ],
-      "label": "Spend 1 Pain token: Empower",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "dru": "empower"
-        }
-      ]
-    },
-    "effects": [
-      {
-        "deepStrikeRange": 6,
-        "if": [
-          "painEmpowered"
-        ]
-      }
-    ]
-  },
-  "Murderous Crossfire": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "turn",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "incoming": {
-            "units": [
-              "DRUKHARI"
-            ],
-            "attack": "ranged",
-            "ap": 1
-          },
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Lone Operative": {
-    "code": true,
-    "status": "auto",
-    "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
-  },
-  "Battle Focus": {
-    "status": "auto",
-    "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres."
-  },
-  "Disparate Paths": {
-    "status": "auto",
-    "note": "Can include Harlequins units in your army even without Asuryani keyword."
-  },
-  "Death is Not Enough": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "units": [
-          "!MONSTER",
-          "!VEHICLE"
-        ]
-      },
-      "do": [
-        {
-          "if": [
-            "killedModelThisPhase"
-          ],
-          "shock": -1
-        },
-        {
-          "if": [
-            "!killedModelThisPhase"
-          ],
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Cruel Amusement": {
-    "act": [
-      {
-        "when": "selectedToShoot",
-        "auto": true,
-        "botOnly": true,
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "sustained hits 3"
-                ]
-              }
-            ],
-            "until": "phase"
-          },
-          {
-            "on": "self",
-            "if": [
-              "enh:Fanged Leer"
-            ],
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "precision"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [SUSTAINED HITS 3]",
-        "if": [
-          "!enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "sustained hits 3"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [PRECISION]",
-        "if": [
-          "!enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "precision"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [IGNORES COVER]",
-        "if": [
-          "!enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "ignores cover"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [SUSTAINED HITS 3] and [PRECISION]",
-        "if": [
-          "enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "sustained hits 3",
-                  "precision"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [SUSTAINED HITS 3] and [IGNORES COVER]",
-        "if": [
-          "enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "sustained hits 3",
-                  "ignores cover"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToShoot",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Shrieker cannon: [PRECISION] and [IGNORES COVER]",
-        "if": [
-          "enh:Fanged Leer"
-        ],
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "shrieker cannon",
-                "abilities": [
-                  "precision",
-                  "ignores cover"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Flip Belt": {
-    "status": "info",
-    "note": "The board is flat: vertical distance never counts"
-  },
-  "TRAVELLING PLAYERS": {
-    "status": "info",
-    "note": "Army building: at most one of this model"
-  },
-  "Fog of Dreams (Psychic)": {
-    "effects": [
-      {
-        "scope": "led",
-        "targetableWithin": 18
-      }
-    ]
-  },
-  "Treacherous Illusion (Psychic)": {
-    "act": {
-      "when": "attacked",
-      "auto": true,
-      "do": [
-        {
-          "on": "attacker",
-          "buff": [
-            {
-              "attack": "melee",
-              "abilities": [
-                "hazardous"
-              ]
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Blitz": {
-    "act": {
-      "when": "movement",
-      "limit": "battle",
-      "label": "Blitz: +2D6\" Move, +3 Attacks",
-      "botUse": "round2",
-      "do": [
-        {
-          "on": "self",
-          "buffRoll": {
-            "expr": "2D6",
-            "fields": [
-              "move"
-            ]
-          }
-        },
-        {
-          "on": "self",
-          "buff": [
-            {
-              "weapon": "Solitaire",
-              "attacks": 3
-            }
-          ],
-          "until": "turn"
-        }
-      ]
-    }
-  },
-  "Blur of Movement": {
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance"
-        ]
-      }
-    ]
-  },
-  "PATH OF DAMNATION": {
-    "status": "info",
-    "note": "Army building: cannot be your WARLORD"
-  },
-  "Choreographer of War": {
-    "effects": [
-      {
-        "scope": "led",
-        "pileIn": 6,
-        "consolidate": 6,
-        "freeConsolidate": true
-      }
-    ]
-  },
-  "Cegorach’s Favour": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "reroll": "hits1",
-        "wound": 1
-      }
-    ]
-  },
-  "Rapid Embarkation": {
-    "act": {
-      "when": "fightEndButton",
-      "if": [
-        "!hasEmbarked"
-      ],
-      "label": "Embark a HARLEQUINS INFANTRY unit within 6\"",
-      "target": {
-        "side": "friendly",
-        "range": 6,
-        "units": [
-          "HARLEQUINS",
-          "INFANTRY"
-        ],
-        "notSelf": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "if": [
-            "!engaged"
-          ],
-          "embarkNear": 6
-        }
-      ]
-    },
-    "note": "The unit must have 6 or fewer models (check when choosing)"
-  },
-  "Acrobatic Grace": {
-    "effects": [
-      {
-        "stealth": true
-      },
-      {
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      }
-    ]
-  },
-  "Dance of Death": {
-    "act": [
-      {
-        "when": "fightStart",
-        "auto": true,
-        "botOnly": true,
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "wound": 1
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "fightStart",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Hero's Prowess: re-roll Hit rolls of 1",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "reroll": "hits1"
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "fightStart",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Villain's Doom: +1 to Wound",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "wound": 1
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "fightStart",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Trickster's Grace: -1 to be hit",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "defend": {
-                  "hit": -1
-                }
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Polychromatic Camouflage": {
-    "effects": [
-      {
-        "targetableWithin": 18
-      }
-    ]
-  },
-  "Reavers of the Void": {
-    "effects": [
-      {
-        "reroll": "hits1"
-      },
-      {
-        "if": [
-          "targetOnObjective"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Mistshield": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "Piratical Raiders": {
-    "effects": [
-      {
-        "if": [
-          "targetMarked:piratical"
-        ],
-        "abilities": [
-          "lethal hits",
-          "precision"
-        ]
-      }
-    ],
-    "act": {
-      "when": "battleStart",
-      "auto": true,
-      "limit": "battle",
-      "target": {
-        "side": "enemy",
-        "anywhere": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [],
-          "until": "battle",
-          "mark": "piratical"
-        }
-      ]
-    }
-  },
-  "Channeller Stones": {
-    "gear": true,
-    "effects": [
-      {
-        "defend": {
-          "negateOnce": "turn"
-        }
-      }
-    ]
-  },
-  "Faolchú": {
-    "gear": true,
-    "effects": [
-      {
-        "attack": "ranged",
-        "abilities": [
-          "ignores cover"
-        ]
-      }
-    ]
-  },
-  "Aethersense (Psychic)": {
-    "effects": [
-      {
-        "scope": "model",
-        "omniScrambler": 12
-      }
-    ]
-  },
-  "Fury of the Void (Psychic)": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "hitWeapon": "Dread of the Deep Void"
-      },
-      "do": [
-        {
-          "incoming": {
-            "units": [
-              "AELDARI"
-            ],
-            "strength": 1
-          },
-          "until": "turn",
-          "mark": "riven"
-        }
-      ]
-    }
-  },
-  "Piratical Hero": {
-    "effects": [
-      {
-        "scope": "led",
-        "hit": 1,
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Prince of Corsairs": {
-    "code": true,
-    "status": "auto",
-    "note": "After deployment: redeploy up to three AELDARI units (set up again or into Strategic Reserves)"
-  },
-  "Raid and Run": {
-    "act": {
-      "when": "fightEndButton",
-      "limit": "phase",
-      "label": "Raid and Run: move D3+3\" (Fall Back if engaged)",
-      "do": [
-        {
-          "on": "self",
-          "move": "D3+3"
-        }
-      ]
-    }
-  },
-  "Hallucinogen Grenades": {
-    "act": {
-      "when": "oppShootingStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "friendly",
-        "range": 36,
-        "visible": true,
-        "units": [
-          "AELDARI",
-          "INFANTRY"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "stealth": true
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Phantasmal Smoke": {
-    "effects": [
-      {
-        "if": [
-          "near:6:DRUKHARI+TRANSPORT"
-        ],
-        "stealth": true
-      },
-      {
-        "if": [
-          "near:6:DRUKHARI+TRANSPORT"
-        ],
-        "defend": {
-          "vs": "ranged",
-          "cover": true
-        }
-      }
-    ],
-    "note": "Within 6\" of a DRUKHARI TRANSPORT (the card: wholly within)"
-  },
-  "Sadistic Fulcrum": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "DRUKHARI",
-          "TRANSPORT"
-        ],
-        "if": [
-          "painEmpowered",
-          "shootingPhase"
-        ],
-        "reroll": "hits"
-      }
-    ],
-    "note": "Every DRUKHARI TRANSPORT within 6\" while the bearer's unit is Empowered in the Shooting phase (the card: one of them)"
-  },
-  "Spiteful Raider": {
-    "code": true,
-    "status": "auto",
-    "note": "An enemy unit near an objective destroyed in the Fight phase: 1 more Pain token"
-  },
-  "Nightmare Shroud": {
-    "effects": [
-      {
-        "if": [
-          "disembarkedThisTurn"
-        ],
-        "noSnapTarget": true
-      }
-    ]
-  },
-  "Archraider": {
-    "effects": [
-      {
-        "scope": "transport",
-        "scouts": 9
-      }
-    ],
-    "note": "The DEDICATED TRANSPORT the bearer starts embarked in has Scouts 9\""
-  },
-  "Webway Walker": {
-    "effects": [
-      {
-        "deepStrike": true
-      },
-      {
-        "if": [
-          "setUpThisTurn",
-          "losingWager"
-        ],
-        "rerollCharge": true
-      }
-    ]
-  },
-  "Reaper’s Cowl": {
-    "effects": [
-      {
-        "stealth": true,
-        "infiltrators": true
-      }
-    ]
-  },
-  "Conductor of Torment": {
-    "act": {
-      "when": "command",
-      "limit": "phase",
-      "label": "Conductor of Torment: trade a Pain token for the wager",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "dru": "wager"
-        }
-      ]
-    }
-  },
-  "Dark Vitality": {
-    "code": true,
-    "status": "auto",
-    "note": "The bearer's unit is always Empowered"
-  },
-  "Labyrinthine Cunning": {
-    "act": [
-      {
-        "when": "commandStart",
-        "auto": true,
-        "botOnly": true,
-        "limit": "phase",
-        "roll": "D6",
-        "table": [
-          {
-            "min": 4,
-            "do": [
-              {
-                "cp": 1
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "when": "command",
-        "limit": "phase",
-        "botUse": "never",
-        "if": [
-          "painToken"
-        ],
-        "label": "Spend 1 Pain token: +1CP",
-        "do": [
-          {
-            "on": "self",
-            "dru": "spendCp"
-          }
-        ]
-      },
-      {
-        "when": "command",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Roll one D6: 4+ = +1CP",
-        "roll": "D6",
-        "table": [
-          {
-            "min": 4,
-            "do": [
-              {
-                "cp": 1
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  "Eye of Spite": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "attacks": 1,
-        "ap": 1
-      }
-    ],
-    "act": {
-      "when": "selectedToFight",
-      "if": [
-        "painToken"
-      ],
-      "label": "Eye of Spite: spend 1 Pain token for +2 Attacks and AP instead",
-      "botUse": "always",
-      "do": [
-        {
-          "on": "self",
-          "dru": "spend"
-        },
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "buff": [
-            {
-              "attack": "melee",
-              "attacks": 1,
-              "ap": 1
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Crucible of Malediction": {
-    "act": [
-      {
-        "when": "shooting",
-        "limit": "battle",
-        "label": "Crucible of Malediction: enemy units within 12\" take a Battle-shock test",
-        "botUse": "round2",
-        "target": {
-          "side": "enemy",
-          "range": 12,
-          "each": true
-        },
-        "do": [
-          {
-            "if": [
-              "targetKw:PSYKER"
-            ],
-            "shockMortals": {
-              "mod": 0,
-              "mortals": "3"
-            }
-          },
-          {
-            "if": [
-              "!targetKw:PSYKER"
-            ],
-            "shock": 0
-          }
-        ]
-      },
-      {
-        "when": "shooting",
-        "limit": "battle",
-        "if": [
-          "painToken"
-        ],
-        "label": "Crucible of Malediction: spend 1 Pain token, tests at -1",
-        "botUse": "never",
-        "target": {
-          "side": "enemy",
-          "range": 12,
-          "each": true
-        },
-        "do": [
-          {
-            "on": "self",
-            "dru": "spend"
-          },
-          {
-            "if": [
-              "targetKw:PSYKER"
-            ],
-            "shockMortals": {
-              "mod": -1,
-              "mortals": "3"
-            }
-          },
-          {
-            "if": [
-              "!targetKw:PSYKER"
-            ],
-            "shock": -1
-          }
-        ]
-      }
-    ]
-  },
-  "Pharmacophex": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "limit": "phase",
-      "if": [
-        "detachment:Spectacle of Spite"
-      ],
-      "roll": "D6",
-      "table": [
-        {
-          "min": 1,
-          "max": 1,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "attack": "melee",
-                  "attacks": 1
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        },
-        {
-          "min": 2,
-          "max": 2,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "move": 2
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        },
-        {
-          "min": 3,
-          "max": 3,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "attack": "melee",
-                  "skill": 1
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        },
-        {
-          "min": 4,
-          "max": 4,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "toughness": 1
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        },
-        {
-          "min": 5,
-          "max": 5,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "attack": "melee",
-                  "strength": 1
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "max": 6,
-          "do": [
-            {
-              "on": "self",
-              "buff": [
-                {
-                  "ld": 1
-                },
-                {
-                  "attack": "ranged",
-                  "skill": 1
-                }
-              ],
-              "until": "nextCommand"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Chronoshard": {
-    "act": {
-      "when": "fightStartButton",
-      "limit": "battle",
-      "label": "Chronoshard: Fights First this phase",
-      "botUse": "valuable",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "fightsFirst": true
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Periapt of Torments": {
-    "effects": [
-      {
-        "noSnapTarget": true
-      }
-    ]
-  },
-  "Morghenna’s Curse": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "ap": 1,
-        "damage": 1
-      }
-    ]
-  },
-  "Master Regenesist": {
-    "code": true,
-    "status": "auto",
-    "note": "Fleshcraft returns D3+3 models"
-  },
-  "Master Nemesine": {
-    "effects": [
-      {
-        "scope": "model",
-        "abilities": [
-          "anti-beast 2+",
-          "anti-monster 4+"
-        ]
-      }
-    ]
-  },
-  "Master Artisan": {
-    "effects": [
-      {
-        "scope": "model",
-        "statW": 1
-      },
-      {
-        "toughness": 1
-      }
-    ]
-  },
-  "Master Repugnomancer (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Fear Incarnate reaches 9\"; a friendly DRUKHARI unit within 9\" failing a Battle-shock test or destroyed: 4+ for a Pain token"
-  },
-  "Leechbite Plate": {
-    "effects": [
-      {
-        "scope": "model",
-        "svSet": 3
-      }
-    ],
-    "act": {
-      "when": "anyCommand",
-      "if": [
-        "painToken"
-      ],
-      "label": "Leechbite Plate: spend 1 Pain token, the bearer regains all lost wounds",
-      "botUse": "damaged",
-      "do": [
-        {
-          "on": "self",
-          "dru": "spend"
-        },
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "heal": "99"
-        }
-      ]
-    }
-  },
-  "Webway Awl": {
-    "effects": [
-      {
-        "deepStrike": true
-      },
-      {
-        "stratDiscount": {
-          "ids": [
-            "rapid-ingress"
-          ],
-          "cp": 9
-        }
-      }
-    ]
-  },
-  "Informant Network": {
-    "act": {
-      "when": "formation",
-      "auto": true,
-      "limit": "battle",
-      "target": {
-        "side": "friendly",
-        "units": [
-          "KABALITE WARRIORS|HAND OF THE ARCHON"
-        ],
-        "each": true,
-        "count": 3,
-        "anywhere": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "infiltrators": true
-            }
-          ],
-          "until": "battle"
-        }
-      ]
-    }
-  },
-  "Towering Arrogance": {
-    "effects": [
-      {
-        "scope": "led",
-        "ld": 1,
-        "oc": 1
-      }
-    ]
-  },
-  "Hyperstimm Trafficker": {
-    "effects": [
-      {
-        "toughness": 1
-      }
-    ]
-  },
-  "Contempt for Rivals": {
-    "effects": [
-      {
-        "abilities": [
-          "precision"
-        ]
-      }
-    ]
-  },
-  "Gnarlskin Experimentor": {
-    "effects": [
-      {
-        "defend": {
-          "woundIfStronger": -1
-        }
-      }
-    ]
-  },
-  "Elixir of the Corpse Courts": {
-    "effects": [
-      {
-        "defend": {
-          "inv": 5
-        }
-      }
-    ]
-  },
-  "Overlord@Archon": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Overlord: a Battle-shocked unit within 12\" is no longer Battle-shocked",
-      "target": {
-        "side": "friendly",
-        "range": 12,
-        "shocked": true,
-        "units": [
-          "DRUKHARI"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "unshock": true
-        }
-      ]
-    }
-  },
-  "Phantasm Grenade Launcher@Kabalite Warriors": {
-    "gear": true,
-    "effects": [
-      {
-        "addKeywords": [
-          "SMOKE",
-          "GRENADES"
-        ]
-      }
-    ]
-  },
-  "Tormentors@Incubi": {
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "targetBattleShocked"
-        ],
-        "hit": 1
-      }
-    ],
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Aethersails@Raider": {
-    "effects": [
-      {
-        "if": [
-          "hasEmbarked"
-        ],
-        "rerollAdvance": true,
-        "rerollCharge": true
-      }
-    ]
-  },
-  "Grav-talon@Reavers": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "abilities": [
-          "lethal hits"
-        ],
-        "ap": 1
-      }
-    ],
-    "note": "Bladevanes AP -1 becomes -2"
+   ]
   }
+ },
+ "Lithe Agility (Pain)": {
+  "act": [
+   {
+    "when": "movement",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "charge",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   }
+  ],
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Storm of Blades": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Bloody Spectacle": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetCharacter"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ],
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "needCharacterKill": true,
+   "do": [
+    {
+     "cp": 1
+    }
+   ]
+  }
+ },
+ "Fights First": {
+  "code": true,
+  "status": "auto",
+  "note": "FIGHTS FIRST24.13 Those possessed of lightning-fast reactions may strike before the opponent can react. While every model in a unit has this ability, that unit is a Fights First unit. See the Resolve Fights First Combats step in the Fight phase (12.04)."
+ },
+ "Brides of Death (Pain)": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "melee",
+    "strength": 1,
+    "ap": 1,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Blur of Blades": {
+  "effects": [
+   {
+    "scope": "led",
+    "fightsFirst": true
+   }
+  ]
+ },
+ "Thrilling Spectacle": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "label": "Thrilling Spectacle: 3+ invulnerable save, 12 melee Attacks",
+   "botUse": "valuable",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "defend": {
+        "inv": 3
+       }
+      },
+      {
+       "attack": "melee",
+       "attacksTo": 12
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Feel No Pain": {
+  "code": true,
+  "status": "auto",
+  "note": "FEEL NO PAIN24.12 The hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal. This ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
+ },
+ "Fleshcraft (Pain)": {
+  "act": {
+   "when": "command",
+   "if": [
+    "painReady",
+    "belowStarting"
+   ],
+   "label": "Fleshcraft: spend 1 Pain token, return D3+1 (Master Regenesist: D3+3) Bodyguard models",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    },
+    {
+     "on": "self",
+     "if": [
+      "!enh:Master Regenesist"
+     ],
+     "reviveRoll": "D3+1"
+    },
+    {
+     "on": "self",
+     "if": [
+      "enh:Master Regenesist"
+     ],
+     "reviveRoll": "D3+3"
+    }
+   ]
+  }
+ },
+ "Fear Incarnate (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "ld": -1
+   },
+   {
+    "scope": "model",
+    "if": [
+     "!enh:Master Repugnomancer"
+    ],
+    "terrorBelow": 6
+   },
+   {
+    "scope": "model",
+    "if": [
+     "enh:Master Repugnomancer"
+    ],
+    "terrorBelow": 9
+   },
+   {
+    "scope": "enemyAura",
+    "range": 3,
+    "if": [
+     "enh:Master Repugnomancer"
+    ],
+    "ld": -1
+   }
+  ],
+  "note": "Master Repugnomancer: 9\""
+ },
+ "Pain Adept": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "per": "army",
+   "limit": "phase",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "self",
+       "dru": "gain"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Master of Blades (Pain)": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "melee",
+    "wound": 1,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Onslaught": {
+  "effects": [
+   {
+    "scope": "led",
+    "pileIn": 6,
+    "consolidate": 6
+   }
+  ]
+ },
+ "Silent Executioner": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetBelowStarting"
+    ],
+    "reroll": "hits"
+   },
+   {
+    "scope": "model",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Sadistic Raiders (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   }
+  ],
+  "effects": [
+   {
+    "reroll": "wounds1",
+    "if": [
+     "painEmpowered"
+    ]
+   },
+   {
+    "if": [
+     "painEmpowered",
+     "targetOnObjective"
+    ],
+    "reroll": "wounds"
+   }
+  ]
+ },
+ "Cruel Enforcers": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onOwnObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Kabalite Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "notBattleShocked"
+    ],
+    "oc": 1
+   }
+  ]
+ },
+ "Phantasm Grenade Launcher": {
+  "gear": true,
+  "effects": [
+   {
+    "addKeywords": [
+     "GRENADES"
+    ]
+   }
+  ]
+ },
+ "Acrobatic Gladiators (Pain)": {
+  "act": {
+   "when": "charge",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ],
+   "botIf": [
+    "any:advanced||fellBack"
+   ]
+  },
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ],
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "No Escape": {
+  "effects": [
+   {
+    "forceDesperate": true
+   },
+   {
+    "if": [
+     "targetBattleShocked"
+    ],
+    "desperateMinus": 1
+   }
+  ]
+ },
+ "Decapitating Strikes (Pain)": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "painEmpowered",
+     "targetInfantry"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Tormentors": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Incubi Shrine Token": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "hit",
+   "limit": "battle"
+  },
+  "note": "One token: one Hit roll becomes a 6 once per battle"
+ },
+ "Deep Strike": {
+  "code": true,
+  "status": "auto",
+  "note": "DEEP STRIKE24.09 There are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation. Each time this unit makes an ingress move (20."
+ },
+ "Infiltrators": {
+  "code": true,
+  "status": "auto",
+  "note": "INFILTRATORS24.20 Many armies employ reconnaissance units who can sit concealed, waiting for the right moment to strike. During deployment, if every model in a unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from your opponent’s deployment zone and all enemy units."
+ },
+ "Stealth": {
+  "code": true,
+  "status": "auto",
+  "note": "STEALTH24.33 The stealthiest warriors can evade the attentions, and the bullets, of their foes. If every model in a unit has this ability, each time a ranged attack targets that unit, that unit has the benefit of cover against that attack (13.08)."
+ },
+ "Fade Away (Pain)": {
+  "act": {
+   "when": "opponentFightEnd",
+   "if": [
+    "painReady",
+    "!engaged"
+   ],
+   "label": "Fade Away: spend 1 Pain token, into Strategic Reserves",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    },
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Shade Weavers": {
+  "effects": [
+   {
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Experimental Enhancements (Pain)": {
+  "act": [
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: melee Attacks 3",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "if": [
+         "notCharacterModel"
+        ],
+        "attacksTo": 3
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: melee Attacks 4 and [HAZARDOUS]",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "if": [
+         "notCharacterModel"
+        ],
+        "attacksTo": 4,
+        "abilities": [
+         "hazardous"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Torturer’s Craft": {
+  "act": [
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "limit": "phase",
+    "target": {
+     "side": "enemy",
+     "hit": true,
+     "units": [
+      "!VEHICLE"
+     ]
+    },
+    "do": [
+     {
+      "shock": 0
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "limit": "phase",
+    "target": {
+     "side": "enemy",
+     "hit": true,
+     "units": [
+      "!VEHICLE"
+     ]
+    },
+    "do": [
+     {
+      "shock": 0
+     }
+    ]
+   }
+  ]
+ },
+ "Deadly Demise": {
+  "code": true,
+  "status": "auto",
+  "note": "DEADLY DEMISE24.08 From detonating ammo stores to corrosive innards or frenzied death throes, some targets are deadly even in defeat. This ability always takes the form Deadly Demise X."
+ },
+ "Firing Deck": {
+  "code": true,
+  "status": "auto",
+  "note": "FIRING DECK24.14 Some transports have dedicated platforms or firing ports from which embarked passengers can lay down a withering hail of munitions. This ability always takes the form Firing Deck X."
+ },
+ "Splinter Racks (Pain)": {
+  "act": {
+   "when": "selectedToShoot",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "painEmpowered",
+     "hasEmbarked",
+     "weaponHas:anti"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Vanguard of the Dark City": {
+  "choice": {
+   "name": "Vanguard of the Dark City",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Masters of the Shadowed Sky",
+    "Speed of the Kill",
+    "Visions of Butchery",
+    "Aethersails"
+   ]
+  }
+ },
+ "Masters of the Shadowed Sky": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onOwnObjective",
+    "embarkedKw:KABALITE WARRIORS"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Speed of the Kill": {
+  "status": "info",
+  "note": "Disembarking Wyches must be set up wholly within 6\" (the normal 3\" rule is stricter in this app)"
+ },
+ "Visions of Butchery": {
+  "effects": [
+   {
+    "weapon": "bladevanes",
+    "attacksPerEmbarked": {
+     "per": 1,
+     "max": 20
+    }
+   },
+   {
+    "weapon": "chainsnares",
+    "attacksPerEmbarked": {
+     "per": 1,
+     "max": 20
+    }
+   }
+  ],
+  "note": "Every embarked model counts (the card: WRACKS models)"
+ },
+ "Aethersails": {
+  "effects": [
+   {
+    "advanceFixed": 6
+   }
+  ]
+ },
+ "Rapid Deployment (Pain)": {
+  "act": {
+   "when": "movement",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "disembarkAfterAdvance": true,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Aerialists": {
+  "act": {
+   "when": "fightEndButton",
+   "if": [
+    "!hasEmbarked"
+   ],
+   "label": "Embark a DRUKHARI INFANTRY unit within 6\"",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "DRUKHARI",
+     "INFANTRY",
+     "!FLY"
+    ],
+    "notSelf": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "if": [
+      "!engaged"
+     ],
+     "embarkNear": 6
+    }
+   ]
+  },
+  "note": "The unit must have 6 or fewer models"
+ },
+ "Matchless Swiftness (Pain)": {
+  "act": {
+   "when": "movement",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "advanceFixed": 8,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Eviscerating Fly-by": {
+  "act": {
+   "when": "endOfNormalMove",
+   "limit": "phase",
+   "label": "Eviscerating Fly-by: 1 D6 per model, 4+ = 1 mortal wound",
+   "target": {
+    "side": "enemy",
+    "movedOver": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "all": true,
+      "rerollIf": [
+       "hasAbility:Cluster Caltrops"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "Cluster Caltrops": {
+  "code": true,
+  "status": "auto",
+  "note": "Eviscerating Fly-by re-rolls its failed dice (all of the unit's dice, not only the bearer's)"
+ },
+ "Grav-talon": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Battlefield Butchery (Pain)": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "melee",
+    "attacks": 1,
+    "strength": 1,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Skyboard Evasion": {
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "if": [
+    "unengaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "Nowhere to Run (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "painEmpowered"
+    ],
+    "target": {
+     "side": "enemy",
+     "hit": true,
+     "units": [
+      "!MONSTER",
+      "!VEHICLE"
+     ]
+    },
+    "do": [
+     {
+      "on": "target",
+      "buff": [
+       {
+        "move": -2,
+        "chargeBonus": -2
+       }
+      ],
+      "until": "nextTurnStart",
+      "mark": "pinned"
+     }
+    ]
+   }
+  ]
+ },
+ "Ground Attack Craft": {
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetNotFly"
+    ],
+    "hit": 1
+   }
+  ]
+ },
+ "Nowhere to Hide (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "painEmpowered"
+    ],
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "incoming": {
+       "noCover": true
+      },
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Void Mine": {
+  "act": {
+   "when": "opponentFightEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true,
+    "units": [
+     "!LONE OPERATIVE"
+    ]
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D6"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "Only the selected model's unit is rolled for (the card: every enemy unit within D6\" of it)"
+ },
+ "Winged Strike (Pain)": {
+  "act": {
+   "when": "selectedToShoot",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "attack": "ranged",
+    "reroll": "hits",
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Airborne Evasion": {
+  "act": {
+   "when": "afterShootingButton",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Normal move of up to 6\" (no charge this turn)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "6",
+     "noCharge": true
+    }
+   ]
+  }
+ },
+ "Mindless Killing Machines (Pain)": {
+  "act": {
+   "when": "fightStartButton",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "fightOnDeath": 2,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Devoted to Pain": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "twoMeleeWeapons"
+    ],
+    "weapon": "macro-scalpel",
+    "abilities": [
+     "twin-linked"
+    ]
+   }
+  ]
+ },
+ "Torture Device": {
+  "code": true,
+  "status": "auto",
+  "note": "One more Pain token each time this unit destroys an enemy unit"
+ },
+ "Pain Parasite (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "if": [
+     "painEmpowered",
+     "killedModelThisPhase"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "if": [
+       "!belowStarting"
+      ],
+      "heal": "3"
+     },
+     {
+      "on": "self",
+      "if": [
+       "belowStarting"
+      ],
+      "heal": "3"
+     }
+    ]
+   },
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "if": [
+     "painEmpowered",
+     "killedModelThisPhase"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "heal": "3"
+     }
+    ]
+   }
+  ]
+ },
+ "Pain Engine (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Each Pain token spent to Empower a unit within 9\": 5+ (+1 without a spirit vortex) gets it back"
+ },
+ "Agonising Suppression (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "limit": "phase",
+    "if": [
+     "painEmpowered"
+    ],
+    "target": {
+     "side": "enemy",
+     "hit": true
+    },
+    "do": [
+     {
+      "on": "target",
+      "buff": [
+       {
+        "hit": -1
+       }
+      ],
+      "until": "nextTurnStart",
+      "mark": "suppressed"
+     }
+    ]
+   }
+  ]
+ },
+ "Eradicate the Foe": {
+  "effects": [
+   {
+    "if": [
+     "targetFullStrength"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Archon of the Poisoned Tongue (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: [SUSTAINED HITS 1]",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: [LETHAL HITS]",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: [SUSTAINED HITS 1]",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: [LETHAL HITS]",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     },
+     {
+      "on": "self",
+      "buff": [
+       {
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Precognisant": {
+  "code": true,
+  "status": "auto",
+  "note": "After deployment: redeploy up to three DRUKHARI units (set up again or into Strategic Reserves)"
+ },
+ "Mind Like a Steel Trap (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Scouts": {
+  "code": true,
+  "status": "auto",
+  "note": "SCOUTS24.31 Scouts form the vanguard of many armies. Unnoticed by the enemy, they range ahead of the main force. This ability always takes the form Scouts X\"."
+ },
+ "Assassins’ Poisons (Pain)": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "if": [
+     "painReady"
+    ],
+    "label": "Spend 1 Pain token: Empower",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "dru": "empower"
+     }
+    ]
+   }
+  ],
+  "effects": [
+   {
+    "if": [
+     "painEmpowered",
+     "!weaponHas:blast pistol",
+     "!weaponHas:blaster",
+     "!weaponHas:dark lance"
+    ],
+    "abilities": [
+     "lethal hits",
+     "precision"
+    ]
+   }
+  ]
+ },
+ "Archon’s Will": {
+  "effects": [
+   {
+    "if": [
+     "marked:archonsWill",
+     "notBattleShocked",
+     "onObjective"
+    ],
+    "defend": {
+     "inv": 5
+    }
+   },
+   {
+    "if": [
+     "marked:archonsWill",
+     "notBattleShocked",
+     "onObjective"
+    ],
+    "ocSet": 3
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "buff": [],
+     "until": "battle",
+     "mark": "archonsWill"
+    }
+   ]
+  },
+  "note": "Any objective counts (the card: the one selected at the start of the first battle round)"
+ },
+ "Stimm-needler": {
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "negateOnce": "turn"
+    }
+   }
+  ]
+ },
+ "ARCHON’S RETINUE": {
+  "effects": [
+   {
+    "scope": "led",
+    "if": [
+     "leaderAttached",
+     "kw:ARCHON"
+    ],
+    "scouts": 7
+   }
+  ],
+  "note": "The attached Leader gains Scouts 7\""
+ },
+ "Swooping Descent (Pain)": {
+  "act": {
+   "when": "movement",
+   "if": [
+    "painReady"
+   ],
+   "label": "Spend 1 Pain token: Empower",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "dru": "empower"
+    }
+   ]
+  },
+  "effects": [
+   {
+    "deepStrikeRange": 6,
+    "if": [
+     "painEmpowered"
+    ]
+   }
+  ]
+ },
+ "Murderous Crossfire": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "turn",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "incoming": {
+      "units": [
+       "DRUKHARI"
+      ],
+      "attack": "ranged",
+      "ap": 1
+     },
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Lone Operative": {
+  "code": true,
+  "status": "auto",
+  "note": "LONE OPERATIVE24.24 Assassins and other covert agents are difficult to pinpoint in the storm of battle. Unless part of an attached unit, this unit is not visible to enemy models unless they are within 12\" of this unit, and it cannot be targeted by [INDIRECT FIRE] weapons unless the attacking model i..."
+ },
+ "Battle Focus": {
+  "status": "auto",
+  "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres."
+ },
+ "Disparate Paths": {
+  "status": "auto",
+  "note": "Can include Harlequins units in your army even without Asuryani keyword."
+ },
+ "Death is Not Enough": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "if": [
+      "killedModelThisPhase"
+     ],
+     "shock": -1
+    },
+    {
+     "if": [
+      "!killedModelThisPhase"
+     ],
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Cruel Amusement": {
+  "act": [
+   {
+    "when": "selectedToShoot",
+    "auto": true,
+    "botOnly": true,
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "sustained hits 3"
+        ]
+       }
+      ],
+      "until": "phase"
+     },
+     {
+      "on": "self",
+      "if": [
+       "enh:Fanged Leer"
+      ],
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "precision"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [SUSTAINED HITS 3]",
+    "if": [
+     "!enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "sustained hits 3"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [PRECISION]",
+    "if": [
+     "!enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "precision"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [IGNORES COVER]",
+    "if": [
+     "!enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "ignores cover"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [SUSTAINED HITS 3] and [PRECISION]",
+    "if": [
+     "enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "sustained hits 3",
+         "precision"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [SUSTAINED HITS 3] and [IGNORES COVER]",
+    "if": [
+     "enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "sustained hits 3",
+         "ignores cover"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToShoot",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Shrieker cannon: [PRECISION] and [IGNORES COVER]",
+    "if": [
+     "enh:Fanged Leer"
+    ],
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "shrieker cannon",
+        "abilities": [
+         "precision",
+         "ignores cover"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Flip Belt": {
+  "status": "info",
+  "note": "The board is flat: vertical distance never counts"
+ },
+ "TRAVELLING PLAYERS": {
+  "status": "info",
+  "note": "Army building: at most one of this model"
+ },
+ "Fog of Dreams (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Treacherous Illusion (Psychic)": {
+  "act": {
+   "when": "attacked",
+   "auto": true,
+   "do": [
+    {
+     "on": "attacker",
+     "buff": [
+      {
+       "attack": "melee",
+       "abilities": [
+        "hazardous"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Blitz": {
+  "act": {
+   "when": "movement",
+   "limit": "battle",
+   "label": "Blitz: +2D6\" Move, +3 Attacks",
+   "botUse": "round2",
+   "do": [
+    {
+     "on": "self",
+     "buffRoll": {
+      "expr": "2D6",
+      "fields": [
+       "move"
+      ]
+     }
+    },
+    {
+     "on": "self",
+     "buff": [
+      {
+       "weapon": "Solitaire",
+       "attacks": 3
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ "Blur of Movement": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
+    ]
+   }
+  ]
+ },
+ "PATH OF DAMNATION": {
+  "status": "info",
+  "note": "Army building: cannot be your WARLORD"
+ },
+ "Choreographer of War": {
+  "effects": [
+   {
+    "scope": "led",
+    "pileIn": 6,
+    "consolidate": 6,
+    "freeConsolidate": true
+   }
+  ]
+ },
+ "Cegorach’s Favour": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "reroll": "hits1",
+    "wound": 1
+   }
+  ]
+ },
+ "Rapid Embarkation": {
+  "act": {
+   "when": "fightEndButton",
+   "if": [
+    "!hasEmbarked"
+   ],
+   "label": "Embark a HARLEQUINS INFANTRY unit within 6\"",
+   "target": {
+    "side": "friendly",
+    "range": 6,
+    "units": [
+     "HARLEQUINS",
+     "INFANTRY"
+    ],
+    "notSelf": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "if": [
+      "!engaged"
+     ],
+     "embarkNear": 6
+    }
+   ]
+  },
+  "note": "The unit must have 6 or fewer models (check when choosing)"
+ },
+ "Acrobatic Grace": {
+  "effects": [
+   {
+    "stealth": true
+   },
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Dance of Death": {
+  "act": [
+   {
+    "when": "fightStart",
+    "auto": true,
+    "botOnly": true,
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "wound": 1
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "fightStartButton",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Hero's Prowess: re-roll Hit rolls of 1",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "reroll": "hits1"
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "fightStartButton",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Villain's Doom: +1 to Wound",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "wound": 1
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "fightStartButton",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Trickster's Grace: -1 to be hit",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "defend": {
+         "hit": -1
+        }
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Polychromatic Camouflage": {
+  "effects": [
+   {
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Reavers of the Void": {
+  "effects": [
+   {
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "targetOnObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Mistshield": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Piratical Raiders": {
+  "effects": [
+   {
+    "if": [
+     "targetMarked:piratical"
+    ],
+    "abilities": [
+     "lethal hits",
+     "precision"
+    ]
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [],
+     "until": "battle",
+     "mark": "piratical"
+    }
+   ]
+  }
+ },
+ "Channeller Stones": {
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "negateOnce": "turn"
+    }
+   }
+  ]
+ },
+ "Faolchú": {
+  "gear": true,
+  "effects": [
+   {
+    "attack": "ranged",
+    "abilities": [
+     "ignores cover"
+    ]
+   }
+  ]
+ },
+ "Aethersense (Psychic)": {
+  "effects": [
+   {
+    "scope": "model",
+    "omniScrambler": 12
+   }
+  ]
+ },
+ "Fury of the Void (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "Dread of the Deep Void"
+   },
+   "do": [
+    {
+     "incoming": {
+      "units": [
+       "AELDARI"
+      ],
+      "strength": 1
+     },
+     "until": "turn",
+     "mark": "riven"
+    }
+   ]
+  }
+ },
+ "Piratical Hero": {
+  "effects": [
+   {
+    "scope": "led",
+    "hit": 1,
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Prince of Corsairs": {
+  "code": true,
+  "status": "auto",
+  "note": "After deployment: redeploy up to three AELDARI units (set up again or into Strategic Reserves)"
+ },
+ "Raid and Run": {
+  "act": {
+   "when": "fightEndButton",
+   "limit": "phase",
+   "label": "Raid and Run: move D3+3\" (Fall Back if engaged)",
+   "do": [
+    {
+     "on": "self",
+     "move": "D3+3"
+    }
+   ]
+  }
+ },
+ "Hallucinogen Grenades": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "friendly",
+    "range": 36,
+    "visible": true,
+    "units": [
+     "AELDARI",
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "stealth": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Phantasmal Smoke": {
+  "effects": [
+   {
+    "if": [
+     "near:6:DRUKHARI+TRANSPORT"
+    ],
+    "stealth": true
+   },
+   {
+    "if": [
+     "near:6:DRUKHARI+TRANSPORT"
+    ],
+    "defend": {
+     "vs": "ranged",
+     "cover": true
+    }
+   }
+  ],
+  "note": "Within 6\" of a DRUKHARI TRANSPORT (the card: wholly within)"
+ },
+ "Sadistic Fulcrum": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "DRUKHARI",
+     "TRANSPORT"
+    ],
+    "if": [
+     "painEmpowered",
+     "shootingPhase"
+    ],
+    "reroll": "hits"
+   }
+  ],
+  "note": "Every DRUKHARI TRANSPORT within 6\" while the bearer's unit is Empowered in the Shooting phase (the card: one of them)"
+ },
+ "Spiteful Raider": {
+  "code": true,
+  "status": "auto",
+  "note": "An enemy unit near an objective destroyed in the Fight phase: 1 more Pain token"
+ },
+ "Nightmare Shroud": {
+  "effects": [
+   {
+    "if": [
+     "disembarkedThisTurn"
+    ],
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Archraider": {
+  "effects": [
+   {
+    "scope": "transport",
+    "scouts": 9
+   }
+  ],
+  "note": "The DEDICATED TRANSPORT the bearer starts embarked in has Scouts 9\""
+ },
+ "Webway Walker": {
+  "effects": [
+   {
+    "deepStrike": true
+   },
+   {
+    "if": [
+     "setUpThisTurn",
+     "losingWager"
+    ],
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Reaper’s Cowl": {
+  "effects": [
+   {
+    "stealth": true,
+    "infiltrators": true
+   }
+  ]
+ },
+ "Conductor of Torment": {
+  "act": {
+   "when": "command",
+   "limit": "phase",
+   "label": "Conductor of Torment: trade a Pain token for the wager",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "dru": "wager"
+    }
+   ]
+  }
+ },
+ "Dark Vitality": {
+  "code": true,
+  "status": "auto",
+  "note": "The bearer's unit is always Empowered"
+ },
+ "Labyrinthine Cunning": {
+  "act": [
+   {
+    "when": "commandStart",
+    "auto": true,
+    "botOnly": true,
+    "limit": "phase",
+    "roll": "D6",
+    "table": [
+     {
+      "min": 4,
+      "do": [
+       {
+        "cp": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "if": [
+     "painToken"
+    ],
+    "label": "Spend 1 Pain token: +1CP",
+    "do": [
+     {
+      "on": "self",
+      "dru": "spendCp"
+     }
+    ]
+   },
+   {
+    "when": "command",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Roll one D6: 4+ = +1CP",
+    "roll": "D6",
+    "table": [
+     {
+      "min": 4,
+      "do": [
+       {
+        "cp": 1
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Eye of Spite": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "attacks": 1,
+    "ap": 1
+   }
+  ],
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "painToken"
+   ],
+   "label": "Eye of Spite: spend 1 Pain token for +2 Attacks and AP instead",
+   "botUse": "always",
+   "do": [
+    {
+     "on": "self",
+     "dru": "spend"
+    },
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "attack": "melee",
+       "attacks": 1,
+       "ap": 1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Crucible of Malediction": {
+  "act": [
+   {
+    "when": "shooting",
+    "limit": "battle",
+    "label": "Crucible of Malediction: enemy units within 12\" take a Battle-shock test",
+    "botUse": "round2",
+    "target": {
+     "side": "enemy",
+     "range": 12,
+     "each": true
+    },
+    "do": [
+     {
+      "if": [
+       "targetKw:PSYKER"
+      ],
+      "shockMortals": {
+       "mod": 0,
+       "mortals": "3"
+      }
+     },
+     {
+      "if": [
+       "!targetKw:PSYKER"
+      ],
+      "shock": 0
+     }
+    ]
+   },
+   {
+    "when": "shooting",
+    "limit": "battle",
+    "if": [
+     "painToken"
+    ],
+    "label": "Crucible of Malediction: spend 1 Pain token, tests at -1",
+    "botUse": "never",
+    "target": {
+     "side": "enemy",
+     "range": 12,
+     "each": true
+    },
+    "do": [
+     {
+      "on": "self",
+      "dru": "spend"
+     },
+     {
+      "if": [
+       "targetKw:PSYKER"
+      ],
+      "shockMortals": {
+       "mod": -1,
+       "mortals": "3"
+      }
+     },
+     {
+      "if": [
+       "!targetKw:PSYKER"
+      ],
+      "shock": -1
+     }
+    ]
+   }
+  ]
+ },
+ "Pharmacophex": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "detachment:Spectacle of Spite"
+   ],
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "attacks": 1
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    },
+    {
+     "min": 2,
+     "max": 2,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "move": 2
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    },
+    {
+     "min": 3,
+     "max": 3,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "skill": 1
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 4,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "toughness": 1
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    },
+    {
+     "min": 5,
+     "max": 5,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "attack": "melee",
+         "strength": 1
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "max": 6,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "ld": 1
+        },
+        {
+         "attack": "ranged",
+         "skill": 1
+        }
+       ],
+       "until": "nextCommand"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Chronoshard": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "label": "Chronoshard: Fights First this phase",
+   "botUse": "valuable",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "fightsFirst": true
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Periapt of Torments": {
+  "effects": [
+   {
+    "noSnapTarget": true
+   }
+  ]
+ },
+ "Morghenna’s Curse": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "ap": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Master Regenesist": {
+  "code": true,
+  "status": "auto",
+  "note": "Fleshcraft returns D3+3 models"
+ },
+ "Master Nemesine": {
+  "effects": [
+   {
+    "scope": "model",
+    "abilities": [
+     "anti-beast 2+",
+     "anti-monster 4+"
+    ]
+   }
+  ]
+ },
+ "Master Artisan": {
+  "effects": [
+   {
+    "scope": "model",
+    "statW": 1
+   },
+   {
+    "toughness": 1
+   }
+  ]
+ },
+ "Master Repugnomancer (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Fear Incarnate reaches 9\"; a friendly DRUKHARI unit within 9\" failing a Battle-shock test or destroyed: 4+ for a Pain token"
+ },
+ "Leechbite Plate": {
+  "effects": [
+   {
+    "scope": "model",
+    "svSet": 3
+   }
+  ],
+  "act": {
+   "when": "anyCommand",
+   "if": [
+    "painToken"
+   ],
+   "label": "Leechbite Plate: spend 1 Pain token, the bearer regains all lost wounds",
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "dru": "spend"
+    },
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "heal": "99"
+    }
+   ]
+  }
+ },
+ "Webway Awl": {
+  "effects": [
+   {
+    "deepStrike": true
+   },
+   {
+    "stratDiscount": {
+     "ids": [
+      "rapid-ingress"
+     ],
+     "cp": 9
+    }
+   }
+  ]
+ },
+ "Informant Network": {
+  "act": {
+   "when": "formation",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "friendly",
+    "units": [
+     "KABALITE WARRIORS|HAND OF THE ARCHON"
+    ],
+    "each": true,
+    "count": 3,
+    "anywhere": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "infiltrators": true
+      }
+     ],
+     "until": "battle"
+    }
+   ]
+  }
+ },
+ "Towering Arrogance": {
+  "effects": [
+   {
+    "scope": "led",
+    "ld": 1,
+    "oc": 1
+   }
+  ]
+ },
+ "Hyperstimm Trafficker": {
+  "effects": [
+   {
+    "toughness": 1
+   }
+  ]
+ },
+ "Contempt for Rivals": {
+  "effects": [
+   {
+    "abilities": [
+     "precision"
+    ]
+   }
+  ]
+ },
+ "Gnarlskin Experimentor": {
+  "effects": [
+   {
+    "defend": {
+     "woundIfStronger": -1
+    }
+   }
+  ]
+ },
+ "Elixir of the Corpse Courts": {
+  "effects": [
+   {
+    "defend": {
+     "inv": 5
+    }
+   }
+  ]
+ },
+ "Overlord@Archon": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Overlord: a Battle-shocked unit within 12\" is no longer Battle-shocked",
+   "target": {
+    "side": "friendly",
+    "range": 12,
+    "shocked": true,
+    "units": [
+     "DRUKHARI"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "unshock": true
+    }
+   ]
+  }
+ },
+ "Phantasm Grenade Launcher@Kabalite Warriors": {
+  "gear": true,
+  "effects": [
+   {
+    "addKeywords": [
+     "SMOKE",
+     "GRENADES"
+    ]
+   }
+  ]
+ },
+ "Tormentors@Incubi": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetBattleShocked"
+    ],
+    "hit": 1
+   }
+  ],
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Aethersails@Raider": {
+  "effects": [
+   {
+    "if": [
+     "hasEmbarked"
+    ],
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Grav-talon@Reavers": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ],
+    "ap": 1
+   }
+  ],
+  "note": "Bladevanes AP -1 becomes -2"
+ }
 }

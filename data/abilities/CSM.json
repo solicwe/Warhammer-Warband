@@ -494,8 +494,7 @@
  },
  "Death Hex (Psychic)": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "range": 12,
@@ -525,7 +524,8 @@
       }
      ]
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Warpsmith": {
@@ -991,8 +991,7 @@
  },
  "Corrupt Machine Spirits": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "range": 12,
@@ -1029,13 +1028,13 @@
       }
      ]
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Spirit Thief": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "visible": true,
@@ -1053,7 +1052,8 @@
      },
      "until": "phase"
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Warp-sighted Butcher": {
@@ -1959,9 +1959,8 @@
  },
  "Soul Link": {
   "act": {
-   "when": "commandStart",
-   "auto": true,
-   "limit": "phase",
+   "when": "command",
+   "limit": "turn",
    "target": {
     "side": "friendly",
     "units": [

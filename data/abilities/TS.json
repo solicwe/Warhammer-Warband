@@ -79,8 +79,7 @@
  },
  "Marked by Fate (Psychic)": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "visible": true
@@ -93,7 +92,8 @@
      "selfOnly": true,
      "mark": "Marked by Fate"
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Arcane Shield (Psychic)": {
@@ -1176,8 +1176,7 @@
  },
  "Nethershriek Mind-eater": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "target": {
     "side": "enemy",
     "range": 12,
@@ -1190,7 +1189,8 @@
       "mortals": "3"
      }
     }
-   ]
+   ],
+   "limit": "phase"
   }
  },
  "Diabolic Savant": {

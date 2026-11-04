@@ -1440,7 +1440,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
                             {opts.length > 1 ? optLabel(m.label) : 'Use'}
                           </button>
-                          {actPick === k && <div className="unit-strip">{m.targets.map((x) => unitPill(x, false, () => use(x.id)))}</div>}
+                          {actPick === k && (
+                            <div className="unit-strip" style={{ marginTop: 4, gap: 4, alignItems: 'center' }}>
+                              <span className="tiny muted" style={{ marginRight: 2 }}>Target:</span>
+                              {m.targets.map((x) => unitPill(x, false, () => use(x.id)))}
+                              <button className="btn small" style={{ minHeight: 26, fontSize: 11, padding: '1px 8px' }} onClick={() => setActPick(null)}>Cancel</button>
+                            </div>
+                          )}
                         </span>
                       );
                     })}

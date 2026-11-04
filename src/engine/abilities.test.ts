@@ -378,4 +378,39 @@ describe('reactions to being attacked', () => {
     startAttack(s, 'fight', boyz.id, bg.id, r.pools);
     expect(s.attack!.pools.map((p) => p.hitMod)).toEqual(before.map((h) => Math.max(-1, h - 1)));
   });
+
+  it('Nethershriek Mind-eater appears as a manual shooting ability with selectable target', async () => {
+    const { createGame, formationAt, placeUnit } = await import('./game');
+    const TS = JSON.parse(fs.readFileSync('public/data/factions/TS.json', 'utf8'));
+    const s = createGame({
+      lists: [
+        {
+          name: 'TS', factionId: 'TS', battleSize: 'incursion', detachments: ['Changehost of Deceit'],
+          units: [{ uid: 'u1', datasheet: 'Exalted Sorcerer', models: 1, pts: 100, enhancement: 'Nethershriek Mind-eater', enhancementPts: 20 }],
+        },
+        {
+          name: 'SM', factionId: 'SM', battleSize: 'incursion', detachments: ['Gladius Task Force'],
+          units: [{ uid: 'sm1', datasheet: 'Intercessor Squad', models: 5, pts: 80 }],
+        },
+      ],
+      factions: [TS, load('SM')],
+      names: ['TS', 'SM'],
+      seed: 42,
+    });
+    const tsUnit = s.units.find((u) => u.owner === 0)!;
+    const smUnit = s.units.find((u) => u.owner === 1)!;
+    placeUnit(s, tsUnit, formationAt(tsUnit, { x: 10, y: 10 }));
+    placeUnit(s, smUnit, formationAt(smUnit, { x: 15, y: 10 }));
+    s.phase = 'shooting';
+    s.active = 0;
+
+    const acts = manualActs(s, 0);
+    const neth = acts.find((m) => m.def.name === 'Nethershriek Mind-eater');
+    expect(neth).toBeDefined();
+    expect(neth!.targets.some((t) => t.id === smUnit.id)).toBe(true);
+
+    const err = useActByKey(s, tsUnit.id, neth!.def.key, smUnit.id);
+    expect(err).toBeNull();
+    expect(manualActs(s, 0).some((m) => m.def.name === 'Nethershriek Mind-eater')).toBe(false);
+  });
 });

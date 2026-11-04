@@ -612,8 +612,7 @@
  },
  "Vortex Terrors (Psychic)": {
   "act": {
-   "when": "shootingStart",
-   "auto": true,
+   "when": "shooting",
    "limit": "phase",
    "target": {
     "side": "enemy",
@@ -798,7 +797,7 @@
    }
   ],
   "act": {
-   "when": "fightStart",
+   "when": "fightStartButton",
    "limit": "battle",
    "botUse": "always",
    "botIf": [
