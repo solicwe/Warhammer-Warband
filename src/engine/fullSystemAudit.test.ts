@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   MISSIONS,
@@ -206,6 +207,21 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
           expect(layouts.length).toBeGreaterThan(0);
         }
       }
+    });
+
+    it('Parchment mission card variables and Tabletop card colors preserve high-contrast physical paper aesthetic across all themes', () => {
+      const css = fs.readFileSync('src/ui/styles.css', 'utf8');
+      
+      // Ensure dark mode does not turn --paper into dark navy #162032 with dark text clash
+      expect(css).not.toContain('--paper: #162032');
+      expect(css).not.toContain('--paper-edge: #f59e0b');
+      
+      // Ensure TabletopScreen styles secondary cards as physical parchment cards
+      const tabletopTsx = fs.readFileSync('src/ui/TabletopScreen.tsx', 'utf8');
+      expect(tabletopTsx).toContain("background: '#fdfbf7'");
+      expect(tabletopTsx).toContain("color: '#1c1917'");
+      expect(tabletopTsx).toContain("colorScheme: 'light'");
+      expect(tabletopTsx).toContain("background: '#f5eedc'");
     });
 
     it('Secondary mission cards have valid descriptions, timing, and positive VP caps', () => {

@@ -1399,17 +1399,18 @@ export function TabletopScreen({ index, onBack }: Props) {
                       key={cardId}
                       className="sec-mission-real-card"
                       style={{
-                        background: 'var(--paper, #fdfbf7)',
+                        background: '#fdfbf7',
                         color: '#1c1917',
-                        border: '2px solid var(--paper-edge, #c8b79b)',
+                        border: '2px solid #c8b79b',
                         borderRadius: 12,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.7)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.7)',
                         padding: '14px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 10,
                         position: 'relative',
                         overflow: 'hidden',
+                        colorScheme: 'light',
                       }}
                     >
                       {/* Top Header: Category Tag & Status Badge */}
@@ -1472,13 +1473,13 @@ export function TabletopScreen({ index, onBack }: Props) {
                       {/* Card Text Body (Parchment Inset) - Explains What To Do */}
                       <div
                         style={{
-                          background: 'var(--surface-2)',
-                          border: '1px dashed var(--line-2)',
+                          background: '#f5eedc',
+                          border: '1px dashed #c8b79b',
                           borderRadius: 6,
                           padding: '10px 12px',
                           fontSize: 13,
                           lineHeight: 1.45,
-                          color: 'var(--text)',
+                          color: '#1c1917',
                         }}
                       >
                         <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
