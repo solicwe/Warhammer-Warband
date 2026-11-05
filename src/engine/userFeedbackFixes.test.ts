@@ -243,4 +243,21 @@ describe('User Feedback Fixes Verification', () => {
     const res = toggleRisenRubricae(s, 0, 'term1');
     expect(res).toBe('Unit is already deployed on the battlefield');
   });
+
+  it('Ability bar and disabled buttons use semantic theme variables for high contrast in light mode', () => {
+    const css = fs.readFileSync('src/ui/styles.css', 'utf8');
+    const gameScreenTsx = fs.readFileSync('src/ui/GameScreen.tsx', 'utf8');
+
+    // .ab-bar uses var(--surface-2) instead of hardcoded dark rgba
+    expect(css).toContain('.ab-bar { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1.5px solid var(--line-2); border-radius: 8px; background: var(--surface-2);');
+    expect(css).not.toContain('.ab-bar { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(18, 22, 28, 0.92);');
+
+    // .btn.primary:disabled has distinct readable styling
+    expect(css).toContain('.btn.primary:disabled {');
+    expect(css).toContain('background: var(--surface-2) !important;');
+    expect(css).toContain('color: var(--text-3) !important;');
+
+    // Shooting weapon selection label uses readable theme color
+    expect(gameScreenTsx).toContain("color: 'var(--text-2)'");
+  });
 });

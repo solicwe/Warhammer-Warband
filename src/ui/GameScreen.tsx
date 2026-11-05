@@ -2956,7 +2956,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           />
           {!mode.overwatch && activeRemaining.length > 1 && (
             <div className="row wrap" style={{ alignItems: 'center', gap: '0.4rem', margin: '0.35rem 0' }}>
-              <span className="label" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Weapons shooting this target:</span>
+              <span className="label" style={{ fontSize: '0.78rem', color: 'var(--text-2)', fontWeight: 600 }}>Weapons shooting this target:</span>
               {activeRemaining.map((n) => {
                 const off = (mode.skip ?? []).includes(n);
                 return (
