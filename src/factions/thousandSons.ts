@@ -101,6 +101,7 @@ export function toggleRisenRubricae(s: GameState, p: PlayerId, unitId: string): 
   const cands = risenRubricaeCandidates(s, p);
   const target = cands.find((c) => c.unit.id === unitId);
   if (!target) return 'Unit is not eligible for Risen Rubricae';
+  if (target.unit.status === 'board') return 'Unit is already deployed on the battlefield';
 
   if (current.has(unitId)) {
     // Deselect

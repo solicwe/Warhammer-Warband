@@ -197,7 +197,7 @@ describe('User Feedback Fixes Verification', () => {
     const stratUseTsx = fs.readFileSync('src/ui/StratUse.tsx', 'utf8');
 
     // Risen Rubricae candidate cards display sub.enh, icon, No Enhancement fallback, and Bearer badge
-    expect(gameScreenTsx).toContain('risenRubricaeCandidates(s, p).map((c) =>');
+    expect(gameScreenTsx).toContain('const cands = risenRubricaeCandidates(s, p);');
     expect(gameScreenTsx).toContain('const sub = unitSubDetails(c.unit);');
     expect(gameScreenTsx).toContain('<Icon name="enhancement" size={13} />');
     expect(gameScreenTsx).toContain('No Enhancement');
@@ -210,5 +210,37 @@ describe('User Feedback Fixes Verification', () => {
     // StratUse displays enhancement badge for friendly candidate targets
     expect(stratUseTsx).toContain('u.enhancements?.length > 0 && (');
     expect(stratUseTsx).toContain("u.enhancements.map((e) => e.name).join(' · ')");
+  });
+
+  it('Risen Rubricae automatically hides when all selected units are placed on the board, and prevents toggling deployed units', async () => {
+    const { toggleRisenRubricae } = await import('../factions/thousandSons');
+    const gameScreenTsx = fs.readFileSync('src/ui/GameScreen.tsx', 'utf8');
+
+    // UI hides the card when all selected units are placed on the board
+    expect(gameScreenTsx).toContain("sel.length > 0 && sel.every((c) => c.unit.status === 'board')");
+    expect(gameScreenTsx).toContain('setRrCollapsed');
+    expect(gameScreenTsx).toContain('This unit is already deployed on the board');
+
+    // Engine rejects toggling units already deployed on the board
+    const s = {
+      turn: 1,
+      phase: 'deployment',
+      players: [{ risenRubricae: ['term1'] }],
+      units: [
+        {
+          id: 'term1',
+          name: 'Scarab Occult Terminators',
+          owner: 0,
+          status: 'board', // already deployed
+          keywords: ['TERMINATOR', 'RUBRICAE'],
+          core: { infiltrators: true },
+          models: [{ id: 'm1', dead: false, wounds: 3, profile: { W: 3 } }],
+          enhancements: [{ name: 'Risen Rubricae' }],
+        },
+      ],
+    } as unknown as GameState;
+
+    const res = toggleRisenRubricae(s, 0, 'term1');
+    expect(res).toBe('Unit is already deployed on the battlefield');
   });
 });

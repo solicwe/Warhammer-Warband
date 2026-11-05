@@ -453,6 +453,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [mode, setModeRaw] = useState<Mode | null>(null);
   const [draft, setDraft] = useState<Paths | null>(null);
   const [drawerMin, setDrawerMin] = useState(false); // phone: the bottom sheet folded down to its handle
+  const [rrCollapsed, setRrCollapsed] = useState(false); // Risen Rubricae candidate drawer collapsed state
   // the joystick's loop outlives a render: it settles the latest draft when let go
   const draftRef = useRef<Paths | null>(null);
   draftRef.current = draft;
@@ -1942,192 +1943,245 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
-        {hasRisenRubricae(s, p) && risenRubricaeCandidates(s, p).length > 0 && (
-          <div
-            className="card"
-            style={{
-              padding: '10px 12px',
-              marginBottom: 8,
-              border: '1.5px solid var(--accent)',
-              background: 'var(--surface-2)',
-              borderRadius: 8,
-              boxSizing: 'border-box',
-              maxWidth: '100%',
-              overflow: 'hidden',
-            }}
-          >
-            <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <div className="small" style={{ color: 'var(--text)' }}>
-                <b style={{ color: 'var(--accent)' }}>Risen Rubricae (Infiltrators)</b>
-              </div>
-              <div className="tiny" style={{ fontWeight: 700, color: 'var(--text-2)' }}>
-                {(() => {
-                  const cands = risenRubricaeCandidates(s, p);
-                  const selBl = cands.filter((c) => c.selected && c.kind === 'battleline').length;
-                  const selOth = cands.filter((c) => c.selected && c.kind === 'other').length;
-                  if (selOth > 0) return '1 / 1 Terminators selected';
-                  return `${selBl} / 2 Rubric Marines selected`;
-                })()}
-              </div>
-            </div>
-            <div className="tiny muted" style={{ marginBottom: 8, lineHeight: 1.35 }}>
-              Select either <b>2 Rubric Marines</b> (Battleline) or <b>1 Scarab Occult Terminators</b> to gain Infiltrators:
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-              {risenRubricaeCandidates(s, p).map((c) => {
-                const isSel = c.selected;
-                const sub = unitSubDetails(c.unit);
-                const lead = unitLeadModel(c.unit);
-                return (
+        {(() => {
+          if (!hasRisenRubricae(s, p)) return null;
+          const cands = risenRubricaeCandidates(s, p);
+          if (cands.length === 0) return null;
+          const sel = cands.filter((c) => c.selected);
+          // If the player has made their selection and ALL selected units have already been placed on the board:
+          if (sel.length > 0 && sel.every((c) => c.unit.status === 'board')) {
+            return null;
+          }
+          // If all eligible candidate units in the entire army are already placed on the board:
+          if (cands.every((c) => c.unit.status === 'board')) {
+            return null;
+          }
+
+          const selBl = sel.filter((c) => c.kind === 'battleline').length;
+          const selOth = sel.filter((c) => c.kind === 'other').length;
+          const countText = selOth > 0 ? '1 / 1 Terminators selected' : `${selBl} / 2 Rubric Marines selected`;
+
+          return (
+            <div
+              className="card"
+              style={{
+                padding: '10px 12px',
+                marginBottom: 8,
+                border: '1.5px solid var(--accent)',
+                background: 'var(--surface-2)',
+                borderRadius: 8,
+                boxSizing: 'border-box',
+                maxWidth: '100%',
+                overflow: 'hidden',
+              }}
+            >
+              <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: rrCollapsed ? 0 : 6 }}>
+                <div className="small" style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <b style={{ color: 'var(--accent)' }}>Risen Rubricae (Infiltrators)</b>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="tiny" style={{ fontWeight: 700, color: 'var(--text-2)' }}>
+                    {countText}
+                  </span>
                   <button
-                    key={c.unit.id}
-                    className={`unit-pill ${isSel ? 'sel' : ''}`}
-                    aria-pressed={isSel}
-                    style={{
-                      width: '100%',
-                      maxWidth: '100%',
-                      minHeight: 52,
-                      padding: '10px 12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      whiteSpace: 'normal',
-                      textAlign: 'left',
-                      boxSizing: 'border-box',
-                      borderRadius: 8,
-                      background: isSel ? 'var(--accent)' : 'var(--surface)',
-                      borderColor: isSel ? 'var(--accent)' : 'var(--line-2)',
-                      color: isSel ? 'var(--on-fill)' : 'var(--text)',
-                    }}
-                    onClick={() => {
-                      const e = act((g) => toggleRisenRubricae(g, p, c.unit.id));
-                      if (e) flash(e);
-                    }}
+                    type="button"
+                    className="btn ghost small"
+                    style={{ minHeight: 24, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}
+                    onClick={() => setRrCollapsed((v) => !v)}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: '1 1 auto' }}>
-                      <Portrait
-                        kind={unitToken(c.unit)}
-                        owner={c.unit.owner}
-                        character={c.unit.models.some((m) => m.isCharacter)}
-                        size={36}
-                        datasheet={unitPortraitDatasheet(c.unit)}
-                        fallback={lead?.source}
-                      />
-                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 auto' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
-                          <span style={{ fontWeight: 700, fontSize: 13.5, lineHeight: 1.3, wordBreak: 'break-word', color: isSel ? 'var(--on-fill)' : 'var(--text)' }}>
-                            {c.unit.name}
-                          </span>
-                          {c.bearer && (
+                    {rrCollapsed ? 'Show' : 'Hide'}
+                  </button>
+                </div>
+              </div>
+              {!rrCollapsed && (
+                <>
+                  <div className="tiny muted" style={{ marginBottom: 8, lineHeight: 1.35 }}>
+                    Select either <b>2 Rubric Marines</b> (Battleline) or <b>1 Scarab Occult Terminators</b> to gain Infiltrators:
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+                    {cands.map((c) => {
+                      const isSel = c.selected;
+                      const isPlaced = c.unit.status === 'board';
+                      const sub = unitSubDetails(c.unit);
+                      const lead = unitLeadModel(c.unit);
+                      return (
+                        <button
+                          key={c.unit.id}
+                          className={`unit-pill ${isSel ? 'sel' : ''}`}
+                          aria-pressed={isSel}
+                          disabled={isPlaced}
+                          style={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            minHeight: 52,
+                            padding: '10px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                            whiteSpace: 'normal',
+                            textAlign: 'left',
+                            boxSizing: 'border-box',
+                            borderRadius: 8,
+                            background: isSel ? 'var(--accent)' : 'var(--surface)',
+                            borderColor: isSel ? 'var(--accent)' : 'var(--line-2)',
+                            color: isSel ? 'var(--on-fill)' : 'var(--text)',
+                            opacity: isPlaced ? 0.65 : 1,
+                            cursor: isPlaced ? 'default' : 'pointer',
+                          }}
+                          onClick={() => {
+                            if (isPlaced) {
+                              flash('This unit is already deployed on the board');
+                              return;
+                            }
+                            const e = act((g) => toggleRisenRubricae(g, p, c.unit.id));
+                            if (e) flash(e);
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: '1 1 auto' }}>
+                            <Portrait
+                              kind={unitToken(c.unit)}
+                              owner={c.unit.owner}
+                              character={c.unit.models.some((m) => m.isCharacter)}
+                              size={36}
+                              datasheet={unitPortraitDatasheet(c.unit)}
+                              fallback={lead?.source}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 auto' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                                <span style={{ fontWeight: 700, fontSize: 13.5, lineHeight: 1.3, wordBreak: 'break-word', color: isSel ? 'var(--on-fill)' : 'var(--text)' }}>
+                                  {c.unit.name}
+                                </span>
+                                {c.bearer && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 2,
+                                      padding: '1px 6px',
+                                      borderRadius: 4,
+                                      background: isSel ? 'rgba(0,0,0,0.3)' : 'var(--accent-soft)',
+                                      color: isSel ? 'var(--on-fill)' : 'var(--accent)',
+                                      fontSize: 10.5,
+                                      fontWeight: 800,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.04em',
+                                    }}
+                                  >
+                                    Bearer
+                                  </span>
+                                )}
+                              </div>
+                              <span className="tiny" style={{ color: isSel ? 'var(--on-fill)' : 'var(--text-3)', opacity: isSel ? 0.85 : 1, marginTop: 2 }}>
+                                {c.kind === 'other' ? 'Terminators' : 'Battleline'} · {alive(c.unit).length} model(s) · {c.unit.pts} pts
+                              </span>
+                              {sub.enh ? (
+                                <div
+                                  style={{
+                                    color: isSel ? 'var(--on-fill)' : 'var(--accent)',
+                                    fontWeight: 800,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    marginTop: 3,
+                                    fontSize: 12,
+                                  }}
+                                >
+                                  <Icon name="enhancement" size={13} />
+                                  <span>{sub.enh}</span>
+                                </div>
+                              ) : (
+                                <div
+                                  style={{
+                                    color: isSel ? 'var(--on-fill)' : 'var(--text-3)',
+                                    fontStyle: 'italic',
+                                    fontSize: 11.5,
+                                    marginTop: 3,
+                                    opacity: isSel ? 0.85 : 0.8,
+                                  }}
+                                >
+                                  No Enhancement
+                                </div>
+                              )}
+                              {sub.weapons && (
+                                <span
+                                  className="tiny"
+                                  style={{
+                                    color: isSel ? 'var(--on-fill)' : 'var(--text-2)',
+                                    opacity: isSel ? 0.85 : 0.9,
+                                    marginTop: 2,
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                  }}
+                                >
+                                  {sub.weapons}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isPlaced ? (
                             <span
                               style={{
+                                flexShrink: 0,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 2,
-                                padding: '1px 6px',
+                                gap: 4,
+                                padding: '4px 9px',
                                 borderRadius: 4,
-                                background: isSel ? 'rgba(0,0,0,0.3)' : 'var(--accent-soft)',
-                                color: isSel ? 'var(--on-fill)' : 'var(--accent)',
-                                fontSize: 10.5,
-                                fontWeight: 800,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.04em',
+                                border: '1px solid var(--line-2)',
+                                color: isSel ? 'var(--on-fill)' : 'var(--text-3)',
+                                background: isSel ? 'rgba(0,0,0,0.2)' : 'var(--surface-2)',
+                                fontSize: 11,
+                                fontWeight: 700,
                               }}
                             >
-                              Bearer
+                              <Icon name="check" size={12} /> Placed
+                            </span>
+                          ) : isSel ? (
+                            <span
+                              style={{
+                                flexShrink: 0,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '4px 9px',
+                                borderRadius: 4,
+                                background: 'rgba(0,0,0,0.25)',
+                                color: 'var(--on-fill)',
+                                fontSize: 11.5,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              <Icon name="check" size={13} /> Infiltrator
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                flexShrink: 0,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '4px 9px',
+                                borderRadius: 4,
+                                border: '1px solid var(--line-2)',
+                                color: 'var(--text-3)',
+                                fontSize: 11.5,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Select
                             </span>
                           )}
-                        </div>
-                        <span className="tiny" style={{ color: isSel ? 'var(--on-fill)' : 'var(--text-3)', opacity: isSel ? 0.85 : 1, marginTop: 2 }}>
-                          {c.kind === 'other' ? 'Terminators' : 'Battleline'} · {alive(c.unit).length} model(s) · {c.unit.pts} pts
-                        </span>
-                        {sub.enh ? (
-                          <div
-                            style={{
-                              color: isSel ? 'var(--on-fill)' : 'var(--accent)',
-                              fontWeight: 800,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 4,
-                              marginTop: 3,
-                              fontSize: 12,
-                            }}
-                          >
-                            <Icon name="enhancement" size={13} />
-                            <span>{sub.enh}</span>
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              color: isSel ? 'var(--on-fill)' : 'var(--text-3)',
-                              fontStyle: 'italic',
-                              fontSize: 11.5,
-                              marginTop: 3,
-                              opacity: isSel ? 0.85 : 0.8,
-                            }}
-                          >
-                            No Enhancement
-                          </div>
-                        )}
-                        {sub.weapons && (
-                          <span
-                            className="tiny"
-                            style={{
-                              color: isSel ? 'var(--on-fill)' : 'var(--text-2)',
-                              opacity: isSel ? 0.85 : 0.9,
-                              marginTop: 2,
-                              whiteSpace: 'normal',
-                              wordBreak: 'break-word',
-                            }}
-                          >
-                            {sub.weapons}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {isSel ? (
-                      <span
-                        style={{
-                          flexShrink: 0,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 9px',
-                          borderRadius: 4,
-                          background: 'rgba(0,0,0,0.25)',
-                          color: 'var(--on-fill)',
-                          fontSize: 11.5,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        <Icon name="check" size={13} /> Infiltrator
-                      </span>
-                    ) : (
-                      <span
-                        style={{
-                          flexShrink: 0,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '4px 9px',
-                          borderRadius: 4,
-                          border: '1px solid var(--line-2)',
-                          color: 'var(--text-3)',
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Select
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
         <div className="unit-strip">
           {groupUnits(pending).map((g) => {
             const isSelected = selUnit && g.units.some((u) => u.id === selUnit.id);
