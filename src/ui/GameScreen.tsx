@@ -1,6 +1,7 @@
 import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, decides, onAuto } from '../ai/autoPlay';
 import { pathBlocked, routeAround } from '../engine/pathing';
-import { KEYS, readText, writeText, saveBattleLog } from '../services/storage';
+import { KEYS, readText, writeText, saveBattleLog, loadBattleLogs, type BattleRecord } from '../services/storage';
+import { compressReplayTimeline } from '../services/replay';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
@@ -154,14 +155,14 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   fightsFirst: ['Fights first', true], 'advanceCharge+1': ['+1 Adv/Charge', true],
 };
 
-export function GameScreen({ initial, onExit }: { initial: GameState; onExit: () => void }) {
-  const { state: s, act, undo, canUndo } = useGame(initial);
+export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, onReplayStep }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; onReplayStep?: (index: number) => void }) {
+  const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay);
   // idle lives in the game itself (both sides in s.bots), so saves, dice and reactions all go to the bot and it
   // survives leaving and continuing the battle
   const autoPlay = !!s.idleBots;
   const bots: PlayerId[] = useMemo(() => s.bots ?? (s.botPlayer != null ? [s.botPlayer] : []), [s.bots, s.botPlayer]);
   const spectate = bots.length === 2;
-  const actingBot = bots.find((b) => botShouldAct(s, b)) ?? null;
+  const actingBot = replay ? null : bots.find((b) => botShouldAct(s, b)) ?? null;
   const [speed, setSpeed] = useState<0 | 1 | 2>(autoPlay ? 2 : 1); // bot-vs-bot: pause / normal / fast
   // the player hurries the bot's turn along: shorter pauses between its steps, results-only reports
   const [rush, setRush] = useState(autoPlay);
@@ -244,7 +245,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   // the player is reading (mission cards, the menu, a rule): the game waits instead of moving under them
   const viewing = showCards || showMissions || showMenu || !!explain || !!summary;
   useEffect(() => {
-    if (!bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
+    if (replay || !bots.length || rolling || reporting || thinking || stepping || viewing || s.phase === 'gameover' || (spectate && speed === 0)) return;
     const who = actingBot;
     // start of a bot's Movement phase: pick how to play the turn before moving anything
     if (who !== null && s.phase === 'movement' && s.active === who && !styleChosen(s)) {
@@ -331,7 +332,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       catch { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; onMain(); }
     }, delay);
     return () => window.clearTimeout(t);
-  }, [s, actingBot, act, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, actingBot, act, rolling, reporting, thinking, stepping, viewing, worker, speed, spectate, bots.length, rush, replay]); // eslint-disable-line react-hooks/exhaustive-deps
   // the hurry lasts for the bot's turn only
   useEffect(() => { if (actingBot === null && !spectate) setRush(false); }, [actingBot, spectate]);
   useEffect(() => { stepOnMain.current = false; }, [s.turn, s.phase]);
@@ -376,16 +377,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   }, [s.round, s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
   // bot against bot: the summary goes away by itself
   useEffect(() => { if (!summary || !spectate) return; const tm = window.setTimeout(() => setSummary(null), 4000); return () => window.clearTimeout(tm); }, [summary, spectate]);
-  const [finalSeen, setFinalSeen] = useState(false);
-  const loggedRef = useRef(false);
+  const [finalSeen, setFinalSeen] = useState(replay);
+  const loggedRef = useRef(replay || initial.phase === 'gameover');
+  const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
+  const lastReplayTurn = useRef(initial.turn);
   useEffect(() => {
-    if (s.phase !== 'gameover') return;
+    if (replay || s.turn === lastReplayTurn.current) return;
+    replayFrames.current.push(structuredClone(s));
+    lastReplayTurn.current = s.turn;
+  }, [s.turn, replay]);
+
+  useEffect(() => {
+    if (replay || s.phase !== 'gameover') return;
     for (const b of bots) speak(b, s.winner === b ? 'win' : 'lose');
     play(s.winner !== null && s.winner !== 'draw' && !bots.includes(s.winner) ? 'vp' : 'turn');
 
     if (!loggedRef.current) {
       loggedRef.current = true;
-      saveBattleLog({
+      const record: BattleRecord = {
         id: 'battle-' + Date.now(),
         timestamp: Date.now(),
         mode: s.campaign ? 'campaign' : 'simulator',
@@ -404,14 +413,25 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           seed: s.rng,
           savedGame: s,
         },
+      };
+      saveBattleLog(record);
+      const timeline = [...replayFrames.current];
+      if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
+      void compressReplayTimeline(timeline).then((encoded) => {
+        if (loadBattleLogs().some((saved) => saved.id === record.id)) {
+          saveBattleLog({ ...record, replayState: { ...record.replayState!, timeline: encoded } });
+        }
+      }).catch((error: unknown) => {
+        console.error('Could not save replay timeline', error);
+        window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
       });
     }
-  }, [s.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.phase, replay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // auto rules: the player only moves and shoots; the app takes every other decision of theirs as it comes up
   const autoWho = ([0, 1] as PlayerId[]).find((p) => autoDue(s, p)) ?? null;
   useEffect(() => {
-    if (autoWho === null || rolling || thinking || viewing) return;
+    if (replay || autoWho === null || rolling || thinking || viewing) return;
     const t = window.setTimeout(() => {
       act((g) => {
         let count = 0;
@@ -422,12 +442,12 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       });
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
-  }, [s, autoWho, rolling, thinking, viewing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, autoWho, rolling, thinking, viewing, replay]); // eslint-disable-line react-hooks/exhaustive-deps
   // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
   // possible); the step ends by itself unless a fight-start ability is waiting to be used
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
   useEffect(() => {
-    if (!pileKey || s.manualPile || s.attack || s.window) return;
+    if (replay || !pileKey || s.manualPile || s.attack || s.window) return;
     const f = s.fight!;
     if (bots.includes(f.stepPlayer) || onAuto(s, f.stepPlayer)) return;
     const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
@@ -444,7 +464,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       if (res.moved.length) flash(`${kind === 'pileIn' ? 'Pile-in' : 'Consolidate'} (auto): ${res.moved.join(', ')}`);
     }, 450);
     return () => window.clearTimeout(t);
-  }, [pileKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pileKey, replay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sel, setSel] = useState<string | null>(null);
   const selUnit = sel ? s.units.find((u) => u.id === sel) ?? null : null;
@@ -1188,7 +1208,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const rings: Ring[] = useMemo(() => {
     const r: Ring[] = [];
     if (mode?.k === 'charge' && modeUnit) {
-      for (const m of alive(modeUnit)) if (alive(modeUnit).length <= 3) r.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
+      for (const m of alive(modeUnit)) r.push({ c: m, r: (modeUnit.chargeRoll ?? 0) + m.r, color: 'rgba(245,184,61,0.5)', dash: true });
     }
     // Keep-out distance while arriving or infiltrating: model circles mark enemy ranges.
     if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress' || mode.how === 'infiltrate')) {
@@ -3168,6 +3188,10 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const chargePanel = () => {
     if (mode?.k === 'charge' && modeUnit) {
       const roll = modeUnit.chargeRoll ?? 0;
+      const nearest = boardUnits(s, other(modeUnit.owner))
+        .filter((e) => !hasKw(e, 'AIRCRAFT') || hasKw(modeUnit, 'FLY'))
+        .map((e) => unitDistance(modeUnit, e))
+        .sort((a, b) => a - b)[0];
       const cr = canUseStratagem(s, modeUnit.owner, 'command-reroll', modeUnit);
       const finish = () => {
         if (!mode.heroic) return;
@@ -3177,7 +3201,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       return (
         <>
           <div className="big-result">Charge roll: {roll}"</div>
-          {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails</div>}
+          {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${Math.max(0, nearest - RULES.engagementRange).toFixed(1)}" to reach Engagement Range` : ''}</div>}
           {(hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
             <div className="small" style={{ color: '#fca5a5', marginTop: '0.2rem' }}>
               Crushing Impact (1CP) available: rolls T{alive(modeUnit)[0]?.profile.T ?? 4}D6 on impact
@@ -3579,6 +3603,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
 
   const panel = () => {
+    if (replay) return (
+      <div className="row wrap">
+        <div className="grow">
+          Replay · Step {replayIndex + 1}/{replayCount} · Round {s.round} · {PHASE_TH[s.phase]}
+        </div>
+        <button className="btn" disabled={replayIndex === 0} onClick={() => onReplayStep?.(replayIndex - 1)}>Previous</button>
+        <button className="btn primary" disabled={replayIndex + 1 >= replayCount} onClick={() => onReplayStep?.(replayIndex + 1)}>Next</button>
+        <button className="btn" onClick={onExit}>History</button>
+      </div>
+    );
     if (s.phase === 'gameover') return (
       <div className="row">
         <div className="handoff grow">{s.winner === 'draw' ? 'The battle ends in a draw' : `${pName(s, s.winner as PlayerId)} wins`}</div>

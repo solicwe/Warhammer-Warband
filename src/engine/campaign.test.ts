@@ -7,6 +7,7 @@ import {
   afterBattle, applyCampaign, buyEnhancementForUnit, changeSquadSize, combineSquads, continueNextLoop,
   enhancementScrapCost, enter, makeMap, newRun, reachable, recruitUnit, removeEnhancementFromUnit, takeReward
 } from './campaign';
+import { pointsOptions } from './army';
 import { effectsFor } from '../rules-engine/effects';
 import { pointsFirst, armyPlan } from '../ai/botPlan';
 import { chooseTurnStyle } from '../ai/botLook';
@@ -93,6 +94,8 @@ describe('campaign', () => {
 
   it('allows changing squad size to 10 models and combining squads in roguelike campaign', () => {
     const sm = load('SM');
+    const intercessors = sm.datasheets.find((d) => d.name === 'Intercessor Squad')!;
+    const pointsAt = (models: number) => pointsOptions(intercessors).find((option) => option.models === models)!.pts;
     const list = autoList(sm, 500, 3);
     let run = newRun(sm, list, ['ORK'], 42);
     run.scrap = 500;
@@ -108,8 +111,8 @@ describe('campaign', () => {
     run = changeSquadSize(run, sm, unit1.uid, 10);
     const updated1 = run.list.units.find((u) => u.uid === unit1.uid)!;
     expect(updated1.models).toBe(10);
-    expect(updated1.pts).toBe(175);
-    expect(run.scrap).toBe(scrapBefore - 80); // 175 - 95 = 80 Scrap spent
+    expect(updated1.pts).toBe(pointsAt(10));
+    expect(run.scrap).toBe(scrapBefore - (pointsAt(10) - pointsAt(5)));
 
     // 2. Recruit a second 5-man Intercessor Squad
     run = recruitUnit(run, sm, 'Intercessor Squad', 5);
@@ -129,7 +132,7 @@ describe('campaign', () => {
 
     const merged = run.list.units.find((u) => u.uid === squads[0].uid)!;
     expect(merged.models).toBe(10);
-    expect(merged.pts).toBe(175);
+    expect(merged.pts).toBe(pointsAt(10));
     expect(merged.battles).toBe(5); // the more experienced squad's count
   });
 

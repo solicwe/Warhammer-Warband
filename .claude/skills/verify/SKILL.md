@@ -49,6 +49,7 @@ or run it on the old code), then pass.
 - Look at it. Start `npx vite --port 5179 --strictPort` in the background, open the page with Playwright
   (`require('playwright')`, `chromium.launch()`, a phone viewport such as `devices['iPhone 13']`), screenshot, read
   the image. Kill vite by its PID afterwards.
+- For battle-history replay, click History, Replay, Previous / Next, and exit. Confirm the original record count and in-progress save are unchanged.
 - Effects: a sheet page in `src/zz/` that renders `FxView` (export it for the run, put it back after) at two or three
   moments of each effect, board zoomed out (`<FxLayer fx={[]} viewW={44} />`). Send the sheet to the owner.
 - Frame cost: render an attack 61 times with `flushSync` and time it; count the SVG elements.
@@ -67,3 +68,5 @@ or run it on the old code), then pass.
   hold the port.
 - A run of the full suite started while files were changing gave a wrong result. Do not edit `src/` while it runs;
   docs and skills are safe to edit.
+- Charge reach is measured to Engagement Range, not base contact: target filtering, charge result feedback and the
+  auto-charge path must all allow the rolled distance plus the 1" Engagement Range.

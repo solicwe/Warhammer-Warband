@@ -382,11 +382,11 @@ describe('Imperial Agents rule coverage', () => {
       expect(stormBolter.profiles[0]).toMatchObject({ S: 5, AP: -1 });
     }
     for (const name of ['Inquisitor', 'Inquisitor Draxus']) {
-      expect(AoI.datasheets.find((sheet) => sheet.name === name)!.leads).not.toContain('Deathwatch Kill Team');
+      expect(AoI.datasheets.find((sheet) => sheet.name === name)!.leads).toContain('Deathwatch Kill Team');
     }
     const veiledBlade = AoI.detachments.find((detachment) => detachment.name === 'Veiled Blade Elimination Force')!;
     expect(Object.fromEntries(veiledBlade.enhancements.map(({ name, pts }) => [name, pts]))).toEqual({
-      'Decoy Targets': 40, 'Esoteric Explosives': 40, 'Intraneural Biotech': 35, 'Micromelta Rounds': 45,
+      'Decoy Targets': 15, 'Esoteric Explosives': 10, 'Intraneural Biotech': 15, 'Micromelta Rounds': 20,
     });
     expect(veiledBlade.stratagems.find((stratagem) => stratagem.name === 'ENSNARING TRAP')!.text).not.toContain('does not receive a Charge bonus');
   });
@@ -396,7 +396,7 @@ describe('Imperial Agents rule coverage', () => {
       name: 'Assassins', factionId: 'AoI', battleSize: 'incursion', detachments: ['Veiled Blade Elimination Force'],
       units: [{ uid: 'vindicare', datasheet: 'Vindicare Assassin', models: 1, pts: 100 }],
     };
-    expect(listPoints(list, AoI)).toBe(145);
+    expect(listPoints(list, AoI)).toBe(120);
     expect(buildUnits(list, AoI, 0)[0].abilities.some((ability) => ability.name === 'Micromelta Rounds')).toBe(true);
     list.detachments = [];
     expect(listPoints(list, AoI)).toBe(100);
@@ -423,7 +423,7 @@ describe('Imperial Agents rule coverage', () => {
     const rhino = state.units.find((unit) => unit.sources[0] === 'Imperial Rhino')!;
     rhino.transport!.capacity = 5;
     expect(canEmbarkIn(state, killTeam, rhino)).toMatch(/Not enough room/);
-    rhino.transport!.capacity = 6;
+    rhino.transport!.capacity = 7;
     expect(canEmbarkIn(state, killTeam, rhino)).toBeNull();
   });
 

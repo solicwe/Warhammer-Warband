@@ -2,6 +2,7 @@
 // preferences and custom photos. Reads and writes never throw (a private window or a full / blocked storage just
 // means this session only), so callers do not need their own try/catch. A cloud sync hooks in at this one place.
 import { migrateRun, type Run } from '../engine/campaign';
+import type { GameState } from '../engine/types';
 
 /** The storage keys in use. */
 export const KEYS = {
@@ -76,7 +77,8 @@ export interface BattleRecord {
   summary?: string;
   replayState?: {
     seed: number;
-    savedGame: any;
+    savedGame: GameState;
+    timeline?: string;
   };
 }
 

@@ -476,24 +476,24 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
       // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
       const inDifferentFootprint = s.terrain.some((t) =>
         t.category !== 'exposed' &&
-        standsIn(s, m, t) &&
-        !standsIn(s, attacker, t)
+        modelStandsIn(s, m, t) &&
+        !modelStandsIn(s, attacker, t)
       );
       if (inDifferentFootprint) return true;
 
-      const attackerInSame = s.terrain.some((t) => t.category !== 'exposed' && standsIn(s, attacker, t) && standsIn(s, m, t));
+      const attackerInSame = s.terrain.some((t) => t.category !== 'exposed' && modelStandsIn(s, attacker, t) && modelStandsIn(s, m, t));
       if (attackerInSame) {
         // Rule 4: Attacker inside + Target inside SAME Footprint = Target does NOT gain cover from that shared footprint.
         return false;
       }
 
-      const attackerInAny = s.terrain.some((t) => t.category !== 'exposed' && standsIn(s, attacker, t));
+      const attackerInAny = s.terrain.some((t) => t.category !== 'exposed' && modelStandsIn(s, attacker, t));
       if (attackerInAny) {
         // Rule 3: Attacker inside + Target outside = Target does NOT gain cover from attacker's footprint
         const otherIntervening = s.terrain.some((t) =>
           t.category !== 'exposed' &&
-          !standsIn(s, attacker, t) &&
-          !standsIn(s, m, t) &&
+          !modelStandsIn(s, attacker, t) &&
+          !modelStandsIn(s, m, t) &&
           segCrossesPoly({ a: attacker, b: m }, t.poly)
         );
         if (otherIntervening) return true;
@@ -508,4 +508,3 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
   if (cacheKey) coverUnitPairCache.set(cacheKey, res);
   return res;
 }
-

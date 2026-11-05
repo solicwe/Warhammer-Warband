@@ -45,21 +45,22 @@ if (typeof window !== 'undefined') {
 }
 
 /** Game state holder: every action runs synchronously on a clone of the latest state, then autosaves. */
-export function useGame(initial: GameState) {
+export function useGame(initial: GameState, persist = true, readOnly = false) {
   const sanitized = sanitizeGameState(initial);
   const ref = useRef<GameState>(sanitized);
   const history = useRef<GameState[]>([]);
   const [state, setState] = useState<GameState>(sanitized);
   const [undoCount, setUndoCount] = useState(0);
   // a battle left before its first action is still there to continue from the home screen
-  useEffect(() => { queueSave(ref.current); }, []);
+  useEffect(() => { if (persist) queueSave(ref.current); }, [persist]);
   const commit = (next: GameState) => {
     sanitizeGameState(next);
     ref.current = next;
     setState(next);
-    queueSave(next);
+    if (persist) queueSave(next);
   };
   const act = useCallback(<T,>(fn: (s: GameState) => T): T => {
+    if (readOnly) return undefined as T;
     const prev = ref.current;
     const next = structuredClone(prev);
     let out: T;
@@ -76,11 +77,12 @@ export function useGame(initial: GameState) {
     setUndoCount(history.current.length);
     commit(next);
     return out;
-  }, []);
+  }, [persist, readOnly]);
   const undo = useCallback(() => {
+    if (readOnly) return;
     const prev = history.current.pop();
     setUndoCount(history.current.length);
     if (prev) commit(prev);
-  }, []);
+  }, [persist, readOnly]);
   return { state, act, undo, canUndo: undoCount > 0 };
 }

@@ -129,7 +129,8 @@ const JUNK = /following|\bor\b|^unit$|^models?$|pistol\)|one of them|^different\
 /** "2 multi-meltas and 1 storm bolter" -> ['multi-meltas', 'multi-meltas', 'storm bolter'] (repeated for counts) */
 const items = (s) => s.split(/\s+and\s+|,\s*/).flatMap((raw) => {
   const body = ownerless(raw);
-  const x = stripCount(body);
+  const replacement = body.match(/\breplaced with\s+(.+)$/i);
+  const x = stripCount(replacement?.[1] ?? body);
   if (!x || x.length > 40 || JUNK.test(x)) return [];
   return Array(Math.min(countOf(body), 6)).fill(x);
 });
@@ -477,7 +478,9 @@ function build() {
       })),
     }));
 
-    const armyRules = t.Abilities.filter((a) => a.faction_id === f.id).map((a) => ({ name: a.name, text: htmlToText(a.description) }));
+    // The export duplicates this ADEPTUS ASTARTES-only rule for factions without Space Marine units.
+    const armyRules = t.Abilities.filter((a) => a.faction_id === f.id && (a.name !== 'Combat Doctrines' || f.id === 'SM'))
+      .map((a) => ({ name: a.name, text: htmlToText(a.description) }));
 
     for (const d of datasheets) {
       const br = borrowed.get(d.id);

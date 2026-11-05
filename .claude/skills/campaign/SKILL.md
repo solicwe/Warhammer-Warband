@@ -15,7 +15,7 @@ Player view: the README's Campaign section.
 | A run, the map, rewards, recruiting, relics | `src/engine/campaign.ts` | `Run`, `makeMap`, `makeOffer`, `takeReward`, `afterBattle`, `applyCampaign`, `RELICS`, `relicText`, `relicMaxLevel` |
 | Battles | `campaignMission(node)` in `campaign.ts`, started in `src/ui/Campaign.tsx` | a normal battle: official primary, Tactical secondaries, 5 rounds, random Force Dispositions by the node's seed; both sides hold their secondary cards from round 1; idle tactic (`run.idleTactic`: 'objectives' or 'assault') selectable on the node and in battle |
 | The army tree | `src/engine/campaignTree.ts` | 7 shared spokes, the army's branch, ring bridges, conversion keystones; `treeFor(army)`; swap pools (`SWAP`); `TREE_KEYS` / `effectKeys` |
-| The army's own branches | `src/engine/campaignTreeArmies.ts` | `ARMY_KITS` per army (corps, arsenal, titan keystone); move lists per style; `WIDE` army-wide nodes |
+| The army's own branches | `src/engine/campaignTreeArmies.ts` | `ARMY_KITS` per army (corps, arsenal, and an arsenal keystone; Titan unlock where recruitable); move lists per style; `WIDE` army-wide nodes |
 | Keywords an army can field | `src/engine/treeFielded.ts` | written by `campaignTreeFit.test.ts` (`UPDATE_FIELDED=1`); never edit by hand |
 | Enemy growth | `enemyTree`, `enemyTreePoints`, `enemyDetachments` | the enemy gets a tree as big as yours (+3 elite, +6 boss) |
 | Screens | `src/ui/Campaign.tsx`, `ArmyTree.tsx`, `Relics.tsx` | |
@@ -60,3 +60,6 @@ at phone width.
   condition, not the comment, and test the case the comment promises (`campaignRules.test.ts`, campaign events).
 - Changing a price can break a test that relied on running out of Scrap (`campaign.test.ts`, combining squads): fix
   the test to ask for what it means, not for the old price.
+- A faction without a priced Titan still needs a named ordinary arsenal keystone. `armyBranches()` falls back to
+  `arsenal.keystone` when no Titan unlock applies; check every faction's recruit pool in `campaignTree.test.ts` and
+  every tree node name in `campaignTreeFit.test.ts`.

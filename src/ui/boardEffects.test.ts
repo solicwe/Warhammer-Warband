@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getObjectiveEffects } from './Board';
+import { getObjectiveEffects, needsTableQuarterGuide } from './Board';
 import type { GameState, ObjectiveState, PlayerState } from '../engine/types';
 
 function mockGameState(): GameState {
@@ -50,6 +50,16 @@ describe('getObjectiveEffects', () => {
     expect(soc).toBeDefined();
     expect(soc?.radius).toBe(6.0);
     expect(soc?.title).toContain('SHADOW OF CHAOS');
+  });
+
+  it('shows quarter guidance only while the viewer has a table-quarter primary', () => {
+    const s = mockGameState();
+    s.players[0].primaryId = 'reconnaissance-sweep';
+    expect(needsTableQuarterGuide(s, 0)).toBe(true);
+    s.round = 6;
+    expect(needsTableQuarterGuide(s, 0)).toBe(false);
+    s.players[1].primaryId = 'meatgrinder';
+    expect(needsTableQuarterGuide(s, 1)).toBe(false);
   });
 
   it('detects Grey Knights Warpbane Task Force Hallowed Ground 3" zone', () => {
@@ -195,4 +205,3 @@ describe('getObjectiveEffects', () => {
     expect(supply?.title).toContain('SUPPLY CACHE');
   });
 });
-

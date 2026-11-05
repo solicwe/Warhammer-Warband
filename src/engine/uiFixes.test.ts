@@ -8,23 +8,12 @@ import { defaultWargear, syncWargear } from './army';
 import type { ArmyList, FactionData } from './types';
 
 describe('UI & Tyranid Datasheet Fixes', () => {
-  it('Harridan and Hierophant datasheets have valid base and options', () => {
+  it('current Tyranid datasheets have valid model bases and renderable stats', () => {
     const tyrFac = TYR as unknown as FactionData;
-    const harridan = tyrFac.datasheets.find((d) => d.name === 'Harridan');
-    const hierophant = tyrFac.datasheets.find((d) => d.name === 'Hierophant');
+    expect(tyrFac.datasheets.length).toBe(50);
 
-    expect(harridan).toBeDefined();
-    expect(harridan?.models[0].base).toBeDefined();
-    expect(harridan?.models[0].base.text).toBeTruthy();
-    expect(harridan?.options).toBeDefined();
-
-    expect(hierophant).toBeDefined();
-    expect(hierophant?.models[0].base).toBeDefined();
-    expect(hierophant?.models[0].base.text).toBeTruthy();
-    expect(hierophant?.options).toBeDefined();
-
-    // Verify statGroups does not throw on any Tyranid datasheet
     for (const d of tyrFac.datasheets) {
+      expect(d.models[0]?.base?.text, d.name).toBeTruthy();
       expect(() => statGroups(d.models)).not.toThrow();
     }
   });

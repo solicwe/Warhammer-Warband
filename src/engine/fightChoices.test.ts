@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { expect, it } from 'vitest';
 import { buildFightPools } from './attack';
-import { canOverrun, createGame, endPileInStep, fightCandidates, formationAt, markFought, placeUnit } from './game';
+import { autoPileMove, canOverrun, consolidateMode, createGame, endPileInStep, fightCandidates, formationAt, markFought, placeUnit } from './game';
 import { alive, unitDistance } from './state';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
@@ -66,4 +66,36 @@ it('a unit whose foe was destroyed is done on its own when no enemy is within 5"
   expect(canOverrun(s2, b2)).toBe(true);
   expect(fightCandidates(s2).units.map((u) => u.id)).toEqual([b2.id]);
   expect(unitDistance(b, far)).toBeGreaterThan(5);
+});
+
+it('lets a fought unit consolidate toward an enemy farther than 3"', () => {
+  const s = game([['Intercessor Squad', 1, 80]], [['Boyz', 1, 90]]);
+  const u = put(s, 'p0-x0', { x: 22, y: 22 });
+  const enemy = put(s, 'p1-x0', { x: 22, y: 28 });
+  for (const m of u.models.slice(1)) m.dead = true;
+  for (const m of enemy.models.slice(1)) m.dead = true;
+  const before = unitDistance(u, enemy);
+  s.fight = { step: 'consolidate', stepPlayer: 0, chooser: 0, eligible: [u.id], fought: [u.id], forcedNext: null, movedThisStep: [] };
+
+  expect(before).toBeGreaterThan(3);
+  expect(consolidateMode(s, u)).toEqual({ mode: 'engaging', enemies: [enemy] });
+  expect(autoPileMove(s, u, 'consolidate')).toBe(true);
+  expect(unitDistance(u, enemy)).toBeLessThan(before);
+});
+
+it('lets a fought unit consolidate toward an objective after all enemies are destroyed', () => {
+  const s = game([['Intercessor Squad', 1, 80]], [['Boyz', 1, 90]]);
+  const u = put(s, 'p0-x0', { x: 22, y: 22 });
+  const enemy = s.units.find((x) => x.owner === 1)!;
+  enemy.status = 'destroyed';
+  for (const m of enemy.models) m.dead = true;
+  const objective = s.objectives[0];
+  s.objectives = [objective];
+  s.terrain = [{
+    id: objective.terrainId, kind: 'objective-area', label: 'Objective', category: 'exposed', height: 0,
+    poly: [{ x: 30, y: 30 }, { x: 31, y: 30 }, { x: 31, y: 31 }, { x: 30, y: 31 }], walls: [],
+  }];
+  s.fight = { step: 'consolidate', stepPlayer: 0, chooser: 0, eligible: [u.id], fought: [u.id], forcedNext: null, movedThisStep: [] };
+
+  expect(consolidateMode(s, u)).toMatchObject({ mode: 'objective', objective });
 });

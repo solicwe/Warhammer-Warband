@@ -135,8 +135,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
   enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. An army that can field
   titanic units or allied Knights unlocks them with the keystone at the end of its arsenal branch (Questor Oath,
-  Gargant Mob, Monolith Phalanx...); Drukhari, Genestealer Cults and the Votann have none and get another keystone
-  there, and Imperial and Chaos Knight armies need none for their own Knights. Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
+  Gargant Mob, Monolith Phalanx...); Drukhari, Genestealer Cults, the Votann and Tyranids get an ordinary keystone
+  when their recruit pool has no Titan to unlock, and Imperial and Chaos Knight armies need none for their own Knights.
+  Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
 - **Relics** are artefacts with special rules the tree never gives: invulnerable saves, -1 Damage, Critical Hits on
   5+, mortal wounds, Fights First, [LANCE], [DEVASTATING WOUNDS], shooting or charging after Advancing... A relic you
   already hold comes back as an upgrade while a level still improves it, and its text is written from what it does.
@@ -156,16 +157,16 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - While a sheet is up, a small live map window under the phase tabs shows the unit you picked, zoomed in; with nothing
   picked it shows the whole board while the sheet hides most of it. It never opens over the dice. Drag it to move it,
   or close it.
-- Pinch to zoom and drag to pan. You can zoom out to twice the table's width, so all of it fits above the bottom sheet. Two faint dashed lines split the table into its four
-  quarters, for the missions that score by quarter. An objective's outline takes the colour of whoever has more OC
-  on it right now; the game settles control at the end of each phase.
+- Pinch to zoom and drag to pan. You can zoom out to twice the table's width, so all of it fits above the bottom sheet.
+  Missions that score by table quarter label Q1–Q4 and mark the central 6" exclusion zone. An objective's outline
+  takes the colour of whoever has more OC on it right now; the game settles control at the end of each phase.
 - **Moving and setting up.** Drag a model or use the stick, then press Confirm. Cancel, Reset and Confirm sit at the
   top of the sheet, above the stick, so they stay on screen. Bikes and vehicles get turn buttons (45 degrees a press)
   while they move or set up, and keep the facing you gave them. A facing within 20 degrees of straight snaps straight.
 - **Auto fit.** A unit set down against a wall or another model shuffles to the nearest legal spot, and a long base
   also turns to find an angle that fits. Pile-in is automatic: each model tries every spot around the nearest enemy
-  models, base contact first, while the unit stays in coherency. Consolidation: you pick which of your units
-  consolidate (Auto places them the same way); the bot's units do it on their own.
+  models, base contact first, while the unit stays in coherency. After fighting, choose each eligible unit's
+  Consolidation position yourself or use Auto; the bot's units do it on their own.
 - **Fight choices.** A melee weapon with several profiles (strike / sweep) gets profile cards, as in shooting. A unit
   whose foe was destroyed before it fought may Overrun (pile in again, then fight) when an enemy is within 5"; with
   none, it is done on its own and you do not have to pick it to skip it.
@@ -175,6 +176,8 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
   play. Closing the tab or the browser loses nothing.
+- **Battle history.** Finished simulator and campaign matches can be replayed one turn at a time from History. Replays
+  are read-only and do not replace the current save or create another history entry.
 
 Nothing leaves your device, and the site sends a Content Security Policy that only allows its own files and Google Fonts.
 

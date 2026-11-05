@@ -4,10 +4,11 @@ import { Icon } from './Icon';
 
 interface Props {
   onClose: () => void;
-  onReplay: (log: BattleRecord) => void;
+  onReplay: (log: BattleRecord) => void | Promise<void>;
+  replayError?: string | null;
 }
 
-export function BattleLogsModal({ onClose, onReplay }: Props) {
+export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
   const [logs, setLogs] = useState<BattleRecord[]>(loadBattleLogs);
   const [filter, setFilter] = useState<'all' | 'simulator' | 'tabletop' | 'campaign'>('all');
   const [armedClear, setArmedClear] = useState(false);
@@ -129,6 +130,7 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
 
         {/* Content list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {replayError && <div className="toast" role="alert">{replayError}</div>}
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <Icon name="history" size={36} style={{ opacity: 0.35 }} />

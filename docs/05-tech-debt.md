@@ -1,4 +1,4 @@
-# Bugs and technical debt (audit of 1 November 2026)
+# Bugs and technical debt (audit of 1 November 2026; updated 5 November 2026)
 
 A whole-project check: type check with unused-code warnings, a search for exports nobody uses, the engine's
 determinism rule, dependencies, the docs against the code, and a bot-vs-bot battle in the browser. Update this file
@@ -22,6 +22,12 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | Fire Overwatch on a unit that did not move | The end-of-Movement window let any enemy within 24" be shot | `overwatchTargets`: only units that moved or were set up this turn, for the player and the bot |
 | The defender could not fight back | The map's unit actions were for the active player only | The side whose pick it is gets the Fight action, and the panel has a Fight button |
 | A stale comment | `fitFormation` said objective markers block a model; they do not (`pathing.ts`) | Comment corrected, unused filter removed |
+| Charge rolls failing at engagement distance | Target checks compared the full base-to-base gap with the rolled movement, although a charge only needs to reach Engagement Range | Target selection and charge result feedback now include the 1" Engagement Range; `autoCharge.test.ts` covers a charge that ends 1" away |
+| Quarter and movement guides missing on some maps / units | Faint quarter lines were drawn beneath terrain, and model range circles were hidden for units with more than six models (three for charges) | Active quarter scoring labels all quarters and the centre exclusion area; range circles render for every model in a draft |
+| Consolidation unavailable after a nearby enemy was destroyed | The player could choose a position only if an enemy or objective was already within 3" | Fought units can now consolidate toward any remaining enemy or the nearest objective; `fightChoices.test.ts` covers both cases |
+| Replaying a finished battle created another history entry and could replace the current save | Replay reopened a game-over snapshot in the normal game screen, whose effects log the result and autosave the state; records had no turn checkpoints | Replay now stores compressed turn snapshots, supports Previous / Next, and opens without writing saves or history |
+| Tyranid campaign arsenal had no named end node when no priced Bio-titan was recruitable | The Titan keystone was removed to match the current recruit pool, leaving the ordinary keystone empty | Added the Great Devourer ordinary keystone and checked that every army's arsenal has a named keystone |
+| Compound wargear text could become a fake item name | `parseWargearOption` kept the "is replaced with" sentence as a weapon choice | Extract the replacement item before canonicalising choices; regenerated faction data |
 
 ## Open, by priority
 

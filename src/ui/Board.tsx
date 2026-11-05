@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RULES, MISSIONS, deploymentById } from '../engine/config';
+import { RULES, MISSIONS, deploymentById, primaryById } from '../engine/config';
 import { baseDist, bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../factions/flow';
@@ -620,6 +620,11 @@ const StaticTerrainLayer = memo(function StaticTerrainLayer({ children }: { chil
   return <g className="static-terrain-layer" pointerEvents="none">{children}</g>;
 });
 
+export function needsTableQuarterGuide(s: GameState, viewer: PlayerId): boolean {
+  return primaryById(s.players[viewer].primaryId).scoring.some((r) =>
+    r.condition === 'tableQuarters' && s.round >= r.rounds[0] && s.round <= r.rounds[1]);
+}
+
 function BoardImpl(props: BoardProps) {
   usePortraitsVersion();
   const { s, draft, draftUnit, maxFor, onDraft, walk } = props;
@@ -629,6 +634,7 @@ function BoardImpl(props: BoardProps) {
   const SOFT = [p0Theme.soft, p1Theme.soft];
   const W = Math.max(RULES.battlefield.width, s.table?.width ?? RULES.battlefield.width);
   const H = Math.max(RULES.battlefield.height, s.table?.height ?? RULES.battlefield.height);
+  const quarterGuide = needsTableQuarterGuide(s, props.viewer);
   // local draft position for dragging to eliminate global re-renders
   const [localDraft, setLocalDraft] = useState<Paths | null>(null);
   // models picked for single-model adjustment (tap a model of the moving unit); otherwise a drag moves the whole unit
@@ -1493,6 +1499,29 @@ function BoardImpl(props: BoardProps) {
         <text key={`tx${i}`} x={i * 6 + 0.15} y={H - 0.25} fontSize={0.6} fill="rgba(255,255,255,0.4)" pointerEvents="none">{i * 6}"</text>
       ))}
       <StaticTerrainLayer>{terrainEls}</StaticTerrainLayer>
+      {quarterGuide && (
+        <g className="quarter-guide" pointerEvents="none">
+          <title>Quarter scoring: 3 quarters = 3VP, 4 quarters = 6VP. Models within 6" of the centre do not score.</title>
+          <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#f5d48a" strokeWidth={0.14} strokeDasharray="0.8 0.45" />
+          <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#f5d48a" strokeWidth={0.14} strokeDasharray="0.8 0.45" />
+          <circle cx={W / 2} cy={H / 2} r={6} fill="rgba(245,212,138,0.12)" stroke="#f5d48a" strokeWidth={0.16} strokeDasharray="0.65 0.35" />
+          {[
+            { x: W / 4, y: H / 4, label: 'Q1' },
+            { x: W * 3 / 4, y: H / 4, label: 'Q2' },
+            { x: W / 4, y: H * 3 / 4, label: 'Q3' },
+            { x: W * 3 / 4, y: H * 3 / 4, label: 'Q4' },
+          ].map((q) => (
+            <g key={q.label} transform={`translate(${q.x} ${q.y})`}>
+              <rect x={-0.8} y={-0.52} width={1.6} height={1.04} rx={0.3} fill="rgba(20,18,14,0.82)" stroke="#f5d48a" strokeWidth={0.07} />
+              <text y={0.2} textAnchor="middle" fontSize={0.7} fontWeight={900} fill="#f5d48a">{q.label}</text>
+            </g>
+          ))}
+          <g transform={`translate(${W / 2} ${H / 2 - 6.55})`}>
+            <rect x={-3.1} y={-0.42} width={6.2} height={0.84} rx={0.25} fill="rgba(20,18,14,0.88)" stroke="#f5d48a" strokeWidth={0.06} />
+            <text y={0.16} textAnchor="middle" fontSize={0.46} fontWeight={800} fill="#f5d48a">6" FROM CENTRE: NO SCORE</text>
+          </g>
+        </g>
+      )}
       {props.edgeGuide !== undefined && props.edgeGuide > 0 && props.edgeGuide * 2 < Math.min(W, H) && (
         <g pointerEvents="none">
           <rect x={props.edgeGuide} y={props.edgeGuide} width={W - props.edgeGuide * 2} height={H - props.edgeGuide * 2}
@@ -1812,7 +1841,7 @@ function BoardImpl(props: BoardProps) {
                     strokeWidth={isBad ? 0.11 : 0.08}
                     strokeDasharray={isBad ? '0.35 0.18' : undefined}
                   />
-                  {ms.length <= 6 && maxFor && (
+                  {maxFor && (
                     <circle
                       cx={p[0].x}
                       cy={p[0].y}

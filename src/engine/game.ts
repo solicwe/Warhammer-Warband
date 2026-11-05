@@ -1758,7 +1758,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   s.lastAct = { unitId: u.id, owner: u.owner, kind: 'charge', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
-  const near = Math.min(...boardUnits(s, other(u.owner)).map((e) => unitDistance(u, e)), 99);
+  const near = Math.max(0, Math.min(...boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') || hasKw(u, 'FLY')).map((e) => unitDistance(u, e)), 99) - RULES.engagementRange);
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + rollMods(s, u).chargeBonus - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0);
   if (r[0] + r[1] + bonus < near) {
     const higher = Math.max(r[0], r[1]);
@@ -1798,7 +1798,7 @@ function emergencyEmbark(s: GameState, charger: UnitState) {
     const key = `${s.turn}:${t.id}`;
     if ((t.oncePerTurnUsed ??= []).includes(key)) continue;
     const cands = boardUnits(s, p).filter((x) => x.id !== t.id && isAstartes(x) && !isEngaged(s, x)
-      && unitDistance(charger, x) <= (charger.chargeRoll ?? 0) + 1e-6
+      && unitDistance(charger, x) <= (charger.chargeRoll ?? 0) + RULES.engagementRange + 1e-6
       && alive(x).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6)) && !canEmbarkIn(s, x, t));
     const worth = (x: UnitState) => (x.pts * alive(x).length) / Math.max(1, x.startingStrength);
     const best = cands.sort((a, b) => worth(b) - worth(a))[0];
@@ -1878,7 +1878,7 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
   const out = boardUnits(s, other(u.owner)).filter((e) => {
     if (hasKw(e, 'AIRCRAFT') && !hasKw(u, 'FLY')) return false;
     const d = unitDistance(u, e);
-    if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + 1e-6) return false;
+    if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + RULES.engagementRange + 1e-6) return false;
     if (opts.within !== undefined && d > opts.within) return false;
     if (u.chargeOnly?.turn === s.turn && !u.chargeOnly.ids.includes(e.id)) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
@@ -2122,20 +2122,23 @@ export function startConsolidate(s: GameState) {
 }
 
 export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' | 'engaging' | 'objective' | null; enemies: UnitState[]; objective?: ObjectiveState } {
+  const nearestObjective = () => s.objectives.slice().sort((a, b) => {
+    const centreA = polyCentroid(objectiveTerrain(s, a).poly);
+    const centreB = polyCentroid(objectiveTerrain(s, b).poly);
+    const distance = (p: Pt) => Math.min(...alive(u).map((m) => dist(m, p)));
+    return distance(centreA) - distance(centreB);
+  })[0];
   const eng = engagedEnemies(s, u);
   // Establish Supremacy: an objective consolidation even while engaged
   if (eng.length && unitFlags(s, u).objConsolidate) {
-    const obj = s.objectives.find((o) => alive(u).some((m) => objectivePolys(s, o).some((p) => bodyTouchesPoly(m, RULES.consolidate.range, p))));
-    if (obj) return { mode: 'objective', enemies: [], objective: obj };
+    const objective = nearestObjective();
+    if (objective) return { mode: 'objective', enemies: [], objective };
   }
   if (eng.length) return { mode: 'ongoing', enemies: eng };
-  const near = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.consolidate.range);
-  if (near.length) return { mode: 'engaging', enemies: near };
-  const obj = s.objectives.find((o) => {
-    const t = s.terrain.find((x) => x.id === o.terrainId)!;
-    return alive(u).some((m) => bodyTouchesPoly(m, RULES.consolidate.range, t.poly));
-  });
-  if (obj) return { mode: 'objective', enemies: [], objective: obj };
+  const enemies = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
+  if (enemies.length) return { mode: 'engaging', enemies };
+  const objective = nearestObjective();
+  if (objective) return { mode: 'objective', enemies: [], objective };
   return { mode: null, enemies: [] };
 }
 

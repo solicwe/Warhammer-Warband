@@ -273,6 +273,7 @@ export const ARMY_KITS: Record<string, { corps: Kit; arsenal: Kit; titan?: Spec 
     arsenal: { name: 'Brood Brothers', about: 'Stolen tanks, bikes and guard regiments turned to the cult.', style: 'gun', k: ['VEHICLE', 'MOUNTED', 'BATTLELINE'],
       notable: { ...s('Borrowed Firepower', 'VEHICLE ranged weapons: +1 Strength and +1 AP against MONSTER or VEHICLE units.', 'VEHICLE', [{ strength: 1, attack: 'ranged' }, { ap: 1, attack: 'ranged', if: ['targetMV'] }]), bonus: bonus(6, 'With 6 branch nodes: MOUNTED +2" Move.', { move: 2 }) },
       keystone: s('Purloined Arsenal', 'Keystone. VEHICLE ranged attacks re-roll Hit rolls; -1" Move.', 'VEHICLE', [{ reroll: 'hits', attack: 'ranged' }, { move: -1 }]) },
+    titan: QUESTOR,
   },
   GK: {
     corps: { name: 'Brotherhoods', about: 'Terminators and psyker-knights: daemon hunters in silver.', style: 'blade', k: ['TERMINATOR', 'PSYKER', 'CHARACTER'],
@@ -343,8 +344,8 @@ export const ARMY_KITS: Record<string, { corps: Kit; arsenal: Kit; titan?: Spec 
       notable: { ...s('Shadow of the Hive', 'ENDLESS MULTITUDE: +1 OC and +1 Attack in melee.', 'ENDLESS MULTITUDE', { oc: 1, attacks: 1, attack: 'melee' }), bonus: bonus(6, 'With 6 branch nodes: SYNAPSE Feel No Pain 5+.', { defend: { fnp: 5 } }) },
       keystone: s('Devour', 'Keystone. INFANTRY: +1 Attack and re-roll Charge rolls; -1 to saving throws.', 'INFANTRY', [{ attacks: 1, rerollCharge: true, attack: 'melee' }, { defend: { save: -1 } }]) },
     arsenal: { name: 'Monstrous Bio-forms', about: 'Hive Tyrants, Harvesters and the great beasts.', style: 'blade', k: ['MONSTER', 'HARVESTER', 'HIVE TYRANT'],
-      notable: { ...s('Bio-weapon Symbiosis', 'MONSTER: melee weapons +1 Damage.', 'MONSTER', { damage: 1, attack: 'melee' }), bonus: bonus(6, 'With 6 branch nodes: those units also Feel No Pain 6+.', { defend: { fnp: 6 } }) } },
-    titan: titan('Bio-titan Spawning', 'Harridans, Hierophants and other bio-titans'),
+      notable: { ...s('Bio-weapon Symbiosis', 'MONSTER: melee weapons +1 Damage.', 'MONSTER', { damage: 1, attack: 'melee' }), bonus: bonus(6, 'With 6 branch nodes: those units also Feel No Pain 6+.', { defend: { fnp: 6 } }) },
+      keystone: s('Great Devourer', 'Keystone. MONSTER melee weapons: +1 Strength and +1 Attack; -1 OC.', 'MONSTER', [{ strength: 1, attacks: 1, attack: 'melee' }, { oc: -1 }]) },
   },
   WE: {
     corps: { name: 'Berzerker Warbands', about: 'Berzerkers, Eightbound and Exalted champions: blood for the Blood God.', style: 'blade', k: ['BATTLELINE', 'POSSESSED', 'CHARACTER'],

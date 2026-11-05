@@ -142,17 +142,17 @@ export const PRESETS: Record<string, ArmyList> = {
     battleSize: 'incursion',
     detachments: ['Guardians of the Throne'],
     units: [
-      { uid: 'c1', datasheet: 'Custodian Guard', models: 4, pts: 180 },
+      { uid: 'c1', datasheet: 'Custodian Guard Sodality', models: 3, pts: 240 },
       {
         uid: 'c2', datasheet: 'Shield-Captain', models: 1, pts: 180, attachTo: 'c1', warlord: true,
         wargear: [
           { opt: 0, choice: 2, count: 1 }, // Guardian Spear
         ],
       },
-      { uid: 'c3', datasheet: 'Custodian Guard', models: 4, pts: 180 },
-      { uid: 'c4', datasheet: 'Vertus Praetors', models: 2, pts: 155 },
-      { uid: 'c6', datasheet: 'Allarus Custodians', models: 3, pts: 180 },
-      { uid: 'c5', datasheet: 'Prosecutors', models: 5, pts: 55 },
+      { uid: 'c3', datasheet: 'Custodian Guard Sodality', models: 3, pts: 240 },
+      { uid: 'c4', datasheet: 'Vertus Praetors', models: 2, pts: 220 },
+      { uid: 'c6', datasheet: 'Allarus Custodians', models: 3, pts: 270 },
+      { uid: 'c5', datasheet: 'Prosecutor Squad', models: 5, pts: 50 },
     ],
   },
   TS: {
@@ -492,7 +492,7 @@ export const PRESETS: Record<string, ArmyList> = {
       {
         uid: 'i4', datasheet: 'Deathwatch Kill Team', models: 5, pts: 115,
         wargear: [
-          { opt: 1, choice: 0, count: 2 }, // 2x Deathwatch thunder hammer
+          { opt: 1, choice: 0, count: 1 }, // Deathwatch thunder hammer
           { opt: 4, choice: 0, count: 1 }, // Frag cannon
           { opt: 5, choice: 0, count: 1 }, // Infernus heavy bolter
           { opt: 7, choice: 0, count: 1 }, // Xenophase blade
@@ -1037,7 +1037,4 @@ export const PRESETS: Record<string, ArmyList> = {
     ],
   },
 };
-
-
-
 

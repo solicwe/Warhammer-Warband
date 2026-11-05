@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { expect, it } from 'vitest';
-import { autoCharge, createGame, formationAt, placeUnit } from './game';
+import { autoCharge, chargeTargetOptions, createGame, formationAt, placeUnit } from './game';
 import { alive, unitDistance } from './state';
 import { nextRandom } from './dice';
 import type { ArmyList, FactionData, GameState } from './types';
@@ -29,3 +29,29 @@ it.each([['Assault Intercessor Squad', 10, 22], ['Terminator Squad', 5, 111]] as
     expect(autoCharge(s, a, [t.id])).toBe(true);
     expect(alive(a).some((m) => alive(t).some((e) => Math.hypot(m.x - e.x, m.y - e.y) - m.r - e.r <= 1.01))).toBe(true);
   });
+
+it('allows a charge roll to reach engagement range when bases remain up to 1" apart', () => {
+  const s: GameState = createGame({
+    lists: [list('SM', [['Assault Intercessor Squad', 1, 100]]), list('ORK', [['Boyz', 1, 90]])],
+    factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+    dispositions: ['take-and-hold', 'take-and-hold'], seed: 22,
+  });
+  s.terrain = [];
+  for (const u of s.units) u.status = 'reserves';
+  s.round = 2; s.turn = 3; s.active = 0; s.phase = 'charge';
+  const a = s.units.find((u) => u.owner === 0)!, t = s.units.find((u) => u.owner === 1)!;
+  placeUnit(s, t, formationAt(t, { x: 20, y: 20 }));
+  placeUnit(s, a, formationAt(a, { x: 20, y: 25 }));
+  for (const m of a.models.slice(1)) m.dead = true;
+  for (const m of t.models.slice(1)) m.dead = true;
+  const attacker = alive(a)[0], target = alive(t)[0];
+  attacker.x = target.x + target.r + attacker.r + 3.5;
+  attacker.y = target.y;
+  a.declaredCharge = true;
+  a.chargeRoll = 3;
+
+  expect(unitDistance(a, t)).toBeCloseTo(3.5);
+  expect(chargeTargetOptions(s, a)).toContain(t);
+  expect(autoCharge(s, a, [t.id])).toBe(true);
+  expect(unitDistance(a, t)).toBeLessThanOrEqual(1.01);
+});

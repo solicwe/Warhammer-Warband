@@ -441,6 +441,9 @@ function findRule(a: AbilityData, sheet: string): AbilityRule | undefined {
 export type AbilityStatus = 'auto' | 'partial' | 'manual' | 'info' | 'none' | 'core';
 export function abilityStatus(u: UnitState, a: AbilityData): { status: AbilityStatus; note?: string } {
   if (a.type === 'Core') return { status: 'core' };
+  if (a.name.startsWith('Cabal of Sorcerers') && u.factionKeywords.includes('HERETIC ASTARTES')) {
+    return { status: 'info', note: 'This ability only applies when your Army Faction is Thousand Sons.' };
+  }
   const r = abilityRule(u, a);
   // army rules (Aegis of the Emperor, Martial Ka'tah …) live with the detachment rules
   if (!r && DET_RULES[a.name]) return { status: DET_RULES[a.name].auto === 'full' ? 'auto' : DET_RULES[a.name].auto === 'partial' ? 'partial' : 'manual' };

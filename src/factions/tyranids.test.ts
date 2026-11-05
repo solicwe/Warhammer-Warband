@@ -104,12 +104,10 @@ describe('Tyranids Shadow in the Warp', () => {
 });
 
 describe('Tyranids Datasheet Coverage', () => {
-  it('contains all 52 non-legends datasheets with required properties', () => {
-    expect(TYR_FACTION.datasheets.length).toBe(52);
+  it('contains all 50 currently priced datasheets with required properties', () => {
+    expect(TYR_FACTION.datasheets.length).toBe(50);
 
     const names = TYR_FACTION.datasheets.map((d: { name: string }) => d.name);
-    expect(names).toContain('Harridan');
-    expect(names).toContain('Hierophant');
     expect(names).toContain('The Red Terror');
     expect(names).toContain('Tyranid Prime with Lash Whip');
     expect(names).toContain('Hyperadapted Raveners');

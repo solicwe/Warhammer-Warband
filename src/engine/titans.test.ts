@@ -8,7 +8,6 @@ import { rollHits, rollWounds, rollSavesAndDamage, applyDamage } from './attack'
 import type { DatasheetData, GameState, UnitState, ModelState, ArmyList, FactionData } from './types';
 import tlFaction from '../../public/data/factions/TL.json';
 import smFaction from '../../public/data/factions/SM.json';
-import tyrFaction from '../../public/data/factions/TYR.json';
 import votannFaction from '../../public/data/factions/LoV.json';
 import tauFaction from '../../public/data/factions/TAU.json';
 import necronFaction from '../../public/data/factions/NEC.json';
@@ -49,14 +48,7 @@ describe('Unit Sizes & Footprints (HULLS & ROUND)', () => {
     expect(whShape.r).toBeCloseTo(3.875);
   });
 
-  it('Super-heavies, bio-titans, and vehicles have accurate dimensions', () => {
-    const hierophant = tyrFaction.datasheets.find((d) => d.name === 'Hierophant')!;
-    const hShape = baseShape(hierophant as unknown as DatasheetData, 0);
-    expect(hShape.hull).toBe(true);
-    // len = 14, wid = 11 => hw = 5.5, hl = 1.5, r = 6.25
-    expect(hShape.hw).toBeCloseTo(5.5);
-    expect(hShape.hl).toBeCloseTo(1.5);
-
+  it('priced super-heavies and vehicles have accurate dimensions', () => {
     const thunderhawk = smFaction.datasheets.find((d) => d.name === 'Thunderhawk Gunship')!;
     const thShape = baseShape(thunderhawk as unknown as DatasheetData, 0);
     expect(thShape.hull).toBe(true);
@@ -100,8 +92,8 @@ describe('Unit Sizes & Footprints (HULLS & ROUND)', () => {
 
     const telemon = acFaction.datasheets.find((d) => d.name === 'Telemon Heavy Dreadnought')!;
     const telShape = baseShape(telemon as unknown as DatasheetData, 0);
-    // 100mm base round => r = 2.0 inches
-    expect(telShape.r).toBeCloseTo(2.0);
+    // 100mm base round, converted to inches.
+    expect(telShape.r).toBeCloseTo(100 / 25.4 / 2);
   });
 });
 
@@ -527,4 +519,3 @@ describe('Titan Abilities', () => {
     });
   });
 });
-

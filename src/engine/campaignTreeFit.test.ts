@@ -67,6 +67,7 @@ describe('army tree v3: relics never repeat the tree', () => {
   });
 
   it('no relic shares a name with a tree node', () => {
+    expect(treeNodes.filter(({ n }) => !n.name).map(({ id }) => id)).toEqual([]);
     const names = new Set(treeNodes.map(({ n }) => n.name.toLowerCase()));
     expect(RELICS.filter((r) => names.has(r.name.toLowerCase())).map((r) => r.name)).toEqual([]);
   });
@@ -96,4 +97,3 @@ describe('army tree v3: relics never repeat the tree', () => {
     }
   });
 });
-

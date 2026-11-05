@@ -67,10 +67,11 @@ Hybrid design: the big shared tree is the same for every army; three slots are t
   HERNKYN, KAPRICUS, IRONKIN STEELJACKS...). The depth-6 notable and the keystone are written for each army; the small
   nodes come from a style (guns, blades, walls, speed, war engines) so every branch is full.
 - **Titans**: the arsenal's keystone unlocks titanic units and Knights, named for the army (Questor Oath, Dread Pact,
-  Super-heavy Requisition, Wraithknight Awakening, Monolith Phalanx, Gargant Mob, Supremacy Clearance, Bio-titan
-  Spawning, Lord of Skulls Pact, Legio Pact), only for armies whose recruit pool has such a unit. Drukhari, Genestealer
-  Cults, Leagues of Votann and Chaos Knights get an ordinary keystone there instead; Imperial and Chaos Knight armies
-  recruit their own Knights without one. A test checks the keystone against each army's real recruit pool.
+  Super-heavy Requisition, Wraithknight Awakening, Monolith Phalanx, Gargant Mob, Supremacy Clearance, Lord of Skulls
+  Pact, Legio Pact), only for armies whose recruit pool has such a unit. Drukhari, Genestealer Cults, Leagues of Votann,
+  Tyranids and Chaos Knights get an ordinary keystone there instead; Tyranids use Great Devourer while no Bio-titan is
+  in the priced recruit pool. Imperial and Chaos Knight armies recruit their own Knights without one. A test checks the
+  keystone against each army's real recruit pool.
 - Old saves (tree v1, eight slots): nodes that no longer exist or no longer connect to the start, and the old Titan
   Requisition, are given back as Renown once.
 
@@ -116,7 +117,7 @@ can now hold a different node for each army.
   field, nodes keep their distance on every army's drawing, the tree uses only its own effect keys, every relic only
   others, no relic shares a name with a node, relic texts at every level, and offers only fitting relics.
 - `campaignTree.test.ts`: the shape (every node reachable, no overlaps, every keyword real), Renown, allocate and
-  refund rules, conversion keystones, thresholds, VETERAN, the titan keystone per army, old saves.
+  refund rules, conversion keystones, thresholds, VETERAN, Titan and ordinary arsenal keystones per army, old saves.
 - `campaignTreeEngine.test.ts`: every condition a node names is one the engine knows; every node of every branch
   changes what the engine works out for a unit it reaches (stats, rolls, OC, attack and defence modifiers), with a
   control that a no-op effect changes nothing; a leader-only node stays on the leader; and a whole 3-round campaign

@@ -89,13 +89,13 @@ describe('army building', () => {
   });
 
   it('uses the Aquila Kill Team majority Toughness instead of its highest profile', () => {
-    const u = buildUnits(list('AoI', [['Aquila Kill Team', 5, 200]]), AOI, 0)[0];
-    expect(u.models).toHaveLength(5);
+    const u = buildUnits(list('AoI', [['Aquila Kill Team', 6, 110]]), AOI, 0)[0];
+    expect(u.models).toHaveLength(6);
     expect(u.models.some((m) => m.profile.T === 6)).toBe(true);
-    expect(targetToughness(u)).toBe(4);
-    const t4 = u.models.find((m) => m.profile.T === 4)!;
+    expect(targetToughness(u)).toBe(5);
+    const t5 = u.models.find((m) => m.profile.T === 5)!;
     const t6 = u.models.find((m) => m.profile.T === 6)!;
-    u.models = [{ ...t4, id: 'tie-t4-a' }, { ...t4, id: 'tie-t4-b' }, { ...t6, id: 'tie-t6-a' }, { ...t6, id: 'tie-t6-b' }];
+    u.models = [{ ...t5, id: 'tie-t5-a' }, { ...t5, id: 'tie-t5-b' }, { ...t6, id: 'tie-t6-a' }, { ...t6, id: 'tie-t6-b' }];
     expect(targetToughness(u)).toBe(6);
   });
 });

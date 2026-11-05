@@ -11,6 +11,7 @@ import { GameScreen } from './GameScreen';
 import { Home } from './Home';
 import { loadArmies, saveArmies, withAutoRules, type Army } from './library';
 import { clearSaved, loadSaved } from './store';
+import { decompressReplayTimeline } from '../services/replay';
 import { TabletopScreen } from './TabletopScreen';
 import { TokenSprites } from './Tokens';
 
@@ -18,7 +19,7 @@ type Screen =
   | { kind: 'home' }
   | { kind: 'build'; id: string; fresh?: boolean }
   | { kind: 'battle' }
-  | { kind: 'game'; state: GameState }
+  | { kind: 'game'; state: GameState; replay?: { states: GameState[]; index: number } }
   | { kind: 'campaign' }
   | { kind: 'tabletop' };
 
@@ -47,6 +48,7 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   const [showArcaneModal, setShowArcaneModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
+  const [replayError, setReplayError] = useState<string | null>(null);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setErr('Could not load the faction list. Reload the page to try again.')); setSaved(loadSaved()); }, []);
   useEffect(() => saveArmies(armies), [armies]);
@@ -73,7 +75,25 @@ export default function App() {
 
   // leaving a campaign battle goes back to the campaign map (its result moves the run on)
   const exitGame = () => { const sv = loadSaved(); setSaved(sv); setScreen(sv?.campaign ? { kind: 'campaign' } : { kind: 'home' }); };
-  if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen initial={screen.state} onExit={exitGame} /></div>);
+  if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen
+    key={screen.replay ? `replay-${screen.replay.index}` : 'live'}
+    initial={screen.state}
+    replay={!!screen.replay}
+    replayIndex={screen.replay?.index}
+    replayCount={screen.replay?.states.length}
+    onReplayStep={screen.replay ? (index) => setScreen((current) => current.kind === 'game' && current.replay
+      ? { ...current, state: current.replay.states[index], replay: { ...current.replay, index } }
+      : current) : undefined}
+    onExit={() => {
+      if (screen.replay) {
+        setSaved(loadSaved());
+        setScreen({ kind: 'home' });
+        setShowLogsModal(true);
+      } else {
+        exitGame();
+      }
+    }}
+  /></div>);
   if (screen.kind === 'campaign') {
     return wrap(<CampaignScreen index={index} saved={saved} onBack={goHome} onPlay={(s) => setScreen({ kind: 'game', state: s })} onClearSaved={() => { clearSaved(); setSaved(null); }} />);
   }
@@ -150,10 +170,20 @@ export default function App() {
       {showLogsModal && (
         <BattleLogsModal
           onClose={() => setShowLogsModal(false)}
-          onReplay={(log) => {
+          replayError={replayError}
+          onReplay={async (log) => {
             if (log.replayState?.savedGame) {
-              setShowLogsModal(false);
-              setScreen({ kind: 'game', state: withAutoRules(log.replayState.savedGame) });
+              try {
+                const states = log.replayState.timeline
+                  ? await decompressReplayTimeline(log.replayState.timeline)
+                  : [log.replayState.savedGame];
+                if (!states.length) throw new Error('This battle has no replay states.');
+                setReplayError(null);
+                setShowLogsModal(false);
+                setScreen({ kind: 'game', state: withAutoRules(states[0]), replay: { states: states.map(withAutoRules), index: 0 } });
+              } catch (error) {
+                setReplayError(error instanceof Error ? error.message : String(error));
+              }
             }
           }}
         />

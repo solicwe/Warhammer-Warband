@@ -5,7 +5,7 @@ import type { GameState, ModelState, Pt, TerrainPiece } from './types';
 
 const P = (x: number, y: number): Pt => ({ x, y });
 const model = (x: number, y: number, r = 0.63) => ({ x, y, r, keywords: ['INFANTRY'] }) as unknown as ModelState;
-const board = (...terrain: TerrainPiece[]) => ({ terrain }) as unknown as GameState;
+const board = (...terrain: TerrainPiece[]) => ({ terrain, units: [] }) as unknown as GameState;
 function area(x0: number, y0: number, x1: number, y1: number, category: TerrainPiece['category'], walls: [Pt, Pt][] = []): TerrainPiece {
   return { id: `t${x0}-${y0}`, kind: 'ruin', label: '', category, height: category === 'dense' ? 5 : 1.5, poly: [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], walls: walls.map(([a, b]) => ({ a, b })) };
 }
@@ -75,15 +75,15 @@ describe('a hairline between two terrain areas (layout tracing)', () => {
   });
 });
 
-describe('model-level obscuring in a unit', () => {
-  it('models standing outside behind an obscuring ruin cannot see through it, even if a squadmate stands inside', () => {
+describe('unit-level obscuring', () => {
+  it('a unit counts as standing in an obscuring area when any squadmate stands inside', () => {
     const t = area(18, 10, 21, 30, 'light');
     const inside = { ...model(19, 20), id: 'a1', dead: false } as unknown as ModelState;
     const outside = { ...model(16.5, 20), id: 'a2', dead: false } as unknown as ModelState;
     const viewer = { ...model(30, 20), id: 'b1', dead: false } as unknown as ModelState;
     const squad = { units: [{ id: 'A', models: [inside, outside] }, { id: 'B', models: [viewer] }], terrain: [t] } as unknown as GameState;
     expect(hasLos(squad, inside, viewer)).toBe(true); // inside the ruin: sees out to viewer
-    expect(hasLos(squad, outside, viewer)).toBe(false); // outside behind the ruin: still blocked by obscuring terrain
+    expect(hasLos(squad, outside, viewer)).toBe(true); // the whole unit counts as standing in the ruin
   });
 });
 
@@ -104,4 +104,3 @@ describe('large bases and split ruins (13.10)', () => {
     expect(hasLos(board(halfA, halfB), shooter, target)).toBe(true);
   });
 });
-
