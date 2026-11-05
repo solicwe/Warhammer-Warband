@@ -753,7 +753,8 @@
             ]
           }
         ]
-      }
+      },
+      "needKw": "ADEPTUS ASTARTES"
     },
     "Transhuman Strategist": {
       "auto": "full",

@@ -11,10 +11,6 @@
     {
       "name": "Pact of Blood",
       "text": "When mustering your army, unless specifically stated otherwise, you cannot select Blood Legions as your Army Faction."
-    },
-    {
-      "name": "Combat Doctrines",
-      "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
     }
   ],
   "detachments": [

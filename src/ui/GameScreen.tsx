@@ -1297,6 +1297,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
 
   // ---------- render helpers ----------
 
+  const unitLeadModel = (u: UnitState) => u.models.find((m) => m.isCharacter && !m.dead) ?? u.models.find((m) => m.isCharacter) ?? alive(u)[0] ?? u.models[0];
+  const unitPortraitDatasheet = (u: UnitState) => {
+    const lead = unitLeadModel(u);
+    if (!lead) return undefined;
+    return lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source;
+  };
+
   const unitPill = (u: UnitState, done: boolean, onClick?: () => void) => {
     const canMove = s.phase === 'movement' && !done && u.owner === s.active && !u.move;
     const canCharge = s.phase === 'charge' && !done && u.owner === s.active && !u.declaredCharge && eligibleChargeUnits.has(u.id);
@@ -1304,9 +1311,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <button key={u.id} className={`unit-pill ${done ? 'done' : ''} ${sel === u.id ? 'sel' : ''} ${canMove || canCharge ? 'can-move' : ''} ${u.battleShocked ? 'shock' : ''}`} onClick={onClick ?? (() => { setSel(u.id); })}>
       {(() => {
         // the unit's picture (its leader's when it has one), so a unit is found by sight, not by name
-        const lead = u.models.find((m) => m.isCharacter) ?? u.models[0];
+        const lead = unitLeadModel(u);
         return lead ? <span className="pill-face" aria-hidden="true"><Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((m) => m.isCharacter)} size={26}
-          datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} /></span>
+          datasheet={unitPortraitDatasheet(u)} fallback={lead.source} /></span>
           : <span className={`side-dot s${u.owner}`} aria-hidden="true" />;
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>
@@ -1683,7 +1690,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {selCand && rd.left > 0 && (
             <div className="card redeploy-sel-card" style={{ padding: 10, border: '2px solid var(--accent)', background: 'var(--surface, rgba(255,255,255,0.06))', borderRadius: 8, margin: '8px 0' }}>
               <div className="row" style={{ alignItems: 'flex-start', gap: 10 }}>
-                <Portrait kind={unitToken(selCand)} owner={selCand.owner} character={selCand.models.some((m) => m.isCharacter)} size={38} datasheet={selCand.models[0]?.source} fallback={selCand.models[0]?.source} />
+                <Portrait kind={unitToken(selCand)} owner={selCand.owner} character={selCand.models.some((m) => m.isCharacter)} size={38} datasheet={unitPortraitDatasheet(selCand)} fallback={unitLeadModel(selCand)?.source} />
                 <div className="grow" style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
                     {unitDisplayName(selCand)}
@@ -1741,7 +1748,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 >
                   <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <div className="row" style={{ alignItems: 'center', gap: 8, minWidth: 0, flex: '1 1 auto' }}>
-                      <Portrait kind={unitToken(x)} owner={x.owner} character={x.models.some((m) => m.isCharacter)} size={32} datasheet={x.models[0]?.source} fallback={x.models[0]?.source} />
+                      <Portrait kind={unitToken(x)} owner={x.owner} character={x.models.some((m) => m.isCharacter)} size={32} datasheet={unitPortraitDatasheet(x)} fallback={unitLeadModel(x)?.source} />
                       <div className="grow" style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
                           {dispName}{x.status === 'reserves' ? ' (Reserves)' : ''}
@@ -1894,7 +1901,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               >
                 <span className="unit-pill-main">
                   <span className="pill-face" aria-hidden="true">
-                    <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                    <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} character={activeUnit.models.some((m) => m.isCharacter)} size={26} datasheet={unitPortraitDatasheet(activeUnit)} fallback={unitLeadModel(activeUnit)?.source} />
                   </span>
                   <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
                   <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>
@@ -2261,7 +2268,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   >
                     <span className="unit-pill-main">
                       <span className="pill-face" aria-hidden="true">
-                        <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} size={26} datasheet={activeUnit.models[0]?.source} fallback={activeUnit.models[0]?.source} />
+                        <Portrait kind={unitToken(activeUnit)} owner={activeUnit.owner} character={activeUnit.models.some((m) => m.isCharacter)} size={26} datasheet={unitPortraitDatasheet(activeUnit)} fallback={unitLeadModel(activeUnit)?.source} />
                       </span>
                       <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
                       <span className="muted"> {alive(activeUnit).length}/{activeUnit.startingStrength}</span>

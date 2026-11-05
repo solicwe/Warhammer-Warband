@@ -11,10 +11,6 @@
     {
       "name": "Cult of the Dark Gods",
       "text": "If your Army Faction is HERETIC ASTARTES, you can include any of the following units in your army, and when you do so their Faction keywords are replaced with HERETIC ASTARTES:\n• Khorne Berzerkers (see World Eaters)\n• Rubric Marines (see Thousand Sons)\n• Plague Marines (see Death Guard)\n• Noise Marines (see Emperor’s Children)\nThe combined points value of such units you can include in your army depends on the battle size, as follows:\n• Incursion: Up to 250 pts\n• Strike Force: Up to 500 pts\n• Onslaught: Up to 750 pts"
-    },
-    {
-      "name": "Combat Doctrines",
-      "text": "At the start of your Command phase, you can select one combat doctrine listed below. If you do, that combat doctrine is active for friendly ADEPTUS ASTARTES units with this ability until the start of your next Command phase.\nASSAULT DOCTRINEWhen this unit is selected to make an advance move, that advance move does not prevent this unit from being eligible to declare a charge.\nDEVASTATOR DOCTRINEThis unit’s ranged attacks have [ASSAULT].\nTACTICAL DOCTRINEWhen this unit is selected to make a fall-back move, that fall-back move does not prevent this unit from being eligible to shoot and eligible to declare a charge.\nUnless otherwise stated:\n• You can only select each combat doctrine once per battle.\n• Only one combat doctrine can be active for each unit. If a rule makes a combat doctrine active for a unit, any combat doctrine previously active for that unit is no longer active for that unit."
     }
   ],
   "detachments": [

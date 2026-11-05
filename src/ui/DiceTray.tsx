@@ -323,8 +323,8 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
           </div>
 
           {!done && (
-            <button className="btn small primary" onClick={guarded(onSkip)} style={{ background: '#d99b26', borderColor: '#f59e0b', color: '#0f172a', fontWeight: 800 }} title="Instantly resolve all rolls and calculate damage">
-              1-Click Resolve
+            <button className="btn small primary" onClick={onSkip} style={{ background: '#d99b26', borderColor: '#f59e0b', color: '#0f172a', fontWeight: 800 }} title="Instantly resolve all rolls and calculate damage">
+              Fast Skip / Resolve
             </button>
           )}
         </div>
@@ -594,10 +594,10 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
         <div className="sticky-act tray-act" style={{ padding: '12px 14px' }}>
           <button
             className={`btn primary big wide ${cool ? 'cooling' : ''}`}
-            onClick={guarded(onStep)}
+            onClick={done ? onClose : guarded(onStep)}
             style={{ fontWeight: 800, letterSpacing: '0.04em' }}
           >
-            {nextLabel}
+            {done ? 'Done / Close' : nextLabel}
           </button>
         </div>
       </div>

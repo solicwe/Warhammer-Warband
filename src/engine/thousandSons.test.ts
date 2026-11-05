@@ -283,6 +283,38 @@ describe('Thousand Sons in a game', () => {
     expect(casters(s, 0)).toEqual([]);
     expect(ritualsPending(s, 0)).toBe(false);
   });
+
+  it('Changehost of Deceit: Mortal Sorcery only allows Scintillating Legions Psykers to cast when within 6" and visible to a Thousand Sons unit', () => {
+    // Player 0 has Lord of Change (Scintillating Legions Psyker) and Rubric Marines (Thousand Sons)
+    const s = game(
+      [['Lord of Change', 1, 320], ['Rubric Marines', 5, 100]],
+      [['Boyz', 10, 90]],
+      'Changehost of Deceit'
+    );
+    const loc = put(s, 'p0-x0', { x: 20, y: 20 });
+    const rubrics = put(s, 'p0-x1', { x: 40, y: 40 }); // > 6" away
+    s.phase = 'shooting';
+    s.active = 0;
+
+    // Only the Aspiring Sorcerer from Rubric Marines is a caster; Lord of Change cannot cast (not within 6")
+    let cs = casters(s, 0);
+    expect(cs.map((c) => c.unit.id)).toEqual(['p0-x1']);
+    expect(cs.some((c) => c.unit.id === loc.id)).toBe(false);
+
+    // Now move Rubric Marines to within 6" (e.g. { x: 23, y: 20 }) and visible
+    rubrics.models[0].x = 23;
+    rubrics.models[0].y = 20;
+
+    cs = casters(s, 0);
+    // Now Lord of Change CAN cast because a Thousand Sons unit is within 6" and visible
+    expect(cs.some((c) => c.unit.id === loc.id)).toBe(true);
+    expect(cs.some((c) => c.unit.id === rubrics.id)).toBe(true);
+
+    // If Thousand Sons unit is removed / dead, Lord of Change cannot cast
+    for (const m of rubrics.models) m.dead = true;
+    cs = casters(s, 0);
+    expect(cs.some((c) => c.unit.id === loc.id)).toBe(false);
+  });
 });
 
 describe('Risen Rubricae enhancement', () => {
