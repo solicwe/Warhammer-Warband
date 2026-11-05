@@ -3071,65 +3071,15 @@ select option {
 
 /* home: play modes - NEW BATTLE hero button at top, sub-modes underneath */
 .home-modes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.mode-btn-hero,
 .mode-btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 58px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(74, 144, 226, 0.22) 0%, rgba(18, 24, 34, 0.96) 100%);
-  border: 1.5px solid var(--accent);
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  text-align: left;
+  width: 100%;
+  min-height: 48px;
 }
-.mode-btn-primary:hover {
-  background: linear-gradient(135deg, rgba(74, 144, 226, 0.34) 0%, rgba(24, 32, 46, 0.98) 100%);
-  border-color: #60a5fa;
-  box-shadow: 0 6px 22px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-.mode-btn-primary:active { transform: translateY(1px); }
-.mode-btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
-  color: #0b0f17;
-  flex-shrink: 0;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
-}
-.mode-btn-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.mode-btn-title {
-  font: 800 17px var(--font-cond);
+.mode-btn-hero .mode-sub-label,
+.mode-btn-primary .mode-sub-label {
+  font-size: 13.5px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #ffffff;
-  line-height: 1.15;
-}
-.mode-btn-desc {
-  font: 500 11.5px var(--font-ui);
-  color: var(--text-2);
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.mode-btn-chevron {
-  color: var(--accent);
-  opacity: 0.8;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-.mode-btn-primary:hover .mode-btn-chevron {
-  transform: translateX(3px);
-  opacity: 1;
 }
 
 .modes-sub-grid {

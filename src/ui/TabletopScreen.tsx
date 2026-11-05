@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   deploymentName,
+  dispositionById,
   LAYOUTS,
   layoutsFor,
   MISSIONS,
+  primaryFor,
   secondaryById,
   type DispositionId,
   type LayoutDef,
+  type ScoringRule,
   type SecondaryDef,
 } from '../engine/config';
 import { saveBattleLog } from '../services/storage';
@@ -167,6 +170,14 @@ function getSecondaryScoringPresets(card: SecondaryDef): ScoringPreset[] {
   }
 }
 
+interface MatchSnapshot {
+  round: number;
+  activePlayer: 0 | 1;
+  turnInRound: 0 | 1;
+  players: [PlayerState, PlayerState];
+  actionDesc: string;
+}
+
 export function TabletopScreen({ index, onBack }: Props) {
   // Mode: 'setup' (step-by-step wizard) or 'battle' (in-match)
   const [mode, setMode] = useState<'setup' | 'battle'>('setup');
@@ -202,6 +213,9 @@ export function TabletopScreen({ index, onBack }: Props) {
   const [turnInRound, setTurnInRound] = useState<0 | 1>(0); // 0 = first turn, 1 = second turn
   const [zoomMap, setZoomMap] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Undo History Stack ("เพิ่มปุ่มย้อนกลับด้วย เผื่อกดผิด ไรพวกนั้น")
+  const [undoStack, setUndoStack] = useState<MatchSnapshot[]>([]);
 
   // Custom VP popover for a card
   const [customVpCardId, setCustomVpCardId] = useState<string | null>(null);
@@ -242,6 +256,32 @@ export function TabletopScreen({ index, onBack }: Props) {
       scoredMissions: [],
     },
   ]);
+
+  // Record a snapshot before mutating match state
+  const recordSnapshot = (actionDesc: string) => {
+    setUndoStack((prev) => [
+      ...prev.slice(-20),
+      {
+        round,
+        activePlayer,
+        turnInRound,
+        players: JSON.parse(JSON.stringify(players)),
+        actionDesc,
+      },
+    ]);
+  };
+
+  // Undo last action
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1];
+    setUndoStack((prev) => prev.slice(0, -1));
+    setRound(last.round);
+    setActivePlayer(last.activePlayer);
+    setTurnInRound(last.turnInRound);
+    setPlayers(last.players);
+    play('tick');
+  };
 
   // Strictly locked to the playable layouts for this matchup
   const playableLayouts = useMemo(() => {
@@ -307,10 +347,10 @@ export function TabletopScreen({ index, onBack }: Props) {
 
       if (type === 'deploy') {
         setAttackerPlayer(winner);
-        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and deploys first (Attacker)!` });
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} ทอยได้สูงกว่า (${r0} vs ${r1}) ได้ลงทัพก่อน (Attacker)!` });
       } else {
         setFirstTurnPlayer(winner);
-        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and takes Turn 1!` });
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} ทอยได้สูงกว่า (${r0} vs ${r1}) ได้เล่นเทิร์นแรก (Turn 1)!` });
       }
 
       play('good');
@@ -353,12 +393,28 @@ export function TabletopScreen({ index, onBack }: Props) {
     setActivePlayer(firstTurnPlayer);
     setTurnInRound(0);
     setRound(1);
+    setUndoStack([]);
     setMode('battle');
     setSubView('player');
   };
 
-  // Tactical Deck Actions
+  // Adjust Command Points (with undo snapshot)
+  const handleAdjustCp = (pIdx: 0 | 1, delta: number) => {
+    recordSnapshot(delta > 0 ? '+1 CP' : '-1 CP');
+    updatePlayer(pIdx, (p) => ({ ...p, cp: Math.max(0, p.cp + delta) }));
+    play('tick');
+  };
+
+  // Adjust Primary VP (with undo snapshot)
+  const handleAdjustPrimaryVp = (pIdx: 0 | 1, delta: number) => {
+    recordSnapshot(delta > 0 ? `+${delta} Primary VP` : `${delta} Primary VP`);
+    updatePlayer(pIdx, (p) => ({ ...p, primaryVp: Math.max(0, Math.min(50, p.primaryVp + delta)) }));
+    play('vp');
+  };
+
+  // Tactical Deck Actions (with undo snapshot)
   const handleDrawCard = (pIdx: 0 | 1) => {
+    recordSnapshot('จั่วการ์ดภารกิจ');
     updatePlayer(pIdx, (p) => {
       if (p.activeMissions.length >= 2) return p;
       let curDeck = [...p.deck];
@@ -376,8 +432,10 @@ export function TabletopScreen({ index, onBack }: Props) {
     });
   };
 
-  // Score Secondary Card (Player chooses VP)
+  // Score Secondary Card (Player chooses VP, with undo snapshot)
   const handleScoreCard = (pIdx: 0 | 1, cardId: string, vp: number) => {
+    const cardName = secondaryById(cardId)?.name ?? cardId;
+    recordSnapshot(`ทำคะแนน +${vp} VP (${cardName})`);
     updatePlayer(pIdx, (p) => ({
       ...p,
       secondaryVp: Math.min(40, p.secondaryVp + vp),
@@ -389,42 +447,36 @@ export function TabletopScreen({ index, onBack }: Props) {
     setCustomVpCardId(null);
   };
 
-  // Free Discard (Player manages CP on their own)
-  const handleDiscardCard = (pIdx: 0 | 1, cardId: string, grantCp: boolean = false) => {
+  // Return scored card back to hand if misclicked
+  const handleUndoScore = (pIdx: 0 | 1, cardId: string, vp: number) => {
+    const cardName = secondaryById(cardId)?.name ?? cardId;
+    recordSnapshot(`ดึงการ์ด ${cardName} คืนสู่มือ`);
     updatePlayer(pIdx, (p) => ({
       ...p,
-      cp: grantCp ? p.cp + 1 : p.cp,
+      secondaryVp: Math.max(0, p.secondaryVp - vp),
+      scoredMissions: p.scoredMissions.filter((id) => id !== cardId),
+      discardedMissions: p.discardedMissions.filter((id) => id !== cardId),
+      activeMissions: [...p.activeMissions, cardId],
+    }));
+    play('tick');
+  };
+
+  // Discard without modifying CP (Player manages CP manually, with undo snapshot)
+  const handleDiscardCard = (pIdx: 0 | 1, cardId: string) => {
+    const cardName = secondaryById(cardId)?.name ?? cardId;
+    recordSnapshot(`ทิ้งการ์ด (${cardName})`);
+    updatePlayer(pIdx, (p) => ({
+      ...p,
       activeMissions: p.activeMissions.filter((id) => id !== cardId),
       discardedMissions: [...p.discardedMissions, cardId],
     }));
     play('tick');
   };
 
-  // New Orders: Spend 1 CP to discard and redraw replacement card
-  const handleNewOrders = (pIdx: 0 | 1, cardId: string) => {
-    updatePlayer(pIdx, (p) => {
-      if (p.cp < 1) return p;
-      let curDeck = [...p.deck];
-      if (curDeck.length === 0) {
-        curDeck = shuffle(p.discardedMissions.length ? p.discardedMissions : allSecondaryIds);
-      }
-      const newDrawn = curDeck.shift();
-      const nextActive = p.activeMissions.filter((id) => id !== cardId);
-      if (newDrawn) nextActive.push(newDrawn);
-      play('card');
-
-      return {
-        ...p,
-        cp: Math.max(0, p.cp - 1),
-        deck: curDeck,
-        activeMissions: nextActive,
-        discardedMissions: [...p.discardedMissions, cardId],
-      };
-    });
-  };
-
-  // Free Redraw (Player manages CP on their own, does NOT deduct CP)
+  // Free Redraw (Player manages CP on their own, does NOT deduct CP, with undo snapshot)
   const handleFreeRedraw = (pIdx: 0 | 1, cardId: string) => {
+    const cardName = secondaryById(cardId)?.name ?? cardId;
+    recordSnapshot(`จั่วเปลี่ยนการ์ด (${cardName})`);
     updatePlayer(pIdx, (p) => {
       let curDeck = [...p.deck];
       if (curDeck.length === 0) {
@@ -447,14 +499,18 @@ export function TabletopScreen({ index, onBack }: Props) {
   // Turn Passing ("เน้นเป็น รายคน เลย พอ อีกฝั่งมา ก็ ค่อย ขึ้นอีกฝั่ง")
   const handlePassTurn = () => {
     const otherPlayer: 0 | 1 = activePlayer === 0 ? 1 : 0;
+    const otherName = otherPlayer === 0 ? p0Name : p1Name;
+
     if (turnInRound === 0) {
       // First turn completed, pass to second player in this round
+      recordSnapshot(`ส่งเทิร์นให้ ${otherName}`);
       setActivePlayer(otherPlayer);
       setTurnInRound(1);
       play('turn');
     } else {
       // Second turn completed, advance round!
       if (round < 5) {
+        recordSnapshot(`จบรอบที่ ${round} → เริ่มรอบที่ ${round + 1}`);
         setRound((r) => r + 1);
         setActivePlayer(firstTurnPlayer);
         setTurnInRound(0);
@@ -513,6 +569,10 @@ export function TabletopScreen({ index, onBack }: Props) {
 
   const activeP = players[activePlayer];
   const otherP = players[activePlayer === 0 ? 1 : 0];
+  const activeDisp = activePlayer === 0 ? p0Disp : p1Disp;
+  const opponentDisp = activePlayer === 0 ? p1Disp : p0Disp;
+  const activePrimary = primaryFor(activeDisp, opponentDisp);
+  const activeAction = activePrimary?.action ? MISSIONS.actions[activePrimary.action] : null;
   const p0Total = players[0].primaryVp + players[0].secondaryVp;
   const p1Total = players[1].primaryVp + players[1].secondaryVp;
 
@@ -544,21 +604,21 @@ export function TabletopScreen({ index, onBack }: Props) {
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(1)}
           >
-            1. Dispositions
+            1. แผนการรบ & แมพ
           </button>
           <button
             className={`btn grow ${setupStep === 2 ? 'primary' : 'ghost'}`}
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(2)}
           >
-            2. Players
+            2. ผู้เล่น & กองทัพ
           </button>
           <button
             className={`btn grow ${setupStep === 3 ? 'primary' : 'ghost'}`}
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(3)}
           >
-            3. Roll-Off
+            3. สุ่มลำดับเล่น
           </button>
         </div>
 
@@ -567,16 +627,16 @@ export function TabletopScreen({ index, onBack }: Props) {
           {setupStep === 1 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Force Dispositions & Playable Layouts</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>1. แผนการรบ & แมพ (Force Dispositions & Map)</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Select the force disposition for each side. The matchup dictates the official tournament layouts.
+                  เลือก Force Disposition ของผู้เล่นแต่ละฝั่ง ระบบจะล็อค 3 แมพทางการของคู่นี้ให้อัตโนมัติ
                 </p>
               </div>
 
               {/* Player 1 Disposition */}
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hold" size={16} /> Player 1 Force Disposition
+                  <Icon name="hold" size={16} /> แผนการรบ Player 1 (Force Disposition)
                 </div>
                 <div className="tt-disp-grid">
                   {MISSIONS.forceDispositions.map((d) => (
@@ -596,7 +656,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               {/* Player 2 Disposition */}
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hold" size={16} /> Player 2 Force Disposition
+                  <Icon name="hold" size={16} /> แผนการรบ Player 2 (Force Disposition)
                 </div>
                 <div className="tt-disp-grid">
                   {MISSIONS.forceDispositions.map((d) => (
@@ -617,8 +677,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontSize: 13, fontWeight: 800 }}>Playable Layouts ({playableLayouts.length} Official Matchup Layouts)</span>
-                    <div className="tiny muted">Locked to official 11th edition pairings for this disposition matchup</div>
+                    <span style={{ fontSize: 13, fontWeight: 800 }}>แมพทางการสำหรับคู่นี้ ({playableLayouts.length} Official Layouts)</span>
+                    <div className="tiny muted">ล็อคเฉพาะ 3 แมพทางการของ 11th Edition สำหรับคู่นี้</div>
                   </div>
                 </div>
 
@@ -669,105 +729,101 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ minHeight: 46, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 onClick={() => setSetupStep(2)}
               >
-                Next: Enter Players & Factions →
+                ถัดไป: ผู้เล่น & กองทัพ (Players & Factions) →
               </button>
             </div>
           )}
 
-          {/* STEP 2: PLAYERS & FACTIONS (NO QUICK-FILL CLUTTER) */}
+          {/* STEP 2: PLAYERS & FACTIONS (CLEAN, SLEEK & COMPACT) */}
           {setupStep === 2 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Choose Players & Factions</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>2. ผู้เล่น & กองทัพ (Players & Factions)</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Enter player names and select factions directly.
+                  ตั้งชื่อผู้เล่นและเลือกกองทัพของแต่ละฝั่ง
                 </p>
               </div>
 
               {/* Player 1 Card */}
               <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Emblem factionId={p0Faction} />
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 1 Name</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={p0Name}
-                      onChange={(e) => setP0Name(e.target.value)}
-                      placeholder="Player 1"
-                      style={{ width: '100%', marginTop: 2, padding: '6px 10px', fontSize: 14 }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)', display: 'block', marginBottom: 6 }}>
-                    Faction: {factionList.find((f) => f.id === p0Faction)?.name ?? p0Faction}
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 150, overflowY: 'auto', padding: 4 }}>
-                    {factionList.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={p0Faction === f.id ? 'btn primary' : 'btn ghost'}
-                        style={{ fontSize: 11.5, minHeight: 30, padding: '2px 8px' }}
-                        onClick={() => setP0Faction(f.id)}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>ชื่อผู้เล่น 1 (Player 1 Name)</label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={p0Name}
+                        onChange={(e) => setP0Name(e.target.value)}
+                        placeholder="Player 1"
+                        style={{ width: '100%', marginTop: 3, padding: '7px 10px', fontSize: 14 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>กองทัพ (Faction)</label>
+                      <select
+                        className="input"
+                        value={p0Faction}
+                        onChange={(e) => setP0Faction(e.target.value)}
+                        style={{ width: '100%', marginTop: 3, padding: '7px 10px', fontSize: 13.5, fontWeight: 700, background: 'var(--surface-2)', color: 'var(--text)' }}
                       >
-                        {f.name}
-                      </button>
-                    ))}
+                        {factionList.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.name} ({f.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Player 2 Card */}
               <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Emblem factionId={p1Faction} />
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 2 Name</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={p1Name}
-                      onChange={(e) => setP1Name(e.target.value)}
-                      placeholder="Player 2"
-                      style={{ width: '100%', marginTop: 2, padding: '6px 10px', fontSize: 14 }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)', display: 'block', marginBottom: 6 }}>
-                    Faction: {factionList.find((f) => f.id === p1Faction)?.name ?? p1Faction}
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 150, overflowY: 'auto', padding: 4 }}>
-                    {factionList.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={p1Faction === f.id ? 'btn primary' : 'btn ghost'}
-                        style={{ fontSize: 11.5, minHeight: 30, padding: '2px 8px' }}
-                        onClick={() => setP1Faction(f.id)}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>ชื่อผู้เล่น 2 (Player 2 Name)</label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={p1Name}
+                        onChange={(e) => setP1Name(e.target.value)}
+                        placeholder="Player 2"
+                        style={{ width: '100%', marginTop: 3, padding: '7px 10px', fontSize: 14 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>กองทัพ (Faction)</label>
+                      <select
+                        className="input"
+                        value={p1Faction}
+                        onChange={(e) => setP1Faction(e.target.value)}
+                        style={{ width: '100%', marginTop: 3, padding: '7px 10px', fontSize: 13.5, fontWeight: 700, background: 'var(--surface-2)', color: 'var(--text)' }}
                       >
-                        {f.name}
-                      </button>
-                    ))}
+                        {factionList.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.name} ({f.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button className="btn ghost" style={{ minHeight: 46, flex: 1 }} onClick={() => setSetupStep(1)}>
-                  ← Back to Dispositions
+                  ← ย้อนกลับไปเลือกแมพ
                 </button>
                 <button
                   className="btn primary grow"
                   style={{ minHeight: 46, fontSize: 14, fontWeight: 800, flex: 2 }}
                   onClick={() => setSetupStep(3)}
                 >
-                  Next: Roll-Off & Turn Order →
+                  ถัดไป: สุ่มลำดับการเล่น (Roll-Off) →
                 </button>
               </div>
             </div>
@@ -777,9 +833,9 @@ export function TabletopScreen({ index, onBack }: Props) {
           {setupStep === 3 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Pre-Battle Roll-Off & Turn Order</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>3. สุ่มลำดับการเล่น (Roll-Off & Turn Order)</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Roll D6 to determine who deploys first (Attacker) and who takes the first battle turn.
+                  ทอยเต๋า D6 เพื่อหาคนลงทัพก่อน (Attacker) และคนเริ่มเทิร์นแรก (Turn 1)
                 </p>
               </div>
 
@@ -1002,14 +1058,36 @@ export function TabletopScreen({ index, onBack }: Props) {
         </div>
 
         {/* View Switcher: Active Player vs Overview */}
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {undoStack.length > 0 && (
+            <button
+              className="btn"
+              style={{
+                minHeight: 34,
+                padding: '2px 10px',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                background: 'rgba(239, 68, 68, 0.14)',
+                color: '#f87171',
+                borderColor: 'rgba(239, 68, 68, 0.35)',
+              }}
+              onClick={handleUndo}
+              title={`Undo last action: ${undoStack[undoStack.length - 1].actionDesc}`}
+            >
+              <Icon name="back" size={14} /> ↩️ ย้อนกลับ
+            </button>
+          )}
+
           {subView === 'player' ? (
             <button
               className="btn"
               style={{ minHeight: 36, padding: '4px 12px', fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)' }}
               onClick={() => setSubView('overview')}
             >
-              <Icon name="map" size={15} /> Overview & Layout
+              <Icon name="map" size={15} /> ดูภาพรวม & แมพ
             </button>
           ) : (
             <button
@@ -1017,7 +1095,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ minHeight: 36, padding: '4px 12px', fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               onClick={() => setSubView('player')}
             >
-              <Icon name="fight" size={15} /> Return to {activeP.name}
+              <Icon name="fight" size={15} /> กลับมาเทิร์น {activeP.name}
             </button>
           )}
 
@@ -1028,7 +1106,7 @@ export function TabletopScreen({ index, onBack }: Props) {
             disabled={savedSuccess}
             title="Finish and record match to Battle History"
           >
-            {savedSuccess ? 'Saved!' : 'Finish'}
+            {savedSuccess ? 'บันทึกแล้ว!' : 'จบเกม'}
           </button>
         </div>
       </header>
@@ -1081,7 +1159,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               <button
                 className="btn"
                 style={{ minWidth: 36, minHeight: 36, padding: 0, fontSize: 18, fontWeight: 800 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, cp: Math.max(0, p.cp - 1) }))}
+                onClick={() => handleAdjustCp(activePlayer, -1)}
               >
                 -
               </button>
@@ -1091,91 +1169,231 @@ export function TabletopScreen({ index, onBack }: Props) {
               <button
                 className="btn primary"
                 style={{ minWidth: 36, minHeight: 36, padding: 0, fontSize: 18, fontWeight: 800 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, cp: p.cp + 1 }))}
+                onClick={() => handleAdjustCp(activePlayer, 1)}
               >
                 +
               </button>
             </div>
           </div>
 
-          {/* Section 2: Primary Mission Scoring */}
-          <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Section 2: Primary Mission Objective & Scoring */}
+          <div className="card" style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hold" size={16} /> Primary Objective VP
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)' }}>
+                    PRIMARY OBJECTIVE
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      padding: '1px 7px',
+                      borderRadius: 4,
+                      background: 'rgba(255,255,255,0.08)',
+                      color: dispositionById(activeDisp).color || 'var(--text-2)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                    }}
+                  >
+                    {dispositionById(activeDisp).name}
+                  </span>
                 </div>
-                <div className="tiny muted">Hold objectives in Command / End of Turn phase</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '0.02em' }}>
+                  {activePrimary ? activePrimary.name : 'Primary Mission'}
+                </div>
               </div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--accent)' }}>
-                {activeP.primaryVp} <span style={{ fontSize: 12, color: 'var(--text-3)' }}>/ 50</span>
+
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div className="tiny muted">PRIMARY VP</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--accent)', lineHeight: 1 }}>
+                  {activeP.primaryVp} <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-3)' }}>/ 50</span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Scoring Buttons */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 4 }}>
-              <button
-                className="btn"
-                style={{ minHeight: 36, fontSize: 12, fontWeight: 700, padding: 2 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, primaryVp: Math.min(50, p.primaryVp + 4) }))}
-              >
-                +4 VP
-              </button>
-              <button
-                className="btn"
-                style={{ minHeight: 36, fontSize: 12, fontWeight: 700, padding: 2 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, primaryVp: Math.min(50, p.primaryVp + 8) }))}
-              >
-                +8 VP
-              </button>
-              <button
-                className="btn"
-                style={{ minHeight: 36, fontSize: 12, fontWeight: 700, padding: 2 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, primaryVp: Math.min(50, p.primaryVp + 12) }))}
-              >
-                +12 VP
-              </button>
-              <button
-                className="btn danger"
-                style={{ minHeight: 36, fontSize: 12, fontWeight: 700, padding: 2 }}
-                onClick={() => updatePlayer(activePlayer, (p) => ({ ...p, primaryVp: Math.max(0, p.primaryVp - 4) }))}
-              >
-                -4 VP
-              </button>
+            {/* What to do for Primary Objective */}
+            <div
+              style={{
+                background: 'rgba(0, 0, 0, 0.25)',
+                border: '1px solid var(--line-2)',
+                borderRadius: 8,
+                padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: '#f59e0b', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="hold" size={14} /> สิ่งที่ต้องทำ (How to score Primary):
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {activePrimary?.scoring.map((r: ScoringRule, i: number) => {
+                  const whenLabel =
+                    r.when === 'endOfYourCommandPhase' ? 'Command Phase' :
+                    r.when === 'endOfYourTurn' ? 'End of Turn' :
+                    r.when === 'endOfBattle' ? 'End of Battle' : r.when;
+                  const roundLabel = r.rounds ? `Round ${r.rounds[0]}–${r.rounds[1]}` : 'All Rounds';
+
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        padding: '6px 8px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderLeft: '3px solid var(--accent)',
+                        borderRadius: '0 6px 6px 0',
+                        fontSize: 12.5,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>
+                          ⏱ {roundLabel} · {whenLabel}
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 800, color: '#10b981' }}>
+                          +{r.vp} VP
+                        </span>
+                      </div>
+                      <div style={{ color: 'var(--text)' }}>{r.text}</div>
+                      {r.bonusText && (
+                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 2 }}>
+                          ⭐ <i>Bonus:</i> {r.bonusText} {r.bonus?.vp ? `(+${r.bonus.vp} VP)` : ''}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {activeAction && (
+                  <div
+                    style={{
+                      padding: '6px 8px',
+                      background: 'rgba(56, 189, 248, 0.08)',
+                      borderLeft: '3px solid #38bdf8',
+                      borderRadius: '0 6px 6px 0',
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      color: '#bae6fd',
+                    }}
+                  >
+                    <b>Action: {activeAction.name}</b> (Starts: {activeAction.starts} phase) — {activeAction.text}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Primary VP Adjustment Steppers */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 6 }}>
+                บันทึกแต้ม Primary (Adjust Score):
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                <button
+                  className="btn"
+                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
+                  onClick={() => handleAdjustPrimaryVp(activePlayer, 2)}
+                >
+                  +2 VP
+                </button>
+                <button
+                  className="btn"
+                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
+                  onClick={() => handleAdjustPrimaryVp(activePlayer, 3)}
+                >
+                  +3 VP
+                </button>
+                <button
+                  className="btn"
+                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
+                  onClick={() => handleAdjustPrimaryVp(activePlayer, 4)}
+                >
+                  +4 VP
+                </button>
+                <button
+                  className="btn"
+                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
+                  onClick={() => handleAdjustPrimaryVp(activePlayer, 5)}
+                >
+                  +5 VP
+                </button>
+                <button
+                  className="btn ghost"
+                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2, color: 'var(--err)', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                  onClick={() => handleAdjustPrimaryVp(activePlayer, -1)}
+                  title="ลด 1 แต้ม"
+                >
+                  -1 VP
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Section 3: Tactical Secondary Mission Deck */}
-          <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="card" style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="cards" size={16} /> Tactical Secondary Missions
+                <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#38bdf8' }}>
+                  SECONDARY MISSIONS · TACTICAL
                 </div>
-                <div className="tiny muted">{activeP.secondaryVp} / 40 VP scored · {activeP.deck.length} in deck</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '0.02em', marginTop: 2 }}>
+                  ภารกิจรอง (Tactical Secondaries)
+                </div>
               </div>
 
-              {activeP.activeMissions.length < 2 && (
-                <button
-                  className="btn primary"
-                  style={{ minHeight: 36, padding: '4px 12px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
-                  onClick={() => handleDrawCard(activePlayer)}
-                  disabled={activeP.deck.length === 0}
-                >
-                  <Icon name="cards" size={15} /> Draw Card
-                </button>
-              )}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div className="tiny muted">SECONDARY VP</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#38bdf8', lineHeight: 1 }}>
+                  {activeP.secondaryVp} <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-3)' }}>/ 40</span>
+                </div>
+                <div className="tiny muted" style={{ marginTop: 2 }}>{activeP.deck.length} in deck</div>
+              </div>
             </div>
+
+            {/* What to do for Secondary Missions banner */}
+            <div
+              style={{
+                background: 'rgba(56, 189, 248, 0.08)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                borderRadius: 8,
+                padding: '8px 12px',
+                fontSize: 12,
+                color: '#e0f2fe',
+                lineHeight: 1.45,
+              }}
+            >
+              💡 <b>สิ่งที่ต้องทำ (How to score Secondary):</b> จั่วการ์ดทำภารกิจบนมือ (สูงสุด 2 ใบ) ทำตามเงื่อนไขที่ระบุบนการ์ดแต่ละใบในเทิร์นของคุณ เมื่อทำสำเร็จให้กดปุ่มเคลมแต้ม VP สีเขียว หากต้องการเปลี่ยนการ์ดสามารถกด <b>Redraw</b> หรือ <b>Discard</b> โดยไม่เสีย CP (จัดการแต้ม CP ด้านบนด้วยตนเอง)
+            </div>
+
+            {activeP.activeMissions.length < 2 && (
+              <button
+                className="btn primary"
+                style={{ minHeight: 38, padding: '4px 14px', fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 800 }}
+                onClick={() => handleDrawCard(activePlayer)}
+                disabled={activeP.deck.length === 0}
+              >
+                <Icon name="cards" size={16} /> Draw Secondary Mission ({activeP.deck.length} left)
+              </button>
+            )}
 
             {/* Active Secondary Cards */}
             {activeP.activeMissions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 12px', background: 'var(--surface-2)', borderRadius: 8, border: '1px dashed var(--line-2)' }}>
+              <div
+                style={{
+                  padding: '24px 16px',
+                  textAlign: 'center',
+                  background: 'rgba(0,0,0,0.18)',
+                  borderRadius: 8,
+                  border: '1px dashed var(--line-2)',
+                  color: 'var(--text-3)',
+                }}
+              >
                 <Icon name="cards" size={28} style={{ opacity: 0.35, marginBottom: 4 }} />
-                <div style={{ fontSize: 13, fontWeight: 700 }}>No Tactical Secondary Cards in Hand</div>
-                <div className="tiny muted" style={{ marginTop: 2 }}>Tap "Draw Card" to draw your tactical objectives for this turn.</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>ยังไม่มีการ์ด Secondary ในมือ</div>
+                <div className="tiny muted" style={{ marginTop: 2 }}>กด <b>Draw Secondary Mission</b> ด้านบนเพื่อเริ่มจั่วการ์ดประจำเทิร์น</div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {activeP.activeMissions.map((cardId) => {
                   const card = secondaryById(cardId);
                   if (!card) return null;
@@ -1256,7 +1474,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                         <Icon name="wait" size={13} /> {card.when}
                       </div>
 
-                      {/* Card Text Body (Parchment Inset) */}
+                      {/* Card Text Body (Parchment Inset) - Explains What To Do */}
                       <div
                         style={{
                           background: 'rgba(0, 0, 0, 0.035)',
@@ -1268,6 +1486,9 @@ export function TabletopScreen({ index, onBack }: Props) {
                           color: '#292524',
                         }}
                       >
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase' }}>
+                          🎯 เงื่อนไขภารกิจ (Requirement):
+                        </div>
                         {card.text}
                       </div>
 
@@ -1312,54 +1533,15 @@ export function TabletopScreen({ index, onBack }: Props) {
                             ))}
                           </div>
                         )}
-
-                        {/* Direct 1-to-5 Point Quick Selectors */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '6px 10px',
-                            background: 'rgba(0,0,0,0.035)',
-                            borderRadius: 6,
-                            border: '1px solid rgba(180, 160, 130, 0.45)',
-                          }}
-                        >
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#57534e', whiteSpace: 'nowrap' }}>
-                            Select Points:
-                          </span>
-                          <div style={{ display: 'flex', gap: 4, flex: 1, justifyContent: 'space-between' }}>
-                            {[1, 2, 3, 4, 5].map((pts) => (
-                              <button
-                                key={pts}
-                                className="btn"
-                                style={{
-                                  flex: 1,
-                                  minHeight: 32,
-                                  padding: 0,
-                                  fontSize: 12.5,
-                                  fontWeight: 800,
-                                  background: '#fff',
-                                  borderColor: '#c4b59d',
-                                  color: '#1c1917',
-                                }}
-                                onClick={() => handleScoreCard(activePlayer, cardId, pts)}
-                                title={`Score +${pts} VP for this mission`}
-                              >
-                                +{pts}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
                       </div>
 
-                      {/* Card Management Footer */}
+                      {/* Card Management Footer: Free Discard & Free Redraw (No CP change) */}
                       <div
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 6,
+                          justifyContent: 'flex-end',
+                          gap: 8,
                           borderTop: '1px solid #d5c8b2',
                           paddingTop: 8,
                           marginTop: 4,
@@ -1368,53 +1550,41 @@ export function TabletopScreen({ index, onBack }: Props) {
                         <button
                           className="btn ghost"
                           style={{
-                            minHeight: 30,
-                            fontSize: 11.5,
-                            padding: '2px 8px',
+                            minHeight: 32,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: '2px 14px',
                             color: '#78716c',
+                            borderColor: '#d5c8b2',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
                           }}
-                          onClick={() => handleDiscardCard(activePlayer, cardId, false)}
-                          title="Discard without gaining CP"
+                          onClick={() => handleDiscardCard(activePlayer, cardId)}
+                          title="Discard this mission card without modifying CP"
                         >
-                          Discard
+                          <Icon name="delete" size={14} /> Discard
                         </button>
 
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            className="btn"
-                            style={{
-                              minHeight: 30,
-                              fontSize: 11.5,
-                              fontWeight: 700,
-                              padding: '2px 10px',
-                              background: '#fef3c7',
-                              color: '#92400e',
-                              borderColor: '#fcd34d',
-                            }}
-                            onClick={() => handleDiscardCard(activePlayer, cardId, true)}
-                            title="Discard at end of turn and gain 1 CP"
-                          >
-                            Discard (+1 CP)
-                          </button>
-
-                          <button
-                            className="btn"
-                            style={{
-                              minHeight: 30,
-                              fontSize: 11.5,
-                              fontWeight: 700,
-                              padding: '2px 10px',
-                              background: '#e0f2fe',
-                              color: '#0369a1',
-                              borderColor: '#bae6fd',
-                            }}
-                            onClick={() => handleNewOrders(activePlayer, cardId)}
-                            disabled={activeP.cp < 1}
-                            title="New Orders: Spend 1 CP to discard and draw a new secondary card"
-                          >
-                            Redraw (-1 CP)
-                          </button>
-                        </div>
+                        <button
+                          className="btn"
+                          style={{
+                            minHeight: 32,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: '2px 16px',
+                            background: '#e0f2fe',
+                            color: '#0369a1',
+                            borderColor: '#bae6fd',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                          }}
+                          onClick={() => handleFreeRedraw(activePlayer, cardId)}
+                          title="Redraw: Discard and draw a replacement card without deducting CP"
+                        >
+                          <Icon name="reroll" size={14} /> Redraw
+                        </button>
                       </div>
                     </div>
                   );
@@ -1424,25 +1594,42 @@ export function TabletopScreen({ index, onBack }: Props) {
           </div>
 
           {/* TURN PASSING ACTION BUTTON ("พอ อีกฝั่งมา ก็ ค่อย ขึ้นอีกฝั่ง") */}
-          <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+          <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', gap: 8 }}>
+            {undoStack.length > 0 && (
+              <button
+                className="btn ghost"
+                style={{
+                  minHeight: 46,
+                  padding: '0 14px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: '#f87171',
+                  borderColor: 'rgba(239, 68, 68, 0.35)',
+                }}
+                onClick={handleUndo}
+                title="Undo last action if tapped by mistake"
+              >
+                ↩️ ย้อนกลับ
+              </button>
+            )}
             <button
               className="btn primary tt-pass-turn-btn"
-              style={{ width: '100%' }}
+              style={{ flex: 1, minHeight: 46 }}
               onClick={handlePassTurn}
             >
               {turnInRound === 0 ? (
                 <>
-                  <span>PASS TURN TO {otherP.name.toUpperCase()}</span>
+                  <span>ส่งเทิร์นให้ {otherP.name.toUpperCase()} (PASS TURN)</span>
                   <Icon name="next" size={20} />
                 </>
               ) : round < 5 ? (
                 <>
-                  <span>END ROUND {round} → ADVANCE TO ROUND {round + 1}</span>
+                  <span>จบรอบ {round} → เริ่มรอบที่ {round + 1} (END ROUND)</span>
                   <Icon name="next" size={20} />
                 </>
               ) : (
                 <>
-                  <span>FINISH BATTLE & RECORD FINAL SCORE</span>
+                  <span>จบการแข่งขัน & สรุปคะแนน (FINISH BATTLE)</span>
                   <Icon name="trophy" size={20} />
                 </>
               )}
@@ -1505,13 +1692,63 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
           </div>
 
+          {/* Scored Missions List with Recovery ("ดึงการ์ดกลับมือเผื่อกดผิด") */}
+          <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 800 }}>ประวัติภารกิจที่ทำคะแนนสำเร็จ (Scored Missions)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {/* Player 0 Scored */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[0].name} ({players[0].scoredMissions.length} ใบ)</div>
+                {players[0].scoredMissions.length === 0 ? (
+                  <div className="tiny muted">ยังไม่มีภารกิจที่ทำคะแนน</div>
+                ) : (
+                  players[0].scoredMissions.map((id) => (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4, fontSize: 11.5 }}>
+                      <span>{secondaryById(id)?.name ?? id}</span>
+                      <button
+                        className="btn ghost"
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171' }}
+                        onClick={() => handleUndoScore(0, id, 5)}
+                        title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
+                      >
+                        ↺ คืนการ์ด
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Player 1 Scored */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[1].name} ({players[1].scoredMissions.length} ใบ)</div>
+                {players[1].scoredMissions.length === 0 ? (
+                  <div className="tiny muted">ยังไม่มีภารกิจที่ทำคะแนน</div>
+                ) : (
+                  players[1].scoredMissions.map((id) => (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4, fontSize: 11.5 }}>
+                      <span>{secondaryById(id)?.name ?? id}</span>
+                      <button
+                        className="btn ghost"
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171' }}
+                        onClick={() => handleUndoScore(1, id, 5)}
+                        title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
+                      >
+                        ↺ คืนการ์ด
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Deployment & Matchup Info */}
           <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)', fontSize: 12.5, lineHeight: 1.5 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Match & Mission Parameters</div>
-            <div><b>Attacker (Deployed 1st):</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>ข้อมูลแมตช์ (Match Parameters)</div>
+            <div><b>Attacker (ลงทัพก่อน):</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
             <div><b>Defender:</b> {attackerPlayer === 0 ? players[1].name : players[0].name}</div>
-            <div><b>First Turn Taken By:</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
-            <div><b>Current Active Turn:</b> {activeP.name} (Round {round}, Turn {turnInRound + 1}/2)</div>
+            <div><b>เริ่มเทิร์นแรก (Turn 1):</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
+            <div><b>เทิร์นปัจจุบัน:</b> {activeP.name} (รอบ {round}, Turn {turnInRound + 1}/2)</div>
           </div>
 
           {/* Layout & Map Inspector ("ดู Layout ด่านไรพวกนั้น") */}
@@ -1526,7 +1763,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ fontSize: 12, minHeight: 32, padding: '2px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
                 onClick={() => setZoomMap(true)}
               >
-                <Icon name="search" size={15} /> Zoom Map
+                <Icon name="search" size={15} /> ดูแผนที่แบบขยาย (Zoom)
               </button>
             </div>
 
@@ -1535,9 +1772,9 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-              <span>Red: Attacker Zone</span>
-              <span>Blue: Defender Zone</span>
-              <span>Circles: Objectives</span>
+              <span>สีแดง: โซน Attacker</span>
+              <span>สีฟ้า: โซน Defender</span>
+              <span>วงกลม: Objectives</span>
             </div>
           </div>
 
@@ -1548,7 +1785,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ minHeight: 46, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               onClick={() => setSubView('player')}
             >
-              <Icon name="fight" size={18} /> Return to {activeP.name}'s Turn
+              <Icon name="fight" size={18} /> กลับสู่เทิร์นของ {activeP.name}
             </button>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -1557,19 +1794,19 @@ export function TabletopScreen({ index, onBack }: Props) {
                 onClick={handleFinishAndSave}
                 disabled={savedSuccess}
               >
-                💾 Finish & Save Match
+                💾 จบเกมและบันทึกประวัติ
               </button>
               <button
                 className="btn ghost"
                 style={{ flex: 1, minHeight: 42, fontSize: 13 }}
                 onClick={() => {
-                  if (confirm('Start a new tabletop match setup?')) {
+                  if (confirm('ต้องการย้อนกลับไปแก้ไขการตั้งค่าแมตช์ (Setup) หรือไม่?')) {
                     setMode('setup');
                     setSetupStep(1);
                   }
                 }}
               >
-                🔄 New Match Setup
+                ⚙️ แก้ไขการตั้งค่าแมตช์
               </button>
             </div>
           </div>
