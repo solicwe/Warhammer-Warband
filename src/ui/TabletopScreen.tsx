@@ -215,7 +215,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   const [zoomMap, setZoomMap] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Undo History Stack ("เพิ่มปุ่มย้อนกลับด้วย เผื่อกดผิด ไรพวกนั้น")
+  // Undo History Stack
   const [undoStack, setUndoStack] = useState<MatchSnapshot[]>([]);
 
   // Custom VP popover for a card
@@ -348,10 +348,10 @@ export function TabletopScreen({ index, onBack }: Props) {
 
       if (type === 'deploy') {
         setAttackerPlayer(winner);
-        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} ทอยได้สูงกว่า (${r0} vs ${r1}) ได้ลงทัพก่อน (Attacker)!` });
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and deploys first (Attacker)!` });
       } else {
         setFirstTurnPlayer(winner);
-        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} ทอยได้สูงกว่า (${r0} vs ${r1}) ได้เล่นเทิร์นแรก (Turn 1)!` });
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and takes Turn 1!` });
       }
 
       play('good');
@@ -415,7 +415,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
   // Tactical Deck Actions (with undo snapshot)
   const handleDrawCard = (pIdx: 0 | 1) => {
-    recordSnapshot('จั่วการ์ดภารกิจ');
+    recordSnapshot('Draw secondary mission');
     updatePlayer(pIdx, (p) => {
       if (p.activeMissions.length >= 2) return p;
       let curDeck = [...p.deck];
@@ -436,7 +436,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   // Score Secondary Card (Player chooses VP, with undo snapshot)
   const handleScoreCard = (pIdx: 0 | 1, cardId: string, vp: number) => {
     const cardName = secondaryById(cardId)?.name ?? cardId;
-    recordSnapshot(`ทำคะแนน +${vp} VP (${cardName})`);
+    recordSnapshot(`Score +${vp} VP (${cardName})`);
     updatePlayer(pIdx, (p) => ({
       ...p,
       secondaryVp: Math.min(40, p.secondaryVp + vp),
@@ -451,7 +451,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   // Return scored card back to hand if misclicked
   const handleUndoScore = (pIdx: 0 | 1, cardId: string, vp: number) => {
     const cardName = secondaryById(cardId)?.name ?? cardId;
-    recordSnapshot(`ดึงการ์ด ${cardName} คืนสู่มือ`);
+    recordSnapshot(`Return ${cardName} to hand`);
     updatePlayer(pIdx, (p) => ({
       ...p,
       secondaryVp: Math.max(0, p.secondaryVp - vp),
@@ -465,7 +465,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   // Discard without modifying CP (Player manages CP manually, with undo snapshot)
   const handleDiscardCard = (pIdx: 0 | 1, cardId: string) => {
     const cardName = secondaryById(cardId)?.name ?? cardId;
-    recordSnapshot(`ทิ้งการ์ด (${cardName})`);
+    recordSnapshot(`Discard (${cardName})`);
     updatePlayer(pIdx, (p) => ({
       ...p,
       activeMissions: p.activeMissions.filter((id) => id !== cardId),
@@ -477,7 +477,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   // Free Redraw (Player manages CP on their own, does NOT deduct CP, with undo snapshot)
   const handleFreeRedraw = (pIdx: 0 | 1, cardId: string) => {
     const cardName = secondaryById(cardId)?.name ?? cardId;
-    recordSnapshot(`จั่วเปลี่ยนการ์ด (${cardName})`);
+    recordSnapshot(`Redraw (${cardName})`);
     updatePlayer(pIdx, (p) => {
       let curDeck = [...p.deck];
       if (curDeck.length === 0) {
@@ -497,21 +497,21 @@ export function TabletopScreen({ index, onBack }: Props) {
     });
   };
 
-  // Turn Passing ("เน้นเป็น รายคน เลย พอ อีกฝั่งมา ก็ ค่อย ขึ้นอีกฝั่ง")
+  // Turn Passing
   const handlePassTurn = () => {
     const otherPlayer: 0 | 1 = activePlayer === 0 ? 1 : 0;
     const otherName = otherPlayer === 0 ? p0Name : p1Name;
 
     if (turnInRound === 0) {
       // First turn completed, pass to second player in this round
-      recordSnapshot(`ส่งเทิร์นให้ ${otherName}`);
+      recordSnapshot(`Pass turn to ${otherName}`);
       setActivePlayer(otherPlayer);
       setTurnInRound(1);
       play('turn');
     } else {
       // Second turn completed, advance round!
       if (round < 5) {
-        recordSnapshot(`จบรอบที่ ${round} → เริ่มรอบที่ ${round + 1}`);
+        recordSnapshot(`End Round ${round} → Start Round ${round + 1}`);
         setRound((r) => r + 1);
         setActivePlayer(firstTurnPlayer);
         setTurnInRound(0);
@@ -608,21 +608,21 @@ export function TabletopScreen({ index, onBack }: Props) {
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(1)}
           >
-            1. แผนการรบ & แมพ
+            1. Mission & Map
           </button>
           <button
             className={`btn grow ${setupStep === 2 ? 'primary' : 'ghost'}`}
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(2)}
           >
-            2. ผู้เล่น & กองทัพ
+            2. Players & Forces
           </button>
           <button
             className={`btn grow ${setupStep === 3 ? 'primary' : 'ghost'}`}
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
             onClick={() => setSetupStep(3)}
           >
-            3. สุ่มลำดับเล่น
+            3. Roll-Off
           </button>
         </div>
 
@@ -631,16 +631,16 @@ export function TabletopScreen({ index, onBack }: Props) {
           {setupStep === 1 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>1. แผนการรบ & แมพ (Force Dispositions & Map)</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>1. Force Dispositions & Battlefield Map</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  เลือก Force Disposition ของผู้เล่นแต่ละฝั่ง ระบบจะล็อค 3 แมพทางการของคู่นี้ให้อัตโนมัติ
+                  Select each player's Force Disposition. The system locks the 3 official tournament layouts for this pairing.
                 </p>
               </div>
 
               {/* Player 1 Disposition */}
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hold" size={16} /> แผนการรบ Player 1 (Force Disposition)
+                  <Icon name="hold" size={16} /> Player 1 Force Disposition
                 </div>
                 <div className="tt-disp-grid">
                   {MISSIONS.forceDispositions.map((d) => (
@@ -660,7 +660,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               {/* Player 2 Disposition */}
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="hold" size={16} /> แผนการรบ Player 2 (Force Disposition)
+                  <Icon name="hold" size={16} /> Player 2 Force Disposition
                 </div>
                 <div className="tt-disp-grid">
                   {MISSIONS.forceDispositions.map((d) => (
@@ -681,8 +681,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontSize: 13, fontWeight: 800 }}>แมพทางการสำหรับคู่นี้ ({playableLayouts.length} Official Layouts)</span>
-                    <div className="tiny muted">ล็อคเฉพาะ 3 แมพทางการของ 11th Edition สำหรับคู่นี้</div>
+                    <span style={{ fontSize: 13, fontWeight: 800 }}>Official Tournament Layouts ({playableLayouts.length} Layouts)</span>
+                    <div className="tiny muted">Locked to the 3 official 11th Edition layouts for this matchup</div>
                   </div>
                 </div>
 
@@ -721,7 +721,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                           setInspectLayout(l);
                         }}
                       >
-                        <Icon name="search" size={13} /> ดู Layout
+                        <Icon name="search" size={13} /> Inspect Layout
                       </button>
                     </div>
                   ))}
@@ -733,7 +733,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ minHeight: 46, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 onClick={() => setSetupStep(2)}
               >
-                ถัดไป: ผู้เล่น & กองทัพ (Players & Factions) →
+                Next: Players & Forces →
               </button>
             </div>
           )}
@@ -742,9 +742,9 @@ export function TabletopScreen({ index, onBack }: Props) {
           {setupStep === 2 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>2. ผู้เล่น & กองทัพ (Players & Factions)</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>2. Players & Factions</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  ตั้งชื่อผู้เล่นและเลือกกองทัพของแต่ละฝั่ง
+                  Set player names and choose army factions for each side.
                 </p>
               </div>
 
@@ -754,7 +754,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   <Emblem factionId={p0Faction} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>ชื่อผู้เล่น 1 (Player 1 Name)</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 1 Name</label>
                       <input
                         type="text"
                         className="input"
@@ -765,7 +765,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>กองทัพ (Faction)</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Faction</label>
                       <select
                         className="input"
                         value={p0Faction}
@@ -789,7 +789,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   <Emblem factionId={p1Faction} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>ชื่อผู้เล่น 2 (Player 2 Name)</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 2 Name</label>
                       <input
                         type="text"
                         className="input"
@@ -800,7 +800,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>กองทัพ (Faction)</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Faction</label>
                       <select
                         className="input"
                         value={p1Faction}
@@ -820,14 +820,14 @@ export function TabletopScreen({ index, onBack }: Props) {
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button className="btn ghost" style={{ minHeight: 46, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setSetupStep(1)}>
-                  <Icon name="back" size={14} /> ย้อนกลับไปเลือกแมพ
+                  <Icon name="back" size={14} /> Back to Map Selection
                 </button>
                 <button
                   className="btn primary grow"
                   style={{ minHeight: 46, fontSize: 14, fontWeight: 800, flex: 2 }}
                   onClick={() => setSetupStep(3)}
                 >
-                  ถัดไป: สุ่มลำดับการเล่น (Roll-Off) →
+                  Next: Roll-Off →
                 </button>
               </div>
             </div>
@@ -837,9 +837,9 @@ export function TabletopScreen({ index, onBack }: Props) {
           {setupStep === 3 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>3. สุ่มลำดับการเล่น (Roll-Off & Turn Order)</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>3. Roll-Off & Turn Order</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  ทอยเต๋า D6 เพื่อหาคนลงทัพก่อน (Attacker) และคนเริ่มเทิร์นแรก (Turn 1)
+                  Roll D6 to determine deployment priority (Attacker) and Turn 1 order.
                 </p>
               </div>
 
@@ -1082,7 +1082,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               onClick={handleUndo}
               title={`Undo last action: ${undoStack[undoStack.length - 1].actionDesc}`}
             >
-              <Icon name="back" size={14} /> ย้อนกลับ
+              <Icon name="back" size={14} /> Undo
             </button>
           )}
 
@@ -1092,7 +1092,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ minHeight: 36, padding: '4px 12px', fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)' }}
               onClick={() => setSubView('overview')}
             >
-              <Icon name="map" size={15} /> ดูภาพรวม & แมพ
+              <Icon name="map" size={15} /> Battlefield & Layout
             </button>
           ) : (
             <button
@@ -1100,7 +1100,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ minHeight: 36, padding: '4px 12px', fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               onClick={() => setSubView('player')}
             >
-              <Icon name="fight" size={15} /> กลับมาเทิร์น {activeP.name}
+              <Icon name="fight" size={15} /> Return to {activeP.name}'s Turn
             </button>
           )}
 
@@ -1111,12 +1111,12 @@ export function TabletopScreen({ index, onBack }: Props) {
             disabled={savedSuccess}
             title="Finish and record match to Battle History"
           >
-            {savedSuccess ? 'บันทึกแล้ว!' : 'จบเกม'}
+            {savedSuccess ? 'Saved!' : 'End Game'}
           </button>
         </div>
       </header>
 
-      {/* VIEW 1: ACTIVE PLAYER VIEW ("เน้นเป็น รายคน เลย โชว์เเค่ของตัวเอง") */}
+      {/* VIEW 1: ACTIVE PLAYER VIEW (Dedicated per player) */}
       {subView === 'player' && (
         <main className="screen" style={{ flex: 1, padding: '12px 14px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Active Player Banner */}
@@ -1229,7 +1229,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               }}
             >
               <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Icon name="hold" size={14} /> สิ่งที่ต้องทำ (How to score Primary):
+                <Icon name="hold" size={14} /> How to score Primary:
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1293,7 +1293,7 @@ export function TabletopScreen({ index, onBack }: Props) {
             {/* Quick Primary VP Adjustment Steppers */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 6 }}>
-                บันทึกแต้ม Primary (Adjust Score):
+                Record Primary VP (Adjust Score):
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
                 {[2, 3, 4, 5].map((vp) => (
@@ -1310,7 +1310,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   className="btn"
                   style={{ minHeight: 38, fontSize: 13, fontWeight: 700, padding: 2, color: 'var(--bad)', borderColor: 'color-mix(in srgb, var(--bad) 30%, transparent)', background: 'var(--bad-soft)' }}
                   onClick={() => handleAdjustPrimaryVp(activePlayer, -1)}
-                  title="ลด 1 แต้ม"
+                  title="-1 VP"
                 >
                   -1 VP
                 </button>
@@ -1326,7 +1326,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   SECONDARY MISSIONS · TACTICAL
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: '0.02em', marginTop: 2 }}>
-                  ภารกิจรอง (Tactical Secondaries)
+                  Tactical Secondaries
                 </div>
               </div>
 
@@ -1355,7 +1355,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               }}
             >
               <span style={{ color: 'var(--p0)', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={15} /></span>
-              <span><b>สิ่งที่ต้องทำ (How to score Secondary):</b> จั่วการ์ดทำภารกิจบนมือ (สูงสุด 2 ใบ) ทำตามเงื่อนไขที่ระบุบนการ์ดแต่ละใบในเทิร์นของคุณ เมื่อทำสำเร็จให้กดปุ่มเคลมแต้ม VP สีเขียว หากต้องการเปลี่ยนการ์ดสามารถกด <b>Redraw</b> หรือ <b>Discard</b> โดยไม่เสีย CP (จัดการแต้ม CP ด้านบนด้วยตนเอง)</span>
+              <span><b>How to score Secondary:</b> Draw up to 2 active secondary mission cards. Complete the conditions stated on each card during your turn. When completed, tap the green score button to claim VP. If you need to change cards, tap <b>Redraw</b> or <b>Discard</b> at no CP cost (manage CP points manually above).</span>
             </div>
 
             {activeP.activeMissions.length < 2 && (
@@ -1384,8 +1384,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                 <div style={{ color: 'var(--accent)', opacity: 0.75, marginBottom: 6 }}>
                   <Icon name="cards" size={32} />
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>ยังไม่มีการ์ด Secondary ในมือ</div>
-                <div className="small muted" style={{ marginTop: 4, color: 'var(--text-2)' }}>กด <b>Draw Secondary Mission</b> ด้านบนเพื่อเริ่มจั่วการ์ดประจำเทิร์น</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>No Secondary Missions in Hand</div>
+                <div className="small muted" style={{ marginTop: 4, color: 'var(--text-2)' }}>Tap <b>Draw Secondary Mission</b> above to draw cards for your turn.</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1482,7 +1482,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                         }}
                       >
                         <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <Icon name="objective" size={13} /> เงื่อนไขภารกิจ (Requirement):
+                          <Icon name="objective" size={13} /> Mission Requirements:
                         </div>
                         {card.text}
                       </div>
@@ -1588,7 +1588,7 @@ export function TabletopScreen({ index, onBack }: Props) {
             )}
           </div>
 
-          {/* TURN PASSING ACTION BUTTON ("พอ อีกฝั่งมา ก็ ค่อย ขึ้นอีกฝั่ง") */}
+          {/* TURN PASSING ACTION BUTTON */}
           <div style={{ marginTop: 'auto', paddingTop: 8, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 16px))', display: 'flex', gap: 8 }}>
             {undoStack.length > 0 && (
               <button
@@ -1607,7 +1607,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 onClick={handleUndo}
                 title="Undo last action if tapped by mistake"
               >
-                <Icon name="back" size={14} /> ย้อนกลับ
+                <Icon name="back" size={14} /> Undo
               </button>
             )}
             <button
@@ -1617,17 +1617,17 @@ export function TabletopScreen({ index, onBack }: Props) {
             >
               {turnInRound === 0 ? (
                 <>
-                  <span>ส่งเทิร์นให้ {otherP.name.toUpperCase()} (PASS TURN)</span>
+                  <span>PASS TURN TO {otherP.name.toUpperCase()}</span>
                   <Icon name="next" size={20} />
                 </>
               ) : round < 5 ? (
                 <>
-                  <span>จบรอบ {round} → เริ่มรอบที่ {round + 1} (END ROUND)</span>
+                  <span>END ROUND {round} → START ROUND {round + 1}</span>
                   <Icon name="next" size={20} />
                 </>
               ) : (
                 <>
-                  <span>จบการแข่งขัน & สรุปคะแนน (FINISH BATTLE)</span>
+                  <span>FINISH MATCH & FINALIZE SCORE</span>
                   <Icon name="trophy" size={20} />
                 </>
               )}
@@ -1636,7 +1636,7 @@ export function TabletopScreen({ index, onBack }: Props) {
         </main>
       )}
 
-      {/* VIEW 2: TABLE OVERVIEW & LAYOUT INSPECTOR ("เเละมีกดให้ ดุภาพรวมทั้งหมด ด้วย ดู Layout ด่านไรพวกนั้น") */}
+      {/* VIEW 2: TABLE OVERVIEW & LAYOUT INSPECTOR */}
       {subView === 'overview' && (
         <main className="screen" style={{ flex: 1, padding: '14px 14px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Side-by-side Scoreboard */}
@@ -1690,15 +1690,15 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
           </div>
 
-          {/* Scored Missions List with Recovery ("ดึงการ์ดกลับมือเผื่อกดผิด") */}
+          {/* Scored Missions List with Recovery */}
           <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 800 }}>ประวัติภารกิจที่ทำคะแนนสำเร็จ (Scored Missions)</div>
+            <div style={{ fontSize: 13, fontWeight: 800 }}>Scored Secondary Missions History</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {/* Player 0 Scored */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[0].name} ({players[0].scoredMissions.length} ใบ)</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[0].name} ({players[0].scoredMissions.length} scored)</div>
                 {players[0].scoredMissions.length === 0 ? (
-                  <div className="tiny muted">ยังไม่มีภารกิจที่ทำคะแนน</div>
+                  <div className="tiny muted">No scored missions yet</div>
                 ) : (
                   players[0].scoredMissions.map((id) => (
                     <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4, fontSize: 11.5 }}>
@@ -1707,9 +1707,9 @@ export function TabletopScreen({ index, onBack }: Props) {
                         className="btn ghost"
                         style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(0, id, 5)}
-                        title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
+                        title="Return this card to hand and refund VP"
                       >
-                        <Icon name="reroll" size={11} /> คืนการ์ด
+                        <Icon name="reroll" size={11} /> Return Card
                       </button>
                     </div>
                   ))
@@ -1718,9 +1718,9 @@ export function TabletopScreen({ index, onBack }: Props) {
 
               {/* Player 1 Scored */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[1].name} ({players[1].scoredMissions.length} ใบ)</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)' }}>{players[1].name} ({players[1].scoredMissions.length} scored)</div>
                 {players[1].scoredMissions.length === 0 ? (
-                  <div className="tiny muted">ยังไม่มีภารกิจที่ทำคะแนน</div>
+                  <div className="tiny muted">No scored missions yet</div>
                 ) : (
                   players[1].scoredMissions.map((id) => (
                     <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'var(--surface-2)', borderRadius: 4, fontSize: 11.5 }}>
@@ -1729,9 +1729,9 @@ export function TabletopScreen({ index, onBack }: Props) {
                         className="btn ghost"
                         style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(1, id, 5)}
-                        title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
+                        title="Return this card to hand and refund VP"
                       >
-                        <Icon name="reroll" size={11} /> คืนการ์ด
+                        <Icon name="reroll" size={11} /> Return Card
                       </button>
                     </div>
                   ))
@@ -1742,14 +1742,14 @@ export function TabletopScreen({ index, onBack }: Props) {
 
           {/* Deployment & Matchup Info */}
           <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)', fontSize: 12.5, lineHeight: 1.5 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>ข้อมูลแมตช์ (Match Parameters)</div>
-            <div><b>Attacker (ลงทัพก่อน):</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Match Parameters</div>
+            <div><b>Attacker (Deploys first):</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
             <div><b>Defender:</b> {attackerPlayer === 0 ? players[1].name : players[0].name}</div>
-            <div><b>เริ่มเทิร์นแรก (Turn 1):</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
-            <div><b>เทิร์นปัจจุบัน:</b> {activeP.name} (รอบ {round}, Turn {turnInRound + 1}/2)</div>
+            <div><b>First Turn (Turn 1):</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
+            <div><b>Active Turn:</b> {activeP.name} (Round {round}, Turn {turnInRound + 1}/2)</div>
           </div>
 
-          {/* Layout & Map Inspector ("ดู Layout ด่านไรพวกนั้น") */}
+          {/* Layout & Map Inspector */}
           <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
@@ -1761,7 +1761,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ fontSize: 12, minHeight: 32, padding: '2px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
                 onClick={() => setZoomMap(true)}
               >
-                <Icon name="search" size={15} /> ดูแผนที่แบบขยาย (Zoom)
+                <Icon name="search" size={15} /> Expand Layout View
               </button>
             </div>
 
@@ -1770,9 +1770,9 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-              <span>สีแดง: โซน Attacker</span>
-              <span>สีฟ้า: โซน Defender</span>
-              <span>วงกลม: Objectives</span>
+              <span>Red: Attacker Zone</span>
+              <span>Blue: Defender Zone</span>
+              <span>Circles: Objectives</span>
             </div>
           </div>
 
@@ -1783,7 +1783,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ minHeight: 46, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               onClick={() => setSubView('player')}
             >
-              <Icon name="fight" size={18} /> กลับสู่เทิร์นของ {activeP.name}
+              <Icon name="fight" size={18} /> Return to {activeP.name}'s Turn
             </button>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -1792,19 +1792,19 @@ export function TabletopScreen({ index, onBack }: Props) {
                 onClick={handleFinishAndSave}
                 disabled={savedSuccess}
               >
-                <Icon name="save" size={14} /> จบเกมและบันทึกประวัติ
+                <Icon name="save" size={14} /> End Match & Save History
               </button>
               <button
                 className="btn ghost"
                 style={{ flex: 1, minHeight: 42, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => {
-                  if (confirm('ต้องการย้อนกลับไปแก้ไขการตั้งค่าแมตช์ (Setup) หรือไม่?')) {
+                  if (confirm('Return to match setup to change settings?')) {
                     setMode('setup');
                     setSetupStep(1);
                   }
                 }}
               >
-                <Icon name="gear" size={14} /> แก้ไขการตั้งค่าแมตช์
+                <Icon name="gear" size={14} /> Modify Match Setup
               </button>
             </div>
           </div>

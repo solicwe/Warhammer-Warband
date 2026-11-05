@@ -2924,7 +2924,7 @@ export function fightingArmyPoints(s: GameState, p: PlayerId): number {
   }, 0);
 }
 
-/** Check if fighting armies are evenly matched ("สูสี"):
+/** Check if fighting armies are evenly matched:
  * Evaluates whether player's fighting force and enemy fighting force are closely matched.
  */
 export function isFightEvenlyMatched(s: GameState): boolean {

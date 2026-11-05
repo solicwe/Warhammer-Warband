@@ -581,7 +581,7 @@ function isDyingModel(u: UnitState, m: ModelState, fx: ActiveFx[], now: number):
   return false;
 }
 
-/** Delay wound deduction until damage numbers and impact effects pop up first (Thai req: เลขดาเมจกับเอฟเฟคขึ้นก่อน ค่อยให้เลือดลด) */
+/** Delay wound deduction until damage numbers and impact effects pop up first */
 function getModelDisplayWounds(u: UnitState, m: ModelState, fx: ActiveFx[], now: number): { wounds: number; low: boolean; fading?: number } {
   if (!fx.length) return { wounds: m.wounds, low: m.wounds * 2 <= m.profile.W };
   const relevant = fx.some((a) => (a.e.kind === 'attack' && a.e.targetId === u.id) || (a.e.kind === 'mortal' && a.e.unitId === u.id));

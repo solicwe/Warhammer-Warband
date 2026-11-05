@@ -51,8 +51,8 @@ export function ArcaneModesModal({ onClose, onCampaign }: Props) {
             <button
               className="btn ghost"
               onClick={onClose}
-              aria-label="ย้อนกลับ"
-              title="ย้อนกลับ"
+              aria-label="Back"
+              title="Back"
               style={{
                 minHeight: 34,
                 padding: '2px 10px',
@@ -65,7 +65,7 @@ export function ArcaneModesModal({ onClose, onCampaign }: Props) {
               }}
             >
               <Icon name="back" size={15} />
-              <span>ย้อนกลับ</span>
+              <span>Back</span>
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <div style={{ padding: 6, borderRadius: 8, background: 'var(--accent-soft)', color: 'var(--accent)', flexShrink: 0 }}>
