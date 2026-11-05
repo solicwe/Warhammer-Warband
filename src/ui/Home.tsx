@@ -97,10 +97,10 @@ export function Home({
           </button>
 
           <nav className="modes-sub-grid" aria-label="Secondary play modes">
-            <button className="mode-btn-sub" onClick={onArcane} title="Demo Roguelike campaign and special game modes">
+            <button className="mode-btn-sub" onClick={onArcane} title="Demo Roguelike campaign and arcade game modes">
               <Icon name="arcane" size={17} />
               <div className="mode-sub-info">
-                <span className="mode-sub-label">ARCANE</span>
+                <span className="mode-sub-label">ARCADE</span>
                 {run && !run.over ? <small className="mode-sub-badge">Stage {Math.min(runLayer + 1, runLayers)}/{runLayers}</small> : null}
               </div>
             </button>

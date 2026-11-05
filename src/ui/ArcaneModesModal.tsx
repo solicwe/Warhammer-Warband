@@ -30,9 +30,9 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Arcane Modes">
+    <div className="sheet-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Arcade Modes">
       <div
-        className="sheet-panel arcane-modal"
+        className="sheet-panel arcade-modal"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: 540, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
       >
@@ -43,8 +43,8 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
               <Icon name="arcane" size={24} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '0.04em' }}>ARCANE EXPEDITIONS</h3>
-              <div className="tiny muted">Roguelike campaign and specialized battle modes</div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '0.04em' }}>ARCADE MODES</h3>
+              <div className="tiny muted">Roguelike campaign and specialized arcade battle modes</div>
             </div>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close" style={{ minWidth: 40, minHeight: 40 }}>
