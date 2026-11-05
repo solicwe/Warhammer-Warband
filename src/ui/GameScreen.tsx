@@ -2449,7 +2449,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </div>
           </div>
         ))}
-        {abilityBar(s.active, { whens: ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase'] })}
+        {selUnit && selUnit.owner === s.active && abilityBar(selUnit.owner, { unitId: selUnit.id, whens: ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase'] })}
         {hasArmyRule(s, s.active, 'Waaagh!') && (
           <div className="card row" style={{ padding: 8 }}>
             <div className="grow small"><b>WAAAGH!</b> (once per battle) — Orks are riled up: 5+ invulnerable save, ranged weapons have [ASSAULT], can charge after advancing, until the end of the next turn</div>
@@ -2700,7 +2700,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             </>
           );
         })()}
-        {abilityBar(s.active, { whens: ['movement', 'endOfNormalMove', 'anyPhase'] })}
+        {selUnit && selUnit.owner === s.active && abilityBar(selUnit.owner, { unitId: selUnit.id, whens: ['movement', 'endOfNormalMove', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
         {(() => {
@@ -3154,7 +3154,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         )}
         {!u && actionOptions(s).length > 0 && <div className="tiny muted">{new Set(actionOptions(s).map((o) => o.unitId)).size} unit(s) can start a mission action ({[...new Set(actionOptions(s).map((o) => o.name))].join(', ')}) — tap a unit to see it</div>}
         {s.pendingActions.filter((a) => a.player === s.active).length > 0 && <div className="tiny"><Icon name="wait" size={13} /> Actions completing at the end of the turn: {s.pendingActions.filter((a) => a.player === s.active).map((a) => `${MISSIONS.actions[a.action].name} (${U(a.unitId).name})`).join(', ')}</div>}
-        {abilityBar(s.active, { whens: ['shooting', 'afterShootingButton', 'anyPhase'] })}
+        {u && abilityBar(u.owner, { unitId: u.id, whens: ['shooting', 'afterShootingButton', 'anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {(() => {
           const can = mine.filter((x) => shootingModes(s, x).length > 0 || hasDeathstrikeMissile(x)).length;
@@ -3318,7 +3318,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             if (res) flash(!res.n ? 'No unit has a fair chance to reach an enemy' : `${res.made.length} of ${res.n} charge${res.n > 1 ? 's' : ''} made it in${res.short.length ? ` · ${res.short.join(', ')}` : ''}`);
           }}>Charge for me</button>
         )}
-        {abilityBar(s.active, { whens: ['anyPhase'] })}
+        {selUnit && selUnit.owner === s.active && abilityBar(selUnit.owner, { unitId: selUnit.id, whens: ['anyPhase'] })}
         {selUnit && selUnit.owner !== s.active && unitCard(selUnit)}
         {redoButton()}
         {(() => {
