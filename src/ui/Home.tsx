@@ -87,12 +87,12 @@ export function Home({
           </section>
         )}
 
-        {/* Play modes: NEW BATTLE on top, Arcade, Tabletop, and History smaller underneath */}
+        {/* Play modes: START BATTLE on top, Arcade, Tabletop, and History smaller underneath */}
         <div className="home-modes" aria-label="Play modes">
           <button className="mode-btn-sub mode-btn-hero" onClick={onBattle} title="Play standard simulator battle against bot or local player">
-            <Icon name="fight" size={18} />
+            <Icon name="fight" size={20} />
             <div className="mode-sub-info">
-              <span className="mode-sub-label">NEW BATTLE</span>
+              <span className="mode-sub-label">START BATTLE</span>
             </div>
           </button>
 
@@ -124,17 +124,22 @@ export function Home({
             <h3>Armies</h3>
             <span className="group-count num">{armies.length}</span>
           </div>
-          <button className="list-new" onClick={onNew}><Icon name="plus" size={20} />New army</button>
+          <button className="list-new" onClick={onNew}><Icon name="plus" size={20} />Create New Roster</button>
           {armies.map((a) => {
             const size = RULES.battleSizes.find((b) => b.id === a.battleSize) ?? RULES.battleSizes[0];
             const pts = listPoints(a, facs[a.factionId]);
             const over = pts > size.points;
+            const rawName = a.name?.trim();
+            const isGenericName = !rawName || rawName.toLowerCase() === 'new army' || rawName.toLowerCase() === 'untitled army';
+            const armyTitle = isGenericName
+              ? (a.subfaction ? `${titleCase(a.subfaction)} Force` : `${factionName(a.factionId)} Army`)
+              : a.name;
             return (
               <div key={a.id} className="army" style={{ ['--accent' as string]: armyColor(a.factionId, a.subfaction), ['--accent-2' as string]: armyColor(a.factionId, a.subfaction) }}>
                 <button className="army-main" onClick={() => onOpen(a.id)}>
                   <Emblem factionId={a.factionId} sub={a.subfaction} />
                   <span className="army-text">
-                    <span className="army-title">{a.name || 'Untitled army'}</span>
+                    <span className="army-title">{armyTitle}</span>
                     <span className="army-meta">{factionName(a.factionId)}{a.subfaction ? ` · ${titleCase(a.subfaction)}` : ''}</span>
                     <span className="army-meta">{a.detachments.join(' + ') || 'No Detachment yet'}</span>
                     <span className={`army-foot ${over ? 'over' : ''}`}>

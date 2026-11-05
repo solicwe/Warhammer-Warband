@@ -3111,17 +3111,31 @@ select option {
 .rl-det + .rl-det { border-top: 4px solid var(--line-2); }
 .rl-det-head { padding: 10px 16px 6px; font: 700 13px var(--font-cond); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: var(--surface-2); border-bottom: 1px solid var(--line); }
 
-/* home: play modes - NEW BATTLE hero button at top, sub-modes underneath */
+/* home: play modes - START BATTLE hero button at top, sub-modes underneath */
 .home-modes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
 .mode-btn-hero,
 .mode-btn-primary {
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
+  background: var(--accent) !important;
+  color: var(--on-fill) !important;
+  border: 1.5px solid var(--accent) !important;
+  box-shadow: 0 2px 10px var(--accent-soft);
+}
+.mode-btn-hero:hover {
+  background: var(--accent-2) !important;
+  border-color: var(--accent-2) !important;
+  color: var(--on-fill) !important;
+}
+.mode-btn-hero .icon {
+  color: var(--on-fill) !important;
 }
 .mode-btn-hero .mode-sub-label,
 .mode-btn-primary .mode-sub-label {
-  font-size: 13.5px;
+  font-size: 15px;
   letter-spacing: 0.08em;
+  font-weight: 800;
+  color: var(--on-fill) !important;
 }
 
 .modes-sub-grid {
