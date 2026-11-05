@@ -332,7 +332,7 @@ function shotRecently(s: GameState, u: UnitState) {
 
 /** Hidden (13.09): INFANTRY/BEASTS/SWARM in a light/dense terrain area, no ranged attacks this or the previous turn. */
 export function isHidden(s: GameState, u: UnitState, m: ModelState): boolean {
-  if (!['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k))) return false;
+  if (!['INFANTRY', 'BEAST', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k))) return false;
   if (hooks.cannotBeHidden?.(s, u)) return false;
   if (shotRecently(s, u)) return false;
   return s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly));

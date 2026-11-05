@@ -555,7 +555,7 @@ function seen(s: GameState, e: UnitState, u: UnitState): boolean {
 /** Expected loss (in points) during the enemy's next turn: shots from units in range after a move, charges from brawlers. */
 function dangerScore(s: GameState, u: UnitState, ctx: Ctx): number {
   let shots = 0, melee = 0;
-  const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly)));
+  const infantryInCover = alive(u).every((m) => ['INFANTRY', 'BEAST', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) && s.terrain.some((t) => t.category !== 'exposed' && bodyTouchesPoly(m, 0, t.poly)));
   for (const f of ctx.foes) {
     const gap = unitDistance(u, f.u);
     if (f.range > 0 && f.rk > 0 && gap <= f.range + f.M) {

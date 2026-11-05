@@ -6,7 +6,7 @@ export type WeaponFx =
   | 'bolt' | 'heavyBolt' | 'gatling' | 'shoota' | 'shotgun' | 'sniper' | 'pulse'
   | 'plasma' | 'las' | 'melta' | 'volkite' | 'grav' | 'lightning' | 'psychic'
   | 'flame' | 'missile' | 'shell'
-  | 'gauss' | 'shuriken' | 'bio' | 'sonic' | 'cryo'
+  | 'gauss' | 'shuriken' | 'bio' | 'sonic' | 'cryo' | 'arrow'
   | 'slash' | 'power' | 'chain' | 'crush' | 'claw';
 
 const has = (p: WeaponProfileData, a: string) => (p.abilities ?? []).some((x) => x.toLowerCase().startsWith(a));
@@ -66,7 +66,11 @@ function meleeFx(n: string, p: WeaponProfileData): WeaponFx {
 
 function rangedFx(n: string, p: WeaponProfileData, catchAll: boolean): WeaponFx | null {
   // 1. Psychic / Warp / C'tan powers / Disruptors / D-weapons
-  if (has(p, 'psychic') || /smite|psychic|psycannon|psilencer|witch|warp|astropathic|mind wipe|thunderclap|d-cannon|wraithcannon|distortion|d-scythe|gaze of death|gaze of gork|cosmic insanity|time’s arrow|time's arrow|antimatter meteor|spirit vortex|baleblast|fatecaster|neuro disruptor|eldritch/.test(n)) return 'psychic';
+  // Bows / Greatbows / Crossbows (Fatecaster greatbow, Dart-bow, etc.)
+  if (/bow|greatbow|crossbow|\barrows?\b/.test(n) && !/time['’]s arrow|tachyon arrow/.test(n)) return 'arrow';
+
+  // 1. Psychic / Warp / C'tan powers / Disruptors / D-weapons
+  if (has(p, 'psychic') || /smite|psychic|psycannon|psilencer|witch|warp|astropathic|mind wipe|thunderclap|d-cannon|wraithcannon|distortion|d-scythe|gaze of death|gaze of gork|cosmic insanity|time’s arrow|time's arrow|antimatter meteor|spirit vortex|baleblast|neuro disruptor|eldritch/.test(n)) return 'psychic';
 
   // 2. Sonic / Cacophony (Noise Marines, Slaanesh), Eldar vibro and Drukhari screamers
   if (/sonic|blastmaster|cacophon|dirgesinger|heartstring|scream of despair|noise|vibro cannon|screamer/.test(n)) return 'sonic';

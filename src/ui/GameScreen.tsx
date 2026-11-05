@@ -180,7 +180,35 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   const [liveMap, setLiveMapRaw] = useState<boolean>(() => readText(KEYS.liveMap) !== '0');
   const setLiveMap = (v: boolean) => { setLiveMapRaw(v); writeText(KEYS.liveMap, v ? '1' : '0'); };
   const [fastShooting, setFastShootingRaw] = useState<boolean>(() => readText(KEYS.fastShooting) === 'true');
-  const setFastShooting = (v: boolean) => { setFastShootingRaw(v); writeText(KEYS.fastShooting, String(v)); };
+  const setFastShooting = (v: boolean) => {
+    setFastShootingRaw(v);
+    writeText(KEYS.fastShooting, String(v));
+    act((g) => { g.defenderRolls = !v; });
+  };
+
+  useEffect(() => {
+    if (fastShooting && s.defenderRolls !== false) {
+      act((g) => { g.defenderRolls = false; });
+    }
+  }, [fastShooting, s.defenderRolls]);
+
+  useEffect(() => {
+    if (fastShooting && s.attack) {
+      const at = s.attack;
+      const attacker = s.units.find((u) => u.id === at.attackerId);
+      act((g) => {
+        resolveAll(g);
+        finishAttack(g);
+        if (at.kind === 'overwatch') closeWindow(g);
+        if (at.kind === 'fight' && attacker) {
+          markFought(g, unitById(g, attacker.id));
+          openCounteroffensive(g, attacker.owner);
+        }
+      });
+      setMode(null);
+      if (at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
+    }
+  }, [fastShooting, s.attack]);
   const [shake, setShake] = useState(0);
   const [reporting, setReporting] = useState(false); // an attack is being told on screen: the bot waits for it
   const [summary, setSummary] = useState<RoundTally | null>(null); // the round just played, in numbers
@@ -3094,12 +3122,23 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           {res?.pools.map((p) => <div key={p.key} className="tiny">{p.weapon}: {p.attackNote} · Hit {p.skill}+ · Wound {p.woundNeed}+ ({p.woundNote}) · AP{p.ap} D{p.damage}</div>)}
           {res?.notes.map((n) => <div key={n} className="err">{n}</div>)}
           <div className="row">
-            <button className="btn primary grow" disabled={!res || !res.pools.length} onClick={() => act((g) => {
-              const gu = unitById(g, u.id);
-              if (mode.epic) spendStratagem(g, gu.owner, 'epic-challenge', gu);
-              const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile });
-              startAttack(g, 'fight', gu.id, mode.target!, r.pools);
-            })}>Fight!</button>
+            <button className="btn primary grow" disabled={!res || !res.pools.length} onClick={() => {
+              const skip = fastShooting;
+              act((g) => {
+                const gu = unitById(g, u.id);
+                if (mode.epic) spendStratagem(g, gu.owner, 'epic-challenge', gu);
+                const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile });
+                startAttack(g, 'fight', gu.id, mode.target!, r.pools);
+                if (skip) {
+                  resolveAll(g);
+                  finishAttack(g);
+                  markFought(g, gu);
+                  openCounteroffensive(g, gu.owner);
+                }
+              });
+              setMode(null);
+              if (skip) setSel(null);
+            }}>Fight!</button>
           </div>
         </>
       );
@@ -3580,7 +3619,22 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           onReroll={onReroll}
           onActOfFaith={onActOfFaith}
           onFree={(k, i) => { const e = act((g) => useFreeDie(g, k, i)); if (e) flash(e); }}
-          onSkip={() => act((g) => resolveAll(g))}
+          onSkip={() => {
+            const at = s.attack;
+            if (!at) return;
+            const attacker = s.units.find((u) => u.id === at.attackerId);
+            act((g) => {
+              resolveAll(g);
+              finishAttack(g);
+              if (at.kind === 'overwatch') closeWindow(g);
+              if (at.kind === 'fight' && attacker) {
+                markFought(g, unitById(g, attacker.id));
+                openCounteroffensive(g, attacker.owner);
+              }
+            });
+            setMode(null);
+            if (at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
+          }}
           onClose={onTrayClose}
           onPick={(i) => act((g) => toggleRerollPick(g, i))}
           onCR={(what) => {
@@ -3841,14 +3895,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               <span className="field-note">{fxLevel === 'full' ? 'Each attack counts up: shots, hits, wounds, through the saves — and what changed the odds' : fxLevel === 'short' ? 'Only what each attack destroyed' : 'No reports (the board still shows the shots)'}</span>
             </div>
             <div className="field">
-              <span id="shooting-dice-setting">Shooting resolution</span>
+              <span id="shooting-dice-setting">Combat & Shooting resolution</span>
               <div className="seg" role="radiogroup" aria-labelledby="shooting-dice-setting">
                 <button
                   type="button"
                   role="radio"
                   aria-checked={!fastShooting}
                   className={!fastShooting ? 'on' : ''}
-                  onClick={() => { setFastShooting(false); flash('Shooting: Dice tray enabled'); }}
+                  onClick={() => {
+                    setFastShooting(false);
+                    flash('Combat: Dice tray enabled');
+                  }}
                 >
                   <Icon name="dice" size={14} /> Dice tray
                 </button>
@@ -3857,15 +3914,18 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   role="radio"
                   aria-checked={fastShooting}
                   className={fastShooting ? 'on' : ''}
-                  onClick={() => { setFastShooting(true); flash('Shooting: Fast skip enabled'); }}
+                  onClick={() => {
+                    setFastShooting(true);
+                    flash('Combat: Fast skip enabled');
+                  }}
                 >
                   Fast / Skip
                 </button>
               </div>
               <span className="field-note">
                 {!fastShooting
-                  ? 'Roll hit, wound, and save dice step-by-step in the dice tray (like in melee fight)'
-                  : 'Fast mode: instantly roll all shooting dice and apply damage without opening the tray'}
+                  ? 'Roll hit, wound, and save dice step-by-step in the dice tray'
+                  : 'Fast mode: instantly roll all shooting & melee dice without opening the tray'}
               </span>
             </div>
             {bots.length === 1 && (

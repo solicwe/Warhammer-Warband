@@ -133,6 +133,10 @@ export default function App() {
             setShowArcaneModal(false);
             setScreen({ kind: 'campaign' });
           }}
+          onBattle={() => {
+            setShowArcaneModal(false);
+            setScreen({ kind: 'battle' });
+          }}
           onTabletop={() => {
             setShowArcaneModal(false);
             setScreen({ kind: 'tabletop' });

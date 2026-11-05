@@ -461,6 +461,7 @@ const SHOT: Record<WeaponFx, { max: number; span: number; travel: number }> = {
   bio: { max: 8, span: 0.3, travel: 0.15 },
   sonic: { max: 4, span: 0.35, travel: 0.18 },
   cryo: { max: 4, span: 0.3, travel: 0.01 },
+  arrow: { max: 8, span: 0.35, travel: 0.16 },
   slash: { max: 10, span: 0.42, travel: 0.06 },
   power: { max: 10, span: 0.42, travel: 0.06 },
   chain: { max: 10, span: 0.42, travel: 0.06 },
@@ -525,13 +526,13 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
       const src = { x: base.x + Math.cos(ang) * lip, y: base.y + Math.sin(ang) * lip };
       if (MELEE.has(v.fx)) { meleeHit(v.fx, `${vi}-${i}`, impact, hit, f - t0, sd, over, under, P); continue; }
       // muzzle flash (gatlings get one long flickering flash per gun instead)
-      if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic' && v.fx !== 'sonic') {
+      if (v.fx !== 'gatling' && v.fx !== 'flame' && v.fx !== 'psychic' && v.fx !== 'sonic' && v.fx !== 'arrow') {
         const mk = (f - t0) / (v.fx === 'las' || v.fx === 'melta' || v.fx === 'volkite' || v.fx === 'gauss' || v.fx === 'cryo' ? 0.12 : 0.07);
         if (mk > 0 && mk < 1) over.push(<Muzzle key={`m${vi}-${i}`} at={src} ang={ang} k={mk} sd={sd} fx={v.fx} pow={P} />);
       }
       // gun smoke comes just after the flash and hangs a moment, drifting up
       const smk = (f - t0 - 0.03) / 0.55;
-      if (smk > 0 && smk < 1 && !['las', 'lightning', 'gauss', 'cryo', 'gatling', 'flame', 'psychic', 'sonic'].includes(v.fx)) {
+      if (smk > 0 && smk < 1 && !['las', 'lightning', 'gauss', 'cryo', 'gatling', 'flame', 'psychic', 'sonic', 'arrow'].includes(v.fx)) {
         under.push(<Puff key={`gs${vi}-${i}`} at={{ x: src.x + Math.cos(ang) * 0.5 + (noise(sd, 60) - 0.5) * 0.5, y: src.y + Math.sin(ang) * 0.5 - smk * 0.7 }} k={smk} r={(v.fx === 'missile' ? 1.4 : 0.7) * Math.sqrt(P)} color="rgba(150,145,138,0.55)" />);
       }
       const key = `${vi}-${i}`;

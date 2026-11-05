@@ -545,12 +545,12 @@ function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: str
     if (spot === 'wall' && !titanic) { errors.push(`${m.name} ends on a wall`); bad.add(m.id); }
     if (spot === 'objective') { errors.push(`${m.name} cannot end on top of an objective marker`); bad.add(m.id); }
     for (const t of s.terrain) {
-      if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
+      if (t.kind === 'container' && pointInPoly(p, t.poly) && !['INFANTRY', 'BEAST', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k))) {
         errors.push(`${m.name} cannot end on top of a container (13.06)`); bad.add(m.id);
       }
       // a sealed container: nothing stands inside it or half over its side; some models can end on its roof
       if (t.box && bodyTouchesPoly(bodyAt(m, p), -0.05, t.box)) {
-        const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+        const roof = bodyWhollyInPoly(bodyAt(m, p), t.box) && ['INFANTRY', 'BEAST', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
         if (!roof) { errors.push(`${m.name} cannot overlap a container (place it beside the container or wholly on its roof)`); bad.add(m.id); }
       }
       // 13.06.01 Solid Terrain: cannot end protruding through doors/windows/openings <= 3"
@@ -840,7 +840,7 @@ export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: 
       if (g < 0.02 || (o.foe && !engage && g <= RULES.engagementRange + 0.02)) return false;
     }
     if (walls.some((w) => pointSegDist(p, w) < m.r * 0.85 + 0.02)) return false;
-    const walker = ['INFANTRY', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
+    const walker = ['INFANTRY', 'BEAST', 'BEASTS', 'SWARM', 'FLY', 'MONSTER'].some((k) => m.keywords.includes(k));
     for (const t of boxes) {
       if (t.kind === 'container' && pointInPoly(p, t.poly) && !walker) return false;
       if (t.box && bodyTouchesPoly(bodyAt(m, p), -0.05, t.box) && !(walker && bodyWhollyInPoly(bodyAt(m, p), t.box))) return false;

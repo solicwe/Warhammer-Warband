@@ -6,7 +6,7 @@ import { alive, boardUnits, hasKw, onBoard, other, tableH, tableW } from './stat
 import type { GameState, ModelState, MoveKind, Pt, Seg, UnitState } from './types';
 
 
-export const canCrossDense = (m: ModelState) => ['INFANTRY', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k));
+export const canCrossDense = (m: ModelState, u?: UnitState) => ['INFANTRY', 'BEAST', 'BEASTS', 'SWARM', 'MOBILE'].some((k) => m.keywords.includes(k) || (u && u.keywords.includes(k)));
 
 /** Abilities that let a unit move through enemy models ("Get Out da Way!", Shokk-boosta); registered by effects.ts. */
 type ThroughHook = (s: GameState, u: UnitState, kind: MoveKind) => 'all' | 'nonMV' | 'titanic' | null;
@@ -19,7 +19,8 @@ export const isMV = (m: ModelState) => m.keywords.includes('MONSTER') || m.keywo
 /** Walls a model may not move through: dense terrain taller than 2" for anything but INFANTRY / BEASTS / SWARM / MOBILE.
  *  A vehicle or monster drives into, through and out of a ruin's footprint freely; only its walls stop it. */
 export function blockingWalls(s: GameState, m: ModelState, fly = false, _ends: Pt[] = [m]): Seg[] {
-  if (fly || canCrossDense(m)) return [];
+  const u = s.units.find((x) => x.models.some((mod) => mod.id === m.id));
+  if (fly || canCrossDense(m, u)) return [];
   return s.terrain.filter((t) => t.category === 'dense' && t.height > 2).flatMap((t) => t.walls);
 }
 

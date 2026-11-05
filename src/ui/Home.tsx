@@ -83,25 +83,41 @@ export function Home({
           </section>
         )}
 
-        {/* Compact modes bar: keeps army building as the central focus of the page */}
-        <nav className="modes-mini" aria-label="Play modes">
-          <button className="mode-mini" onClick={onBattle} title="Play standard simulator battle against bot or local player">
-            <Icon name="fight" size={17} />
-            <span>New battle</span>
+        {/* Play modes: NEW BATTLE is largest/primary, with Arcane, Tabletop, and History smaller underneath */}
+        <div className="home-modes" aria-label="Play modes">
+          <button className="mode-btn-primary" onClick={onBattle} title="Play standard simulator battle against bot or local player">
+            <div className="mode-btn-icon">
+              <Icon name="fight" size={22} />
+            </div>
+            <div className="mode-btn-text">
+              <span className="mode-btn-title">NEW BATTLE</span>
+              <span className="mode-btn-desc">11th Edition Simulator · vs Bot or 2 Players</span>
+            </div>
+            <Icon name="next" size={18} className="mode-btn-chevron" />
           </button>
-          <button className="mode-mini" onClick={onArcane} title="Demo Roguelike campaign and special game modes">
-            <Icon name="arcane" size={17} />
-            <span>Arcane{run && !run.over ? <small>Stage {Math.min(runLayer + 1, runLayers)}/{runLayers}</small> : null}</span>
-          </button>
-          <button className="mode-mini" onClick={onTabletop} title="Physical 40k match scorekeeper, tactical deck, and 45 terrain maps">
-            <Icon name="tabletop" size={17} />
-            <span>Tabletop</span>
-          </button>
-          <button className="mode-mini" onClick={onLogs} title="Past battle history and replays">
-            <Icon name="history" size={17} />
-            <span>History</span>
-          </button>
-        </nav>
+
+          <nav className="modes-sub-grid" aria-label="Secondary play modes">
+            <button className="mode-btn-sub" onClick={onArcane} title="Demo Roguelike campaign and special game modes">
+              <Icon name="arcane" size={17} />
+              <div className="mode-sub-info">
+                <span className="mode-sub-label">ARCANE</span>
+                {run && !run.over ? <small className="mode-sub-badge">Stage {Math.min(runLayer + 1, runLayers)}/{runLayers}</small> : null}
+              </div>
+            </button>
+            <button className="mode-btn-sub" onClick={onTabletop} title="Physical 40k match scorekeeper, tactical deck, and 45 terrain maps">
+              <Icon name="tabletop" size={17} />
+              <div className="mode-sub-info">
+                <span className="mode-sub-label">TABLETOP</span>
+              </div>
+            </button>
+            <button className="mode-btn-sub" onClick={onLogs} title="Past battle history and replays">
+              <Icon name="history" size={17} />
+              <div className="mode-sub-info">
+                <span className="mode-sub-label">HISTORY</span>
+              </div>
+            </button>
+          </nav>
+        </div>
 
         <section className="group" aria-label="Your armies">
           <div className="group-head">
