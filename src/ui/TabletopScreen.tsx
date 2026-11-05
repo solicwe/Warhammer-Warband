@@ -7,6 +7,7 @@ import {
   secondaryById,
   type DispositionId,
   type LayoutDef,
+  type SecondaryDef,
 } from '../engine/config';
 import { saveBattleLog } from '../services/storage';
 import { Emblem } from './ArmyBuilder';
@@ -64,6 +65,106 @@ function getSecondaryVpOptions(text: string): number[] {
   const nums = matches.map((m) => parseInt(m.replace(/\D/g, ''), 10)).filter((n) => !isNaN(n) && n > 0 && n <= 10);
   const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
   return unique.length > 0 ? unique : [2, 3, 4, 5];
+}
+
+interface ScoringPreset {
+  vp: number;
+  label: string;
+}
+
+/** Accurate mission card scoring options based on official Chapter Approved rules */
+function getSecondaryScoringPresets(card: SecondaryDef): ScoringPreset[] {
+  const id = card.id;
+  switch (id) {
+    case 'beacon':
+      return [
+        { vp: 3, label: 'Outside Deployment Zone (+3 VP)' },
+        { vp: 5, label: 'Outside Your Territory (+5 VP)' },
+      ];
+    case 'cleanse':
+      return [
+        { vp: 2, label: '1 Objective Cleansed (+2 VP)' },
+        { vp: 5, label: '2+ Objectives Cleansed (+5 VP)' },
+      ];
+    case 'burden-of-trust':
+      return [
+        { vp: 2, label: '1 Guarded Objective (+2 VP)' },
+        { vp: 4, label: '2 Guarded Objectives (+4 VP)' },
+        { vp: 5, label: 'Max Guarded (+5 VP)' },
+      ];
+    case 'defend-stronghold':
+      return [
+        { vp: 3, label: 'Home Held (+3 VP)' },
+        { vp: 5, label: 'Home + Clear DZ (+5 VP)' },
+      ];
+    case 'engage-on-all-fronts':
+      return [
+        { vp: 2, label: '3 Quarters (+2 VP)' },
+        { vp: 3, label: '3 Quarters Tac (+3 VP)' },
+        { vp: 4, label: '4 Quarters (+4 VP)' },
+        { vp: 5, label: '4 Quarters Tac (+5 VP)' },
+      ];
+    case 'behind-enemy-lines':
+      return [
+        { vp: 3, label: '1 Unit in Enemy DZ (+3 VP)' },
+        { vp: 4, label: '2 Units in Enemy DZ (+4 VP)' },
+        { vp: 5, label: 'Max in Enemy DZ (+5 VP)' },
+      ];
+    case 'centre-ground':
+      return [
+        { vp: 3, label: 'Center 3" (+3 VP)' },
+        { vp: 5, label: 'Center 6" Clear (+5 VP)' },
+      ];
+    case 'outflank':
+      return [
+        { vp: 3, label: '1 Battlefield Edge (+3 VP)' },
+        { vp: 5, label: '2 Opposite Edges (+5 VP)' },
+      ];
+    case 'display-of-might':
+      return [
+        { vp: 2, label: 'End Your Turn (+2 VP)' },
+        { vp: 5, label: 'End Opponent Turn (+5 VP)' },
+      ];
+    case 'no-prisoners':
+      return [
+        { vp: 2, label: '1 Unit Destroyed (+2 VP)' },
+        { vp: 4, label: '2 Units Destroyed (+4 VP)' },
+        { vp: 5, label: '3+ Units Destroyed (+5 VP)' },
+      ];
+    case 'overwhelming-force':
+      return [
+        { vp: 3, label: '1 Unit on Obj Destroyed (+3 VP)' },
+        { vp: 5, label: '2+ Units on Obj Destroyed (+5 VP)' },
+      ];
+    case 'assassination':
+      return [
+        { vp: 4, label: 'Character Model Destroyed (+4 VP)' },
+        { vp: 5, label: 'All Characters / Tactical (+5 VP)' },
+      ];
+    case 'bring-it-down':
+      return [
+        { vp: 2, label: 'W10-14 Destroyed (+2 VP)' },
+        { vp: 3, label: 'W15-19 Destroyed (+3 VP)' },
+        { vp: 4, label: 'W20+ Destroyed (+4 VP)' },
+        { vp: 5, label: 'Tactical Full (+5 VP)' },
+      ];
+    case 'a-grievous-blow':
+      return [
+        { vp: 4, label: 'Fixed (+4 VP)' },
+        { vp: 5, label: 'Tactical (+5 VP)' },
+      ];
+    case 'secure-no-mans-land':
+    case 'forward-position':
+    case 'a-tempting-target':
+    case 'plunder':
+      return [
+        { vp: 5, label: 'Achieved (+5 VP)' },
+      ];
+    default: {
+      const parsed = getSecondaryVpOptions(card.text);
+      return parsed.map((v) => ({ vp: v, label: `+${v} VP` }));
+    }
+  }
 }
 
 export function TabletopScreen({ index, onBack }: Props) {
@@ -297,6 +398,29 @@ export function TabletopScreen({ index, onBack }: Props) {
       discardedMissions: [...p.discardedMissions, cardId],
     }));
     play('tick');
+  };
+
+  // New Orders: Spend 1 CP to discard and redraw replacement card
+  const handleNewOrders = (pIdx: 0 | 1, cardId: string) => {
+    updatePlayer(pIdx, (p) => {
+      if (p.cp < 1) return p;
+      let curDeck = [...p.deck];
+      if (curDeck.length === 0) {
+        curDeck = shuffle(p.discardedMissions.length ? p.discardedMissions : allSecondaryIds);
+      }
+      const newDrawn = curDeck.shift();
+      const nextActive = p.activeMissions.filter((id) => id !== cardId);
+      if (newDrawn) nextActive.push(newDrawn);
+      play('card');
+
+      return {
+        ...p,
+        cp: Math.max(0, p.cp - 1),
+        deck: curDeck,
+        activeMissions: nextActive,
+        discardedMissions: [...p.discardedMissions, cardId],
+      };
+    });
   };
 
   // Free Redraw (Player manages CP on their own, does NOT deduct CP)
@@ -1051,111 +1175,246 @@ export function TabletopScreen({ index, onBack }: Props) {
                 <div className="tiny muted" style={{ marginTop: 2 }}>Tap "Draw Card" to draw your tactical objectives for this turn.</div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {activeP.activeMissions.map((cardId) => {
                   const card = secondaryById(cardId);
                   if (!card) return null;
-                  const vpOptions = getSecondaryVpOptions(card.text);
+                  const presets = getSecondaryScoringPresets(card);
 
                   return (
                     <div
                       key={cardId}
+                      className="sec-mission-real-card"
                       style={{
-                        padding: '12px 14px',
-                        borderRadius: 8,
-                        background: 'var(--surface-2)',
-                        border: '1px solid var(--line-2)',
+                        background: 'var(--paper, #fdfbf7)',
+                        color: '#1c1917',
+                        border: '2px solid var(--paper-edge, #c8b79b)',
+                        borderRadius: 12,
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(255,255,255,0.7)',
+                        padding: '14px 16px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 8,
+                        gap: 10,
+                        position: 'relative',
+                        overflow: 'hidden',
                       }}
                     >
+                      {/* Top Header: Category Tag & Status Badge */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <b style={{ fontSize: 14.5, color: '#f1f5f9' }}>{card.name}</b>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          {vpOptions.map((v) => (
-                            <span key={v} className="pill-att" style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: 800 }}>
-                              {v} VP
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <p style={{ fontSize: 12.5, color: 'var(--text-2)', margin: 0, lineHeight: 1.4 }}>
-                        {card.text}
-                      </p>
-
-                      {/* Scoring Buttons (Player picks their earned VP) */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                        {vpOptions.map((vp) => (
-                          <button
-                            key={vp}
-                            className="btn primary"
-                            style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, padding: '0 8px' }}
-                            onClick={() => handleScoreCard(activePlayer, cardId, vp)}
-                          >
-                            ✓ Score +{vp} VP
-                          </button>
-                        ))}
-                        <button
-                          className="btn ghost"
-                          style={{ minHeight: 34, fontSize: 11, padding: '0 8px' }}
-                          onClick={() => setCustomVpCardId(customVpCardId === cardId ? null : cardId)}
+                        <span style={{ font: '800 11px var(--font-cond)', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#854d0e' }}>
+                          SECONDARY MISSION · TACTICAL
+                        </span>
+                        <span
+                          className="sec-status-badge completed"
+                          style={{
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            color: '#047857',
+                            border: '1px solid rgba(16, 185, 129, 0.35)',
+                            fontWeight: 800,
+                            fontSize: 11,
+                            padding: '2px 7px',
+                            borderRadius: 4,
+                          }}
                         >
-                          Custom VP
-                        </button>
+                          READY TO SCORE
+                        </span>
                       </div>
 
-                      {/* Custom VP Drawer */}
-                      {customVpCardId === cardId && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: 'var(--surface)', borderRadius: 6, border: '1px solid var(--line-2)' }}>
-                          <span className="tiny muted">VP Amount:</span>
-                          {[1, 2, 3, 4, 5].map((val) => (
-                            <button
-                              key={val}
-                              className={customVpValue === val ? 'btn primary' : 'btn ghost'}
-                              style={{ minWidth: 28, minHeight: 28, padding: 0, fontSize: 12, fontWeight: 700 }}
-                              onClick={() => setCustomVpValue(val)}
-                            >
-                              {val}
-                            </button>
-                          ))}
-                          <button
-                            className="btn primary"
-                            style={{ minHeight: 28, fontSize: 11, padding: '2px 8px', marginLeft: 'auto' }}
-                            onClick={() => handleScoreCard(activePlayer, cardId, customVpValue)}
-                          >
-                            Confirm +{customVpValue}
-                          </button>
-                        </div>
-                      )}
+                      {/* Card Title */}
+                      <div
+                        style={{
+                          font: '900 20px/1.15 var(--font-cond)',
+                          letterSpacing: '0.03em',
+                          textTransform: 'uppercase',
+                          color: '#1c1917',
+                          paddingBottom: 6,
+                          borderBottom: '2px solid #d5c8b2',
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
+                      >
+                        <span>{card.name}</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#854d0e', letterSpacing: '0.04em' }}>
+                          MAX 5 VP
+                        </span>
+                      </div>
 
-                      {/* Free Discard and Redraw (No automatic CP loss or gain unless chosen) */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, borderTop: '1px solid var(--line-1)', paddingTop: 6 }}>
+                      {/* Timing Banner with Icon */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          font: '700 12px var(--font-cond)',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: '#8a2a20',
+                        }}
+                      >
+                        <Icon name="wait" size={13} /> {card.when}
+                      </div>
+
+                      {/* Card Text Body (Parchment Inset) */}
+                      <div
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.035)',
+                          border: '1px dashed rgba(180, 160, 130, 0.75)',
+                          borderRadius: 6,
+                          padding: '10px 12px',
+                          fontSize: 13,
+                          lineHeight: 1.45,
+                          color: '#292524',
+                        }}
+                      >
+                        {card.text}
+                      </div>
+
+                      {/* Scoring Section */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ font: '800 11.5px var(--font-cond)', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#57534e' }}>
+                            Score this Mission:
+                          </span>
+                          <span className="tiny" style={{ color: '#78716c' }}>
+                            Tap to score VP
+                          </span>
+                        </div>
+
+                        {/* Presets / Criteria Score Buttons */}
+                        {presets.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {presets.map((preset) => (
+                              <button
+                                key={preset.label}
+                                className="btn primary"
+                                style={{
+                                  flex: 1,
+                                  minWidth: '45%',
+                                  minHeight: 38,
+                                  fontSize: 12.5,
+                                  fontWeight: 800,
+                                  padding: '4px 10px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 6,
+                                  background: '#15803d',
+                                  borderColor: '#166534',
+                                  color: '#fff',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+                                }}
+                                onClick={() => handleScoreCard(activePlayer, cardId, preset.vp)}
+                              >
+                                <Icon name="check" size={13} /> {preset.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Direct 1-to-5 Point Quick Selectors */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 10px',
+                            background: 'rgba(0,0,0,0.035)',
+                            borderRadius: 6,
+                            border: '1px solid rgba(180, 160, 130, 0.45)',
+                          }}
+                        >
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#57534e', whiteSpace: 'nowrap' }}>
+                            Select Points:
+                          </span>
+                          <div style={{ display: 'flex', gap: 4, flex: 1, justifyContent: 'space-between' }}>
+                            {[1, 2, 3, 4, 5].map((pts) => (
+                              <button
+                                key={pts}
+                                className="btn"
+                                style={{
+                                  flex: 1,
+                                  minHeight: 32,
+                                  padding: 0,
+                                  fontSize: 12.5,
+                                  fontWeight: 800,
+                                  background: '#fff',
+                                  borderColor: '#c4b59d',
+                                  color: '#1c1917',
+                                }}
+                                onClick={() => handleScoreCard(activePlayer, cardId, pts)}
+                                title={`Score +${pts} VP for this mission`}
+                              >
+                                +{pts}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Management Footer */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 6,
+                          borderTop: '1px solid #d5c8b2',
+                          paddingTop: 8,
+                          marginTop: 4,
+                        }}
+                      >
                         <button
                           className="btn ghost"
-                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px' }}
+                          style={{
+                            minHeight: 30,
+                            fontSize: 11.5,
+                            padding: '2px 8px',
+                            color: '#78716c',
+                          }}
                           onClick={() => handleDiscardCard(activePlayer, cardId, false)}
-                          title="Discard this card from hand"
+                          title="Discard without gaining CP"
                         >
                           Discard
                         </button>
-                        <button
-                          className="btn ghost"
-                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px' }}
-                          onClick={() => handleDiscardCard(activePlayer, cardId, true)}
-                          title="Discard at end of turn and gain 1 CP"
-                        >
-                          Discard (+1 CP)
-                        </button>
-                        <button
-                          className="btn ghost"
-                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px', color: '#38bdf8' }}
-                          onClick={() => handleFreeRedraw(activePlayer, cardId)}
-                          title="Redraw: Discard this card and draw a replacement from deck"
-                        >
-                          Redraw
-                        </button>
+
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            className="btn"
+                            style={{
+                              minHeight: 30,
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              padding: '2px 10px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              borderColor: '#fcd34d',
+                            }}
+                            onClick={() => handleDiscardCard(activePlayer, cardId, true)}
+                            title="Discard at end of turn and gain 1 CP"
+                          >
+                            Discard (+1 CP)
+                          </button>
+
+                          <button
+                            className="btn"
+                            style={{
+                              minHeight: 30,
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              padding: '2px 10px',
+                              background: '#e0f2fe',
+                              color: '#0369a1',
+                              borderColor: '#bae6fd',
+                            }}
+                            onClick={() => handleNewOrders(activePlayer, cardId)}
+                            disabled={activeP.cp < 1}
+                            title="New Orders: Spend 1 CP to discard and draw a new secondary card"
+                          >
+                            Redraw (-1 CP)
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

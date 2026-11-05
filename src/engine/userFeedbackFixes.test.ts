@@ -47,10 +47,10 @@ describe('User Feedback Fixes Verification', () => {
   });
 
   it('Fatecaster greatbow and other bows get arrow effect instead of psychic', () => {
-    const fatecasterProf: WeaponProfileData = { name: 'Fatecaster greatbow', range: 30, A: '2', skill: '3+', S: 5, AP: -2, D: '2', abilities: ['ignores cover', 'lethal hits', 'precision'] };
+    const fatecasterProf: WeaponProfileData = { name: 'Fatecaster greatbow', range: 30, A: '2', skill: 3, S: 5, AP: -2, D: '2', abilities: ['ignores cover', 'lethal hits', 'precision'] };
     expect(weaponFx('Fatecaster greatbow', fatecasterProf, false)).toBe('arrow');
 
-    const dartBowProf: WeaponProfileData = { name: 'Dart-bow and tri-blade', range: 24, A: 'D3+1', skill: '3+', S: 4, AP: 0, D: '2', abilities: [] };
+    const dartBowProf: WeaponProfileData = { name: 'Dart-bow and tri-blade', range: 24, A: 'D3+1', skill: 3, S: 4, AP: 0, D: '2', abilities: [] };
     expect(weaponFx('Dart-bow and tri-blade', dartBowProf, false)).toBe('arrow');
   });
 
@@ -76,6 +76,7 @@ describe('User Feedback Fixes Verification', () => {
       id: 'glimmershift-portal',
       name: 'GLIMMERSHIFT PORTAL',
       cp: 1,
+      type: 'Strategic Ploy',
       phase: 'fight',
       turn: 'opponent',
       text: 'Remove those units from the battlefield and place them into Strategic Reserves.',
