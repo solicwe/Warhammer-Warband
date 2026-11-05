@@ -880,18 +880,18 @@ export function TabletopScreen({ index, onBack }: Props) {
                         <button
                           type="button"
                           className={`btn ${p0SecMode === 'tactical' ? 'primary' : 'ghost'}`}
-                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           onClick={() => setP0SecMode('tactical')}
                         >
-                          🎯 Tactical (Deck)
+                          <Icon name="cards" size={13} /> Tactical (Deck)
                         </button>
                         <button
                           type="button"
                           className={`btn ${p0SecMode === 'fixed' ? 'primary' : 'ghost'}`}
-                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           onClick={() => setP0SecMode('fixed')}
                         >
-                          📌 Fixed (2 Objectives)
+                          <Icon name="objective" size={13} /> Fixed (2 Objectives)
                         </button>
                       </div>
 
@@ -973,18 +973,18 @@ export function TabletopScreen({ index, onBack }: Props) {
                         <button
                           type="button"
                           className={`btn ${p1SecMode === 'tactical' ? 'primary' : 'ghost'}`}
-                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           onClick={() => setP1SecMode('tactical')}
                         >
-                          🎯 Tactical (Deck)
+                          <Icon name="cards" size={13} /> Tactical (Deck)
                         </button>
                         <button
                           type="button"
                           className={`btn ${p1SecMode === 'fixed' ? 'primary' : 'ghost'}`}
-                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                           onClick={() => setP1SecMode('fixed')}
                         >
-                          📌 Fixed (2 Objectives)
+                          <Icon name="objective" size={13} /> Fixed (2 Objectives)
                         </button>
                       </div>
 

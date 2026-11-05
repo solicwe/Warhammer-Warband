@@ -234,8 +234,8 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
 
       // Verify Setup Step 2 has mode selectors and fixed pickers
       expect(tabletopTsx).toContain("Secondary Mission Deck");
-      expect(tabletopTsx).toContain("🎯 Tactical (Deck)");
-      expect(tabletopTsx).toContain("📌 Fixed (2 Objectives)");
+      expect(tabletopTsx).toContain("Tactical (Deck)");
+      expect(tabletopTsx).toContain("Fixed (2 Objectives)");
       expect(tabletopTsx).toContain("Select 2 Fixed Missions:");
 
       // Verify In-Match has Fixed mode scoring and does not discard fixed cards
