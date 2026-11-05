@@ -25,7 +25,6 @@
       "Drop Pod": "units/SM/drop-pod-2edc8a73.jpg",
       "Eliminator Squad": "units/SM/eliminator-squad-e5cf3275.jpg",
       "Eradicator Squad with Heavy Bolters": "units/SM/eradicator-squad-with-heavy-bolters-e5bd439e.jpg",
-      "Eradicator Squad": "units/SM/eradicator-squad-f46ec949.jpg",
       "Gladiator Lancer": "units/SM/black-templars-gladiator-lancer-bab44040.jpg",
       "Gladiator Reaper": "units/SM/black-templars-gladiator-reaper-c19c6d59.jpg",
       "Gladiator Valiant": "units/SM/black-templars-gladiator-valiant-05d3acd0.jpg",
@@ -37,7 +36,6 @@
       "Infernus Squad": "units/SM/infernus-squad-aa23350f.jpg",
       "Infiltrator Squad": "units/SM/infiltrator-squad.jpg",
       "Intercessor Squad": "units/SM/intercessor-squad-74c078b0.jpg",
-      "Invader ATV": "units/SM/invader-atv-47f16034.jpg",
       "Invictor Tactical Warsuit": "units/SM/invictor-tactical-warsuit-75289ce1.jpg",
       "Judiciar": "units/SM/judiciar-93f6ca31.jpg",
       "Land Raider Crusader": "units/SM/land-raider-crusader.jpg",
@@ -81,8 +79,8 @@
       "Blood Angels Captain": "units/SM/blood-angels-captain-5a48c6a6.jpg",
       "Blood Claws": "units/SM/blood-claws-0c7c9f14.jpg",
       "Caanok Var": "units/SM/caanok-var-b38dcfa5.jpg",
-      "Captain Titus": "units/SM/captain-titus-98907de5.jpg",
       "Captain on Bike": "units/SM/captain-on-bike-09145334.jpg",
+      "Captain Titus": "units/SM/captain-titus-98907de5.jpg",
       "Castellan": "units/SM/castellan-6ed7cb65.jpg",
       "Cato Sicarius": "units/SM/cato-sicarius-7dc1acdd.jpg",
       "Chaplain Grimaldus": "units/SM/chaplain-grimaldus-30b9acd5.jpg",
@@ -118,7 +116,21 @@
       "Deathwing Terminator Squad::Deathwing Terminator": "units/SM/deathwing-terminator-squad-deathwing-terminator-w-chainfist-f8ce6a1b.jpg",
       "Deathwing Terminator Squad::Deathwing Terminator w/ Chainfist": "units/SM/deathwing-terminator-squad-deathwing-terminator-w-chainfist-f8ce6a1b.jpg",
       "Desolation Squad": "units/SM/desolation-squad-471fb573.jpg",
+      "emblem:SM:": "units/SM/emblem-sm-199c4576.png",
+      "emblem:SM:BLACK TEMPLARS": "units/SM/emblem-sm-black-templars-5b749e95.png",
+      "emblem:SM:BLOOD ANGELS": "units/SM/emblem-sm-blood-angels-a47c5037.png",
+      "emblem:SM:DARK ANGELS": "units/SM/emblem-sm-dark-angels-603aeff8.png",
+      "emblem:SM:DEATHWATCH": "units/SM/emblem-sm-deathwatch-92664a69.png",
+      "emblem:SM:IMPERIAL FISTS": "units/SM/emblem-sm-imperial-fists-9d599c3b.png",
+      "emblem:SM:IRON HANDS": "units/SM/emblem-sm-iron-hands-1ef60356.png",
+      "emblem:SM:RAVEN GUARD": "units/SM/emblem-sm-raven-guard-323d09dd.png",
+      "emblem:SM:SALAMANDERS": "units/SM/emblem-sm-salamanders-9c3e4755.png",
+      "emblem:SM:SPACE WOLVES": "units/SM/emblem-sm-space-wolves-d615fc6e.png",
+      "emblem:SM:ULTRAMARINES": "units/SM/emblem-sm-ultramarines-0fdb77f5.png",
+      "emblem:SM:WHITE SCARS": "units/SM/emblem-sm-white-scars-30159bf7.png",
       "Emperor’s Champion": "units/SM/emperors-champion-ac4334ea.jpg",
+      "Eradicator Squad": "units/SM/eradicator-squad-f46ec949.jpg",
+      "Eradicator Squad with Melta Rifles": "units/SM/eradicator-squad-f46ec949.jpg",
       "Eradicator Squad::Eradicator::Bolt Pistol+Ceramite Fists+Multi-melta": "units/SM/eradicator-squad-eradicator-bolt-pistol-ceramite-fists-multi-melta-863a5b26.jpg",
       "Execrator": "units/SM/execrator-ab52a39b.jpg",
       "Ezekiel": "units/SM/ezekiel-933cb177.jpg",
@@ -129,6 +141,8 @@
       "High Marshal Helbrecht": "units/SM/high-marshal-helbrecht-6af0dc2c.jpg",
       "Indomitor Kill Team": "units/SM/indomitor-kill-team-b99596d7.jpg",
       "Inner Circle Companions": "units/SM/inner-circle-companions-a7d885e8.jpg",
+      "Invader ATV": "units/SM/invader-atv-47f16034.jpg",
+      "Invader ATVs": "units/SM/invader-atv-47f16034.jpg",
       "Iron Father Feirros": "units/SM/iron-father-feirros-6faecbf8.jpg",
       "Iron Priest": "units/SM/iron-priest-6abba830.jpg",
       "Kaius Konorius": "units/SM/kaius-konorius-ca49851f.jpg",
@@ -214,19 +228,7 @@
       "Wolf Scouts::Wolf Scout::Combat Knife+Plasma Pistol": "units/SM/wolf-scouts-wolf-scout-plasma-pistol-21f4a83d.jpg",
       "Wulfen": "units/SM/wulfen-f942e6a1.jpg",
       "Wulfen Dreadnought": "units/SM/wulfen-dreadnought-d7d144f7.jpg",
-      "Wulfen with Storm Shields": "units/SM/wulfen-with-storm-shields-41fa4d75.jpg",
-      "emblem:SM:": "units/SM/emblem-sm-199c4576.png",
-      "emblem:SM:BLACK TEMPLARS": "units/SM/emblem-sm-black-templars-5b749e95.png",
-      "emblem:SM:BLOOD ANGELS": "units/SM/emblem-sm-blood-angels-a47c5037.png",
-      "emblem:SM:DARK ANGELS": "units/SM/emblem-sm-dark-angels-603aeff8.png",
-      "emblem:SM:DEATHWATCH": "units/SM/emblem-sm-deathwatch-92664a69.png",
-      "emblem:SM:IMPERIAL FISTS": "units/SM/emblem-sm-imperial-fists-9d599c3b.png",
-      "emblem:SM:IRON HANDS": "units/SM/emblem-sm-iron-hands-1ef60356.png",
-      "emblem:SM:RAVEN GUARD": "units/SM/emblem-sm-raven-guard-323d09dd.png",
-      "emblem:SM:SALAMANDERS": "units/SM/emblem-sm-salamanders-9c3e4755.png",
-      "emblem:SM:SPACE WOLVES": "units/SM/emblem-sm-space-wolves-d615fc6e.png",
-      "emblem:SM:ULTRAMARINES": "units/SM/emblem-sm-ultramarines-0fdb77f5.png",
-      "emblem:SM:WHITE SCARS": "units/SM/emblem-sm-white-scars-30159bf7.png"
+      "Wulfen with Storm Shields": "units/SM/wulfen-with-storm-shields-41fa4d75.jpg"
     },
     "CSM": {
       "Abaddon The Despoiler": "units/CSM/abaddon-the-despoiler-0c208b9d.jpg",
@@ -239,6 +241,7 @@
       "Chaos Vindicator": "units/CSM/chaos-vindicator-408f5d87.jpg",
       "Cypher": "units/CSM/cypher-a87ba1c3.jpg",
       "Defiler": "units/CSM/defiler-492969ef.jpg",
+      "emblem:CSM:": "units/CSM/emblem-csm-5bf41824.png",
       "Fabius Bile": "units/CSM/fabius-bile-2c25132f.jpg",
       "Fabius Bile::Surgeon Acolyte": "units/CSM/fabius-bile-surgeon-acolyte-8d4f4a44.jpg",
       "Forgefiend": "units/CSM/forgefiend-fe84bf79.jpg",
@@ -287,8 +290,7 @@
       "Rubric Marines::Rubric Marine::Close combat weapon+Soulreaper cannon": "units/CSM/rubric-marines-rubric-marine-close-combat-weapon-soulreaper-cannon-d51dfd78.jpg",
       "Vashtorr The Arkifane": "units/CSM/vashtorr-the-arkifane-030f98e7.jpg",
       "Venomcrawler": "units/CSM/venomcrawler-73df888e.jpg",
-      "Warpsmith": "units/CSM/warpsmith-ff06f07b.jpg",
-      "emblem:CSM:": "units/CSM/emblem-csm-5bf41824.png"
+      "Warpsmith": "units/CSM/warpsmith-ff06f07b.jpg"
     },
     "GC": {
       "Aberrants": "units/GC/aberrants-6c05a20d.jpg",
@@ -336,6 +338,7 @@
       "Deathleaper": "units/GC/deathleaper-bc470098.jpg",
       "Deathstrike": "units/GC/deathstrike-3e034010.jpg",
       "Doomhammer": "units/GC/doomhammer-0e8506a9.jpg",
+      "emblem:GC:": "units/GC/emblem-gc-61ff6eec.png",
       "Field Ordnance Battery": "units/GC/field-ordnance-battery-157d6cdb.jpg",
       "Gargoyles": "units/GC/gargoyles-3b753e22.jpg",
       "Goliath Rockgrinder": "units/GC/goliath-rockgrinder-16eda44a.jpg",
@@ -404,8 +407,7 @@
       "Von Ryan’s Leapers": "units/GC/von-ryans-leapers-298a8c94.jpg",
       "Winged Hive Tyrant": "units/GC/winged-hive-tyrant-54fa62fb.jpg",
       "Winged Tyranid Prime": "units/GC/winged-tyranid-prime-9bd467da.jpg",
-      "Wyvern": "units/GC/wyvern-2d7d62a2.jpg",
-      "emblem:GC:": "units/GC/emblem-gc-61ff6eec.png"
+      "Wyvern": "units/GC/wyvern-2d7d62a2.jpg"
     },
     "QI": {
       "Acastus Knight Asterius": "units/QI/acastus-knight-asterius-f6a3969c.jpg",
@@ -418,6 +420,7 @@
       "Cerastus Knight Atrapos": "units/QI/cerastus-knight-atrapos-055666b2.jpg",
       "Cerastus Knight Castigator": "units/QI/cerastus-knight-castigator-b28d47c3.jpg",
       "Cerastus Knight Lancer": "units/QI/cerastus-knight-lancer-1baae1e2.jpg",
+      "emblem:QI:": "units/QI/emblem-qi-dc8856a6.png",
       "Knight Castellan": "units/QI/knight-castellan-92f95be4.jpg",
       "Knight Crusader": "units/QI/knight-crusader-5278adcf.jpg",
       "Knight Defender": "units/QI/knight-defender-a1ddd3a9.jpg",
@@ -429,15 +432,14 @@
       "Knight Valiant": "units/QI/knight-valiant-323faf2c.jpg",
       "Knight Warden": "units/QI/knight-warden-4f0418eb.jpg",
       "Questoris Knight Magaera": "units/QI/questoris-knight-magaera-673f086e.jpg",
-      "Questoris Knight Styrix": "units/QI/questoris-knight-styrix-28fc8beb.jpg",
-      "emblem:QI:": "units/QI/emblem-qi-dc8856a6.png"
+      "Questoris Knight Styrix": "units/QI/questoris-knight-styrix-28fc8beb.jpg"
     },
     "CD": {
       "Accursed Cultists": "units/CD/accursed-cultists-e3aa6ae5.jpg",
       "Accursed Cultists::Mutant": "units/CD/accursed-cultists-mutant-9a07e684.jpg",
-      "Beasts Of Nurgle": "units/CD/beasts-of-nurgle-b030f690.jpg",
-      "Beasts of Nurgle": "units/CD/beasts-of-nurgle-b030f690.jpg",
       "Be’lakor": "units/CD/belakor-58a404c0.jpg",
+      "Beasts of Nurgle": "units/CD/beasts-of-nurgle-b030f690.jpg",
+      "Beasts Of Nurgle": "units/CD/beasts-of-nurgle-b030f690.jpg",
       "Bloodcrushers": "units/CD/bloodcrushers-6e785e37.jpg",
       "Bloodletters": "units/CD/bloodletters-0a52aca3.jpg",
       "Bloodmaster": "units/CD/bloodmaster-c2913c6c.jpg",
@@ -470,8 +472,8 @@
       "Cultist Mob::Chaos Cultist": "units/CD/cultist-mob-chaos-cultist-901a0173.jpg",
       "Cultist Mob::Cultist Champion::Autopistol+Brutal assault weapon": "units/CD/cultist-mob-cultist-champion-autopistol-brutal-assault-weapon-91e9d422.jpg",
       "Cultist Mob::Cultist Champion::Bolt pistol+Brutal assault weapon": "units/CD/cultist-mob-cultist-champion-autopistol-brutal-assault-weapon-91e9d422.jpg",
-      "Daemon Prince Of Chaos With Wings": "units/CD/daemon-prince-of-chaos-with-wings-457103e1.jpg",
       "Daemon Prince of Chaos": "units/CD/daemon-prince-of-chaos-ba7c96ba.jpg",
+      "Daemon Prince Of Chaos With Wings": "units/CD/daemon-prince-of-chaos-with-wings-457103e1.jpg",
       "Daemon Prince of Nurgle with Wings": "units/CD/daemon-prince-of-chaos-with-wings-457103e1.jpg",
       "Daemon Prince of Slaanesh": "units/CD/daemon-prince-of-chaos-ba7c96ba.jpg",
       "Daemonettes": "units/CD/daemonettes-475a862d.jpg",
@@ -481,6 +483,7 @@
       "Dark Commune::Blessed Blade": "units/CD/dark-commune-blessed-blade-d9ba78c0.jpg",
       "Dark Commune::Iconarch": "units/CD/dark-commune-iconarch-ee691faf.jpg",
       "Dark Commune::Mindwitch": "units/CD/dark-commune-mindwitch-e9c3ff69.jpg",
+      "emblem:CD:": "units/CD/emblem-cd-015e3c56.png",
       "Epidemius": "units/CD/epidemius-8075ce0a.jpg",
       "Exalted Flamer": "units/CD/exalted-flamer-ddb01de5.jpg",
       "Fateskimmer": "units/CD/fateskimmer-2f764fd6.jpg",
@@ -499,8 +502,8 @@
       "Infernal Enrapturess": "units/CD/infernal-enrapturess-d635951d.jpg",
       "Kairos Fateweaver": "units/CD/kairos-fateweaver-08fb4a76.jpg",
       "Karanak": "units/CD/karanak-312e5a36.jpg",
-      "Keeper Of Secrets": "units/CD/keeper-of-secrets-ae56559f.jpg",
       "Keeper of Secrets": "units/CD/keeper-of-secrets-ae56559f.jpg",
+      "Keeper Of Secrets": "units/CD/keeper-of-secrets-ae56559f.jpg",
       "Legionaries": "units/CD/legionaries-aspiring-champion-bolt-pistol-close-combat-weapon-plasma-pistol-1d180177.jpg",
       "Legionaries::Aspiring Champion::Accursed weapon+Bolt pistol+Close combat weapon": "units/CD/legionaries-aspiring-champion-accursed-weapon-bolt-pistol-close-combat-weapon-5a97b703.jpg",
       "Legionaries::Aspiring Champion::Accursed weapon+Boltgun+Close combat weapon": "units/CD/legionaries-aspiring-champion-accursed-weapon-bolt-pistol-close-combat-weapon-5a97b703.jpg",
@@ -559,8 +562,7 @@
       "Traitor Enforcer::Traitor Ogryn": "units/CD/traitor-enforcer-traitor-ogryn-8f06c5bc.jpg",
       "Traitor Guardsmen Squad": "units/CD/traitor-guardsmen-squad-14da45e2.jpg",
       "Tranceweaver": "units/CD/tranceweaver-addb0716.jpg",
-      "Warp Talons": "units/CD/warp-talons-01d76f05.jpg",
-      "emblem:CD:": "units/CD/emblem-cd-015e3c56.png"
+      "Warp Talons": "units/CD/warp-talons-01d76f05.jpg"
     },
     "AS": {
       "Aestred Thurga And Agathae Dolan": "units/AS/aestred-thurga-and-agathae-dolan-2880df7f.jpg",
@@ -598,6 +600,7 @@
       "Dogmata": "units/AS/dogmata-7ac9bc3b.jpg",
       "Dominion Squad": "units/AS/dominion-squad-22618e7b.jpg",
       "Dominion Squad::Dominion Superior::Bolt pistol+Close combat weapon+Ministorum hand flamer": "units/AS/battle-sisters-squad-battle-sister-bolt-pistol-close-combat-weapon-ministorum-fl-64c21e47.jpg",
+      "emblem:AS:": "units/AS/emblem-as-fc0aa097.png",
       "Exorcist": "units/AS/exorcist-e61419b4.jpg",
       "Hospitaller": "units/AS/hospitaller-034ad084.jpg",
       "Imagifier": "units/AS/hospitaller-034ad084.jpg",
@@ -655,13 +658,13 @@
       "Sisters of Battle Squad::Battle Sister::Bolt pistol+Close combat weapon+Heavy bolter": "units/AS/battle-sisters-squad-battle-sister-bolt-pistol-close-combat-weapon-ministorum-fl-64c21e47.jpg",
       "Sisters of Battle Squad::Sister Superior::Bolt pistol+Close combat weapon": "units/AS/battle-sisters-squad-9f226c0a.jpg",
       "Triumph Of Saint Katherine": "units/AS/triumph-of-saint-katherine-59adf076.jpg",
-      "Zephyrim Squad": "units/AS/zephyrim-squad-a203094f.jpg",
-      "emblem:AS:": "units/AS/emblem-as-fc0aa097.png"
+      "Zephyrim Squad": "units/AS/zephyrim-squad-a203094f.jpg"
     },
     "TS": {
       "Ahriman": "units/TS/ahriman-bd69bec9.jpg",
       "Daemon Prince of Tzeentch": "units/TS/daemon-prince-of-tzeentch-4fe6e469.jpg",
       "Daemon Prince of Tzeentch with Wings": "units/TS/daemon-prince-of-tzeentch-with-wings-352694b4.jpg",
+      "emblem:TS:": "units/TS/emblem-ts-03624cc3.png",
       "Exalted Sorcerer": "units/TS/exalted-sorcerer-8e0b24e4.jpg",
       "Exalted Sorcerer on Disc of Tzeentch": "units/TS/exalted-sorcerer-on-disc-of-tzeentch-719e8387.jpg",
       "Infernal Master": "units/TS/infernal-master-67e00224.jpg",
@@ -678,8 +681,7 @@
       "Tzaangor Enlightened": "units/TS/tzaangor-enlightened-481e4e7b.jpg",
       "Tzaangor Enlightened with Fatecaster Greatbows": "units/TS/tzaangor-enlightened-with-fatecaster-greatbows-00be400c.jpg",
       "Tzaangor Shaman": "units/TS/tzaangor-shaman-bf441a19.jpg",
-      "Tzaangors": "units/TS/tzaangors-3420de03.jpg",
-      "emblem:TS:": "units/TS/emblem-ts-03624cc3.png"
+      "Tzaangors": "units/TS/tzaangors-3420de03.jpg"
     },
     "AC": {
       "Allarus Custodians": "units/AC/allarus-custodians-57367458.jpg",
@@ -693,10 +695,13 @@
       "Contemptor-Galatus Dreadnought": "units/AC/contemptor-galatus-dreadnought-a63df22a.jpg",
       "Coronus Grav-carrier": "units/AC/coronus-grav-carrier-fa3b3f54.jpg",
       "Custodian Guard": "units/AC/custodian-guard-365a5150.jpg",
+      "Custodian Guard Sodality": "units/AC/custodian-guard-365a5150.jpg",
       "Custodian Wardens": "units/AC/custodian-wardens-a9e0139b.jpg",
+      "emblem:AC:": "units/AC/emblem-ac-00056479.png",
       "Gyrfalcon Jetbike Sodality": "units/AC/gyrfalcon-jetbike-sodality-f8fbfddf.jpg",
       "Knight-Centura": "units/AC/knight-centura-b3a67930.jpg",
       "Pallas Grav-attack": "units/AC/pallas-grav-attack-bff77722.jpg",
+      "Prosecutor Squad": "units/AC/prosecutors-39cb79a3.jpg",
       "Prosecutors": "units/AC/prosecutors-39cb79a3.jpg",
       "Sentinel Guard Sodality": "units/AC/sentinel-guard-sodality-63c08ec7.jpg",
       "Shield-Captain": "units/AC/shield-captain-b6e9a229.jpg",
@@ -708,29 +713,33 @@
       "Venatari with Kinetic Destroyers": "units/AC/venatari-with-kinetic-destroyers-3cf56960.jpg",
       "Venatari with Verutum Lances": "units/AC/venatari-with-verutum-lances-fdc0e862.jpg",
       "Vertus Praetors": "units/AC/vertus-praetors-5d3f2d3f.jpg",
+      "Vigilator Squad": "units/AC/vigilators-b438f7a9.jpg",
       "Vigilators": "units/AC/vigilators-b438f7a9.jpg",
-      "Witchseekers": "units/AC/witchseekers-70501d61.jpg",
-      "emblem:AC:": "units/AC/emblem-ac-00056479.png"
+      "Witchseeker Squad": "units/AC/witchseekers-70501d61.jpg",
+      "Witchseekers": "units/AC/witchseekers-70501d61.jpg"
     },
     "WE": {
       "Angron": "units/WE/angron-39629958.jpg",
       "Daemon Prince of Khorne": "units/WE/daemon-prince-of-khorne-cc740f25.jpg",
       "Daemon Prince of Khorne with Wings": "units/WE/daemon-prince-of-khorne-with-wings-dffa792e.jpg",
       "Eightbound": "units/WE/eightbound-618c3527.jpg",
+      "emblem:WE:": "units/WE/emblem-we-5c6f4490.png",
       "Exalted Eightbound": "units/WE/exalted-eightbound-4c81adf4.jpg",
       "Goremongers": "units/WE/goremongers-7bd467dd.jpg",
       "Jakhals": "units/WE/jakhals-f07d4362.jpg",
-      "Khorne Lord Of Skulls": "units/WE/khorne-lord-of-skulls-942219fd.jpg",
-      "Khorne Lord of Skulls": "units/WE/khorne-lord-of-skulls-942219fd.jpg",
       "Khârn The Betrayer": "units/WE/kharn-the-betrayer-332f0dde.jpg",
+      "Khorne Lord of Skulls": "units/WE/khorne-lord-of-skulls-942219fd.jpg",
+      "Khorne Lord Of Skulls": "units/WE/khorne-lord-of-skulls-942219fd.jpg",
       "Lord Invocatus": "units/WE/lord-invocatus-21ee5f07.jpg",
       "Lord on Juggernaut": "units/WE/lord-on-juggernaut-647f0342.jpg",
       "Master of Executions": "units/WE/master-of-executions-2f7f7ae2.jpg",
-      "Slaughterbound": "units/WE/slaughterbound-7ca94db9.jpg",
-      "emblem:WE:": "units/WE/emblem-we-5c6f4490.png"
+      "Slaughterbound": "units/WE/slaughterbound-7ca94db9.jpg"
     },
     "NEC": {
       "Annihilation Barge": "units/NEC/annihilation-barge-52c0e4b6.jpg",
+      "C’tan Shard of the Deceiver": "units/NEC/c-tan-shard-of-the-deceiver-d66ede68.jpg",
+      "C’tan Shard of the Nightbringer": "units/NEC/c-tan-shard-of-the-nightbringer-183fdca3.jpg",
+      "C’tan Shard of the Void Dragon": "units/NEC/c-tan-shard-of-the-void-dragon-1c9d6206.jpg",
       "Canoptek Doomstalker": "units/NEC/canoptek-doomstalker-7637e836.jpg",
       "Canoptek Macrocytes": "units/NEC/canoptek-macrocytes-3fc57778.jpg",
       "Canoptek Reanimator": "units/NEC/canoptek-reanimator-ceebfb9b.jpg",
@@ -742,12 +751,10 @@
       "Chronomancer": "units/NEC/chronomancer-28fa240a.jpg",
       "Convergence Of Dominion": "units/NEC/convergence-of-dominion-702449b7.jpg",
       "Cryptothralls": "units/NEC/cryptothralls-4ca5c149.jpg",
-      "C’tan Shard of the Deceiver": "units/NEC/c-tan-shard-of-the-deceiver-d66ede68.jpg",
-      "C’tan Shard of the Nightbringer": "units/NEC/c-tan-shard-of-the-nightbringer-183fdca3.jpg",
-      "C’tan Shard of the Void Dragon": "units/NEC/c-tan-shard-of-the-void-dragon-1c9d6206.jpg",
       "Deathmarks": "units/NEC/deathmarks-184f2767.jpg",
       "Doom Scythe": "units/NEC/doom-scythe-04b524fe.jpg",
       "Doomsday Ark": "units/NEC/doomsday-ark-8c2009fd.jpg",
+      "emblem:NEC:": "units/NEC/emblem-nec-bd76e7ba.png",
       "Flayed Ones": "units/NEC/flayed-ones-b45c9ac0.jpg",
       "Geomancer": "units/NEC/geomancer-d93b317a.jpg",
       "Ghost Ark": "units/NEC/ghost-ark-f49c313c.jpg",
@@ -785,8 +792,7 @@
       "Transcendent C’tan": "units/NEC/transcendent-c-tan-d7501953.jpg",
       "Trazyn The Infinite": "units/NEC/trazyn-the-infinite-da99d335.jpg",
       "Triarch Praetorians": "units/NEC/triarch-praetorians-36252378.jpg",
-      "Triarch Stalker": "units/NEC/triarch-stalker-24ed33cf.jpg",
-      "emblem:NEC:": "units/NEC/emblem-nec-bd76e7ba.png"
+      "Triarch Stalker": "units/NEC/triarch-stalker-24ed33cf.jpg"
     },
     "AoI": {
       "Aquila Kill Team": "units/AoI/aquila-kill-team-8bc15eae.jpg",
@@ -813,6 +819,7 @@
       "Deathwatch Kill Team::Deathwatch Veterans::Deathwatch thunder hammer": "units/AoI/deathwatch-kill-team-deathwatch-veterans-black-shield-blades-90e92926.jpg",
       "Deathwatch Kill Team::Watch Sergeant::Boltgun+Power weapon": "units/AoI/deathwatch-kill-team-deathwatch-veterans-boltgun-power-weapon-ba6ade00.jpg",
       "Decimus Kill Team": "units/AoI/aquila-kill-team-8bc15eae.jpg",
+      "emblem:AoI:": "units/AoI/emblem-aoi-1a1c9fdf.png",
       "Eversor Assassin": "units/AoI/eversor-assassin-c119b8df.jpg",
       "Exaction Squad": "units/AoI/exaction-squad-7769c1cf.jpg",
       "Exaction Squad::Cyber-mastiff": "units/AoI/exaction-squad-cyber-mastiff-9ff64f6f.jpg",
@@ -856,8 +863,7 @@
       "Voidsmen-at-arms::Canid": "units/AoI/voidsmen-at-arms-canid-9d55010a.jpg",
       "Voidsmen-at-arms::Voidmaster": "units/AoI/voidsmen-at-arms-voidmaster-43e7e836.jpg",
       "Watch Captain Artemis": "units/AoI/watch-captain-artemis-fb613997.jpg",
-      "Watch Master": "units/AoI/watch-master-705662cc.jpg",
-      "emblem:AoI:": "units/AoI/emblem-aoi-1a1c9fdf.png"
+      "Watch Master": "units/AoI/watch-master-705662cc.jpg"
     },
     "AdM": {
       "Archaeopter Fusilave": "units/AdM/archaeopter-fusilave-c293232b.jpg",
@@ -866,6 +872,7 @@
       "Belisarius Cawl": "units/AdM/belisarius-cawl-4a06a503.jpg",
       "Corpuscarii Electro-priests": "units/AdM/corpuscarii-electro-priests-e235902c.jpg",
       "Cybernetica Datasmith": "units/AdM/cybernetica-datasmith-2f6e30b1.jpg",
+      "emblem:AdM:": "units/AdM/emblem-adm-976d5301.png",
       "Fulgurite Electro-priests": "units/AdM/fulgurite-electro-priests-0477ad7b.jpg",
       "Hastarii Exterminators": "units/AdM/hastarii-exterminators-acd371d9.jpg",
       "Hastarii Fusiliers": "units/AdM/hastarii-fusiliers-7c33a1c9.jpg",
@@ -899,8 +906,7 @@
       "Tech-priest Enginseer": "units/AdM/tech-priest-enginseer-db339fd3.jpg",
       "Tech-priest Manipulus": "units/AdM/tech-priest-manipulus-217e8be8.jpg",
       "Technoarcheologist": "units/AdM/technoarcheologist-da681d34.jpg",
-      "Thulia Ghuld": "units/AdM/thulia-ghuld-6ed4be59.jpg",
-      "emblem:AdM:": "units/AdM/emblem-adm-976d5301.png"
+      "Thulia Ghuld": "units/AdM/thulia-ghuld-6ed4be59.jpg"
     },
     "DRU": {
       "Archon": "units/DRU/archon-96bd150c.jpg",
@@ -914,6 +920,7 @@
       "Cronos": "units/DRU/cronos-60225823.jpg",
       "Death Jester": "units/DRU/death-jester-8eb2e57a.jpg",
       "Drazhar": "units/DRU/drazhar-4bbfb593.jpg",
+      "emblem:DRU:": "units/DRU/emblem-dru-28a23508.png",
       "Haemonculus": "units/DRU/haemonculus-3e0b68c2.jpg",
       "Hand of the Archon": "units/DRU/hand-of-the-archon-5d11eb25.jpg",
       "Hellions": "units/DRU/hellions-729b6bce.jpg",
@@ -943,8 +950,7 @@
       "Voidraven Bomber": "units/DRU/voidraven-bomber-586062c7.jpg",
       "Voidweaver": "units/DRU/voidweaver-fc3c3ca6.jpg",
       "Wracks": "units/DRU/wracks-3d7e2505.jpg",
-      "Wyches": "units/DRU/wyches-7c3b6e69.jpg",
-      "emblem:DRU:": "units/DRU/emblem-dru-28a23508.png"
+      "Wyches": "units/DRU/wyches-7c3b6e69.jpg"
     },
     "LoV": {
       "Arkanyst Evaluator": "units/LoV/arkanyst-evaluator-6b494105.jpg",
@@ -959,6 +965,7 @@
       "Cthonian Earthshakers": "units/LoV/cthonian-earthshakers-b0a4c112.jpg",
       "Einhyr Champion": "units/LoV/einhyr-champion-94ce938b.jpg",
       "Einhyr Hearthguard": "units/LoV/einhyr-hearthguard-9cdaef35.jpg",
+      "emblem:LoV:": "units/LoV/emblem-lov-c1acd921.png",
       "Grimnyr": "units/LoV/grimnyr-ce6aea78.jpg",
       "Grimnyr::CORV": "units/LoV/grimnyr-corv-341a5c66.jpg",
       "Hearthkyn Warriors": "units/LoV/hearthkyn-warriors-650f2b74.jpg",
@@ -967,12 +974,11 @@
       "Hernkyn Yaegirs": "units/LoV/hernkyn-yaegirs-1cb00e72.jpg",
       "Ironkin Steeljacks with Heavy Volkanite Disintegrators": "units/LoV/ironkin-steeljacks-with-heavy-volkanite-disintegrators-083062c9.jpg",
       "Ironkin Steeljacks with Melee Weapons": "units/LoV/ironkin-steeljacks-with-melee-weapons-83b55585.jpg",
+      "Kâhl": "units/LoV/k-hl-c4ebca4c.jpg",
       "Kapricus Carrier": "units/LoV/kapricus-carrier-de21d075.jpg",
       "Kapricus Defenders": "units/LoV/kapricus-defenders-30c81339.jpg",
-      "Kâhl": "units/LoV/k-hl-c4ebca4c.jpg",
       "Memnyr Strategist": "units/LoV/memnyr-strategist-b31bd9af.jpg",
       "Sagitaur": "units/LoV/sagitaur-05b6e6e8.jpg",
-      "emblem:LoV:": "units/LoV/emblem-lov-c1acd921.png",
       "Ûthar the Destined": "units/LoV/thar-the-destined-b022385f.jpg"
     },
     "AE": {
@@ -988,6 +994,7 @@
       "Dire Avengers": "units/AE/dire-avengers-0134a207.jpg",
       "Dragon Knights": "units/AE/dragon-knights-5b9ac038.jpg",
       "Eldrad Ulthran": "units/AE/eldrad-ulthran-20bdb32f.jpg",
+      "emblem:AE:": "units/AE/emblem-ae-e36836f4.png",
       "Falcon": "units/AE/falcon-b6214b0f.jpg",
       "Farseer": "units/AE/farseer-680162a6.jpg",
       "Farseer Skyrunner": "units/AE/farseer-skyrunner-58a8f828.jpg",
@@ -1046,8 +1053,7 @@
       "Ynnari Succubus": "units/AE/ynnari-succubus-ab199a33.jpg",
       "Ynnari Venom": "units/AE/ynnari-venom-98cd2cb5.jpg",
       "Ynnari Wyches": "units/AE/ynnari-wyches-7c3b6e69.jpg",
-      "Yvraine": "units/AE/yvraine-50012bc4.jpg",
-      "emblem:AE:": "units/AE/emblem-ae-e36836f4.png"
+      "Yvraine": "units/AE/yvraine-50012bc4.jpg"
     },
     "ORK": {
       "Bannernob": "units/ORK/bannernob-91874df3.jpg",
@@ -1060,8 +1066,8 @@
       "Big Mek Dakkarig": "units/ORK/big-mek-dakkarig-57823eba.jpg",
       "Big Mek In Mega Armour": "units/ORK/big-mek-in-mega-armour-b2693920.jpg",
       "Big Mek With Shokk Attack Gun": "units/ORK/big-mek-with-shokk-attack-gun-b4d8f78b.jpg",
-      "Bigboss": "units/ORK/bigboss-58eecb81.jpg",
       "Big’ed Bossbunka": "units/ORK/biged-bossbunka-a56ed145.jpg",
+      "Bigboss": "units/ORK/bigboss-58eecb81.jpg",
       "Blitza-bommer": "units/ORK/blitza-bommer-56c2eade.jpg",
       "Boss Snikrot": "units/ORK/boss-snikrot-89bc5302.jpg",
       "Boyz": "units/ORK/boyz-d7ce7121.jpg",
@@ -1078,6 +1084,7 @@
       "Deff Dread": "units/ORK/deff-dread-8c2842e9.jpg",
       "Deffkilla Wartrike": "units/ORK/deffkilla-wartrike-3d74412a.jpg",
       "Deffkoptas": "units/ORK/deffkoptas-876070e0.jpg",
+      "emblem:ORK:": "units/ORK/emblem-ork-20c39443.png",
       "Flash Gitz": "units/ORK/flash-gitz-5ac0112f.jpg",
       "Gargantuan Squiggoth": "units/ORK/gargantuan-squiggoth-43a64177.jpg",
       "Ghazghkull Thraka": "units/ORK/ghazghkull-thraka-1de4d70c.jpg",
@@ -1117,14 +1124,14 @@
       "Wazbom Blastajet": "units/ORK/wazbom-blastajet-db94349f.jpg",
       "Wazdakka Gutsmek": "units/ORK/wazdakka-gutsmek-1b1f4553.jpg",
       "Weirdboy": "units/ORK/weirdboy-e8d7c025.jpg",
-      "Zodgrod Wortsnagga": "units/ORK/zodgrod-wortsnagga-41e7b5f0.jpg",
-      "emblem:ORK:": "units/ORK/emblem-ork-20c39443.png"
+      "Zodgrod Wortsnagga": "units/ORK/zodgrod-wortsnagga-41e7b5f0.jpg"
     },
     "TYR": {
       "Barbgaunts": "units/TYR/barbgaunts-14e119cb.jpg",
       "Biovores": "units/TYR/biovores-ec136764.jpg",
       "Broodlord": "units/TYR/broodlord-6cbbff1b.jpg",
       "Carnifexes": "units/TYR/carnifexes-61eba2b2.jpg",
+      "emblem:TYR:": "units/TYR/emblem-tyr-2d6f4f6e.png",
       "Exocrine": "units/TYR/exocrine-1ca9dbe0.jpg",
       "Genestealers": "units/TYR/genestealers-b28c542a.jpg",
       "Harpy": "units/TYR/harpy-9fd76cfb.jpg",
@@ -1156,8 +1163,7 @@
       "Tyrannofex": "units/TYR/tyrannofex-0cd40495.jpg",
       "Tyrant Guard": "units/TYR/tyrant-guard-7e208180.jpg",
       "Venomthropes": "units/TYR/venomthropes-d336305f.jpg",
-      "Zoanthropes": "units/TYR/zoanthropes-5e8c4e7b.jpg",
-      "emblem:TYR:": "units/TYR/emblem-tyr-2d6f4f6e.png"
+      "Zoanthropes": "units/TYR/zoanthropes-5e8c4e7b.jpg"
     },
     "DG": {
       "Biologus Putrifier": "units/DG/biologus-putrifier-bc37e5c5.jpg",
@@ -1171,6 +1177,7 @@
       "Blightlord Terminators::Blightlord Terminators::Flail of corruption": "units/DG/blightlord-terminators-blightlord-terminators-flail-of-corruption-83de4d68.jpg",
       "Daemon Prince of Nurgle": "units/DG/daemon-prince-of-nurgle-fe9f19e6.jpg",
       "Deathshroud Terminators": "units/DG/deathshroud-terminators-fb9404dd.jpg",
+      "emblem:DG:": "units/DG/emblem-dg-9186b739.png",
       "Foetid Bloat-drone": "units/DG/foetid-bloat-drone-8184f46a.jpg",
       "Foetid Bloat-drone with Heavy Blight Launcher": "units/DG/foetid-bloat-drone-with-heavy-blight-launcher-cea0be8f.jpg",
       "Foetid Bloat-drone::Foetid Bloat-drone::Plague probe+Plaguespitter": "units/DG/foetid-bloat-drone-foetid-bloat-drone-plague-probe-plaguespitter-968a52b0.jpg",
@@ -1188,8 +1195,7 @@
       "Plagueburst Crawler": "units/DG/plagueburst-crawler-2282aa70.jpg",
       "Poxwalkers": "units/DG/poxwalkers-48065e75.jpg",
       "Tallyman": "units/DG/tallyman-7d320c39.jpg",
-      "Typhus": "units/DG/typhus-a8af382e.jpg",
-      "emblem:DG:": "units/DG/emblem-dg-9186b739.png"
+      "Typhus": "units/DG/typhus-a8af382e.jpg"
     },
     "TAU": {
       "Breacher Team": "units/TAU/breacher-team-42303bce.jpg",
@@ -1204,6 +1210,7 @@
       "Crisis Sunforge Battlesuits": "units/TAU/crisis-sunforge-battlesuits-bdd6b2b7.jpg",
       "Darkstrider": "units/TAU/darkstrider-f1c96203.jpg",
       "Devilfish": "units/TAU/devilfish-03802378.jpg",
+      "emblem:TAU:": "units/TAU/emblem-tau-19bf0214.png",
       "Ethereal": "units/TAU/ethereal-11991093.jpg",
       "Firesight Team": "units/TAU/firesight-team-1f19bd9c.jpg",
       "Ghostkeel Battlesuit": "units/TAU/ghostkeel-battlesuit-10505747.jpg",
@@ -1234,8 +1241,7 @@
       "Tidewall Droneport": "units/TAU/tidewall-droneport-e1b4c1c1.jpg",
       "Tidewall Gunrig": "units/TAU/tidewall-gunrig-2ca7b519.jpg",
       "Tidewall Shieldline": "units/TAU/tidewall-shieldline-6b540882.jpg",
-      "Vespid Stingwings": "units/TAU/vespid-stingwings-b77157d2.jpg",
-      "emblem:TAU:": "units/TAU/emblem-tau-19bf0214.png"
+      "Vespid Stingwings": "units/TAU/vespid-stingwings-b77157d2.jpg"
     },
     "GK": {
       "Brother-captain": "units/GK/brother-captain-92f291f4.jpg",
@@ -1252,6 +1258,7 @@
       "Brotherhood Terminator Squad::Terminator::Nemesis force weapon+Psycannon": "units/GK/brotherhood-terminator-squad-terminator-nemesis-force-weapon-psycannon-c95613f2.jpg",
       "Brotherhood Terminator Squad::Terminator::Nemesis force weapon+Storm bolter": "units/GK/brotherhood-terminator-squad-terminator-nemesis-force-weapon-storm-bolter-19126c38.jpg",
       "Castellan Crowe": "units/GK/castellan-crowe-9a4e4832.jpg",
+      "emblem:GK:": "units/GK/emblem-gk-76e816cc.png",
       "Grand Master": "units/GK/grand-master-68a8a05d.jpg",
       "Grand Master In Nemesis Dreadknight": "units/GK/grand-master-in-nemesis-dreadknight-8b4936b3.jpg",
       "Grand Master Voldus": "units/GK/grand-master-voldus-9c1be1cf.jpg",
@@ -1285,8 +1292,7 @@
       "Stormtalon Gunship": "units/GK/stormtalon-gunship-d1f59efd.jpg",
       "Strike Squad": "units/GK/strike-squad-d30cb5b5.jpg",
       "Strike Squad::Grey Knight::Close combat weapon+Psycannon": "units/GK/strike-squad-grey-knight-close-combat-weapon-psycannon-bef6901b.jpg",
-      "Venerable Dreadnought": "units/GK/venerable-dreadnought-34cf50f8.jpg",
-      "emblem:GK:": "units/GK/emblem-gk-76e816cc.png"
+      "Venerable Dreadnought": "units/GK/venerable-dreadnought-34cf50f8.jpg"
     },
     "AM": {
       "Bullgryn Squad": "units/AM/bullgryn-squad-03934072.jpg",
@@ -1298,6 +1304,7 @@
       "Commissar Graves": "units/AM/commissar-graves-14af157a.jpg",
       "Commissar Graves on Foot": "units/AM/commissar-graves-on-foot-875a8781.jpg",
       "Commissar Yarrick": "units/AM/commissar-yarrick-f3c64ecf.jpg",
+      "emblem:AM:": "units/AM/emblem-am-ebc56ef7.png",
       "Gaunt’s Ghosts": "units/AM/gaunt-s-ghosts-4014b6a4.jpg",
       "Gaunt’s Ghosts::Ibram Gaunt": "units/AM/gaunt-s-ghosts-ibram-gaunt-4014b6a4.jpg",
       "Gaunt’s Ghosts::Tanith Ghost": "units/AM/gaunt-s-ghosts-tanith-ghost-0f73e91a.jpg",
@@ -1314,8 +1321,7 @@
       "Tempestus Aquilons": "units/AM/tempestus-aquilons-77babf05.jpg",
       "Tempestus Scions": "units/AM/tempestus-scions-d3e54b7a.jpg",
       "Ursula Creed": "units/AM/ursula-creed-58c96e56.jpg",
-      "Valkyrie": "units/AM/valkyrie-d152276f.jpg",
-      "emblem:AM:": "units/AM/emblem-am-ebc56ef7.png"
+      "Valkyrie": "units/AM/valkyrie-d152276f.jpg"
     },
     "other": {
       "Cadian Command Squad::Cadian Commander": "units/other/cadian-command-squad-cadian-commander.jpg",
@@ -1371,6 +1377,7 @@
       "Chaos Cerastus Knight Lancer": "units/QT/chaos-cerastus-knight-lancer-65617cfd.jpg",
       "Chaos Questoris Knight Magaera": "units/QT/chaos-questoris-knight-magaera-3eb5d42c.jpg",
       "Chaos Questoris Knight Styrix": "units/QT/chaos-questoris-knight-styrix-6897c32a.jpg",
+      "emblem:QT:": "units/QT/emblem-qt-313da2a7.png",
       "Knight Abominant": "units/QT/knight-abominant-db204ce3.jpg",
       "Knight Desecrator": "units/QT/knight-desecrator-7d93e4a2.jpg",
       "Knight Despoiler": "units/QT/knight-despoiler-b14dc288.jpg",
@@ -1382,11 +1389,11 @@
       "War Dog Huntsman": "units/QT/war-dog-huntsman-a687bf70.jpg",
       "War Dog Karnivore": "units/QT/war-dog-karnivore-05bea9d7.jpg",
       "War Dog Moirax": "units/QT/war-dog-moirax-d1ec00cf.jpg",
-      "War Dog Stalker": "units/QT/war-dog-stalker-a3599ada.jpg",
-      "emblem:QT:": "units/QT/emblem-qt-313da2a7.png"
+      "War Dog Stalker": "units/QT/war-dog-stalker-a3599ada.jpg"
     },
     "EC": {
       "Daemon Prince of Slaanesh with Wings": "units/EC/daemon-prince-of-slaanesh-with-wings-9b551f03.jpg",
+      "emblem:EC:": "units/EC/emblem-ec-31f3286d.png",
       "Flawless Blades": "units/EC/flawless-blades-d413c9df.jpg",
       "Fulgrim": "units/EC/fulgrim-b9446145.jpg",
       "Infractors": "units/EC/infractors-2219bd5e.jpg",
@@ -1397,8 +1404,7 @@
       "Tormentors": "units/EC/tormentors-24c0c79d.jpg",
       "Tormentors::Obsessionist::Bolt pistol+Power sword": "units/EC/infractors-2219bd5e.jpg",
       "Tormentors::Tormentors::Close combat weapon+Meltagun": "units/EC/tormentors-tormentors-close-combat-weapon-meltagun-2274755f.jpg",
-      "Tormentors::Tormentors::Close combat weapon+Plasma gun": "units/EC/tormentors-tormentors-close-combat-weapon-plasma-gun-b10b7012.jpg",
-      "emblem:EC:": "units/EC/emblem-ec-31f3286d.png"
+      "Tormentors::Tormentors::Close combat weapon+Plasma gun": "units/EC/tormentors-tormentors-close-combat-weapon-plasma-gun-b10b7012.jpg"
     },
     "TL": {
       "Reaver Titan": "units/TL/reaver-titan-91cd4081.jpg",
