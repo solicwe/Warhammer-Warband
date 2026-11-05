@@ -9,17 +9,14 @@ export function camFocus(picked: UnitState | null): Pt | null {
   return ms.length ? { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length } : null;
 }
 
-const VIEW = 20; // base inches across when focused on a unit
-
 /**
- * Phone & Desktop PiP Mirror: a live view of the battlefield while a sheet hides it (or on demand).
- * Mirrors the board itself (an SVG <use>), so it costs no extra rendering of units.
- * Features:
- *  - Zoom inside the mirror: buttons (+, -, cycle), mouse wheel, and pinch-to-zoom!
- *  - Pan inside the mirror: drag the battlefield to look around.
- *  - Recenter on active unit with crosshair button.
- *  - Move the window by dragging the header bar.
- *  - Enlarge / compact window toggle (180px <-> 280px).
+ * Phone & Desktop PiP Mirror: a live view of the battlefield while a sheet covers the board (or on demand).
+ *
+ * Controls are strictly separated to prevent conflicts:
+ *  - Top header: drag to move the floating window anywhere on screen.
+ *  - Middle map viewport: drag with mouse/finger to pan camera around the battlefield.
+ *  - Bottom control bar: dedicated zoom buttons (1×, 2×, 3×, 4×, +, -) and target recenter button.
+ *    (Events on the control bar stop propagation so tapping zoom NEVER triggers map panning).
  */
 export function MapCam({
   s,
@@ -47,19 +44,20 @@ export function MapCam({
 
   const userPanned = useRef(false);
   const prevFocus = useRef(focus);
-  const focusRef = useRef(focus);
-  focusRef.current = focus;
 
-  // Window drag ref
+  // Window drag ref (for moving window via header)
   const dragWindow = useRef<{ id: number; dx: number; dy: number } | null>(null);
 
-  // In-map pointer tracking for pan & pinch-zoom
-  const activePointers = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const pinchStartDist = useRef<number | null>(null);
-  const pinchStartZoom = useRef<number>(1);
-  const panStart = useRef<{ clientX: number; clientY: number; center: Pt } | null>(null);
+  // Map panning refs (for panning viewport)
+  const isMapPointerDown = useRef(false);
+  const mapPanStart = useRef<{ x: number; y: number; centerX: number; centerY: number } | null>(null);
+  const mapHasMoved = useRef(false);
 
-  // When focus prop changes (user selected another unit), update center if user hasn't locked their own pan
+  // Multi-touch pinch tracking on map viewport
+  const touchStartDist = useRef<number | null>(null);
+  const touchStartZoom = useRef<number>(1.0);
+
+  // Auto-focus on active unit when it changes, unless user manually panned during this unit
   useEffect(() => {
     if (focus && (focus.x !== prevFocus.current?.x || focus.y !== prevFocus.current?.y)) {
       prevFocus.current = focus;
@@ -83,7 +81,6 @@ export function MapCam({
         const visibleRatio = box.height > 0 ? visibleHeight / box.height : 1;
         const hasOverlay = !!document.querySelector('.tray, .sheet-wrap, .rule-drawer');
 
-        // Show if field is obscured by sheet/tray, or if drawer covers >94%
         now = hasOverlay || visibleHeight < 30 || visibleRatio < 0.06;
       }
       setCovered(now);
@@ -99,45 +96,18 @@ export function MapCam({
   if ((!covered && !forceShow) || closed) return null;
 
   // ViewBox dimensions with zoom factor applied
-  const baseVw = focus ? VIEW : W + 2;
-  const baseVh = focus ? VIEW * 0.75 : H + 2;
-  const curVw = baseVw / zoom;
-  const curVh = baseVh / zoom;
+  // Full board reference: (W + 2) x (H + 2)
+  const curVw = (W + 2) / zoom;
+  const curVh = (H + 2) / zoom;
 
-  // Clamp camera position within battlefield bounds (+/- small margin)
-  const minX = -2;
-  const maxX = W + 2 - curVw;
+  // Clamped viewBox top-left
+  const minX = -1;
+  const maxX = W + 1 - curVw;
   const vx = maxX >= minX ? Math.max(minX, Math.min(maxX, center.x - curVw / 2)) : (W - curVw) / 2;
 
-  const minY = -2;
-  const maxY = H + 2 - curVh;
+  const minY = -1;
+  const maxY = H + 1 - curVh;
   const vy = maxY >= minY ? Math.max(minY, Math.min(maxY, center.y - curVh / 2)) : (H - curVh) / 2;
-
-  // Zoom helpers
-  const handleZoomIn = () => {
-    setZoom((z) => Math.min(5.0, Number((z * 1.3).toFixed(2))));
-    userPanned.current = true;
-  };
-
-  const handleZoomOut = () => {
-    setZoom((z) => Math.max(0.6, Number((z / 1.3).toFixed(2))));
-    userPanned.current = true;
-  };
-
-  const handleCycleZoom = () => {
-    setZoom((z) => {
-      if (z < 1.4) return 2.0;
-      if (z < 2.5) return 3.5;
-      return 1.0;
-    });
-    userPanned.current = true;
-  };
-
-  const handleRecenter = () => {
-    if (focus) setCenter(focus);
-    else setCenter({ x: W / 2, y: H / 2 });
-    userPanned.current = false;
-  };
 
   // Header window drag handlers
   const onHeaderPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -161,72 +131,98 @@ export function MapCam({
     dragWindow.current = null;
   };
 
-  // SVG Pan & Pinch-Zoom handlers
+  // Map viewport panning handlers (single touch/mouse)
   const onMapPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-    if (activePointers.current.size === 1) {
-      panStart.current = { clientX: e.clientX, clientY: e.clientY, center: { ...center } };
-      setPanning(true);
-    } else if (activePointers.current.size === 2) {
-      const pts = [...activePointers.current.values()];
-      pinchStartDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      pinchStartZoom.current = zoom;
-      panStart.current = null;
-    }
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    isMapPointerDown.current = true;
+    mapHasMoved.current = false;
+    mapPanStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      centerX: center.x,
+      centerY: center.y,
+    };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const onMapPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!activePointers.current.has(e.pointerId)) return;
-    activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!isMapPointerDown.current || !mapPanStart.current) return;
+    const dx = e.clientX - mapPanStart.current.x;
+    const dy = e.clientY - mapPanStart.current.y;
 
-    if (activePointers.current.size === 2 && pinchStartDist.current) {
-      // Pinch to zoom
-      const pts = [...activePointers.current.values()];
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      const scale = dist / pinchStartDist.current;
-      const nextZoom = Math.min(5.0, Math.max(0.6, pinchStartZoom.current * scale));
-      setZoom(Number(nextZoom.toFixed(2)));
-      userPanned.current = true;
-    } else if (activePointers.current.size === 1 && panStart.current) {
-      // Pan camera
-      const rect = e.currentTarget.getBoundingClientRect();
-      const dxPixels = e.clientX - panStart.current.clientX;
-      const dyPixels = e.clientY - panStart.current.clientY;
-      const inchesPerPixelX = curVw / Math.max(1, rect.width);
-      const inchesPerPixelY = curVh / Math.max(1, rect.height);
+    if (!mapHasMoved.current && Math.hypot(dx, dy) < 4) return;
+    mapHasMoved.current = true;
+    setPanning(true);
 
-      setCenter({
-        x: panStart.current.center.x - dxPixels * inchesPerPixelX,
-        y: panStart.current.center.y - dyPixels * inchesPerPixelY,
-      });
-      userPanned.current = true;
-    }
-  };
+    const rect = e.currentTarget.getBoundingClientRect();
+    const inchesPerPixelX = curVw / Math.max(1, rect.width);
+    const inchesPerPixelY = curVh / Math.max(1, rect.height);
 
-  const onMapPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
-    activePointers.current.delete(e.pointerId);
-    if (activePointers.current.size < 2) {
-      pinchStartDist.current = null;
-    }
-    if (activePointers.current.size === 0) {
-      panStart.current = null;
-      setPanning(false);
-    }
-  };
+    const newCenterX = mapPanStart.current.centerX - dx * inchesPerPixelX;
+    const newCenterY = mapPanStart.current.centerY - dy * inchesPerPixelY;
 
-  const onMapWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const factor = e.deltaY < 0 ? 1.25 : 0.8;
-    setZoom((z) => Math.min(5.0, Math.max(0.6, Number((z * factor).toFixed(2)))));
+    setCenter({
+      x: Math.max(0, Math.min(W, newCenterX)),
+      y: Math.max(0, Math.min(H, newCenterY)),
+    });
     userPanned.current = true;
   };
 
+  const onMapPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    isMapPointerDown.current = false;
+    mapPanStart.current = null;
+    setPanning(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  // Touch handlers for multi-touch pinch-to-zoom
+  const onTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length === 2) {
+      touchStartDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartZoom.current = zoom;
+      isMapPointerDown.current = false;
+      mapPanStart.current = null;
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length === 2 && touchStartDist.current) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scale = dist / touchStartDist.current;
+      const nextZoom = Math.min(5.0, Math.max(1.0, touchStartZoom.current * scale));
+      setZoom(Number(nextZoom.toFixed(1)));
+      userPanned.current = true;
+    }
+  };
+
+  const onTouchEnd = () => {
+    touchStartDist.current = null;
+  };
+
+  // Wheel zoom on desktop
+  const onMapWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const step = e.deltaY < 0 ? 0.3 : -0.3;
+    setZoom((z) => Math.min(5.0, Math.max(1.0, Number((z + step).toFixed(1)))));
+    userPanned.current = true;
+  };
+
+  // Double click toggles between 1x and 2.5x
   const onMapDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();
-    setZoom((z) => (z > 1.4 ? 1.0 : 2.5));
+    e.stopPropagation();
+    setZoom((z) => (z >= 2.0 ? 1.0 : 2.5));
     userPanned.current = true;
   };
 
@@ -237,14 +233,14 @@ export function MapCam({
       role="region"
       aria-label="Live Mirror Battlefield View"
     >
-      {/* Header bar: drag to move window, resize toggle, close button */}
+      {/* 1. Header bar: Drag to move the floating window */}
       <div
         className="map-cam-header"
         onPointerDown={onHeaderPointerDown}
         onPointerMove={onHeaderPointerMove}
         onPointerUp={onHeaderPointerUp}
         onPointerCancel={onHeaderPointerUp}
-        title="Drag header to move window"
+        title="Drag here to move window"
       >
         <div className="map-cam-title-wrap">
           <span className="map-cam-dot" aria-hidden="true" />
@@ -253,6 +249,7 @@ export function MapCam({
         </div>
         <div className="map-cam-header-actions" onPointerDown={(e) => e.stopPropagation()}>
           <button
+            type="button"
             className="map-cam-hbtn"
             onClick={() => setExpanded((v) => !v)}
             title={expanded ? 'Compact view' : 'Enlarge view'}
@@ -261,6 +258,7 @@ export function MapCam({
             <Icon name={expanded ? 'collapse' : 'expand'} size={13} />
           </button>
           <button
+            type="button"
             className="map-cam-hbtn"
             onClick={() => {
               setClosed(true);
@@ -274,7 +272,7 @@ export function MapCam({
         </div>
       </div>
 
-      {/* Battlefield SVG Viewport: drag to pan, wheel/pinch to zoom, double tap to toggle */}
+      {/* 2. Battlefield SVG Viewport: Drag to pan inside, wheel/pinch to zoom */}
       <div className="map-cam-viewport">
         <svg
           className={`map-cam-svg ${panning ? 'panning' : ''}`}
@@ -285,52 +283,80 @@ export function MapCam({
           onPointerMove={onMapPointerMove}
           onPointerUp={onMapPointerUp}
           onPointerCancel={onMapPointerUp}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
           onWheel={onMapWheel}
           onDoubleClick={onMapDoubleClick}
         >
           <use href="#board-live" />
         </svg>
+      </div>
 
-        {/* Floating Zoom & Pan Controls Pill */}
-        <div className="map-cam-controls">
-          <div className="map-cam-zoom-pill" role="toolbar" aria-label="Mirror zoom controls">
-            <button
-              className="map-cam-zbtn"
-              onClick={handleZoomOut}
-              title="Zoom out (−)"
-              aria-label="Zoom out"
-              disabled={zoom <= 0.65}
-            >
-              <Icon name="minus" size={13} />
-            </button>
-            <button
-              className="map-cam-zlvl"
-              onClick={handleCycleZoom}
-              title="Click to cycle zoom presets (1x, 2x, 3.5x)"
-              aria-label={`Current zoom: ${zoom.toFixed(1)}x. Click to cycle.`}
-            >
-              {zoom.toFixed(1)}×
-            </button>
-            <button
-              className="map-cam-zbtn"
-              onClick={handleZoomIn}
-              title="Zoom in (+)"
-              aria-label="Zoom in"
-              disabled={zoom >= 4.9}
-            >
-              <Icon name="plus" size={13} />
-            </button>
-          </div>
+      {/* 3. Dedicated Bottom Zoom Control Bar: Completely separated from the map so zoom taps NEVER conflict with panning */}
+      <div
+        className="map-cam-bar"
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="map-cam-bar-btn"
+          onClick={() => setZoom((z) => Math.max(1.0, Number((z - 0.5).toFixed(1))))}
+          disabled={zoom <= 1.0}
+          title="Zoom out (−)"
+          aria-label="Zoom out"
+        >
+          <Icon name="minus" size={13} />
+        </button>
 
-          <button
-            className="map-cam-target-btn"
-            onClick={handleRecenter}
-            title={focus ? 'Recenter on active unit' : 'Recenter to center of board'}
-            aria-label="Recenter map"
-          >
-            <Icon name="crosshair" size={14} />
-          </button>
+        <div className="map-cam-presets" role="radiogroup" aria-label="Zoom presets">
+          {[1, 2, 3, 4].map((lvl) => {
+            const active = Math.round(zoom) === lvl;
+            return (
+              <button
+                key={lvl}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                className={`map-cam-preset-btn ${active ? 'active' : ''}`}
+                onClick={() => {
+                  setZoom(lvl);
+                  userPanned.current = true;
+                }}
+                title={`Zoom ${lvl}×`}
+              >
+                {lvl}×
+              </button>
+            );
+          })}
         </div>
+
+        <button
+          type="button"
+          className="map-cam-bar-btn"
+          onClick={() => setZoom((z) => Math.min(5.0, Number((z + 0.5).toFixed(1))))}
+          disabled={zoom >= 5.0}
+          title="Zoom in (+)"
+          aria-label="Zoom in"
+        >
+          <Icon name="plus" size={13} />
+        </button>
+
+        <button
+          type="button"
+          className="map-cam-bar-btn target"
+          onClick={() => {
+            if (focus) setCenter(focus);
+            else setCenter({ x: W / 2, y: H / 2 });
+            userPanned.current = false;
+          }}
+          title={focus ? 'Recenter on unit' : 'Recenter map'}
+          aria-label="Recenter map"
+        >
+          <Icon name="crosshair" size={14} />
+        </button>
       </div>
     </div>
   );

@@ -86,12 +86,8 @@ export function Home({
         {/* Play modes: NEW BATTLE is largest/primary, with Arcade, Tabletop, and History smaller underneath */}
         <div className="home-modes" aria-label="Play modes">
           <button className="mode-btn-primary" onClick={onBattle} title="Play standard simulator battle against bot or local player">
-            <Icon name="fight" size={20} className="mode-btn-icon" />
-            <div className="mode-btn-text">
-              <span className="mode-btn-title">NEW BATTLE</span>
-              <span className="mode-btn-desc">11th Edition Simulator · vs Bot or 2 Players</span>
-            </div>
-            <Icon name="next" size={16} className="mode-btn-chevron" />
+            <Icon name="fight" size={20} />
+            <span>NEW BATTLE</span>
           </button>
 
           <nav className="modes-sub-grid" aria-label="Secondary play modes">
