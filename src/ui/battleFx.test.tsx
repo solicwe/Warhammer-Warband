@@ -5,7 +5,7 @@ import type { WeaponFx } from '../engine/weaponFx';
 import { AttackFx } from './BattleFx';
 
 const KINDS: WeaponFx[] = ['bolt', 'heavyBolt', 'gatling', 'shoota', 'shotgun', 'sniper', 'pulse', 'plasma', 'las', 'melta', 'volkite', 'grav', 'lightning', 'psychic',
-  'flame', 'missile', 'shell', 'gauss', 'shuriken', 'bio', 'sonic', 'cryo', 'slash', 'power', 'chain', 'claw', 'crush'];
+  'flame', 'missile', 'shell', 'gauss', 'shuriken', 'bio', 'sonic', 'cryo', 'arrow', 'slash', 'power', 'chain', 'claw', 'crush'];
 
 describe('every weapon kind draws an effect', () => {
   it.each(KINDS)('%s', (fx) => {

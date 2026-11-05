@@ -919,6 +919,34 @@ export function AttackFx({ e, f }: { e: AttackEvent; f: number }) {
           }
           break;
         }
+        case 'arrow': {
+          if (k > 0 && k < 1) {
+            const head = lerp(src, impact, k);
+            const tail = lerp(src, impact, Math.max(0, k - 0.22));
+            const rotDeg = (ang * 180) / Math.PI;
+            const trail = lerp(src, impact, Math.max(0, k - 0.35));
+            over.push(
+              <g key={`arr${key}`}>
+                <line x1={trail.x} y1={trail.y} x2={tail.x} y2={tail.y} stroke="#38bdf8" strokeWidth={0.12 * TRACE} strokeLinecap="round" opacity={0.35} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#0284c7" strokeWidth={0.18 * TRACE} strokeLinecap="round" opacity={0.6} />
+                <line x1={tail.x} y1={tail.y} x2={head.x} y2={head.y} stroke="#f0f9ff" strokeWidth={0.07 * TRACE} strokeLinecap="round" />
+                <g transform={`translate(${head.x} ${head.y}) rotate(${rotDeg})`}>
+                  <polygon points="0.16,0 -0.1,-0.08 -0.04,0 -0.1,0.08" fill="#e0f2fe" stroke="#0284c7" strokeWidth={0.02 * TRACE} />
+                  <Glow at={{ x: 0, y: 0 }} r={0.35} color="cyan" op={0.6} />
+                </g>
+                <g transform={`translate(${tail.x} ${tail.y}) rotate(${rotDeg})`}>
+                  <line x1="-0.08" y1="-0.06" x2="0.04" y2="0" stroke="#38bdf8" strokeWidth={0.03 * TRACE} />
+                  <line x1="-0.08" y1="0.06" x2="0.04" y2="0" stroke="#38bdf8" strokeWidth={0.03 * TRACE} />
+                </g>
+              </g>,
+            );
+          }
+          if (hit && ik > 0 && ik < 1) {
+            over.push(<Glow key={`pop${key}`} at={impact} r={0.5 * (0.6 + ik)} color="cyan" op={1 - ik} />);
+            over.push(<Sparks key={`k${key}`} at={impact} seed={sd} k={ik} color="#bae6fd" size={0.9 * P} ang={ang} />);
+          } else if (!hit) missDirt(key, impact, ik, sd, under);
+          break;
+        }
       }
     }
     // gatlings: a long flickering muzzle flash on each gun and brass casings flying out

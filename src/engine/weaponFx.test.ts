@@ -20,6 +20,7 @@ describe('weapon effects match the weapon', () => {
     ['Doomsday cannon', 'gauss'], ['Gauss flayer', 'gauss'], ['Tesla carbine', 'lightning'],
     ['Leman Russ battle cannon', 'shell'], ['Earthshaker cannon', 'shell'], ['Missile launcher', 'missile'],
     ['Traktor Kannon', 'grav'], ['Psyko-gatler', 'gatling'], ['Big Shoota', 'shoota'],
+    ['Fatecaster greatbow', 'arrow'], ['Dart-bow', 'arrow'],
   ] as const)('%s → %s', (w, fx) => expect(ranged(w)).toBe(fx));
 
   it('a profile name decides when it names a weapon kind, a generic one does not', () => {

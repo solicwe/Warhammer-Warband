@@ -23,6 +23,7 @@ import gkStrats from '../../data/stratagems/GK.json';
 import lovStrats from '../../data/stratagems/LoV.json';
 import necStrats from '../../data/stratagems/NEC.json';
 import tauStrats from '../../data/stratagems/TAU.json';
+import { RULES } from '../engine/config';
 import { parseAbilityText } from './abilityText';
 import { rollExpr, rollN } from '../engine/dice';
 import { emit, reactWorth, runStratSpecial, targetFilter } from '../engine/events';
@@ -30,7 +31,7 @@ import { ldTest, runActions, runDeathQueue, shockTest, type Action } from './act
 import { kwPhrase } from '../engine/army';
 import { applyMortalWounds, buildShootPools, expectedDamage, onAttackFinished, onAttackStart, onModelKilled } from '../engine/attack';
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
-import { afterReaction, autoCharge, setUnleashWrath, placeNear, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, validateDisembark } from '../engine/game';
+import { afterReaction, armyPoints, autoCharge, setUnleashWrath, placeNear, reservesPoints, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, validateDisembark } from '../engine/game';
 import { baseDist, bodyAt, dist, gap, ptGap } from '../engine/geometry';
 import { alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance, type ReactCtx, type ReactOn, heroFx, playsItself } from '../engine/state';
 import type { BuffKind, GameState, Phase, PlayerId, Pt, StratagemData, UnitState } from '../engine/types';
@@ -464,6 +465,11 @@ export function stratagemBlock(s: GameState, p: PlayerId, st: StratagemData, uni
     const L = lastEnemyAct(s, p);
     for (const c of rule.unitIf ?? []) if (!cond(c, { s, A: unit, T: L?.u, holder: unit })) return `This unit does not qualify (${condText(c)})`;
     if (rule.enemy && !rule.enemy.all && !stratEnemies(s, p, rule, unit, opt.ctx).length) return 'No enemy unit can be selected';
+  }
+  if (rule.do?.some((a) => a.reserves)) {
+    const cap = Math.floor(armyPoints(s, p) * RULES.reserves.maxPointsFraction);
+    const cur = reservesPoints(s, p);
+    if (unit && unit.owner === p && cur + unit.pts > cap) return `Strategic Reserves limit reached (${cur + unit.pts}/${cap} pts)`;
   }
   return canUseStratagem(s, p, st.id, plan.target === 'own' && unit?.owner === p && rule.targetFrom !== 'destroyed' ? unit : undefined, st.cp);
 }
