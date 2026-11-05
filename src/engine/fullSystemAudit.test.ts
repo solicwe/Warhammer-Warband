@@ -224,6 +224,28 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
       expect(tabletopTsx).toContain("background: '#f5eedc'");
     });
 
+    it('Tabletop companion supports both Tactical and Fixed Secondary Mission modes with 20 VP per-card caps', () => {
+      const tabletopTsx = fs.readFileSync('src/ui/TabletopScreen.tsx', 'utf8');
+
+      // Verify PlayerState interface supports secondaryMode ('tactical' | 'fixed'), fixedMissions, fixedScores
+      expect(tabletopTsx).toContain("secondaryMode: 'tactical' | 'fixed'");
+      expect(tabletopTsx).toContain("fixedMissions: [string, string]");
+      expect(tabletopTsx).toContain("fixedScores: Record<string, number>");
+
+      // Verify Setup Step 2 has mode selectors and fixed pickers
+      expect(tabletopTsx).toContain("Secondary Mission Deck");
+      expect(tabletopTsx).toContain("🎯 Tactical (Deck)");
+      expect(tabletopTsx).toContain("📌 Fixed (2 Objectives)");
+      expect(tabletopTsx).toContain("Select 2 Fixed Missions:");
+
+      // Verify In-Match has Fixed mode scoring and does not discard fixed cards
+      expect(tabletopTsx).toContain("handleScoreFixedCard");
+      expect(tabletopTsx).toContain("Card VP Scored (Max 20 VP)");
+      expect(tabletopTsx).toContain("MAX 20 VP");
+      expect(tabletopTsx).toContain("handleToggleSecondaryMode");
+      expect(tabletopTsx).toContain("handleUpdateFixedMissions");
+    });
+
     it('Secondary mission cards have valid descriptions, timing, and positive VP caps', () => {
       for (const card of MISSIONS.secondaries) {
         expect(card.id).toBeTruthy();

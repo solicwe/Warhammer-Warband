@@ -32,6 +32,9 @@ interface Props {
 interface PlayerState {
   name: string;
   faction: string;
+  secondaryMode: 'tactical' | 'fixed';
+  fixedMissions: [string, string];
+  fixedScores: Record<string, number>;
   cp: number;
   primaryVp: number;
   secondaryVp: number;
@@ -193,8 +196,13 @@ export function TabletopScreen({ index, onBack }: Props) {
   // STEP 2: Players & Factions (No quick-fill clutter, pure manual selection)
   const [p0Name, setP0Name] = useState('Player 1');
   const [p0Faction, setP0Faction] = useState('SM');
+  const [p0SecMode, setP0SecMode] = useState<'tactical' | 'fixed'>('tactical');
+  const [p0Fixed, setP0Fixed] = useState<[string, string]>(['assassination', 'bring-it-down']);
   const [p1Name, setP1Name] = useState('Player 2');
   const [p1Faction, setP1Faction] = useState('TYR');
+  const [p1SecMode, setP1SecMode] = useState<'tactical' | 'fixed'>('tactical');
+  const [p1Fixed, setP1Fixed] = useState<[string, string]>(['engage-on-all-fronts', 'cleanse']);
+  const [editingFixedPlayer, setEditingFixedPlayer] = useState<0 | 1 | null>(null);
 
   // STEP 3: Roll-Off & Turn Order (With authentic tumbling dice animation)
   const [attackerPlayer, setAttackerPlayer] = useState<0 | 1>(0); // 0 or 1 deploys first
@@ -237,6 +245,9 @@ export function TabletopScreen({ index, onBack }: Props) {
     {
       name: 'Player 1',
       faction: 'SM',
+      secondaryMode: 'tactical',
+      fixedMissions: ['assassination', 'bring-it-down'],
+      fixedScores: { assassination: 0, 'bring-it-down': 0 },
       cp: 1,
       primaryVp: 0,
       secondaryVp: 0,
@@ -248,6 +259,9 @@ export function TabletopScreen({ index, onBack }: Props) {
     {
       name: 'Player 2',
       faction: 'TYR',
+      secondaryMode: 'tactical',
+      fixedMissions: ['engage-on-all-fronts', 'cleanse'],
+      fixedScores: { 'engage-on-all-fronts': 0, cleanse: 0 },
       cp: 1,
       primaryVp: 0,
       secondaryVp: 0,
@@ -371,22 +385,28 @@ export function TabletopScreen({ index, onBack }: Props) {
       {
         name: p0Name.trim() || 'Player 1',
         faction: p0Faction,
+        secondaryMode: p0SecMode,
+        fixedMissions: p0Fixed,
+        fixedScores: { [p0Fixed[0]]: 0, [p0Fixed[1]]: 0 },
         cp: 1,
         primaryVp: 0,
         secondaryVp: 0,
-        deck: shuffle(allSecondaryIds),
-        activeMissions: [],
+        deck: p0SecMode === 'tactical' ? shuffle(allSecondaryIds) : [],
+        activeMissions: p0SecMode === 'fixed' ? [p0Fixed[0], p0Fixed[1]] : [],
         discardedMissions: [],
         scoredMissions: [],
       },
       {
         name: p1Name.trim() || 'Player 2',
         faction: p1Faction,
+        secondaryMode: p1SecMode,
+        fixedMissions: p1Fixed,
+        fixedScores: { [p1Fixed[0]]: 0, [p1Fixed[1]]: 0 },
         cp: 1,
         primaryVp: 0,
         secondaryVp: 0,
-        deck: shuffle(allSecondaryIds),
-        activeMissions: [],
+        deck: p1SecMode === 'tactical' ? shuffle(allSecondaryIds) : [],
+        activeMissions: p1SecMode === 'fixed' ? [p1Fixed[0], p1Fixed[1]] : [],
         discardedMissions: [],
         scoredMissions: [],
       },
@@ -397,6 +417,77 @@ export function TabletopScreen({ index, onBack }: Props) {
     setUndoStack([]);
     setMode('battle');
     setSubView('player');
+  };
+
+  // Fixed Secondary Scoring (accumulates score on the specific card up to 20 VP, max 40 VP total)
+  const handleScoreFixedCard = (pIdx: 0 | 1, cardId: string, deltaVp: number) => {
+    const cardName = secondaryById(cardId)?.name ?? cardId;
+    recordSnapshot(`${deltaVp > 0 ? '+' : ''}${deltaVp} VP on ${cardName}`);
+    updatePlayer(pIdx, (p) => {
+      const curCardVp = p.fixedScores?.[cardId] ?? 0;
+      const nextCardVp = Math.max(0, Math.min(20, curCardVp + deltaVp));
+      const delta = nextCardVp - curCardVp;
+      const nextTotalVp = Math.max(0, Math.min(40, p.secondaryVp + delta));
+      return {
+        ...p,
+        secondaryVp: nextTotalVp,
+        fixedScores: {
+          ...(p.fixedScores ?? {}),
+          [cardId]: nextCardVp,
+        },
+      };
+    });
+    play('vp');
+  };
+
+  // Switch between Tactical and Fixed dynamically in-game
+  const handleToggleSecondaryMode = (pIdx: 0 | 1, targetMode: 'tactical' | 'fixed') => {
+    recordSnapshot(`Switch secondary mode to ${targetMode}`);
+    updatePlayer(pIdx, (p) => {
+      if (p.secondaryMode === targetMode) return p;
+      if (targetMode === 'fixed') {
+        const m0 = p.fixedMissions?.[0] || 'assassination';
+        const m1 = p.fixedMissions?.[1] || 'bring-it-down';
+        const scores = { ...(p.fixedScores || {}) };
+        if (scores[m0] === undefined) scores[m0] = 0;
+        if (scores[m1] === undefined) scores[m1] = 0;
+        return {
+          ...p,
+          secondaryMode: 'fixed',
+          fixedMissions: [m0, m1],
+          fixedScores: scores,
+          activeMissions: [m0, m1],
+        };
+      } else {
+        let curDeck = p.deck?.length ? [...p.deck] : shuffle(allSecondaryIds);
+        const drawn = curDeck.slice(0, 2);
+        return {
+          ...p,
+          secondaryMode: 'tactical',
+          deck: curDeck.slice(2),
+          activeMissions: drawn,
+        };
+      }
+    });
+    play('tick');
+  };
+
+  // Change Fixed Missions for a player
+  const handleUpdateFixedMissions = (pIdx: 0 | 1, newMissions: [string, string]) => {
+    recordSnapshot(`Change fixed missions to ${newMissions.map((id) => secondaryById(id)?.name).join(', ')}`);
+    updatePlayer(pIdx, (p) => {
+      const nextScores = { ...(p.fixedScores || {}) };
+      if (nextScores[newMissions[0]] === undefined) nextScores[newMissions[0]] = 0;
+      if (nextScores[newMissions[1]] === undefined) nextScores[newMissions[1]] = 0;
+      return {
+        ...p,
+        fixedMissions: newMissions,
+        fixedScores: nextScores,
+        activeMissions: [newMissions[0], newMissions[1]],
+      };
+    });
+    setEditingFixedPlayer(null);
+    play('tick');
   };
 
   // Adjust Command Points (with undo snapshot)
@@ -779,6 +870,64 @@ export function TabletopScreen({ index, onBack }: Props) {
                         ))}
                       </select>
                     </div>
+
+                    {/* Secondary Mission Type Selection */}
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>
+                        Secondary Mission Deck
+                      </label>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          className={`btn ${p0SecMode === 'tactical' ? 'primary' : 'ghost'}`}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          onClick={() => setP0SecMode('tactical')}
+                        >
+                          🎯 Tactical (Deck)
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn ${p0SecMode === 'fixed' ? 'primary' : 'ghost'}`}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          onClick={() => setP0SecMode('fixed')}
+                        >
+                          📌 Fixed (2 Objectives)
+                        </button>
+                      </div>
+
+                      {p0SecMode === 'fixed' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line-2)' }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>Select 2 Fixed Missions:</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                            <select
+                              className="input"
+                              value={p0Fixed[0]}
+                              onChange={(e) => setP0Fixed([e.target.value, p0Fixed[1]])}
+                              style={{ width: '100%', fontSize: 12, padding: '5px 8px', background: 'var(--surface)', color: 'var(--text)' }}
+                            >
+                              {MISSIONS.secondaries.map((s) => (
+                                <option key={s.id} value={s.id} disabled={s.id === p0Fixed[1]}>
+                                  {s.name} {s.fixed ? '⭐' : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              className="input"
+                              value={p0Fixed[1]}
+                              onChange={(e) => setP0Fixed([p0Fixed[0], e.target.value])}
+                              style={{ width: '100%', fontSize: 12, padding: '5px 8px', background: 'var(--surface)', color: 'var(--text)' }}
+                            >
+                              {MISSIONS.secondaries.map((s) => (
+                                <option key={s.id} value={s.id} disabled={s.id === p0Fixed[0]}>
+                                  {s.name} {s.fixed ? '⭐' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="tiny muted">⭐ Marks official standard fixed secondaries. Capped at 20 VP each.</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -813,6 +962,64 @@ export function TabletopScreen({ index, onBack }: Props) {
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Secondary Mission Type Selection */}
+                    <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>
+                        Secondary Mission Deck
+                      </label>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          className={`btn ${p1SecMode === 'tactical' ? 'primary' : 'ghost'}`}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          onClick={() => setP1SecMode('tactical')}
+                        >
+                          🎯 Tactical (Deck)
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn ${p1SecMode === 'fixed' ? 'primary' : 'ghost'}`}
+                          style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700 }}
+                          onClick={() => setP1SecMode('fixed')}
+                        >
+                          📌 Fixed (2 Objectives)
+                        </button>
+                      </div>
+
+                      {p1SecMode === 'fixed' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--line-2)' }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>Select 2 Fixed Missions:</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                            <select
+                              className="input"
+                              value={p1Fixed[0]}
+                              onChange={(e) => setP1Fixed([e.target.value, p1Fixed[1]])}
+                              style={{ width: '100%', fontSize: 12, padding: '5px 8px', background: 'var(--surface)', color: 'var(--text)' }}
+                            >
+                              {MISSIONS.secondaries.map((s) => (
+                                <option key={s.id} value={s.id} disabled={s.id === p1Fixed[1]}>
+                                  {s.name} {s.fixed ? '⭐' : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              className="input"
+                              value={p1Fixed[1]}
+                              onChange={(e) => setP1Fixed([p1Fixed[0], e.target.value])}
+                              style={{ width: '100%', fontSize: 12, padding: '5px 8px', background: 'var(--surface)', color: 'var(--text)' }}
+                            >
+                              {MISSIONS.secondaries.map((s) => (
+                                <option key={s.id} value={s.id} disabled={s.id === p1Fixed[0]}>
+                                  {s.name} {s.fixed ? '⭐' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="tiny muted">⭐ Marks official standard fixed secondaries. Capped at 20 VP each.</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1318,47 +1525,97 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
           </div>
 
-          {/* Section 3: Tactical Secondary Mission Deck */}
+          {/* Section 3: Secondary Missions (Tactical or Fixed) */}
           <div className="card" style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#38bdf8' }}>
-                  SECONDARY MISSIONS · TACTICAL
+                <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeP.secondaryMode === 'fixed' ? '#10b981' : '#38bdf8' }}>
+                  SECONDARY MISSIONS · {activeP.secondaryMode === 'fixed' ? 'FIXED OBJECTIVES' : 'TACTICAL'}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: '0.02em', marginTop: 2 }}>
-                  Tactical Secondaries
+                  {activeP.secondaryMode === 'fixed' ? 'Fixed Objectives' : 'Tactical Secondaries'}
                 </div>
               </div>
 
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div className="tiny muted">SECONDARY VP</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#38bdf8', lineHeight: 1 }}>
-                  {activeP.secondaryVp} <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-3)' }}>/ 40</span>
+              {/* Mode Switcher Pill & VP Total */}
+              <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div style={{ display: 'flex', gap: 3, background: 'var(--surface-2)', padding: 2, borderRadius: 6, border: '1px solid var(--line-2)' }}>
+                  <button
+                    type="button"
+                    className={`btn ${activeP.secondaryMode === 'tactical' ? 'primary' : 'ghost'}`}
+                    style={{ minHeight: 24, fontSize: 10.5, fontWeight: 800, padding: '1px 7px' }}
+                    onClick={() => handleToggleSecondaryMode(activePlayer, 'tactical')}
+                  >
+                    Tactical
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${activeP.secondaryMode === 'fixed' ? 'primary' : 'ghost'}`}
+                    style={{ minHeight: 24, fontSize: 10.5, fontWeight: 800, padding: '1px 7px' }}
+                    onClick={() => handleToggleSecondaryMode(activePlayer, 'fixed')}
+                  >
+                    Fixed
+                  </button>
                 </div>
-                <div className="tiny muted" style={{ marginTop: 2 }}>{activeP.deck.length} in deck</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: activeP.secondaryMode === 'fixed' ? '#10b981' : '#38bdf8', lineHeight: 1, marginTop: 2 }}>
+                  {activeP.secondaryVp} <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)' }}>/ 40</span>
+                </div>
+                <div className="tiny muted">
+                  {activeP.secondaryMode === 'fixed' ? '2 fixed missions' : `${activeP.deck.length} in deck`}
+                </div>
               </div>
             </div>
 
             {/* What to do for Secondary Missions banner */}
-            <div
-              style={{
-                background: 'var(--p0-soft)',
-                border: '1px solid color-mix(in srgb, var(--p0) 25%, transparent)',
-                borderRadius: 8,
-                padding: '10px 12px',
-                fontSize: 12.5,
-                color: 'var(--text)',
-                lineHeight: 1.5,
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 8,
-              }}
-            >
-              <span style={{ color: 'var(--p0)', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={15} /></span>
-              <span><b>How to score Secondary:</b> Draw up to 2 active secondary mission cards. Complete the conditions stated on each card during your turn. When completed, tap the green score button to claim VP. If you need to change cards, tap <b>Redraw</b> or <b>Discard</b> at no CP cost (manage CP points manually above).</span>
-            </div>
+            {activeP.secondaryMode === 'fixed' ? (
+              <div
+                style={{
+                  background: 'rgba(16, 185, 129, 0.10)',
+                  border: '1px solid rgba(16, 185, 129, 0.28)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  fontSize: 12.5,
+                  color: 'var(--text)',
+                  lineHeight: 1.5,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ color: '#10b981', flexShrink: 0, marginTop: 1 }}><Icon name="objective" size={15} /></span>
+                  <span><b>Fixed Objectives:</b> These 2 chosen objectives stay active for the entire battle. Whenever you achieve the conditions, tap the green score button to add VP (capped at 20 VP per card, 40 VP total for secondaries). Fixed cards are never discarded.</span>
+                </div>
+                <button
+                  className="btn ghost"
+                  style={{ fontSize: 11, minHeight: 28, padding: '2px 8px', whiteSpace: 'nowrap', color: '#10b981', flexShrink: 0 }}
+                  onClick={() => setEditingFixedPlayer(activePlayer)}
+                >
+                  <Icon name="gear" size={12} /> Change
+                </button>
+              </div>
+            ) : (
+              <div
+                style={{
+                  background: 'var(--p0-soft)',
+                  border: '1px solid color-mix(in srgb, var(--p0) 25%, transparent)',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  fontSize: 12.5,
+                  color: 'var(--text)',
+                  lineHeight: 1.5,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 8,
+                }}
+              >
+                <span style={{ color: 'var(--p0)', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={15} /></span>
+                <span><b>How to score Secondary:</b> Draw up to 2 active secondary mission cards. Complete the conditions stated on each card during your turn. When completed, tap the green score button to claim VP. If you need to change cards, tap <b>Redraw</b> or <b>Discard</b> at no CP cost (manage CP points manually above).</span>
+              </div>
+            )}
 
-            {activeP.activeMissions.length < 2 && (
+            {activeP.secondaryMode === 'tactical' && activeP.activeMissions.length < 2 && (
               <button
                 className="btn primary"
                 style={{ minHeight: 38, padding: '4px 14px', fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 800 }}
@@ -1415,8 +1672,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                     >
                       {/* Top Header: Category Tag & Status Badge */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ font: '800 11px var(--font-cond)', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#854d0e' }}>
-                          SECONDARY MISSION · TACTICAL
+                        <span style={{ font: '800 11px var(--font-cond)', letterSpacing: '0.12em', textTransform: 'uppercase', color: activeP.secondaryMode === 'fixed' ? '#047857' : '#854d0e' }}>
+                          SECONDARY MISSION · {activeP.secondaryMode === 'fixed' ? 'FIXED OBJECTIVE' : 'TACTICAL'}
                         </span>
                         <span
                           className="sec-status-badge completed"
@@ -1430,7 +1687,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                             borderRadius: 4,
                           }}
                         >
-                          READY TO SCORE
+                          {activeP.secondaryMode === 'fixed' ? 'FIXED OBJECTIVE' : 'READY TO SCORE'}
                         </span>
                       </div>
 
@@ -1450,10 +1707,54 @@ export function TabletopScreen({ index, onBack }: Props) {
                         }}
                       >
                         <span>{card.name}</span>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: '#854d0e', letterSpacing: '0.04em' }}>
-                          MAX 5 VP
+                        <span style={{ fontSize: 13, fontWeight: 800, color: activeP.secondaryMode === 'fixed' ? '#047857' : '#854d0e', letterSpacing: '0.04em' }}>
+                          {activeP.secondaryMode === 'fixed' ? 'MAX 20 VP' : 'MAX 5 VP'}
                         </span>
                       </div>
+
+                      {/* Fixed Card Progress Bar & Stepper */}
+                      {activeP.secondaryMode === 'fixed' && (
+                        <div
+                          style={{
+                            background: '#f5eedc',
+                            border: '1px solid #c8b79b',
+                            borderRadius: 8,
+                            padding: '6px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 10.5, fontWeight: 800, color: '#78350f', textTransform: 'uppercase' }}>
+                              Card VP Scored (Max 20 VP)
+                            </div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: '#1c1917', fontVariantNumeric: 'tabular-nums' }}>
+                              {activeP.fixedScores?.[cardId] ?? 0} <span style={{ fontSize: 12, color: '#78716c' }}>/ 20 VP</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <button
+                              className="btn"
+                              style={{ minWidth: 32, minHeight: 32, padding: 0, fontSize: 13, fontWeight: 800, background: '#fff', borderColor: '#c8b79b', color: '#dc2626' }}
+                              onClick={() => handleScoreFixedCard(activePlayer, cardId, -1)}
+                              disabled={(activeP.fixedScores?.[cardId] ?? 0) <= 0}
+                              title="-1 VP on this card"
+                            >
+                              -1
+                            </button>
+                            <button
+                              className="btn"
+                              style={{ minWidth: 32, minHeight: 32, padding: 0, fontSize: 13, fontWeight: 800, background: '#fff', borderColor: '#c8b79b', color: '#15803d' }}
+                              onClick={() => handleScoreFixedCard(activePlayer, cardId, 1)}
+                              disabled={(activeP.fixedScores?.[cardId] ?? 0) >= 20 || activeP.secondaryVp >= 40}
+                              title="+1 VP on this card"
+                            >
+                              +1
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Timing Banner with Icon */}
                       <div
@@ -1522,7 +1823,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                                   color: '#fff',
                                   boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
                                 }}
-                                onClick={() => handleScoreCard(activePlayer, cardId, preset.vp)}
+                                onClick={() => activeP.secondaryMode === 'fixed' ? handleScoreFixedCard(activePlayer, cardId, preset.vp) : handleScoreCard(activePlayer, cardId, preset.vp)}
+                                disabled={activeP.secondaryMode === 'fixed' ? ((activeP.fixedScores?.[cardId] ?? 0) >= 20 || activeP.secondaryVp >= 40) : false}
                               >
                                 <Icon name="check" size={13} /> {preset.label}
                               </button>
@@ -1531,57 +1833,59 @@ export function TabletopScreen({ index, onBack }: Props) {
                         )}
                       </div>
 
-                      {/* Card Management Footer: Free Discard & Free Redraw (No CP change) */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          gap: 8,
-                          borderTop: '1px solid #d5c8b2',
-                          paddingTop: 8,
-                          marginTop: 4,
-                        }}
-                      >
-                        <button
-                          className="btn ghost"
+                      {/* Card Management Footer: Free Discard & Free Redraw (Only in Tactical Mode) */}
+                      {activeP.secondaryMode === 'tactical' && (
+                        <div
                           style={{
-                            minHeight: 32,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            padding: '2px 14px',
-                            color: '#78716c',
-                            borderColor: '#d5c8b2',
-                            display: 'inline-flex',
+                            display: 'flex',
                             alignItems: 'center',
-                            gap: 5,
+                            justifyContent: 'flex-end',
+                            gap: 8,
+                            borderTop: '1px solid #d5c8b2',
+                            paddingTop: 8,
+                            marginTop: 4,
                           }}
-                          onClick={() => handleDiscardCard(activePlayer, cardId)}
-                          title="Discard this mission card without modifying CP"
                         >
-                          <Icon name="delete" size={14} /> Discard
-                        </button>
+                          <button
+                            className="btn ghost"
+                            style={{
+                              minHeight: 32,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: '2px 14px',
+                              color: '#78716c',
+                              borderColor: '#d5c8b2',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}
+                            onClick={() => handleDiscardCard(activePlayer, cardId)}
+                            title="Discard this mission card without modifying CP"
+                          >
+                            <Icon name="delete" size={14} /> Discard
+                          </button>
 
-                        <button
-                          className="btn"
-                          style={{
-                            minHeight: 32,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            padding: '2px 16px',
-                            background: '#e0f2fe',
-                            color: '#0369a1',
-                            borderColor: '#bae6fd',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                          }}
-                          onClick={() => handleFreeRedraw(activePlayer, cardId)}
-                          title="Redraw: Discard and draw a replacement card without deducting CP"
-                        >
-                          <Icon name="reroll" size={14} /> Redraw
-                        </button>
-                      </div>
+                          <button
+                            className="btn"
+                            style={{
+                              minHeight: 32,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              padding: '2px 16px',
+                              background: '#e0f2fe',
+                              color: '#0369a1',
+                              borderColor: '#bae6fd',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}
+                            onClick={() => handleFreeRedraw(activePlayer, cardId)}
+                            title="Redraw: Discard and draw a replacement card without deducting CP"
+                          >
+                            <Icon name="reroll" size={14} /> Redraw
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1748,6 +2052,8 @@ export function TabletopScreen({ index, onBack }: Props) {
             <div><b>Defender:</b> {attackerPlayer === 0 ? players[1].name : players[0].name}</div>
             <div><b>First Turn (Turn 1):</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
             <div><b>Active Turn:</b> {activeP.name} (Round {round}, Turn {turnInRound + 1}/2)</div>
+            <div><b>{players[0].name} Secondary:</b> {players[0].secondaryMode === 'fixed' ? `Fixed (${players[0].fixedMissions.map((id) => secondaryById(id)?.name).join(', ')})` : 'Tactical (Deck)'}</div>
+            <div><b>{players[1].name} Secondary:</b> {players[1].secondaryMode === 'fixed' ? `Fixed (${players[1].fixedMissions.map((id) => secondaryById(id)?.name).join(', ')})` : 'Tactical (Deck)'}</div>
           </div>
 
           {/* Layout & Map Inspector */}
@@ -1810,6 +2116,72 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
           </div>
         </main>
+      )}
+
+      {/* CHANGE FIXED MISSIONS MODAL */}
+      {editingFixedPlayer !== null && (
+        <div className="sheet-backdrop" onClick={() => setEditingFixedPlayer(null)} role="dialog" aria-modal="true">
+          <div
+            className="sheet-panel"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 440, padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+          >
+            <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+              <b style={{ fontSize: 16 }}>Change Fixed Missions ({players[editingFixedPlayer].name})</b>
+              <button className="icon-btn" onClick={() => setEditingFixedPlayer(null)} aria-label="Close">
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+            <div className="tiny muted">
+              Choose the 2 Fixed Secondary Objectives for this player.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Fixed Mission 1</label>
+                <select
+                  className="input"
+                  value={players[editingFixedPlayer].fixedMissions?.[0] || 'assassination'}
+                  onChange={(e) => {
+                    const m1 = players[editingFixedPlayer].fixedMissions?.[1] || 'bring-it-down';
+                    handleUpdateFixedMissions(editingFixedPlayer, [e.target.value, m1]);
+                  }}
+                  style={{ width: '100%', marginTop: 3, padding: '8px', fontSize: 13, background: 'var(--surface-2)', color: 'var(--text)' }}
+                >
+                  {MISSIONS.secondaries.map((s) => (
+                    <option key={s.id} value={s.id} disabled={s.id === players[editingFixedPlayer].fixedMissions?.[1]}>
+                      {s.name} {s.fixed ? '⭐' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Fixed Mission 2</label>
+                <select
+                  className="input"
+                  value={players[editingFixedPlayer].fixedMissions?.[1] || 'bring-it-down'}
+                  onChange={(e) => {
+                    const m0 = players[editingFixedPlayer].fixedMissions?.[0] || 'assassination';
+                    handleUpdateFixedMissions(editingFixedPlayer, [m0, e.target.value]);
+                  }}
+                  style={{ width: '100%', marginTop: 3, padding: '8px', fontSize: 13, background: 'var(--surface-2)', color: 'var(--text)' }}
+                >
+                  {MISSIONS.secondaries.map((s) => (
+                    <option key={s.id} value={s.id} disabled={s.id === players[editingFixedPlayer].fixedMissions?.[0]}>
+                      {s.name} {s.fixed ? '⭐' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <button
+              className="btn primary"
+              style={{ minHeight: 40, marginTop: 6 }}
+              onClick={() => setEditingFixedPlayer(null)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ZOOM MAP MODAL */}
