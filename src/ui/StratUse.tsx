@@ -182,6 +182,11 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
                       }}
                     >
                       <span className={`side-dot s${u.owner}`} aria-hidden="true" /> {short(u.name)}
+                      {u.enhancements?.length > 0 && (
+                        <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 4, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                          <Icon name="enhancement" size={11} />{u.enhancements.map((e) => e.name).join(' · ')}
+                        </span>
+                      )}
                       {u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
                       {putsInReserves ? ` (${u.pts} pts${overCap ? ' · Full' : ''})` : ''}
                     </button>

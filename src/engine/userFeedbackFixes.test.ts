@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { describe, expect, it } from 'vitest';
 import { canCrossDense, blockingWalls } from './pathing';
 import { weaponFx } from './weaponFx';
@@ -189,5 +190,25 @@ describe('User Feedback Fixes Verification', () => {
     expect(s.units[0].core.infiltrators).toBe(false);
     expect(s.players[0].risenRubricae).toEqual(['term2']);
     expect(s.units[1].core.infiltrators).toBe(true);
+  });
+
+  it('candidate cards and unit pills explicitly display equipped enhancements to tell duplicate units apart', () => {
+    const gameScreenTsx = fs.readFileSync('src/ui/GameScreen.tsx', 'utf8');
+    const stratUseTsx = fs.readFileSync('src/ui/StratUse.tsx', 'utf8');
+
+    // Risen Rubricae candidate cards display sub.enh, icon, No Enhancement fallback, and Bearer badge
+    expect(gameScreenTsx).toContain('risenRubricaeCandidates(s, p).map((c) =>');
+    expect(gameScreenTsx).toContain('const sub = unitSubDetails(c.unit);');
+    expect(gameScreenTsx).toContain('<Icon name="enhancement" size={13} />');
+    expect(gameScreenTsx).toContain('No Enhancement');
+    expect(gameScreenTsx).toContain('Bearer');
+
+    // Unit pill displays enhancement badge when unit has enhancements
+    expect(gameScreenTsx).toContain('u.enhancements?.length > 0 && (');
+    expect(gameScreenTsx).toContain("u.enhancements.map((e) => e.name).join(' · ')");
+
+    // StratUse displays enhancement badge for friendly candidate targets
+    expect(stratUseTsx).toContain('u.enhancements?.length > 0 && (');
+    expect(stratUseTsx).toContain("u.enhancements.map((e) => e.name).join(' · ')");
   });
 });

@@ -1345,6 +1345,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           : <span className={`side-dot s${u.owner}`} aria-hidden="true" />;
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>
+      {u.enhancements?.length > 0 && (
+        <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
+          <Icon name="enhancement" size={11} />{u.enhancements.map((e) => e.name).join(' · ')}
+        </span>
+      )}
       {canMove && <span className="muted" style={{ color: 'var(--accent)', fontWeight: 700 }}> · {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"</span>}
       {u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
@@ -1971,6 +1976,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
               {risenRubricaeCandidates(s, p).map((c) => {
                 const isSel = c.selected;
+                const sub = unitSubDetails(c.unit);
+                const lead = unitLeadModel(c.unit);
                 return (
                   <button
                     key={c.unit.id}
@@ -1979,16 +1986,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     style={{
                       width: '100%',
                       maxWidth: '100%',
-                      minHeight: 44,
-                      padding: '8px 12px',
+                      minHeight: 52,
+                      padding: '10px 12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 8,
+                      gap: 10,
                       whiteSpace: 'normal',
                       textAlign: 'left',
                       boxSizing: 'border-box',
-                      borderRadius: 6,
+                      borderRadius: 8,
                       background: isSel ? 'var(--accent)' : 'var(--surface)',
                       borderColor: isSel ? 'var(--accent)' : 'var(--line-2)',
                       color: isSel ? 'var(--on-fill)' : 'var(--text)',
@@ -1998,13 +2005,86 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                       if (e) flash(e);
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 auto' }}>
-                      <span style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, wordBreak: 'break-word', color: isSel ? 'var(--on-fill)' : 'var(--text)' }}>
-                        {c.unit.name}
-                      </span>
-                      <span className="tiny" style={{ color: isSel ? 'var(--on-fill)' : 'var(--text-3)', opacity: isSel ? 0.85 : 1, marginTop: 2 }}>
-                        {c.kind === 'other' ? 'Terminators' : 'Battleline'} · {alive(c.unit).length} model(s) · {c.unit.pts} pts
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: '1 1 auto' }}>
+                      <Portrait
+                        kind={unitToken(c.unit)}
+                        owner={c.unit.owner}
+                        character={c.unit.models.some((m) => m.isCharacter)}
+                        size={36}
+                        datasheet={unitPortraitDatasheet(c.unit)}
+                        fallback={lead?.source}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13.5, lineHeight: 1.3, wordBreak: 'break-word', color: isSel ? 'var(--on-fill)' : 'var(--text)' }}>
+                            {c.unit.name}
+                          </span>
+                          {c.bearer && (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                padding: '1px 6px',
+                                borderRadius: 4,
+                                background: isSel ? 'rgba(0,0,0,0.3)' : 'var(--accent-soft)',
+                                color: isSel ? 'var(--on-fill)' : 'var(--accent)',
+                                fontSize: 10.5,
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                              }}
+                            >
+                              Bearer
+                            </span>
+                          )}
+                        </div>
+                        <span className="tiny" style={{ color: isSel ? 'var(--on-fill)' : 'var(--text-3)', opacity: isSel ? 0.85 : 1, marginTop: 2 }}>
+                          {c.kind === 'other' ? 'Terminators' : 'Battleline'} · {alive(c.unit).length} model(s) · {c.unit.pts} pts
+                        </span>
+                        {sub.enh ? (
+                          <div
+                            style={{
+                              color: isSel ? 'var(--on-fill)' : 'var(--accent)',
+                              fontWeight: 800,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              marginTop: 3,
+                              fontSize: 12,
+                            }}
+                          >
+                            <Icon name="enhancement" size={13} />
+                            <span>{sub.enh}</span>
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              color: isSel ? 'var(--on-fill)' : 'var(--text-3)',
+                              fontStyle: 'italic',
+                              fontSize: 11.5,
+                              marginTop: 3,
+                              opacity: isSel ? 0.85 : 0.8,
+                            }}
+                          >
+                            No Enhancement
+                          </div>
+                        )}
+                        {sub.weapons && (
+                          <span
+                            className="tiny"
+                            style={{
+                              color: isSel ? 'var(--on-fill)' : 'var(--text-2)',
+                              opacity: isSel ? 0.85 : 0.9,
+                              marginTop: 2,
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-word',
+                            }}
+                          >
+                            {sub.weapons}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {isSel ? (
                       <span
@@ -2013,16 +2093,16 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          padding: '3px 8px',
+                          padding: '4px 9px',
                           borderRadius: 4,
-                          background: 'rgba(0,0,0,0.22)',
+                          background: 'rgba(0,0,0,0.25)',
                           color: 'var(--on-fill)',
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: 800,
                           textTransform: 'uppercase',
                         }}
                       >
-                        <Icon name="check" size={12} /> Infiltrator
+                        <Icon name="check" size={13} /> Infiltrator
                       </span>
                     ) : (
                       <span
@@ -2031,11 +2111,11 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          padding: '3px 8px',
+                          padding: '4px 9px',
                           borderRadius: 4,
                           border: '1px solid var(--line-2)',
                           color: 'var(--text-3)',
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: 600,
                         }}
                       >
@@ -2208,10 +2288,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           <div className="card" style={{ padding: 8, marginBottom: 8 }}>
             <div className="small"><b>Beacon</b> — select the beacon unit (3VP outside your deployment zone, 5VP outside your territory)</div>
             <div className="unit-strip">
-              {beaconCandidates(s, s.active).map((u) => (
-                <button key={u.id} className={`unit-pill ${s.players[s.active].sec.beacon === u.id ? 'sel' : ''}`} aria-pressed={s.players[s.active].sec.beacon === u.id}
-                  onClick={() => { const e = act((g) => setBeacon(g, g.active, u.id)); if (e) flash(e); }}>{u.name}</button>
-              ))}
+              {beaconCandidates(s, s.active).map((u) => {
+                const sub = unitSubDetails(u);
+                return (
+                  <button
+                    key={u.id}
+                    className={`unit-pill ${s.players[s.active].sec.beacon === u.id ? 'sel' : ''}`}
+                    aria-pressed={s.players[s.active].sec.beacon === u.id}
+                    onClick={() => { const e = act((g) => setBeacon(g, g.active, u.id)); if (e) flash(e); }}
+                  >
+                    {u.name}
+                    {sub.enh && (
+                      <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
+                        <Icon name="enhancement" size={11} />{sub.enh}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -2229,6 +2323,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <div className="unit-strip">
                     {opt.candidates.map((u) => {
                       const isAssigned = opt.guardUnitId === u.id;
+                      const sub = unitSubDetails(u);
                       return (
                         <button
                           key={u.id}
@@ -2239,7 +2334,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                             if (e) flash(e);
                           }}
                         >
-                          {u.name} {isAssigned && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4 }}><Icon name="check" size={13} /> (Guarding)</span>}
+                          {u.name}
+                          {sub.enh && (
+                            <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
+                              <Icon name="enhancement" size={11} />{sub.enh}
+                            </span>
+                          )}
+                          {isAssigned && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4 }}><Icon name="check" size={13} /> (Guarding)</span>}
                         </button>
                       );
                     })}
@@ -3891,16 +3992,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                               </div>
                               {!bots.includes(p) && (
                                 <div className="unit-strip" style={{ maxHeight: 90, overflowY: 'auto' }}>
-                                  {beaconCandidates(s, p, true).map((u) => (
-                                    <button
-                                      key={u.id}
-                                      className={`unit-pill ${P.sec.beacon === u.id ? 'sel' : ''}`}
-                                      style={{ minHeight: 32, fontSize: 12, padding: '2px 8px' }}
-                                      onClick={() => { const e = act((g) => setBeacon(g, p, u.id, true)); if (e) flash(e); }}
-                                    >
-                                      {u.name}
-                                    </button>
-                                  ))}
+                                  {beaconCandidates(s, p, true).map((u) => {
+                                    const sub = unitSubDetails(u);
+                                    return (
+                                      <button
+                                        key={u.id}
+                                        className={`unit-pill ${P.sec.beacon === u.id ? 'sel' : ''}`}
+                                        style={{ minHeight: 32, fontSize: 12, padding: '2px 8px' }}
+                                        onClick={() => { const e = act((g) => setBeacon(g, p, u.id, true)); if (e) flash(e); }}
+                                      >
+                                        {u.name}
+                                        {sub.enh && (
+                                          <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
+                                            <Icon name="enhancement" size={11} />{sub.enh}
+                                          </span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -3921,6 +4030,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                       <div className="unit-strip" style={{ marginTop: 2 }}>
                                         {opt.candidates.map((u) => {
                                           const isAssigned = opt.guardUnitId === u.id;
+                                          const sub = unitSubDetails(u);
                                           return (
                                             <button
                                               key={u.id}
@@ -3931,7 +4041,13 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                                 if (e) flash(e);
                                               }}
                                             >
-                                              {u.name} {isAssigned && <Icon name="check" size={12} style={{ marginLeft: 4, verticalAlign: -1 }} />}
+                                              {u.name}
+                                              {sub.enh && (
+                                                <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
+                                                  <Icon name="enhancement" size={11} />{sub.enh}
+                                                </span>
+                                              )}
+                                              {isAssigned && <Icon name="check" size={12} style={{ marginLeft: 4, verticalAlign: -1 }} />}
                                             </button>
                                           );
                                         })}
