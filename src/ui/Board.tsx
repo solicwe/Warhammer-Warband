@@ -451,7 +451,7 @@ const ModelToken = memo(function ModelToken({
   return (
     prev.p.x === next.p.x &&
     prev.p.y === next.p.y &&
-    // a hull turned in place (the ↺ ↻ buttons) moves nowhere, so its facing must be compared too
+    // a hull turned in place (the turn/pivot buttons) moves nowhere, so its facing must be compared too
     prev.m.rot === next.m.rot &&
     prev.disp.wounds === next.disp.wounds &&
     prev.disp.low === next.disp.low &&

@@ -815,8 +815,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button className="btn ghost" style={{ minHeight: 46, flex: 1 }} onClick={() => setSetupStep(1)}>
-                  ← ย้อนกลับไปเลือกแมพ
+                <button className="btn ghost" style={{ minHeight: 46, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setSetupStep(1)}>
+                  <Icon name="back" size={14} /> ย้อนกลับไปเลือกแมพ
                 </button>
                 <button
                   className="btn primary grow"
@@ -972,8 +972,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn ghost" style={{ minHeight: 48, flex: 1 }} onClick={() => setSetupStep(2)}>
-                  ← Back to Players
+                <button className="btn ghost" style={{ minHeight: 48, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => setSetupStep(2)}>
+                  <Icon name="back" size={14} /> Back to Players
                 </button>
                 <button
                   className="btn primary grow"
@@ -1018,13 +1018,13 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button
                   className="btn primary grow"
-                  style={{ minHeight: 40, fontSize: 13, fontWeight: 700 }}
+                  style={{ minHeight: 40, fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   onClick={() => {
                     setSelectedLayoutId(inspectLayout.id);
                     setInspectLayout(null);
                   }}
                 >
-                  ✓ Select Layout {inspectLayout.number}
+                  <Icon name="check" size={14} /> Select Layout {inspectLayout.number}
                 </button>
                 <button className="btn ghost" style={{ minHeight: 40 }} onClick={() => setInspectLayout(null)}>
                   Close
@@ -1077,7 +1077,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               onClick={handleUndo}
               title={`Undo last action: ${undoStack[undoStack.length - 1].actionDesc}`}
             >
-              <Icon name="back" size={14} /> ↩️ ย้อนกลับ
+              <Icon name="back" size={14} /> ย้อนกลับ
             </button>
           )}
 
@@ -1248,8 +1248,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>
-                          ⏱ {roundLabel} · {whenLabel}
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="wait" size={12} /> {roundLabel} · {whenLabel}
                         </span>
                         <span style={{ fontSize: 12.5, fontWeight: 800, color: '#10b981' }}>
                           +{r.vp} VP
@@ -1257,8 +1257,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                       </div>
                       <div style={{ color: 'var(--text)' }}>{r.text}</div>
                       {r.bonusText && (
-                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 2 }}>
-                          ⭐ <i>Bonus:</i> {r.bonusText} {r.bonus?.vp ? `(+${r.bonus.vp} VP)` : ''}
+                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="star" size={12} /> <i>Bonus:</i></span> {r.bonusText} {r.bonus?.vp ? `(+${r.bonus.vp} VP)` : ''}
                         </div>
                       )}
                     </div>
@@ -1360,9 +1360,13 @@ export function TabletopScreen({ index, onBack }: Props) {
                 fontSize: 12,
                 color: '#e0f2fe',
                 lineHeight: 1.45,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 6,
               }}
             >
-              💡 <b>สิ่งที่ต้องทำ (How to score Secondary):</b> จั่วการ์ดทำภารกิจบนมือ (สูงสุด 2 ใบ) ทำตามเงื่อนไขที่ระบุบนการ์ดแต่ละใบในเทิร์นของคุณ เมื่อทำสำเร็จให้กดปุ่มเคลมแต้ม VP สีเขียว หากต้องการเปลี่ยนการ์ดสามารถกด <b>Redraw</b> หรือ <b>Discard</b> โดยไม่เสีย CP (จัดการแต้ม CP ด้านบนด้วยตนเอง)
+              <span style={{ color: '#38bdf8', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={14} /></span>
+              <span><b>สิ่งที่ต้องทำ (How to score Secondary):</b> จั่วการ์ดทำภารกิจบนมือ (สูงสุด 2 ใบ) ทำตามเงื่อนไขที่ระบุบนการ์ดแต่ละใบในเทิร์นของคุณ เมื่อทำสำเร็จให้กดปุ่มเคลมแต้ม VP สีเขียว หากต้องการเปลี่ยนการ์ดสามารถกด <b>Redraw</b> หรือ <b>Discard</b> โดยไม่เสีย CP (จัดการแต้ม CP ด้านบนด้วยตนเอง)</span>
             </div>
 
             {activeP.activeMissions.length < 2 && (
@@ -1486,8 +1490,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                           color: '#292524',
                         }}
                       >
-                        <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase' }}>
-                          🎯 เงื่อนไขภารกิจ (Requirement):
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <Icon name="objective" size={13} /> เงื่อนไขภารกิจ (Requirement):
                         </div>
                         {card.text}
                       </div>
@@ -1605,11 +1609,14 @@ export function TabletopScreen({ index, onBack }: Props) {
                   fontWeight: 700,
                   color: '#f87171',
                   borderColor: 'rgba(239, 68, 68, 0.35)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
                 }}
                 onClick={handleUndo}
                 title="Undo last action if tapped by mistake"
               >
-                ↩️ ย้อนกลับ
+                <Icon name="back" size={14} /> ย้อนกลับ
               </button>
             )}
             <button
@@ -1707,11 +1714,11 @@ export function TabletopScreen({ index, onBack }: Props) {
                       <span>{secondaryById(id)?.name ?? id}</span>
                       <button
                         className="btn ghost"
-                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171' }}
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(0, id, 5)}
                         title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
                       >
-                        ↺ คืนการ์ด
+                        <Icon name="reroll" size={11} /> คืนการ์ด
                       </button>
                     </div>
                   ))
@@ -1729,11 +1736,11 @@ export function TabletopScreen({ index, onBack }: Props) {
                       <span>{secondaryById(id)?.name ?? id}</span>
                       <button
                         className="btn ghost"
-                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171' }}
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(1, id, 5)}
                         title="ดึงการ์ดนี้กลับสู่มือและลบคะแนนหากกดทำคะแนนผิด"
                       >
-                        ↺ คืนการ์ด
+                        <Icon name="reroll" size={11} /> คืนการ์ด
                       </button>
                     </div>
                   ))
@@ -1790,15 +1797,15 @@ export function TabletopScreen({ index, onBack }: Props) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 className="btn"
-                style={{ flex: 1, minHeight: 42, fontSize: 13 }}
+                style={{ flex: 1, minHeight: 42, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={handleFinishAndSave}
                 disabled={savedSuccess}
               >
-                💾 จบเกมและบันทึกประวัติ
+                <Icon name="save" size={14} /> จบเกมและบันทึกประวัติ
               </button>
               <button
                 className="btn ghost"
-                style={{ flex: 1, minHeight: 42, fontSize: 13 }}
+                style={{ flex: 1, minHeight: 42, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => {
                   if (confirm('ต้องการย้อนกลับไปแก้ไขการตั้งค่าแมตช์ (Setup) หรือไม่?')) {
                     setMode('setup');
@@ -1806,7 +1813,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   }
                 }}
               >
-                ⚙️ แก้ไขการตั้งค่าแมตช์
+                <Icon name="gear" size={14} /> แก้ไขการตั้งค่าแมตช์
               </button>
             </div>
           </div>

@@ -924,8 +924,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
   };
   const turnButtons = () => modeUnit && alive(modeUnit).some((m) => m.hl) ? (
     <>
-      <button className="btn small" title="Turn 45° counter-clockwise" onClick={() => turnDraft(-Math.PI / 4)}>↺</button>
-      <button className="btn small" title="Turn 45° clockwise" onClick={() => turnDraft(Math.PI / 4)}>↻</button>
+      <button className="btn small" title="Turn 45° counter-clockwise" onClick={() => turnDraft(-Math.PI / 4)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCcw" size={14} /></button>
+      <button className="btn small" title="Turn 45° clockwise" onClick={() => turnDraft(Math.PI / 4)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCw" size={14} /></button>
     </>
   ) : null;
   /** The furthest every model of the moving unit may go. */
@@ -2393,8 +2393,8 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
                 {alive(u).some((m) => m.hl) && (
                   <>
-                    <button className="btn small" title="Pivot counter-clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, -Math.PI / 4)); if (res?.reason) flash(res.reason); }}>↺ −45°</button>
-                    <button className="btn small" title="Pivot clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, Math.PI / 4)); if (res?.reason) flash(res.reason); }}>↻ +45°</button>
+                    <button className="btn small" title="Pivot counter-clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, -Math.PI / 4)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCcw" size={13} /> −45°</button>
+                    <button className="btn small" title="Pivot clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, Math.PI / 4)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCw" size={13} /> +45°</button>
                   </>
                 )}
               </div>

@@ -3109,6 +3109,8 @@ select option {
   background: rgba(74, 144, 226, 0.08);
   color: #ffffff;
 }
+.mode-btn-sub:focus { outline: none; }
+.mode-btn-sub:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mode-btn-sub:active { transform: translateY(1px); }
 .mode-btn-sub .icon { color: var(--accent); flex-shrink: 0; }
 .mode-sub-info { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; min-width: 0; }

@@ -85,6 +85,11 @@ const ICONS = {
   tabletop: <><rect {...S} x="3" y="4" width="18" height="16" rx="2.5" /><path {...S} d="M3 9.5h18" /><path {...S} d="M9.5 9.5v10.5" /><circle {...F} cx="6.2" cy="6.8" r="1.2" /><circle {...F} cx="14.5" cy="14.5" r="1.5" /><circle {...F} cx="17.5" cy="14.5" r="1.5" /></>,
   arcane: <><circle {...S} cx="12" cy="12" r="9" /><path {...S} d="M12 3a9 9 0 0 1 0 18" strokeDasharray="3 3" /><circle {...S} cx="12" cy="12" r="4.5" /><circle {...F} cx="12" cy="12" r="1.6" /></>,
   map: <><polygon {...S} points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line {...S} x1="9" y1="3" x2="9" y2="18" /><line {...S} x1="15" y1="6" x2="15" y2="21" /></>,
+  star: <polygon {...S} points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+  info: <><circle {...S} cx="12" cy="12" r="9" /><line {...S} x1="12" y1="8" x2="12" y2="8.01" /><line {...S} x1="12" y1="11" x2="12" y2="16" /></>,
+  save: <><path {...S} d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline {...S} points="17 21 17 13 7 13 7 21" /><polyline {...S} points="7 3 7 8 15 8" /></>,
+  rotateCcw: <><path {...S} d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path {...S} d="M3 3v5h5" /></>,
+  rotateCw: <><path {...S} d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path {...S} d="M21 3v5h-5" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;
