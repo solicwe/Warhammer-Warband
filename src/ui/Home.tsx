@@ -7,6 +7,7 @@ import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
 import { useFactions, type FactionIndex } from './data';
 import { Icon, Logo } from './Icon';
+import { ThemeToggle } from './ThemeToggle';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
 
@@ -56,9 +57,12 @@ export function Home({
 
   return (
     <div className="app home">
-      <header className="appbar">
+      <header className="appbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span className="brand"><Logo size={30} />Warhammer Warband</span>
-        <span className="appbar-note">11th edition</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ThemeToggle />
+          <span className="appbar-note">11th edition</span>
+        </div>
       </header>
       <main className="screen">
         {live && (

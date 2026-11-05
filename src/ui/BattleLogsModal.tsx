@@ -97,7 +97,7 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
         {/* Header */}
         <div className="sheet-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--line-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: 6, borderRadius: 8, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+            <div style={{ padding: 6, borderRadius: 8, background: 'var(--accent-soft)', color: 'var(--accent)' }}>
               <Icon name="history" size={22} />
             </div>
             <div>
@@ -165,7 +165,7 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
                     border: '1px solid var(--line-2)',
                     background: 'var(--surface)',
                     borderRadius: 8,
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                    boxShadow: 'var(--card-shadow)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
@@ -212,7 +212,7 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <div style={{ fontWeight: isP0Win ? 800 : 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, color: isP0Win ? 'var(--text)' : 'var(--text-2)' }}>
                         {p0?.name ?? 'Player 1'}
-                        {isP0Win && <Icon name="trophy" size={14} style={{ color: '#fbbf24', flexShrink: 0 }} />}
+                        {isP0Win && <Icon name="trophy" size={14} style={{ color: 'var(--accent)', flexShrink: 0 }} />}
                       </div>
                       {p0?.faction && <span className="muted" style={{ fontSize: 11 }}>{p0.faction}</span>}
                     </div>
@@ -225,7 +225,7 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <div style={{ fontWeight: isP1Win ? 800 : 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, color: isP1Win ? 'var(--text)' : 'var(--text-2)' }}>
-                        {isP1Win && <Icon name="trophy" size={14} style={{ color: '#fbbf24', flexShrink: 0 }} />}
+                        {isP1Win && <Icon name="trophy" size={14} style={{ color: 'var(--accent)', flexShrink: 0 }} />}
                         {p1?.name ?? 'Player 2'}
                       </div>
                       {p1?.faction && <span className="muted" style={{ fontSize: 11 }}>{p1.faction}</span>}

@@ -90,6 +90,8 @@ const ICONS = {
   save: <><path {...S} d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline {...S} points="17 21 17 13 7 13 7 21" /><polyline {...S} points="7 3 7 8 15 8" /></>,
   rotateCcw: <><path {...S} d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path {...S} d="M3 3v5h5" /></>,
   rotateCw: <><path {...S} d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path {...S} d="M21 3v5h-5" /></>,
+  sun: <><circle {...S} cx="12" cy="12" r="4.5" /><path {...S} d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></>,
+  moon: <path {...S} d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof ICONS;

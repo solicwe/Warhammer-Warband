@@ -16,6 +16,7 @@ import { saveBattleLog } from '../services/storage';
 import { Emblem } from './ArmyBuilder';
 import { type FactionIndex } from './data';
 import { Icon } from './Icon';
+import { ThemeToggle } from './ThemeToggle';
 import { LayoutPreview } from './LayoutPreview';
 import { Die } from './RollOverlay';
 import { play } from './sfx';
@@ -592,9 +593,12 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="tiny muted">11th Edition Match Setup</div>
             </div>
           </div>
-          <span className="pill-att" style={{ fontSize: 11, padding: '3px 10px', background: 'rgba(74, 222, 128, 0.2)', color: '#4ade80' }}>
-            Step {setupStep} of 3
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ThemeToggle />
+            <span className="pill-att" style={{ fontSize: 11, padding: '3px 10px', background: 'var(--good-soft)', color: 'var(--good)', border: '1px solid var(--good)' }}>
+              Step {setupStep} of 3
+            </span>
+          </div>
         </header>
 
         {/* Step Indicator */}
@@ -881,7 +885,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   </div>
 
                   {rollResult && (
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#38bdf8', textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', textAlign: 'center' }}>
                       {rollResult.reason}
                     </div>
                   )}
@@ -1059,6 +1063,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
         {/* View Switcher: Active Player vs Overview */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <ThemeToggle />
           {undoStack.length > 0 && (
             <button
               className="btn"
@@ -1124,7 +1129,7 @@ export function TabletopScreen({ index, onBack }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Emblem factionId={activeP.faction} />
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#ffffff', letterSpacing: '0.04em' }}>
+                <div className="tt-player-name">
                   {activeP.name.toUpperCase()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
@@ -1190,15 +1195,15 @@ export function TabletopScreen({ index, onBack }: Props) {
                       fontWeight: 700,
                       padding: '1px 7px',
                       borderRadius: 4,
-                      background: 'rgba(255,255,255,0.08)',
-                      color: dispositionById(activeDisp).color || 'var(--text-2)',
-                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'var(--surface-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--line-2)',
                     }}
                   >
                     {dispositionById(activeDisp).name}
                   </span>
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '0.02em' }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: '0.02em' }}>
                   {activePrimary ? activePrimary.name : 'Primary Mission'}
                 </div>
               </div>
@@ -1214,7 +1219,7 @@ export function TabletopScreen({ index, onBack }: Props) {
             {/* What to do for Primary Objective */}
             <div
               style={{
-                background: 'rgba(0, 0, 0, 0.25)',
+                background: 'var(--surface-2)',
                 border: '1px solid var(--line-2)',
                 borderRadius: 8,
                 padding: '10px 12px',
@@ -1223,7 +1228,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 gap: 8,
               }}
             >
-              <div style={{ fontSize: 11.5, fontWeight: 800, color: '#f59e0b', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Icon name="hold" size={14} /> สิ่งที่ต้องทำ (How to score Primary):
               </div>
 
@@ -1240,7 +1245,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                       key={i}
                       style={{
                         padding: '6px 8px',
-                        background: 'rgba(255, 255, 255, 0.03)',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--line)',
                         borderLeft: '3px solid var(--accent)',
                         borderRadius: '0 6px 6px 0',
                         fontSize: 12.5,
@@ -1257,8 +1263,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                       </div>
                       <div style={{ color: 'var(--text)' }}>{r.text}</div>
                       {r.bonusText && (
-                        <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="star" size={12} /> <i>Bonus:</i></span> {r.bonusText} {r.bonus?.vp ? `(+${r.bonus.vp} VP)` : ''}
+                        <div style={{ fontSize: 11.5, color: 'var(--text-2)', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="star" size={12} /> <i>Bonus:</i></span> {r.bonusText} {r.bonus?.vp ? `(+${r.bonus.vp} VP)` : ''}
                         </div>
                       )}
                     </div>
@@ -1269,12 +1275,13 @@ export function TabletopScreen({ index, onBack }: Props) {
                   <div
                     style={{
                       padding: '6px 8px',
-                      background: 'rgba(56, 189, 248, 0.08)',
-                      borderLeft: '3px solid #38bdf8',
+                      background: 'var(--p0-soft)',
+                      border: '1px solid var(--line)',
+                      borderLeft: '3px solid var(--p0)',
                       borderRadius: '0 6px 6px 0',
                       fontSize: 12,
                       lineHeight: 1.4,
-                      color: '#bae6fd',
+                      color: 'var(--text)',
                     }}
                   >
                     <b>Action: {activeAction.name}</b> (Starts: {activeAction.starts} phase) — {activeAction.text}
@@ -1289,37 +1296,19 @@ export function TabletopScreen({ index, onBack }: Props) {
                 บันทึกแต้ม Primary (Adjust Score):
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                {[2, 3, 4, 5].map((vp) => (
+                  <button
+                    key={vp}
+                    className="btn"
+                    style={{ minHeight: 38, fontSize: 13, fontWeight: 700, padding: 2, background: 'var(--surface-2)', borderColor: 'var(--line-2)', color: 'var(--text)' }}
+                    onClick={() => handleAdjustPrimaryVp(activePlayer, vp)}
+                  >
+                    +{vp} VP
+                  </button>
+                ))}
                 <button
                   className="btn"
-                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
-                  onClick={() => handleAdjustPrimaryVp(activePlayer, 2)}
-                >
-                  +2 VP
-                </button>
-                <button
-                  className="btn"
-                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
-                  onClick={() => handleAdjustPrimaryVp(activePlayer, 3)}
-                >
-                  +3 VP
-                </button>
-                <button
-                  className="btn"
-                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
-                  onClick={() => handleAdjustPrimaryVp(activePlayer, 4)}
-                >
-                  +4 VP
-                </button>
-                <button
-                  className="btn"
-                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2 }}
-                  onClick={() => handleAdjustPrimaryVp(activePlayer, 5)}
-                >
-                  +5 VP
-                </button>
-                <button
-                  className="btn ghost"
-                  style={{ minHeight: 34, fontSize: 12, fontWeight: 700, padding: 2, color: 'var(--err)', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                  style={{ minHeight: 38, fontSize: 13, fontWeight: 700, padding: 2, color: 'var(--bad)', borderColor: 'color-mix(in srgb, var(--bad) 30%, transparent)', background: 'var(--bad-soft)' }}
                   onClick={() => handleAdjustPrimaryVp(activePlayer, -1)}
                   title="ลด 1 แต้ม"
                 >
@@ -1336,7 +1325,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#38bdf8' }}>
                   SECONDARY MISSIONS · TACTICAL
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', letterSpacing: '0.02em', marginTop: 2 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: '0.02em', marginTop: 2 }}>
                   ภารกิจรอง (Tactical Secondaries)
                 </div>
               </div>
@@ -1353,19 +1342,19 @@ export function TabletopScreen({ index, onBack }: Props) {
             {/* What to do for Secondary Missions banner */}
             <div
               style={{
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
+                background: 'var(--p0-soft)',
+                border: '1px solid color-mix(in srgb, var(--p0) 25%, transparent)',
                 borderRadius: 8,
-                padding: '8px 12px',
-                fontSize: 12,
-                color: '#e0f2fe',
-                lineHeight: 1.45,
+                padding: '10px 12px',
+                fontSize: 12.5,
+                color: 'var(--text)',
+                lineHeight: 1.5,
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 6,
+                gap: 8,
               }}
             >
-              <span style={{ color: '#38bdf8', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={14} /></span>
+              <span style={{ color: 'var(--p0)', flexShrink: 0, marginTop: 1 }}><Icon name="info" size={15} /></span>
               <span><b>สิ่งที่ต้องทำ (How to score Secondary):</b> จั่วการ์ดทำภารกิจบนมือ (สูงสุด 2 ใบ) ทำตามเงื่อนไขที่ระบุบนการ์ดแต่ละใบในเทิร์นของคุณ เมื่อทำสำเร็จให้กดปุ่มเคลมแต้ม VP สีเขียว หากต้องการเปลี่ยนการ์ดสามารถกด <b>Redraw</b> หรือ <b>Discard</b> โดยไม่เสีย CP (จัดการแต้ม CP ด้านบนด้วยตนเอง)</span>
             </div>
 
@@ -1386,7 +1375,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{
                   padding: '24px 16px',
                   textAlign: 'center',
-                  background: 'rgba(0,0,0,0.18)',
+                  background: 'var(--surface-2)',
                   borderRadius: 8,
                   border: '1px dashed var(--line-2)',
                   color: 'var(--text-3)',
@@ -1481,13 +1470,13 @@ export function TabletopScreen({ index, onBack }: Props) {
                       {/* Card Text Body (Parchment Inset) - Explains What To Do */}
                       <div
                         style={{
-                          background: 'rgba(0, 0, 0, 0.035)',
-                          border: '1px dashed rgba(180, 160, 130, 0.75)',
+                          background: 'var(--surface-2)',
+                          border: '1px dashed var(--line-2)',
                           borderRadius: 6,
                           padding: '10px 12px',
                           fontSize: 13,
                           lineHeight: 1.45,
-                          color: '#292524',
+                          color: 'var(--text)',
                         }}
                       >
                         <div style={{ fontSize: 11, fontWeight: 800, color: '#78350f', marginBottom: 4, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>

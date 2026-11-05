@@ -129,4 +129,19 @@ describe('User Feedback Fixes Verification', () => {
     expect(s.players[0].secActive).toContain('no-prisoners');
     expect(s.players[0].cp).toBe(2);
   });
+
+  it('Theme manager properly stores and applies light and dark themes', async () => {
+    const { applyTheme, getEffectiveTheme, getStoredTheme } = await import('../ui/theme');
+
+    applyTheme('light');
+    expect(getStoredTheme()).toBe('light');
+    expect(getEffectiveTheme('light')).toBe('light');
+
+    applyTheme('dark');
+    expect(getStoredTheme()).toBe('dark');
+    expect(getEffectiveTheme('dark')).toBe('dark');
+
+    applyTheme('auto');
+    expect(getStoredTheme()).toBe('auto');
+  });
 });

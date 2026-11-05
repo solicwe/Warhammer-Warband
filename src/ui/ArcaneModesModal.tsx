@@ -39,7 +39,7 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
         {/* Modal Header */}
         <div className="sheet-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--line-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: 6, borderRadius: 8, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+            <div style={{ padding: 6, borderRadius: 8, background: 'var(--accent-soft)', color: 'var(--accent)' }}>
               <Icon name="arcane" size={24} />
             </div>
             <div>
@@ -86,22 +86,22 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
               style={{
                 padding: '16px',
                 border: '1.5px solid var(--accent)',
-                background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.12) 0%, rgba(20, 28, 40, 0.95) 100%)',
+                background: 'var(--surface)',
                 borderRadius: 10,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 10,
-                boxShadow: '0 4px 18px rgba(0, 0, 0, 0.35)',
+                boxShadow: 'var(--card-shadow)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ padding: 8, borderRadius: 8, background: 'rgba(74, 144, 226, 0.25)', color: 'var(--accent)' }}>
+                  <div style={{ padding: 8, borderRadius: 8, background: 'var(--accent-soft)', color: 'var(--accent)' }}>
                     <Icon name="trophy" size={24} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <b style={{ fontSize: 17, color: '#ffffff' }}>Demo Roguelike Campaign</b>
+                      <b style={{ fontSize: 17, color: 'var(--text)' }}>Demo Roguelike Campaign</b>
                       <span className="pill-att" style={{ fontSize: 10, padding: '2px 6px', background: 'var(--accent)', color: '#090d16', fontWeight: 800 }}>FEATURED</span>
                     </div>
                     <div className="tiny muted">Sector map · Unit drafts · Ancient relics · Escalating threats</div>
@@ -109,7 +109,7 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
                 </div>
 
                 {run && !run.over && (
-                  <span className="pill-att" style={{ fontSize: 11, padding: '3px 8px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)' }}>
+                  <span className="pill-att" style={{ fontSize: 11, padding: '3px 8px', background: 'var(--p0-soft)', color: 'var(--p0)', border: '1px solid var(--p0)' }}>
                     Stage {Math.min(runLayer + 1, runLayers)} of {runLayers}
                   </span>
                 )}
@@ -170,13 +170,13 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ padding: 7, borderRadius: 8, background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24' }}>
+                  <div style={{ padding: 7, borderRadius: 8, background: 'var(--warn-soft)', color: 'var(--warn)' }}>
                     <Icon name="swords" size={20} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <b style={{ fontSize: 15 }}>Escalation League</b>
-                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24' }}>SERIES</span>
+                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'var(--warn-soft)', color: 'var(--warn)' }}>SERIES</span>
                     </div>
                     <div className="tiny muted">3-match progressive skirmish (500 → 1000 → 2000 pts)</div>
                   </div>
@@ -216,13 +216,13 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ padding: 7, borderRadius: 8, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+                  <div style={{ padding: 7, borderRadius: 8, background: 'var(--bad-soft)', color: 'var(--bad)' }}>
                     <Icon name="skull" size={20} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <b style={{ fontSize: 15 }}>Last Stand: Horde Invasion</b>
-                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>WAVE DEFENSE</span>
+                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'var(--bad-soft)', color: 'var(--bad)' }}>WAVE DEFENSE</span>
                     </div>
                     <div className="tiny muted">Infinite alien swarms · Perimeter defense</div>
                   </div>
@@ -262,13 +262,13 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ padding: 7, borderRadius: 8, background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}>
+                  <div style={{ padding: 7, borderRadius: 8, background: 'var(--accent-soft)', color: 'var(--accent)' }}>
                     <Icon name="sparkles" size={20} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <b style={{ fontSize: 15 }}>Relic Hunt: Archeotech Extraction</b>
-                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }}>NARRATIVE</span>
+                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'var(--accent-soft)', color: 'var(--accent)' }}>NARRATIVE</span>
                     </div>
                     <div className="tiny muted">Recover archeotech before orbital bombardment</div>
                   </div>
@@ -308,13 +308,13 @@ export function ArcaneModesModal({ onClose, onCampaign, onBattle }: Props) {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ padding: 7, borderRadius: 8, background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' }}>
+                  <div style={{ padding: 7, borderRadius: 8, background: 'var(--good-soft)', color: 'var(--good)' }}>
                     <Icon name="target" size={20} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <b style={{ fontSize: 15 }}>Apex Colossus: Boss Raid</b>
-                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80' }}>ASYMMETRIC</span>
+                      <span className="pill-att" style={{ fontSize: 10, padding: '1px 6px', background: 'var(--good-soft)', color: 'var(--good)' }}>ASYMMETRIC</span>
                     </div>
                     <div className="tiny muted">Elite strike team vs Colossal Apex Monster</div>
                   </div>
