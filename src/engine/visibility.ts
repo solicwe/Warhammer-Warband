@@ -223,7 +223,8 @@ function connectedMapOf(s: GameState): Map<TerrainPiece, ConnectedTerrain> {
   return map;
 }
 
-function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
+/** True if model m itself stands in terrain t (no unit expansion). */
+function modelStandsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
   if (modelInPiece(m, t)) return true;
   const conn = connectedMapOf(s).get(t);
   if (!conn || (!conn.sisters.length && !conn.bridges.length)) return false;
@@ -236,6 +237,21 @@ function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
     if (pointInPoly(m, br.poly) || bodyTouchesPoly(m, 0, br.poly)) return true;
   }
   return false;
+}
+
+/**
+ * 10th Ed core: a UNIT is "within" a terrain feature if ANY model in the unit is within it.
+ * If any living model of m's unit touches the footprint of t, the entire unit is treated
+ * as standing in t for LoS -- the terrain does not block sight from/to any model in that unit.
+ * Physical walls still block normally.
+ */
+function standsIn(s: GameState, m: ModelState, t: TerrainPiece): boolean {
+  // Fast path: the model itself is in the piece.
+  if (modelStandsIn(s, m, t)) return true;
+  // Unit-aware path: if any living sibling stands in t, the whole unit counts.
+  const unit = s.units.find((u) => u.models.some((md) => md.id === m.id));
+  if (!unit) return false;
+  return alive(unit).some((n) => n.id !== m.id && modelStandsIn(s, n, t));
 }
 
 function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false): Blockers {
