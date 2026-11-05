@@ -144,4 +144,50 @@ describe('User Feedback Fixes Verification', () => {
     applyTheme('auto');
     expect(getStoredTheme()).toBe('auto');
   });
+
+  it('Risen Rubricae candidates exclude units in reserves and sync properly', async () => {
+    const { risenRubricaeCandidates, syncRisenRubricaeWithReserves } = await import('../factions/thousandSons');
+
+    const s = {
+      log: [],
+      players: [
+        {
+          name: 'TS Player',
+          factionId: 'TS',
+          risenRubricae: ['term1'],
+        },
+      ],
+      units: [
+        {
+          id: 'term1',
+          name: 'Terminators 1',
+          owner: 0,
+          status: 'reserves', // Sent to reserves
+          pts: 200,
+          keywords: ['TERMINATOR', 'RUBRICAE'],
+          core: { infiltrators: true },
+          enhancements: [{ name: 'Risen Rubricae' }],
+        },
+        {
+          id: 'term2',
+          name: 'Terminators 2',
+          owner: 0,
+          status: 'pending', // Available to deploy on board
+          pts: 200,
+          keywords: ['TERMINATOR', 'RUBRICAE'],
+          core: { infiltrators: false },
+        },
+      ],
+    } as unknown as GameState;
+
+    // Unit in reserves should NOT be a candidate
+    const candsBefore = risenRubricaeCandidates(s, 0);
+    expect(candsBefore.map((c) => c.unit.id)).toEqual(['term2']);
+
+    // Syncing with reserves should remove term1 and update infiltrators
+    syncRisenRubricaeWithReserves(s, 0);
+    expect(s.units[0].core.infiltrators).toBe(false);
+    expect(s.players[0].risenRubricae).toEqual(['term2']);
+    expect(s.units[1].core.infiltrators).toBe(true);
+  });
 });

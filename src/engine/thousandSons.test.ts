@@ -391,4 +391,43 @@ describe('Risen Rubricae enhancement', () => {
       'Risen Rubricae can only select 1 Terminator/other Rubricae unit, or up to 2 Rubricae Battleline units'
     );
   });
+
+  it('synchronizes Risen Rubricae with Reserves, excluding units sent to reserves', async () => {
+    const { declareReserves, risenRubricaeCandidates } = await import('./game');
+    const s = game([
+      ['Scarab Occult Terminators', 5, 180],
+      ['Sorcerer In Terminator Armour', 1, 105, 'x0', { enhancement: 'Risen Rubricae' }],
+      ['Scarab Occult Terminators', 5, 180],
+      ['Rubric Marines', 5, 100],
+      ['Rubric Marines', 5, 100],
+      ['Mutalith Vortex Beast', 1, 165],
+      ['Chaos Spawn', 2, 65],
+      ['Sorcerer', 1, 95],
+    ], [['Boyz', 10, 90]], 'Rubricae Phalanx');
+
+    // All units start as 'pending'
+    s.units.forEach((u) => { u.status = 'pending'; });
+
+    const termWithEnhancement = s.units.find((u) => u.sources.includes('Sorcerer In Terminator Armour'))!;
+    const otherTerm = s.units.find((u) => u.sources.includes('Scarab Occult Terminators') && u.id !== termWithEnhancement.id)!;
+    const rubric = s.units.find((u) => u.sources.includes('Rubric Marines'))!;
+
+    // Initial state: bearer unit (termWithEnhancement) is auto-selected for Infiltrators
+    expect(termWithEnhancement.core.infiltrators).toBe(true);
+
+    // Send the bearer unit to reserves (285 pts < 495 pts cap)
+    const err = declareReserves(s, 0, [termWithEnhancement.id]);
+    expect(err).toBeNull();
+
+    expect(termWithEnhancement.status).toBe('reserves');
+    // Infiltrators is cleared from unit sent to reserves
+    expect(termWithEnhancement.core.infiltrators).toBe(false);
+
+    // Only non-reserve units appear as candidates
+    const cands = risenRubricaeCandidates(s, 0);
+    const candIds = cands.map((c) => c.unit.id);
+    expect(candIds).not.toContain(termWithEnhancement.id);
+    expect(candIds).toContain(otherTerm.id);
+    expect(candIds).toContain(rubric.id);
+  });
 });

@@ -1868,7 +1868,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
     return (
       <>
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
-        {hasRisenRubricae(s, p) && (
+        {hasRisenRubricae(s, p) && risenRubricaeCandidates(s, p).length > 0 && (
           <div className="card" style={{ padding: '8px 10px', marginBottom: 8, border: '1px solid var(--accent)', background: 'rgba(74, 144, 226, 0.08)' }}>
             <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <div className="small">

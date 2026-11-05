@@ -21,7 +21,7 @@ import { isMelee } from './weapons';
 import { endSpotBlocked, isMV, pathBlocked, pathLength, settleMove } from './pathing';
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
-import { autoSelectRisenRubricae, hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, toggleRisenRubricae } from '../factions/thousandSons';
+import { autoSelectRisenRubricae, hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, syncRisenRubricaeWithReserves, toggleRisenRubricae } from '../factions/thousandSons';
 import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
 
 
@@ -525,7 +525,7 @@ setZoneCheck((s, u, owner) => alive(u).length > 0 && alive(u).every((m) => bodyW
 export interface MoveCheck { ok: boolean; errors: string[]; bad: string[] }
 
 export { canCrossDense, isMV, pathLength, settleMove, routeAround } from './pathing';
-export { hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, toggleRisenRubricae };
+export { hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, syncRisenRubricaeWithReserves, toggleRisenRubricae };
 
 function endChecks(s: GameState, u: UnitState, pos: Map<string, Pt>, errors: string[], bad: Set<string>) {
   const W = tableW(s), H = tableH(s);
@@ -964,6 +964,7 @@ export function declareReserves(s: GameState, p: PlayerId, ids: string[]): strin
     log(s, `${u.name} starts in Strategic Reserves${hasDeepStrike(s, u) ? ' (Deep Strike)' : ''}`, 'info', p);
   }
   s.reservesDeclared = [...(s.reservesDeclared ?? []), p];
+  syncRisenRubricaeWithReserves(s, p);
   if (!s.units.some((u) => u.owner === p && u.status === 'pending')) nextDeployer(s);
   return null;
 }
@@ -986,6 +987,7 @@ export function sendToReserves(s: GameState, unitId: string): string | null {
   if (reservesPoints(s, u.owner) + u.pts > armyPoints(s, u.owner) * RULES.reserves.maxPointsFraction) return `Strategic Reserves cannot exceed ${RULES.reserves.maxPointsFraction * 100}% of the army's points`;
   u.status = 'reserves';
   log(s, `${u.name} is in Strategic Reserves${hasDeepStrike(s, u) ? ' (Deep Strike)' : ''}`, 'info', u.owner);
+  syncRisenRubricaeWithReserves(s, u.owner);
   nextDeployer(s);
   return null;
 }

@@ -36,14 +36,14 @@ export function isOtherRubricae(u: UnitState): boolean {
   );
 }
 
-/** Get eligible candidates for Risen Rubricae */
+/** Get eligible candidates for Risen Rubricae (excludes units in Reserves or destroyed) */
 export function risenRubricaeCandidates(s: GameState, p: PlayerId): RisenRubricaeCandidate[] {
   if (!hasRisenRubricae(s, p)) return [];
   const selectedIds = new Set(s.players[p]?.risenRubricae ?? []);
   const bearer = risenRubricaeBearer(s, p);
 
   return s.units
-    .filter((u) => u.owner === p && (isRubricaeBattleline(u) || isOtherRubricae(u)))
+    .filter((u) => u.owner === p && u.status !== 'reserves' && u.status !== 'destroyed' && (isRubricaeBattleline(u) || isOtherRubricae(u)))
     .map((u) => ({
       unit: u,
       kind: isRubricaeBattleline(u) ? ('battleline' as const) : ('other' as const),
@@ -152,4 +152,34 @@ export function autoSelectRisenRubricae(s: GameState, p: PlayerId) {
   }
 
   setRisenRubricae(s, p, initial);
+}
+
+/**
+ * Synchronize Risen Rubricae selection with Reserves:
+ * If any currently selected unit is moved to Reserves, remove it from Risen Rubricae.
+ * If no eligible units remain selected, auto-select from the remaining available candidates.
+ */
+export function syncRisenRubricaeWithReserves(s: GameState, p: PlayerId) {
+  if (!hasRisenRubricae(s, p)) return;
+  const current = s.players[p]?.risenRubricae ?? [];
+  const validCandidates = risenRubricaeCandidates(s, p);
+  const validIds = new Set(validCandidates.map((c) => c.unit.id));
+
+  // Reset infiltrators on units that were selected but are no longer valid (e.g. sent to reserves)
+  for (const id of current) {
+    if (!validIds.has(id)) {
+      const u = s.units.find((x) => x.id === id);
+      if (u) u.core.infiltrators = false;
+    }
+  }
+
+  const remaining = current.filter((id) => validIds.has(id));
+  if (remaining.length > 0) {
+    setRisenRubricae(s, p, remaining);
+  } else if (validCandidates.length > 0) {
+    autoSelectRisenRubricae(s, p);
+  } else {
+    const P = s.players[p];
+    if (P) P.risenRubricae = [];
+  }
 }

@@ -251,11 +251,24 @@ export function MapCam({
           <button
             type="button"
             className="map-cam-hbtn"
+            onClick={() => {
+              if (focus) setCenter(focus);
+              else setCenter({ x: W / 2, y: H / 2 });
+              userPanned.current = false;
+            }}
+            title={focus ? 'Recenter on unit' : 'Recenter map'}
+            aria-label="Recenter map"
+          >
+            <Icon name="crosshair" size={12} />
+          </button>
+          <button
+            type="button"
+            className="map-cam-hbtn"
             onClick={() => setExpanded((v) => !v)}
             title={expanded ? 'Compact view' : 'Enlarge view'}
             aria-label={expanded ? 'Compact view' : 'Enlarge view'}
           >
-            <Icon name={expanded ? 'collapse' : 'expand'} size={13} />
+            <Icon name={expanded ? 'collapse' : 'expand'} size={12} />
           </button>
           <button
             type="button"
@@ -267,7 +280,7 @@ export function MapCam({
             title="Close mirror"
             aria-label="Close mirror"
           >
-            <Icon name="close" size={13} />
+            <Icon name="close" size={12} />
           </button>
         </div>
       </div>
@@ -291,72 +304,6 @@ export function MapCam({
         >
           <use href="#board-live" />
         </svg>
-      </div>
-
-      {/* 3. Dedicated Bottom Zoom Control Bar: Completely separated from the map so zoom taps NEVER conflict with panning */}
-      <div
-        className="map-cam-bar"
-        onPointerDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="map-cam-bar-btn"
-          onClick={() => setZoom((z) => Math.max(1.0, Number((z - 0.5).toFixed(1))))}
-          disabled={zoom <= 1.0}
-          title="Zoom out (−)"
-          aria-label="Zoom out"
-        >
-          <Icon name="minus" size={13} />
-        </button>
-
-        <div className="map-cam-presets" role="radiogroup" aria-label="Zoom presets">
-          {[1, 2, 3, 4].map((lvl) => {
-            const active = Math.round(zoom) === lvl;
-            return (
-              <button
-                key={lvl}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                className={`map-cam-preset-btn ${active ? 'active' : ''}`}
-                onClick={() => {
-                  setZoom(lvl);
-                  userPanned.current = true;
-                }}
-                title={`Zoom ${lvl}×`}
-              >
-                {lvl}×
-              </button>
-            );
-          })}
-        </div>
-
-        <button
-          type="button"
-          className="map-cam-bar-btn"
-          onClick={() => setZoom((z) => Math.min(5.0, Number((z + 0.5).toFixed(1))))}
-          disabled={zoom >= 5.0}
-          title="Zoom in (+)"
-          aria-label="Zoom in"
-        >
-          <Icon name="plus" size={13} />
-        </button>
-
-        <button
-          type="button"
-          className="map-cam-bar-btn target"
-          onClick={() => {
-            if (focus) setCenter(focus);
-            else setCenter({ x: W / 2, y: H / 2 });
-            userPanned.current = false;
-          }}
-          title={focus ? 'Recenter on unit' : 'Recenter map'}
-          aria-label="Recenter map"
-        >
-          <Icon name="crosshair" size={14} />
-        </button>
       </div>
     </div>
   );

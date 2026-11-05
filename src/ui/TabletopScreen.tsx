@@ -1377,13 +1377,15 @@ export function TabletopScreen({ index, onBack }: Props) {
                   textAlign: 'center',
                   background: 'var(--surface-2)',
                   borderRadius: 8,
-                  border: '1px dashed var(--line-2)',
-                  color: 'var(--text-3)',
+                  border: '1.5px dashed var(--line-2)',
+                  color: 'var(--text-2)',
                 }}
               >
-                <Icon name="cards" size={28} style={{ opacity: 0.35, marginBottom: 4 }} />
-                <div style={{ fontSize: 13, fontWeight: 700 }}>ยังไม่มีการ์ด Secondary ในมือ</div>
-                <div className="tiny muted" style={{ marginTop: 2 }}>กด <b>Draw Secondary Mission</b> ด้านบนเพื่อเริ่มจั่วการ์ดประจำเทิร์น</div>
+                <div style={{ color: 'var(--accent)', opacity: 0.75, marginBottom: 6 }}>
+                  <Icon name="cards" size={32} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>ยังไม่มีการ์ด Secondary ในมือ</div>
+                <div className="small muted" style={{ marginTop: 4, color: 'var(--text-2)' }}>กด <b>Draw Secondary Mission</b> ด้านบนเพื่อเริ่มจั่วการ์ดประจำเทิร์น</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1587,7 +1589,7 @@ export function TabletopScreen({ index, onBack }: Props) {
           </div>
 
           {/* TURN PASSING ACTION BUTTON ("พอ อีกฝั่งมา ก็ ค่อย ขึ้นอีกฝั่ง") */}
-          <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', gap: 8 }}>
+          <div style={{ marginTop: 'auto', paddingTop: 8, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 16px))', display: 'flex', gap: 8 }}>
             {undoStack.length > 0 && (
               <button
                 className="btn ghost"
