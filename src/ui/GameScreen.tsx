@@ -1766,7 +1766,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     padding: '8px 10px',
                     borderRadius: 6,
                     border: isSel ? '2px solid var(--accent)' : '1px solid var(--line-2, rgba(255,255,255,0.1))',
-                    background: isSel ? 'rgba(74, 144, 226, 0.12)' : 'var(--surface, rgba(255,255,255,0.03))',
+                    background: isSel ? 'var(--accent-soft)' : 'var(--surface)',
                     cursor: 'pointer',
                   }}
                   onClick={() => {
@@ -1834,7 +1834,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                     <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
                     <span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
                     {isSelected ? (
-                      <span className="reserves-tag sel" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: '#38bdf8', color: '#090d16', fontSize: 11, fontWeight: 800 }}>
+                      <span className="reserves-tag sel" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: 'var(--accent)', color: 'var(--on-fill)', fontSize: 11, fontWeight: 800 }}>
                         <Icon name="check" size={12} /> IN RESERVES
                       </span>
                     ) : (
@@ -1869,12 +1869,24 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
       <>
         <div className="handoff">{pName(s, p)} ({s.players[p].role === 'attacker' ? 'Attacker' : 'Defender'}) deploys: players alternate one unit at a time</div>
         {hasRisenRubricae(s, p) && risenRubricaeCandidates(s, p).length > 0 && (
-          <div className="card" style={{ padding: '8px 10px', marginBottom: 8, border: '1px solid var(--accent)', background: 'rgba(74, 144, 226, 0.08)' }}>
-            <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div className="small">
-                <b>Risen Rubricae (Infiltrators)</b>
+          <div
+            className="card"
+            style={{
+              padding: '10px 12px',
+              marginBottom: 8,
+              border: '1.5px solid var(--accent)',
+              background: 'var(--surface-2)',
+              borderRadius: 8,
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div className="small" style={{ color: 'var(--text)' }}>
+                <b style={{ color: 'var(--accent)' }}>Risen Rubricae (Infiltrators)</b>
               </div>
-              <div className="tiny muted">
+              <div className="tiny" style={{ fontWeight: 700, color: 'var(--text-2)' }}>
                 {(() => {
                   const cands = risenRubricaeCandidates(s, p);
                   const selBl = cands.filter((c) => c.selected && c.kind === 'battleline').length;
@@ -1884,24 +1896,86 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 })()}
               </div>
             </div>
-            <div className="tiny muted" style={{ marginBottom: 6 }}>
-              Select either <b>2 Rubric Marines</b> (Battleline) or <b>1 Scarab Occult Terminators</b>:
+            <div className="tiny muted" style={{ marginBottom: 8, lineHeight: 1.35 }}>
+              Select either <b>2 Rubric Marines</b> (Battleline) or <b>1 Scarab Occult Terminators</b> to gain Infiltrators:
             </div>
-            <div className="unit-strip">
-              {risenRubricaeCandidates(s, p).map((c) => (
-                <button
-                  key={c.unit.id}
-                  className={`unit-pill ${c.selected ? 'sel' : ''}`}
-                  aria-pressed={c.selected}
-                  onClick={() => {
-                    const e = act((g) => toggleRisenRubricae(g, p, c.unit.id));
-                    if (e) flash(e);
-                  }}
-                >
-                  {c.unit.name} {c.kind === 'other' ? '(Terminators)' : '(Battleline)'}
-                  {c.selected && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 4 }}><Icon name="check" size={13} /> Infiltrator</span>}
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+              {risenRubricaeCandidates(s, p).map((c) => {
+                const isSel = c.selected;
+                return (
+                  <button
+                    key={c.unit.id}
+                    className={`unit-pill ${isSel ? 'sel' : ''}`}
+                    aria-pressed={isSel}
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      minHeight: 44,
+                      padding: '8px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      whiteSpace: 'normal',
+                      textAlign: 'left',
+                      boxSizing: 'border-box',
+                      borderRadius: 6,
+                      background: isSel ? 'var(--accent)' : 'var(--surface)',
+                      borderColor: isSel ? 'var(--accent)' : 'var(--line-2)',
+                      color: isSel ? 'var(--on-fill)' : 'var(--text)',
+                    }}
+                    onClick={() => {
+                      const e = act((g) => toggleRisenRubricae(g, p, c.unit.id));
+                      if (e) flash(e);
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 auto' }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, wordBreak: 'break-word', color: isSel ? 'var(--on-fill)' : 'var(--text)' }}>
+                        {c.unit.name}
+                      </span>
+                      <span className="tiny" style={{ color: isSel ? 'var(--on-fill)' : 'var(--text-3)', opacity: isSel ? 0.85 : 1, marginTop: 2 }}>
+                        {c.kind === 'other' ? 'Terminators' : 'Battleline'} · {alive(c.unit).length} model(s) · {c.unit.pts} pts
+                      </span>
+                    </div>
+                    {isSel ? (
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          background: 'rgba(0,0,0,0.22)',
+                          color: 'var(--on-fill)',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        <Icon name="check" size={12} /> Infiltrator
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          border: '1px solid var(--line-2)',
+                          color: 'var(--text-3)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Select
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
