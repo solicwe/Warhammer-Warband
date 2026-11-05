@@ -1,0 +1,131 @@
+import { describe, expect, it } from 'vitest';
+import { canCrossDense, blockingWalls } from './pathing';
+import { weaponFx } from './weaponFx';
+import { stratagemBlock, stratRuleFor } from '../rules-engine/stratagems';
+import { discardSecondary } from './game';
+import { secondaryDead } from './secondaries';
+import type { GameState, ModelState, StratagemData } from './types';
+
+describe('User Feedback Fixes Verification', () => {
+  it('Beast keyword allows passing through dense walls', () => {
+    const beastModel = {
+      id: 'm1',
+      keywords: ['BEAST'],
+      r: 0.5,
+    } as unknown as ModelState;
+    const beastPluralModel = {
+      id: 'm2',
+      keywords: ['BEASTS'],
+      r: 0.5,
+    } as unknown as ModelState;
+    const infantryModel = {
+      id: 'm3',
+      keywords: ['INFANTRY'],
+      r: 0.5,
+    } as unknown as ModelState;
+    const vehicleModel = {
+      id: 'm4',
+      keywords: ['VEHICLE'],
+      r: 1.5,
+    } as unknown as ModelState;
+
+    expect(canCrossDense(beastModel)).toBe(true);
+    expect(canCrossDense(beastPluralModel)).toBe(true);
+    expect(canCrossDense(infantryModel)).toBe(true);
+    expect(canCrossDense(vehicleModel)).toBe(false);
+
+    const s = {
+      terrain: [
+        { category: 'dense', height: 4, walls: [{ a: { x: 0, y: 0 }, b: { x: 10, y: 0 } }] },
+      ],
+      units: [],
+    } as unknown as GameState;
+
+    expect(blockingWalls(s, beastModel)).toHaveLength(0);
+    expect(blockingWalls(s, beastPluralModel)).toHaveLength(0);
+    expect(blockingWalls(s, vehicleModel)).toHaveLength(1);
+  });
+
+  it('Fatecaster greatbow and other bows get arrow effect instead of psychic', () => {
+    const fatecasterProf = { name: 'Fatecaster greatbow', skill: 3, range: 30, A: '2', S: 5, AP: -2, D: '2', abilities: ['ignores cover', 'lethal hits', 'precision'] };
+    expect(weaponFx('Fatecaster greatbow', fatecasterProf, false)).toBe('arrow');
+
+    const dartBowProf = { name: 'Dart-bow and tri-blade', skill: 3, range: 24, A: 'D3+1', S: 4, AP: 0, D: '2', abilities: [] };
+    expect(weaponFx('Dart-bow and tri-blade', dartBowProf, false)).toBe('arrow');
+  });
+
+  it('Stratagem placing units into reserves checks reserve points limit', () => {
+    const s = {
+      phase: 'fight',
+      round: 2,
+      active: 1, // opponent's fight phase
+      log: [],
+      players: [
+        { name: 'P0', factionId: 'TS', cp: 3, detachments: [] },
+        { name: 'P1', factionId: 'SM', cp: 3, detachments: [] },
+      ],
+      units: [
+        // Total army points = 1000. Cap = 1000 * 0.5 = 500 pts.
+        // u1 is 520 pts (> 500 cap).
+        { id: 'u1', owner: 0, pts: 520, keywords: ['MONSTER', 'SCINTILLATING LEGIONS'], factionKeywords: ['THOUSAND SONS'], status: 'board', buffs: [], models: [{ id: 'm1', wounds: 18, dead: false }] },
+        { id: 'u2', owner: 0, pts: 480, keywords: ['INFANTRY'], factionKeywords: ['THOUSAND SONS'], status: 'board', buffs: [], models: [{ id: 'm2', wounds: 1, dead: false }] },
+      ],
+    } as unknown as GameState;
+
+    const glimmershift = {
+      id: 'glimmershift-portal',
+      name: 'GLIMMERSHIFT PORTAL',
+      cp: 1,
+      phase: 'fight',
+      turn: 'opponent',
+      detachment: 'Changehost of Deceit',
+      text: 'Remove those units from the battlefield and place them into Strategic Reserves.',
+    } as unknown as StratagemData;
+
+    const targetUnit = s.units[0];
+    const blockReason = stratagemBlock(s, 0, glimmershift, targetUnit, { react: true });
+    expect(blockReason).toContain('Strategic Reserves limit reached');
+  });
+
+  it('Discarding a secondary awards CP and swapSecondary replaces it', () => {
+    const s = {
+      round: 2,
+      active: 0,
+      phase: 'shooting',
+      log: [],
+      fx: [],
+      players: [
+        {
+          name: 'P0',
+          cp: 1,
+          secMode: 'tactical',
+          secActive: ['assassination'],
+          secDeck: ['no-prisoners'],
+          sec: {},
+        },
+        {
+          name: 'P1',
+          cp: 1,
+          secMode: 'tactical',
+          secActive: [],
+          secDeck: [],
+          sec: {},
+        },
+      ],
+      units: [
+        // Friendly unit
+        { id: 'f1', owner: 0, status: 'board', models: [{ id: 'fm1', dead: false, profile: { M: 6 } }] },
+        // No enemy characters alive
+        { id: 'e1', owner: 1, status: 'board', models: [{ id: 'em1', isCharacter: false, dead: false }] },
+      ],
+      objectives: [],
+    } as unknown as GameState;
+
+    expect(secondaryDead(s, 0, 'assassination')).toBe(true);
+    discardSecondary(s, 0, 'assassination');
+
+    // It should have discarded assassination and awarded +1 CP
+    expect(s.players[0].secActive).not.toContain('assassination');
+    expect(s.players[0].cp).toBe(2);
+  });
+});

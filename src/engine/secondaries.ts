@@ -162,6 +162,7 @@ function onDrawn(s: GameState, p: PlayerId, id: string): boolean {
   const def = secondaryById(id);
   const P = s.players[p];
   const e = other(p);
+  if (secondaryDead(s, p, id)) return false;
   if (def.round1Redraw && s.round === 1) return false;
   if (def.redrawIf && P.secActive.includes(def.redrawIf)) return false;
   if (def.redrawIfNo === 'ss13' && !boardUnits(s, e).some((u) => u.startingStrength >= 13)) return false;

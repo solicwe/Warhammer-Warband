@@ -31,12 +31,17 @@ export function MapCam({ s, focus, onClose }: { s: GameState; focus: Pt | null; 
       const f = focusRef.current;
       let now = false;
       // the dice tray shows both sides itself, and its 1-Click Resolve sits where this window would go
-      if (svg && m && !document.querySelector('.tray')) {
+      if (svg && m) {
         const box = svg.getBoundingClientRect();
-        const sheetTop = Math.min(box.bottom, document.querySelector('.game-side')?.getBoundingClientRect().top ?? Infinity);
-        // a picked unit: shown, zoomed on it, whenever a sheet is up; nothing picked: the whole board, while the sheet
-        // hides most of the board
-        now = f ? box.bottom - sheetTop > 24 : box.bottom - sheetTop > box.height * 0.5;
+        const sheet = document.querySelector('.game-side');
+        const sheetTop = sheet ? sheet.getBoundingClientRect().top : box.bottom;
+        const visibleHeight = Math.max(0, Math.min(box.bottom, sheetTop) - box.top);
+        const visibleRatio = box.height > 0 ? visibleHeight / box.height : 1;
+        const hasOverlay = !!document.querySelector('.tray, .sheet-wrap, .rule-drawer');
+
+        // Only show if the field is completely obscured / hidden ("ปิดไม่เห็นสนามเลย"):
+        // If the battlefield is still visible (เเต่ถ้ายังเห็น ไม่ต้องขึ้น), do NOT show it!
+        now = hasOverlay || visibleHeight < 30 || visibleRatio < 0.06;
       }
       setCovered(now);
 

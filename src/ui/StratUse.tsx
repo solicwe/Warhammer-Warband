@@ -6,6 +6,8 @@ import { alive, onBoard, stratCost, type ReactCtx } from '../engine/state';
 import { EFFECT_LABEL, stratagemBlock, stratChoices, stratEnemies, stratagemShortSummary, type StratRule, type StratUse as Use } from '../rules-engine/stratagems';
 import type { GameState, PlayerId, StratagemData, UnitState } from '../engine/types';
 import { Icon } from './Icon';
+import { RULES } from '../engine/config';
+import { armyPoints, reservesPoints } from '../engine/game';
 
 const short = (n: string) => (n.length > 22 ? n.slice(0, 21) + '…' : n);
 
@@ -22,8 +24,15 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
   const [enemyId, setEnemyId] = useState<string>('');
   const [extra, setExtra] = useState<string[]>([]);
 
+  const putsInReserves = !!rule.do?.some((a) => a.reserves);
+  const resCap = Math.floor(armyPoints(s, p) * RULES.reserves.maxPointsFraction);
+  const curRes = reservesPoints(s, p);
   const unit = units.find((u) => u.id === unitId);
-  const why = stratagemBlock(s, p, st, unit, { react, ctx });
+  const extraPts = extra.map((id) => units.find((x) => x.id === id)?.pts ?? 0).reduce((a, b) => a + b, 0);
+  const totalReservePts = curRes + (unit?.pts ?? 0) + extraPts;
+  const reserveOver = putsInReserves && unit && totalReservePts > resCap;
+  const baseWhy = stratagemBlock(s, p, st, unit, { react, ctx });
+  const why = reserveOver ? `Strategic Reserves limit reached (${totalReservePts}/${resCap} pts)` : baseWhy;
   const timingOk = !why || /Select a target|Must be one of your units|Select an enemy unit|Not enough CP|TARGET|does not qualify|No enemy unit/.test(why);
   const cost = stratCost(s, st.id, unit?.owner === p && onBoard(unit) ? unit : undefined, st.cp);
   const choices = stratChoices(s, rule, unit);
@@ -35,6 +44,7 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
 
   // Guerrilla Tactics: "up to two PHOBOS and/or SCOUT SQUAD units"
   const extraOk = (u: UnitState) => !!rule.extraTargets && u.id !== unitId
+    && (!putsInReserves || curRes + (unit?.pts ?? 0) + extraPts + u.pts <= resCap)
     && (!rule.extraTargets.kw || [unit, u].every((x) => x && rule.extraTargets!.kw!.some((k0) => k0.split('|').some((k) => x.keywords.includes(k) || (x.sources ?? [x.name]).some((n) => n.toUpperCase() === k)))))
     && [unit, u].every((x) => x && !rule.extraTargets!.notKw?.some((k) => x.keywords.includes(k)));
 
@@ -143,28 +153,40 @@ export function StratUseCard({ s, p, st, rule, detachment, units, ctx, react, bo
         <>
           {units.length > 1 && (
             <div className="strat-pick-group">
+              {putsInReserves && (
+                <div className={`tiny ${curRes >= resCap ? 'err' : 'muted'}`} style={{ marginBottom: 4 }}>
+                  Strategic Reserves: <b>{curRes} / {resCap} pts</b>
+                  {curRes >= resCap && <span style={{ color: '#ef4444', marginLeft: 6 }}><b>(Full)</b></span>}
+                </div>
+              )}
               <div className="strat-pick-label">Select friendly target unit:</div>
               <div className="unit-strip">
-                {units.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    className={`unit-pill ${unitId === u.id ? 'sel' : extra.includes(u.id) ? 'sel2' : ''}`}
-                    onClick={() => {
-                      if (unitId && unitId !== u.id && extraOk(u) && extra.length < (rule.extraTargets?.count ?? 1) - 1) {
-                        setExtra(extra.includes(u.id) ? extra.filter((x) => x !== u.id) : [...extra, u.id]);
-                        return;
-                      }
-                      setUnitId(unitId === u.id ? '' : u.id);
-                      setExtra([]);
-                      setChoice(undefined);
-                      setEnemyId('');
-                    }}
-                  >
-                    <span className={`side-dot s${u.owner}`} aria-hidden="true" /> {short(u.name)}
-                    {u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
-                  </button>
-                ))}
+                {units.map((u) => {
+                  const overCap = putsInReserves && (curRes + u.pts > resCap) && unitId !== u.id && !extra.includes(u.id);
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      disabled={overCap}
+                      title={overCap ? `Exceeds Strategic Reserves limit (${curRes + u.pts}/${resCap} pts)` : undefined}
+                      className={`unit-pill ${unitId === u.id ? 'sel' : extra.includes(u.id) ? 'sel2' : ''} ${overCap ? 'disabled' : ''}`}
+                      onClick={() => {
+                        if (unitId && unitId !== u.id && extraOk(u) && extra.length < (rule.extraTargets?.count ?? 1) - 1) {
+                          setExtra(extra.includes(u.id) ? extra.filter((x) => x !== u.id) : [...extra, u.id]);
+                          return;
+                        }
+                        setUnitId(unitId === u.id ? '' : u.id);
+                        setExtra([]);
+                        setChoice(undefined);
+                        setEnemyId('');
+                      }}
+                    >
+                      <span className={`side-dot s${u.owner}`} aria-hidden="true" /> {short(u.name)}
+                      {u.status === 'reserves' ? ' (Reserves)' : !alive(u).length ? ' (destroyed)' : ''}
+                      {putsInReserves ? ` (${u.pts} pts${overCap ? ' · Full' : ''})` : ''}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

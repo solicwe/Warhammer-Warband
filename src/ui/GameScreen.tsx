@@ -3594,7 +3594,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </div>
-      {isMobileScreen && liveMap && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} onClose={() => { setLiveMap(false); flash('Live map closed (re-enable in Menu)'); }} />}
+      {isMobileScreen && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} />}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
@@ -3852,8 +3852,15 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                           )}
                           {P.secMode === 'tactical' && !bots.includes(p) && (
                             <>
-                              <button className="btn sec-discard" onClick={() => { act((g) => discardSecondary(g, p, id)); flash(s.active === p ? 'Card discarded, +1CP' : 'Card discarded (CP only in your own turn)'); }}>
-                                <Icon name="delete" size={18} /> Discard{s.active === p ? ' (+1CP)' : ''}
+                              <button
+                                className="btn sec-discard"
+                                style={dead ? { background: '#2563eb', color: '#fff', fontWeight: 700 } : undefined}
+                                onClick={() => {
+                                  act((g) => discardSecondary(g, p, id));
+                                  flash(dead ? 'Unachievable card discarded — drew replacement' : (s.active === p ? 'Card discarded, +1CP' : 'Card discarded (CP only in your own turn)'));
+                                }}
+                              >
+                                <Icon name={dead ? 'reroll' : 'delete'} size={18} /> {dead ? 'Discard & Draw New Card' : `Discard${s.active === p ? ' (+1CP)' : ''}`}
                               </button>
                               {!P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && (
                                 <button className="btn small sec-discard" onClick={() => act((g) => swapSecondary(g, p, id))}><Icon name="reroll" size={16} /> New Orders (1CP, once)</button>
@@ -3979,14 +3986,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 <button role="radio" aria-checked={!sound} className={!sound ? 'on' : ''} onClick={() => { setSoundOn(false); setSound(false); }}>Off</button>
               </div>
             </div>
-            <div className="field">
-              <span id="live-map-mirror">Live map mirror (phone)</span>
-              <div className="seg" role="radiogroup" aria-labelledby="live-map-mirror">
-                <button role="radio" aria-checked={liveMap} className={liveMap ? 'on' : ''} onClick={() => { setLiveMap(true); flash('Live map mirror enabled'); }}>On</button>
-                <button role="radio" aria-checked={!liveMap} className={!liveMap ? 'on' : ''} onClick={() => { setLiveMap(false); flash('Live map mirror disabled'); }}>Off</button>
-              </div>
-              <span className="field-note">Floating mini map mirror of the board when a sheet is open</span>
-            </div>
+
             <button className="btn danger" onClick={onExit}>Exit to home <span className="muted small">· the battle is saved</span></button>
           </div>
         </div>

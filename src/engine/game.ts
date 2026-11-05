@@ -5,7 +5,7 @@ import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army'
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
 import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
-import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
+import { bankSecondary, drawUpTo, scoreSecondaries, secondaryDead } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body, bodyBox } from './geometry';
 import {
@@ -1061,6 +1061,7 @@ export function redeployUnit(s: GameState, unitId: string, toReserves: boolean):
   if (!r || r.left <= 0 || !redeployCandidates(s).includes(u)) return 'This unit cannot be redeployed';
   r.left--;
   if (toReserves) {
+    if (reservesPoints(s, u.owner) + u.pts > armyPoints(s, u.owner) * RULES.reserves.maxPointsFraction) return `Strategic Reserves cannot exceed ${RULES.reserves.maxPointsFraction * 100}% of the army's points`;
     extractToReserves(s, u, r.source);
   } else {
     u.status = 'pending';

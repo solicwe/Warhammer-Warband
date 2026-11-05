@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   deploymentName,
-  dispositionById,
   LAYOUTS,
   layoutsFor,
   MISSIONS,
-  primaryFor,
   secondaryById,
   type DispositionId,
   type LayoutDef,
@@ -15,6 +13,8 @@ import { Emblem } from './ArmyBuilder';
 import { type FactionIndex } from './data';
 import { Icon } from './Icon';
 import { LayoutPreview } from './LayoutPreview';
+import { Die } from './RollOverlay';
+import { play } from './sfx';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
 
@@ -57,35 +57,54 @@ const DEFAULT_FACTIONS = [
   { id: 'QT', name: 'Chaos Knights' },
 ];
 
-export function TabletopScreen({ armies, index, onBack }: Props) {
+/** Parse scoring VP options from card text (e.g. "2VP / 2+ = 5VP" -> [2, 5]) */
+function getSecondaryVpOptions(text: string): number[] {
+  const matches = text.match(/\b([1-9])\s*VP\b/gi);
+  if (!matches || matches.length === 0) return [2, 3, 4, 5];
+  const nums = matches.map((m) => parseInt(m.replace(/\D/g, ''), 10)).filter((n) => !isNaN(n) && n > 0 && n <= 10);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+  return unique.length > 0 ? unique : [2, 3, 4, 5];
+}
+
+export function TabletopScreen({ index, onBack }: Props) {
   // Mode: 'setup' (step-by-step wizard) or 'battle' (in-match)
   const [mode, setMode] = useState<'setup' | 'battle'>('setup');
   const [setupStep, setSetupStep] = useState<1 | 2 | 3>(1);
 
-  // STEP 1: Dispositions & Layout
+  // STEP 1: Dispositions & Playable Layouts (Strictly locked to matchup)
   const [p0Disp, setP0Disp] = useState<DispositionId>('take-and-hold');
   const [p1Disp, setP1Disp] = useState<DispositionId>('take-and-hold');
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-01');
-  const [browseAllLayouts, setBrowseAllLayouts] = useState(false);
+  const [inspectLayout, setInspectLayout] = useState<LayoutDef | null>(null);
 
-  // STEP 2: Players & Factions (No army building required!)
-  const [p0Name, setP0Name] = useState(armies[0]?.name || 'Player 1');
-  const [p0Faction, setP0Faction] = useState(armies[0]?.factionId || 'SM');
-  const [p1Name, setP1Name] = useState(armies[1]?.name || 'Player 2');
-  const [p1Faction, setP1Faction] = useState(armies[1]?.factionId || 'TYR');
+  // STEP 2: Players & Factions (No quick-fill clutter, pure manual selection)
+  const [p0Name, setP0Name] = useState('Player 1');
+  const [p0Faction, setP0Faction] = useState('SM');
+  const [p1Name, setP1Name] = useState('Player 2');
+  const [p1Faction, setP1Faction] = useState('TYR');
 
-  // STEP 3: Roll-Off & Turn Order
+  // STEP 3: Roll-Off & Turn Order (With authentic tumbling dice animation)
   const [attackerPlayer, setAttackerPlayer] = useState<0 | 1>(0); // 0 or 1 deploys first
   const [firstTurnPlayer, setFirstTurnPlayer] = useState<0 | 1>(0); // 0 or 1 takes Turn 1
   const [rollResult, setRollResult] = useState<{ p0: number; p1: number; reason: string } | null>(null);
+
+  // Rolling Dice Animation State
+  const [rolling, setRolling] = useState<'deploy' | 'turn' | null>(null);
+  const [tempDice, setTempDice] = useState<{ p0: number; p1: number }>({ p0: 1, p1: 1 });
+  const [landedDice, setLandedDice] = useState<{ p0: number; p1: number } | null>(null);
+  const animIntervalRef = useRef<number | null>(null);
 
   // IN-MATCH STATE
   const [subView, setSubView] = useState<'player' | 'overview'>('player');
   const [round, setRound] = useState(1);
   const [activePlayer, setActivePlayer] = useState<0 | 1>(0);
-  const [turnInRound, setTurnInRound] = useState<0 | 1>(0); // 0 = first turn of round, 1 = second turn of round
+  const [turnInRound, setTurnInRound] = useState<0 | 1>(0); // 0 = first turn, 1 = second turn
   const [zoomMap, setZoomMap] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Custom VP popover for a card
+  const [customVpCardId, setCustomVpCardId] = useState<string | null>(null);
+  const [customVpValue, setCustomVpValue] = useState<number>(3);
 
   const allSecondaryIds = useMemo(() => MISSIONS.secondaries.map((s) => s.id), []);
 
@@ -123,14 +142,20 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
     },
   ]);
 
-  // Available layouts for the selected dispositions
-  const matchingLayouts = useMemo(() => {
+  // Strictly locked to the playable layouts for this matchup
+  const playableLayouts = useMemo(() => {
     const matched = layoutsFor(p0Disp, p1Disp);
     return matched.length ? matched : LAYOUTS.slice(0, 3);
   }, [p0Disp, p1Disp]);
 
-  const displayedLayouts = browseAllLayouts ? LAYOUTS : matchingLayouts;
-  const curLayout: LayoutDef = LAYOUTS.find((l) => l.id === selectedLayoutId) ?? displayedLayouts[0] ?? LAYOUTS[0];
+  // Sync selected layout if current selection is not in playable layouts
+  useEffect(() => {
+    if (!playableLayouts.some((l) => l.id === selectedLayoutId) && playableLayouts[0]) {
+      setSelectedLayoutId(playableLayouts[0].id);
+    }
+  }, [playableLayouts, selectedLayoutId]);
+
+  const curLayout: LayoutDef = LAYOUTS.find((l) => l.id === selectedLayoutId) ?? playableLayouts[0] ?? LAYOUTS[0];
 
   const factionList = useMemo(() => {
     if (index?.factions && index.factions.length > 0) {
@@ -147,27 +172,56 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
     });
   };
 
-  // Dice roll helper for roll-offs
+  // Roll D6 with animation
   const rollD6 = () => Math.floor(Math.random() * 6) + 1;
 
-  const handleRollOff = (type: 'deploy' | 'turn') => {
+  const handleStartAnimatedRoll = (type: 'deploy' | 'turn') => {
+    if (rolling) return;
+    setRolling(type);
+    setLandedDice(null);
+    play('dice');
+
     let r0 = rollD6();
     let r1 = rollD6();
     while (r0 === r1) {
       r0 = rollD6();
       r1 = rollD6();
     }
-    const winner: 0 | 1 = r0 > r1 ? 0 : 1;
-    const winnerName = winner === 0 ? p0Name : p1Name;
 
-    if (type === 'deploy') {
-      setAttackerPlayer(winner);
-      setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and deploys first!` });
-    } else {
-      setFirstTurnPlayer(winner);
-      setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and takes Turn 1!` });
-    }
+    // Tumble faces for 750ms
+    if (animIntervalRef.current) clearInterval(animIntervalRef.current);
+    animIntervalRef.current = window.setInterval(() => {
+      setTempDice({ p0: rollD6(), p1: rollD6() });
+    }, 65);
+
+    setTimeout(() => {
+      if (animIntervalRef.current) clearInterval(animIntervalRef.current);
+      animIntervalRef.current = null;
+      setTempDice({ p0: r0, p1: r1 });
+      setLandedDice({ p0: r0, p1: r1 });
+      play('land');
+
+      const winner: 0 | 1 = r0 > r1 ? 0 : 1;
+      const winnerName = winner === 0 ? p0Name : p1Name;
+
+      if (type === 'deploy') {
+        setAttackerPlayer(winner);
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and deploys first (Attacker)!` });
+      } else {
+        setFirstTurnPlayer(winner);
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and takes Turn 1!` });
+      }
+
+      play('good');
+      setRolling(null);
+    }, 800);
   };
+
+  useEffect(() => {
+    return () => {
+      if (animIntervalRef.current) clearInterval(animIntervalRef.current);
+    };
+  }, []);
 
   // Launch Battle from Setup
   const handleStartBattle = () => {
@@ -212,6 +266,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
       }
       if (curDeck.length === 0) return p;
       const drawn = curDeck.shift()!;
+      play('card');
       return {
         ...p,
         deck: curDeck,
@@ -220,6 +275,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
     });
   };
 
+  // Score Secondary Card (Player chooses VP)
   const handleScoreCard = (pIdx: 0 | 1, cardId: string, vp: number) => {
     updatePlayer(pIdx, (p) => ({
       ...p,
@@ -228,20 +284,24 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
       scoredMissions: [...p.scoredMissions, cardId],
       discardedMissions: [...p.discardedMissions, cardId],
     }));
+    play('vp');
+    setCustomVpCardId(null);
   };
 
-  const handleDiscardCard = (pIdx: 0 | 1, cardId: string, grantCp: boolean) => {
+  // Free Discard (Player manages CP on their own)
+  const handleDiscardCard = (pIdx: 0 | 1, cardId: string, grantCp: boolean = false) => {
     updatePlayer(pIdx, (p) => ({
       ...p,
       cp: grantCp ? p.cp + 1 : p.cp,
       activeMissions: p.activeMissions.filter((id) => id !== cardId),
       discardedMissions: [...p.discardedMissions, cardId],
     }));
+    play('tick');
   };
 
-  const handleNewOrders = (pIdx: 0 | 1, cardId: string) => {
+  // Free Redraw (Player manages CP on their own, does NOT deduct CP)
+  const handleFreeRedraw = (pIdx: 0 | 1, cardId: string) => {
     updatePlayer(pIdx, (p) => {
-      if (p.cp < 1) return p;
       let curDeck = [...p.deck];
       if (curDeck.length === 0) {
         curDeck = shuffle(p.discardedMissions.length ? p.discardedMissions : allSecondaryIds);
@@ -249,10 +309,10 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
       const newDrawn = curDeck.shift();
       const nextActive = p.activeMissions.filter((id) => id !== cardId);
       if (newDrawn) nextActive.push(newDrawn);
+      play('card');
 
       return {
         ...p,
-        cp: p.cp - 1,
         deck: curDeck,
         activeMissions: nextActive,
         discardedMissions: [...p.discardedMissions, cardId],
@@ -267,6 +327,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
       // First turn completed, pass to second player in this round
       setActivePlayer(otherPlayer);
       setTurnInRound(1);
+      play('turn');
     } else {
       // Second turn completed, advance round!
       if (round < 5) {
@@ -278,6 +339,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
           { ...prev[0], cp: prev[0].cp + 1 },
           { ...prev[1], cp: prev[1].cp + 1 },
         ]);
+        play('turn');
       } else {
         // Round 5 finished
         setSubView('overview');
@@ -377,13 +439,13 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
         </div>
 
         <main className="screen" style={{ flex: 1, padding: '14px', overflowY: 'auto' }}>
-          {/* STEP 1: FORCE DISPOSITIONS & LAYOUT */}
+          {/* STEP 1: FORCE DISPOSITIONS & PLAYABLE LAYOUTS (LOCKED TO MATCHUP) */}
           {setupStep === 1 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Choose Force Dispositions & Layout</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Force Dispositions & Playable Layouts</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Select the force disposition for each player. In 11th edition, their matchup dictates the primary mission and tournament terrain layouts.
+                  Select the force disposition for each side. The matchup dictates the official tournament layouts.
                 </p>
               </div>
 
@@ -427,44 +489,52 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                 </div>
               </div>
 
-              {/* Layout Selection */}
+              {/* Playable Layouts (Locked to this matchup) */}
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>
-                    Official Layouts ({displayedLayouts.length} available)
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 800 }}>Playable Layouts ({playableLayouts.length} Official Matchup Layouts)</span>
+                    <div className="tiny muted">Locked to official 11th edition pairings for this disposition matchup</div>
                   </div>
-                  <button
-                    className="btn ghost"
-                    style={{ fontSize: 11, minHeight: 28, padding: '2px 8px' }}
-                    onClick={() => setBrowseAllLayouts(!browseAllLayouts)}
-                  >
-                    {browseAllLayouts ? 'Show Matching Only' : 'Browse All 45 Layouts'}
-                  </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: 8 }}>
-                  {displayedLayouts.map((l) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: 10 }}>
+                  {playableLayouts.map((l) => (
                     <div
                       key={l.id}
-                      onClick={() => setSelectedLayoutId(l.id)}
                       style={{
-                        padding: '8px',
+                        padding: '10px 8px',
                         borderRadius: 8,
                         border: selectedLayoutId === l.id ? '2px solid var(--accent)' : '1px solid var(--line-2)',
                         background: selectedLayoutId === l.id ? 'rgba(74, 144, 226, 0.12)' : 'var(--surface-2)',
-                        cursor: 'pointer',
                         textAlign: 'center',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         gap: 6,
+                        position: 'relative',
                       }}
                     >
-                      <LayoutPreview layout={l} width={90} />
-                      <div>
-                        <b style={{ fontSize: 12, display: 'block' }}>Layout {l.number}</b>
-                        <span className="tiny muted">{deploymentName(l.deployment)}</span>
+                      <div onClick={() => setSelectedLayoutId(l.id)} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }}>
+                        <LayoutPreview layout={l} width={90} />
+                        <div>
+                          <b style={{ fontSize: 12.5, display: 'block' }}>Layout {l.number}</b>
+                          <span className="tiny muted">{deploymentName(l.deployment)}</span>
+                        </div>
                       </div>
+
+                      {/* Inspect Layout Button */}
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ minHeight: 28, fontSize: 11, padding: '2px 8px', width: '100%', marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInspectLayout(l);
+                        }}
+                      >
+                        <Icon name="search" size={13} /> ดู Layout
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -480,19 +550,19 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
             </div>
           )}
 
-          {/* STEP 2: PLAYERS & FACTIONS (NO PRE-ARRANGED ARMY NEEDED) */}
+          {/* STEP 2: PLAYERS & FACTIONS (NO QUICK-FILL CLUTTER) */}
           {setupStep === 2 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Choose Players & Factions</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  No pre-built army list required! Simply enter names and choose your warband factions.
+                  Enter player names and select factions directly.
                 </p>
               </div>
 
               {/* Player 1 Card */}
               <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Emblem factionId={p0Faction} />
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 1 Name</label>
@@ -511,7 +581,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)', display: 'block', marginBottom: 6 }}>
                     Faction: {factionList.find((f) => f.id === p0Faction)?.name ?? p0Faction}
                   </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 130, overflowY: 'auto', padding: 4 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 150, overflowY: 'auto', padding: 4 }}>
                     {factionList.map((f) => (
                       <button
                         key={f.id}
@@ -525,33 +595,11 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                     ))}
                   </div>
                 </div>
-
-                {armies.length > 0 && (
-                  <div style={{ borderTop: '1px solid var(--line-1)', paddingTop: 6 }}>
-                    <span className="tiny muted">Or quick-fill from your saved armies:</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                      {armies.slice(0, 4).map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          className="btn ghost"
-                          style={{ fontSize: 11, minHeight: 26, padding: '1px 6px' }}
-                          onClick={() => {
-                            setP0Name(a.name || 'Player 1');
-                            setP0Faction(a.factionId);
-                          }}
-                        >
-                          {a.name || 'Army'} ({a.factionId})
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Player 2 Card */}
               <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Emblem factionId={p1Faction} />
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)' }}>Player 2 Name</label>
@@ -570,7 +618,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-3)', display: 'block', marginBottom: 6 }}>
                     Faction: {factionList.find((f) => f.id === p1Faction)?.name ?? p1Faction}
                   </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 130, overflowY: 'auto', padding: 4 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 150, overflowY: 'auto', padding: 4 }}>
                     {factionList.map((f) => (
                       <button
                         key={f.id}
@@ -584,28 +632,6 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                     ))}
                   </div>
                 </div>
-
-                {armies.length > 1 && (
-                  <div style={{ borderTop: '1px solid var(--line-1)', paddingTop: 6 }}>
-                    <span className="tiny muted">Or quick-fill from your saved armies:</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                      {armies.slice(1, 5).map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          className="btn ghost"
-                          style={{ fontSize: 11, minHeight: 26, padding: '1px 6px' }}
-                          onClick={() => {
-                            setP1Name(a.name || 'Player 2');
-                            setP1Faction(a.factionId);
-                          }}
-                        >
-                          {a.name || 'Army'} ({a.factionId})
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -623,21 +649,62 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
             </div>
           )}
 
-          {/* STEP 3: ROLL-OFF & DEPLOYMENT / FIRST TURN */}
+          {/* STEP 3: ROLL-OFF & DEPLOYMENT / FIRST TURN (WITH TUMBLING DICE ANIMATION) */}
           {setupStep === 3 && (
             <div className="tt-wizard">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Pre-Battle Roll-Off & Turn Order</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Determine who deploys first (Attacker) and who takes the first battle turn.
+                  Roll D6 to determine who deploys first (Attacker) and who takes the first battle turn.
                 </p>
               </div>
 
-              {/* Roll Result Toast */}
-              {rollResult && (
-                <div className="card" style={{ padding: '10px 14px', background: 'rgba(56, 189, 248, 0.12)', border: '1px solid #38bdf8', borderRadius: 8 }}>
-                  <b style={{ color: '#38bdf8', fontSize: 13 }}>Roll Result: </b>
-                  <span style={{ fontSize: 13 }}>{rollResult.reason}</span>
+              {/* Animated Tumbling Dice Box */}
+              {(rolling || landedDice) && (
+                <div
+                  className="card"
+                  style={{
+                    padding: '16px',
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--line-2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 12,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-3)' }}>
+                    {rolling === 'deploy' ? 'Rolling for Deployment Order...' : rolling === 'turn' ? 'Rolling for Turn 1 Order...' : 'Roll Result'}
+                  </div>
+
+                  <div className={`ro-dice ${landedDice ? 'land' : 'tumble'}`} style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: landedDice && tempDice.p0 > tempDice.p1 ? 'var(--accent)' : 'inherit' }}>
+                        {p0Name}
+                      </span>
+                      <div className={`ro-die ${landedDice && tempDice.p0 > tempDice.p1 ? 'win' : ''}`}>
+                        <Die v={tempDice.p0} color={landedDice && tempDice.p0 > tempDice.p1 ? '#38bdf8' : '#64748b'} size={68} />
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-3)' }}>VS</div>
+
+                    <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: landedDice && tempDice.p1 > tempDice.p0 ? 'var(--accent)' : 'inherit' }}>
+                        {p1Name}
+                      </span>
+                      <div className={`ro-die ${landedDice && tempDice.p1 > tempDice.p0 ? 'win' : ''}`}>
+                        <Die v={tempDice.p1} color={landedDice && tempDice.p1 > tempDice.p0 ? '#38bdf8' : '#64748b'} size={68} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {rollResult && (
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#38bdf8', textAlign: 'center' }}>
+                      {rollResult.reason}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -648,8 +715,13 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                     <b style={{ fontSize: 14 }}>1. Deployment Order (Attacker)</b>
                     <div className="tiny muted">The Attacker deploys their entire army first.</div>
                   </div>
-                  <button className="btn" style={{ fontSize: 12, minHeight: 32, padding: '2px 10px', display: 'flex', alignItems: 'center', gap: 4 }} onClick={() => handleRollOff('deploy')}>
-                    <Icon name="dice" size={15} /> Roll D6
+                  <button
+                    className="btn primary"
+                    style={{ fontSize: 12.5, minHeight: 34, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                    onClick={() => handleStartAnimatedRoll('deploy')}
+                    disabled={rolling !== null}
+                  >
+                    <Icon name="dice" size={16} /> Roll D6
                   </button>
                 </div>
 
@@ -657,7 +729,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <button
                     type="button"
                     className={attackerPlayer === 0 ? 'on' : ''}
-                    style={{ flex: 1, minHeight: 42, fontSize: 13, fontWeight: 700 }}
+                    style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setAttackerPlayer(0)}
                   >
                     {p0Name} Deploys 1st (Attacker)
@@ -665,7 +737,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <button
                     type="button"
                     className={attackerPlayer === 1 ? 'on' : ''}
-                    style={{ flex: 1, minHeight: 42, fontSize: 13, fontWeight: 700 }}
+                    style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setAttackerPlayer(1)}
                   >
                     {p1Name} Deploys 1st (Attacker)
@@ -680,8 +752,13 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                     <b style={{ fontSize: 14 }}>2. First Turn Order</b>
                     <div className="tiny muted">Which player takes Turn 1 in Battle Round 1?</div>
                   </div>
-                  <button className="btn" style={{ fontSize: 12, minHeight: 32, padding: '2px 10px', display: 'flex', alignItems: 'center', gap: 4 }} onClick={() => handleRollOff('turn')}>
-                    <Icon name="dice" size={15} /> Roll D6
+                  <button
+                    className="btn primary"
+                    style={{ fontSize: 12.5, minHeight: 34, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                    onClick={() => handleStartAnimatedRoll('turn')}
+                    disabled={rolling !== null}
+                  >
+                    <Icon name="dice" size={16} /> Roll D6
                   </button>
                 </div>
 
@@ -689,7 +766,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <button
                     type="button"
                     className={firstTurnPlayer === 0 ? 'on' : ''}
-                    style={{ flex: 1, minHeight: 42, fontSize: 13, fontWeight: 700 }}
+                    style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setFirstTurnPlayer(0)}
                   >
                     {p0Name} Takes Turn 1
@@ -697,7 +774,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   <button
                     type="button"
                     className={firstTurnPlayer === 1 ? 'on' : ''}
-                    style={{ flex: 1, minHeight: 42, fontSize: 13, fontWeight: 700 }}
+                    style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setFirstTurnPlayer(1)}
                   >
                     {p1Name} Takes Turn 1
@@ -729,6 +806,53 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
             </div>
           )}
         </main>
+
+        {/* INSPECT LAYOUT MODAL */}
+        {inspectLayout && (
+          <div className="sheet-backdrop" onClick={() => setInspectLayout(null)} role="dialog" aria-modal="true">
+            <div
+              className="sheet-panel"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: 460, maxHeight: '90vh', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+            >
+              <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Layout {inspectLayout.number}: {deploymentName(inspectLayout.deployment)}</h3>
+                  <div className="tiny muted">Attacker edge: {inspectLayout.attackerEdge} · {inspectLayout.objectives.length} objectives</div>
+                </div>
+                <button className="icon-btn" onClick={() => setInspectLayout(null)} aria-label="Close">
+                  <Icon name="close" size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
+                <LayoutPreview layout={inspectLayout} width={280} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
+                <span>Red: Attacker Zone</span>
+                <span>Blue: Defender Zone</span>
+                <span>Circles: Objectives</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button
+                  className="btn primary grow"
+                  style={{ minHeight: 40, fontSize: 13, fontWeight: 700 }}
+                  onClick={() => {
+                    setSelectedLayoutId(inspectLayout.id);
+                    setInspectLayout(null);
+                  }}
+                >
+                  ✓ Select Layout {inspectLayout.number}
+                </button>
+                <button className="btn ghost" style={{ minHeight: 40 }} onClick={() => setInspectLayout(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -826,7 +950,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
               <div style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Icon name="strat" size={16} /> Command Points (CP)
               </div>
-              <div className="tiny muted">Spend on Stratagems & Tactical Redraws</div>
+              <div className="tiny muted">Spend on Stratagems & Tactical Decisions</div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -927,11 +1051,11 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                 <div className="tiny muted" style={{ marginTop: 2 }}>Tap "Draw Card" to draw your tactical objectives for this turn.</div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {activeP.activeMissions.map((cardId) => {
                   const card = secondaryById(cardId);
                   if (!card) return null;
-                  const vpReward = card.auto?.[0]?.vp ?? 4;
+                  const vpOptions = getSecondaryVpOptions(card.text);
 
                   return (
                     <div
@@ -943,44 +1067,94 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                         border: '1px solid var(--line-2)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 6,
+                        gap: 8,
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <b style={{ fontSize: 14, color: '#f1f5f9' }}>{card.name}</b>
-                        <span className="pill-att" style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: 800 }}>
-                          +{vpReward} VP
-                        </span>
+                        <b style={{ fontSize: 14.5, color: '#f1f5f9' }}>{card.name}</b>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {vpOptions.map((v) => (
+                            <span key={v} className="pill-att" style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: 800 }}>
+                              {v} VP
+                            </span>
+                          ))}
+                        </div>
                       </div>
 
-                      <p style={{ fontSize: 12, color: 'var(--text-2)', margin: 0, lineHeight: 1.35 }}>
-                        {card.text || card.auto?.[0]?.condition || 'Achieve condition according to Chapter Approved rules.'}
+                      <p style={{ fontSize: 12.5, color: 'var(--text-2)', margin: 0, lineHeight: 1.4 }}>
+                        {card.text}
                       </p>
 
-                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                      {/* Scoring Buttons (Player picks their earned VP) */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                        {vpOptions.map((vp) => (
+                          <button
+                            key={vp}
+                            className="btn primary"
+                            style={{ flex: 1, minHeight: 34, fontSize: 12, fontWeight: 700, padding: '0 8px' }}
+                            onClick={() => handleScoreCard(activePlayer, cardId, vp)}
+                          >
+                            ✓ Score +{vp} VP
+                          </button>
+                        ))}
                         <button
-                          className="btn primary grow"
-                          style={{ minHeight: 34, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
-                          onClick={() => handleScoreCard(activePlayer, cardId, vpReward)}
+                          className="btn ghost"
+                          style={{ minHeight: 34, fontSize: 11, padding: '0 8px' }}
+                          onClick={() => setCustomVpCardId(customVpCardId === cardId ? null : cardId)}
                         >
-                          <Icon name="check" size={13} /> Score (+{vpReward} VP)
+                          Custom VP
+                        </button>
+                      </div>
+
+                      {/* Custom VP Drawer */}
+                      {customVpCardId === cardId && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: 'var(--surface)', borderRadius: 6, border: '1px solid var(--line-2)' }}>
+                          <span className="tiny muted">VP Amount:</span>
+                          {[1, 2, 3, 4, 5].map((val) => (
+                            <button
+                              key={val}
+                              className={customVpValue === val ? 'btn primary' : 'btn ghost'}
+                              style={{ minWidth: 28, minHeight: 28, padding: 0, fontSize: 12, fontWeight: 700 }}
+                              onClick={() => setCustomVpValue(val)}
+                            >
+                              {val}
+                            </button>
+                          ))}
+                          <button
+                            className="btn primary"
+                            style={{ minHeight: 28, fontSize: 11, padding: '2px 8px', marginLeft: 'auto' }}
+                            onClick={() => handleScoreCard(activePlayer, cardId, customVpValue)}
+                          >
+                            Confirm +{customVpValue}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Free Discard and Redraw (No automatic CP loss or gain unless chosen) */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, borderTop: '1px solid var(--line-1)', paddingTop: 6 }}>
+                        <button
+                          className="btn ghost"
+                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px' }}
+                          onClick={() => handleDiscardCard(activePlayer, cardId, false)}
+                          title="Discard this card from hand"
+                        >
+                          Discard
                         </button>
                         <button
                           className="btn ghost"
-                          style={{ minHeight: 34, fontSize: 11.5, padding: '0 8px' }}
+                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px' }}
                           onClick={() => handleDiscardCard(activePlayer, cardId, true)}
-                          title="Discard at end of turn for 1 CP"
+                          title="Discard at end of turn and gain 1 CP"
                         >
                           Discard (+1 CP)
                         </button>
                         <button
                           className="btn ghost"
-                          style={{ minHeight: 34, fontSize: 11.5, padding: '0 8px' }}
-                          onClick={() => handleNewOrders(activePlayer, cardId)}
-                          disabled={activeP.cp < 1}
-                          title="New Orders: Spend 1 CP to discard and redraw"
+                          style={{ minHeight: 30, fontSize: 11.5, padding: '2px 10px', color: '#38bdf8' }}
+                          onClick={() => handleFreeRedraw(activePlayer, cardId)}
+                          title="Redraw: Discard this card and draw a replacement from deck"
                         >
-                          Redraw (-1 CP)
+                          Redraw
                         </button>
                       </div>
                     </div>
@@ -1120,15 +1294,15 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 className="btn"
-                style={{ flex: 1, minHeight: 42, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                style={{ flex: 1, minHeight: 42, fontSize: 13 }}
                 onClick={handleFinishAndSave}
                 disabled={savedSuccess}
               >
-                <Icon name="check" size={15} /> Finish & Save Match
+                💾 Finish & Save Match
               </button>
               <button
                 className="btn ghost"
-                style={{ flex: 1, minHeight: 42, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                style={{ flex: 1, minHeight: 42, fontSize: 13 }}
                 onClick={() => {
                   if (confirm('Start a new tabletop match setup?')) {
                     setMode('setup');
@@ -1136,7 +1310,7 @@ export function TabletopScreen({ armies, index, onBack }: Props) {
                   }
                 }}
               >
-                <Icon name="reroll" size={15} /> New Match Setup
+                🔄 New Match Setup
               </button>
             </div>
           </div>
