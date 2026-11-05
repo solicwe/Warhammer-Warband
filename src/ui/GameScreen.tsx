@@ -1815,7 +1815,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
         <>
           <div className="handoff">{pName(s, p)}: which units start in Reserves?</div>
           <div className="small muted">Deep Strike and Strategic Reserves are declared now, before anything is set up, and cannot be changed later.</div>
-          <div className="unit-strip">
+          <div className="unit-strip" style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
             {pending.map((x) => {
               const isSelected = resPick.includes(x.id);
               const sub = unitSubDetails(x);
@@ -1823,33 +1823,102 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               return (
                 <button
                   key={x.id}
-                  className={`unit-pill ${isSelected ? 'sel res-active' : ''} ${sub.text ? 'has-sub' : ''}`}
+                  className={`unit-pill ${isSelected ? 'res-active' : ''} ${sub.text ? 'has-sub' : ''}`}
                   aria-pressed={isSelected}
+                  style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    textAlign: 'left',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: isSelected ? '2px solid var(--accent)' : '1px solid var(--line-2)',
+                    borderLeft: isSelected ? '5px solid var(--accent)' : '1px solid var(--line-2)',
+                    background: isSelected ? 'var(--surface-2)' : 'var(--surface)',
+                    color: 'var(--text)',
+                    boxShadow: isSelected ? '0 2px 8px var(--accent-soft)' : undefined,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                    cursor: 'pointer',
+                  }}
                   onClick={() => {
                     setFocusUnit(x.id);
                     setResPick((cur) => (cur.includes(x.id) ? cur.filter((i) => i !== x.id) : [...cur, x.id]));
                   }}
                 >
-                  <span className="unit-pill-main">
-                    <span style={{ fontWeight: 600 }}>{dispName.length > 22 ? dispName.slice(0, 21) + '…' : dispName}</span>
-                    <span className="muted"> {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}</span>
+                  <span className="unit-pill-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: '1 1 auto', overflow: 'hidden' }}>
+                      <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {dispName}
+                      </span>
+                      <span className="muted" style={{ fontSize: 12, color: 'var(--text-2)', flexShrink: 0 }}>
+                        {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}
+                      </span>
+                    </span>
                     {isSelected ? (
-                      <span className="reserves-tag sel" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: 'var(--accent)', color: 'var(--on-fill)', fontSize: 11, fontWeight: 800 }}>
-                        <Icon name="check" size={12} /> IN RESERVES
+                      <span
+                        className="reserves-tag sel"
+                        style={{
+                          flexShrink: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '3px 10px',
+                          borderRadius: 4,
+                          background: 'var(--accent)',
+                          color: 'var(--on-fill)',
+                          fontSize: 11.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.04em',
+                          boxShadow: '0 1px 4px var(--accent-soft)',
+                        }}
+                      >
+                        <Icon name="check" size={13} /> IN RESERVES
                       </span>
                     ) : (
-                      <span className="reserves-tag" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line-2)', color: 'var(--text-3)', fontSize: 11 }}>
+                      <span
+                        className="reserves-tag"
+                        style={{
+                          flexShrink: 0,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          border: '1px solid var(--line-2)',
+                          color: 'var(--text-3)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
                         Deploy on board
                       </span>
                     )}
                   </span>
                   {sub.text && (
-                    <span className="unit-pill-sub">
-                      {sub.enh && <span className="pill-enh"><Icon name="enhancement" size={11} />{sub.enh}</span>}
+                    <span
+                      className="unit-pill-sub"
+                      style={{
+                        fontSize: 12,
+                        lineHeight: 1.35,
+                        color: 'var(--text-2)',
+                        marginTop: 2,
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
+                        maxWidth: '100%',
+                      }}
+                    >
+                      {sub.enh && (
+                        <span className="pill-enh" style={{ color: 'var(--accent)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <Icon name="enhancement" size={12} />
+                          {sub.enh}
+                        </span>
+                      )}
                       {sub.enh && (sub.attached || sub.weapons) && <span> · </span>}
-                      {sub.attached && <span className="pill-att">{sub.attached}</span>}
+                      {sub.attached && <span className="pill-att" style={{ color: 'var(--text)', fontWeight: 600 }}>{sub.attached}</span>}
                       {sub.attached && sub.weapons && <span> · </span>}
-                      {sub.weapons && <span className="pill-wep">{sub.weapons}</span>}
+                      {sub.weapons && <span className="pill-wep" style={{ color: 'var(--text-2)' }}>{sub.weapons}</span>}
                     </span>
                   )}
                 </button>

@@ -284,6 +284,12 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
       const normCss = stylesCss.replace(/\r\n/g, '\n');
       expect(normCss).toContain(".unit-pill-count { display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; padding: 1px 6px; font-size: 11px; font-weight: 800; color: var(--accent);");
       expect(normCss).toContain(".combat-phase-title {\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: 0.1em;\n  text-transform: uppercase;\n  color: var(--accent);");
+
+      // GameScreen reserves card: no white-on-light text clash
+      const gameScreenTsx = fs.readFileSync('src/ui/GameScreen.tsx', 'utf8');
+      expect(gameScreenTsx).not.toContain("className={`unit-pill ${isSelected ? 'sel res-active' : ''}");
+      expect(normCss).toContain(".unit-pill.res-active {\n  border: 2px solid var(--accent) !important;");
+      expect(normCss).toContain(".unit-pill.res-active .unit-pill-main,\n.unit-pill.res-active .unit-pill-main span {\n  color: var(--text) !important;");
     });
   });
 });
