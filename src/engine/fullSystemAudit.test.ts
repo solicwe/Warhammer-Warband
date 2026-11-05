@@ -259,5 +259,31 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
         }
       }
     });
+
+    it('Global color audit: no rogue cyan blue colors in TabletopScreen, BattleLogs, or DiceTray, with clean contrast across themes', () => {
+      const tabletopTsx = fs.readFileSync('src/ui/TabletopScreen.tsx', 'utf8');
+      const battleLogsTsx = fs.readFileSync('src/ui/BattleLogsModal.tsx', 'utf8');
+      const diceTrayTsx = fs.readFileSync('src/ui/DiceTray.tsx', 'utf8');
+      const stylesCss = fs.readFileSync('src/ui/styles.css', 'utf8');
+
+      // TabletopScreen: no cyan blue in Battlefield & Layout, secondary headers, or roll-offs
+      expect(tabletopTsx).not.toContain("color: '#38bdf8'");
+      expect(tabletopTsx).not.toContain("rgba(56, 189, 248");
+      expect(tabletopTsx).not.toContain("color: '#0369a1'"); // Redraw button on parchment is no longer baby blue
+
+      // BattleLogsModal: uses theme semantic variables rather than hardcoded pastel colors on light background
+      expect(battleLogsTsx).not.toContain("color:\r\n                            log.mode === 'simulator'\r\n                              ? '#38bdf8'");
+      expect(battleLogsTsx).toContain("var(--p0)");
+      expect(battleLogsTsx).toContain("var(--good)");
+      expect(battleLogsTsx).toContain("var(--warn)");
+
+      // DiceTray: re-roll instructions use theme accent
+      expect(diceTrayTsx).toContain("color: 'var(--accent)', fontWeight: 700");
+
+      // styles.css: unit-pill-count and combat modal steps use theme variables
+      const normCss = stylesCss.replace(/\r\n/g, '\n');
+      expect(normCss).toContain(".unit-pill-count { display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; padding: 1px 6px; font-size: 11px; font-weight: 800; color: var(--accent);");
+      expect(normCss).toContain(".combat-phase-title {\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: 0.1em;\n  text-transform: uppercase;\n  color: var(--accent);");
+    });
   });
 });

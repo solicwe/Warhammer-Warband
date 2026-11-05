@@ -1075,7 +1075,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                         {p0Name}
                       </span>
                       <div className={`ro-die ${landedDice && tempDice.p0 > tempDice.p1 ? 'win' : ''}`}>
-                        <Die v={tempDice.p0} color={landedDice && tempDice.p0 > tempDice.p1 ? '#38bdf8' : '#64748b'} size={68} />
+                        <Die v={tempDice.p0} color={landedDice && tempDice.p0 > tempDice.p1 ? 'var(--accent)' : 'var(--text-3)'} size={68} />
                       </div>
                     </div>
 
@@ -1086,7 +1086,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                         {p1Name}
                       </span>
                       <div className={`ro-die ${landedDice && tempDice.p1 > tempDice.p0 ? 'win' : ''}`}>
-                        <Die v={tempDice.p1} color={landedDice && tempDice.p1 > tempDice.p0 ? '#38bdf8' : '#64748b'} size={68} />
+                        <Die v={tempDice.p1} color={landedDice && tempDice.p1 > tempDice.p0 ? 'var(--accent)' : 'var(--text-3)'} size={68} />
                       </div>
                     </div>
                   </div>
@@ -1282,9 +1282,9 @@ export function TabletopScreen({ index, onBack }: Props) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
-                background: 'rgba(239, 68, 68, 0.14)',
-                color: '#f87171',
-                borderColor: 'rgba(239, 68, 68, 0.35)',
+                background: 'var(--bad-soft)',
+                color: 'var(--bad)',
+                borderColor: 'var(--bad)',
               }}
               onClick={handleUndo}
               title={`Undo last action: ${undoStack[undoStack.length - 1].actionDesc}`}
@@ -1296,7 +1296,18 @@ export function TabletopScreen({ index, onBack }: Props) {
           {subView === 'player' ? (
             <button
               className="btn"
-              style={{ minHeight: 36, padding: '4px 12px', fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)' }}
+              style={{
+                minHeight: 36,
+                padding: '4px 12px',
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'var(--accent-soft)',
+                color: 'var(--accent)',
+                borderColor: 'var(--accent)',
+              }}
               onClick={() => setSubView('overview')}
             >
               <Icon name="map" size={15} /> Battlefield & Layout
@@ -1529,7 +1540,7 @@ export function TabletopScreen({ index, onBack }: Props) {
           <div className="card" style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeP.secondaryMode === 'fixed' ? '#10b981' : '#38bdf8' }}>
+                <div style={{ fontSize: 11, fontWeight: 850, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeP.secondaryMode === 'fixed' ? '#10b981' : 'var(--accent)' }}>
                   SECONDARY MISSIONS · {activeP.secondaryMode === 'fixed' ? 'FIXED OBJECTIVES' : 'TACTICAL'}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', letterSpacing: '0.02em', marginTop: 2 }}>
@@ -1557,7 +1568,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                     Fixed
                   </button>
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: activeP.secondaryMode === 'fixed' ? '#10b981' : '#38bdf8', lineHeight: 1, marginTop: 2 }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: activeP.secondaryMode === 'fixed' ? '#10b981' : 'var(--accent)', lineHeight: 1, marginTop: 2 }}>
                   {activeP.secondaryVp} <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)' }}>/ 40</span>
                 </div>
                 <div className="tiny muted">
@@ -1851,10 +1862,10 @@ export function TabletopScreen({ index, onBack }: Props) {
                             style={{
                               minHeight: 32,
                               fontSize: 12,
-                              fontWeight: 600,
+                              fontWeight: 700,
                               padding: '2px 14px',
-                              color: '#78716c',
-                              borderColor: '#d5c8b2',
+                              color: '#57534e',
+                              borderColor: '#c8b79b',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 5,
@@ -1870,14 +1881,15 @@ export function TabletopScreen({ index, onBack }: Props) {
                             style={{
                               minHeight: 32,
                               fontSize: 12,
-                              fontWeight: 700,
+                              fontWeight: 800,
                               padding: '2px 16px',
-                              background: '#e0f2fe',
-                              color: '#0369a1',
-                              borderColor: '#bae6fd',
+                              background: '#f5eedc',
+                              color: '#854d0e',
+                              borderColor: '#c8b79b',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 5,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                             }}
                             onClick={() => handleFreeRedraw(activePlayer, cardId)}
                             title="Redraw: Discard and draw a replacement card without deducting CP"
@@ -1903,8 +1915,9 @@ export function TabletopScreen({ index, onBack }: Props) {
                   padding: '0 14px',
                   fontSize: 13,
                   fontWeight: 700,
-                  color: '#f87171',
-                  borderColor: 'rgba(239, 68, 68, 0.35)',
+                  background: 'var(--bad-soft)',
+                  color: 'var(--bad)',
+                  borderColor: 'var(--bad)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 5,
@@ -2010,7 +2023,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                       <span>{secondaryById(id)?.name ?? id}</span>
                       <button
                         className="btn ghost"
-                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: 'var(--bad)', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(0, id, 5)}
                         title="Return this card to hand and refund VP"
                       >
@@ -2032,7 +2045,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                       <span>{secondaryById(id)?.name ?? id}</span>
                       <button
                         className="btn ghost"
-                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: '#f87171', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                        style={{ minHeight: 24, padding: '1px 6px', fontSize: 10.5, color: 'var(--bad)', display: 'inline-flex', alignItems: 'center', gap: 3 }}
                         onClick={() => handleUndoScore(1, id, 5)}
                         title="Return this card to hand and refund VP"
                       >

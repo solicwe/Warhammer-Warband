@@ -1345,7 +1345,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           : <span className={`side-dot s${u.owner}`} aria-hidden="true" />;
       })()} {u.name.length > 26 ? u.name.slice(0, 25) + '…' : u.name}
       <span className="muted"> {alive(u).length}/{u.startingStrength}</span>
-      {canMove && <span className="muted" style={{ color: '#38bdf8', fontWeight: 600 }}> · {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"</span>}
+      {canMove && <span className="muted" style={{ color: 'var(--accent)', fontWeight: 700 }}> · {(alive(u)[0]?.profile.M ?? 0) + unitFlags(s, u).move}"</span>}
       {u.battleShocked ? ' ' : ''}
       {s.players[1 - u.owner].oathTarget === u.id && <span className="oath-tag">{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</span>}
       {s.ftggPairs?.some((p) => p.spottedId === u.id && p.turn === s.turn && p.phase === s.phase) && <span className="oath-tag spotted-tag">SPOTTED</span>}
@@ -2181,7 +2181,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
         {!bots.includes(s.active) && s.players[s.active].secActive.includes('a-tempting-target') && (
-          <div className="card" style={{ padding: '10px 12px', marginBottom: 8, border: '1px solid #ea580c', background: 'rgba(234, 88, 12, 0.08)' }}>
+          <div className="card" style={{ padding: '10px 12px', marginBottom: 8, border: '1.5px solid var(--accent)', background: 'var(--surface-2)' }}>
             <div className="small" style={{ marginBottom: 6 }}>
               <b>A Tempting Target</b> — select the decoy objective in No Man's Land (5VP if controlled):
             </div>
@@ -2193,7 +2193,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                   <button
                     key={obj.id}
                     className={`unit-pill ${isSel ? 'sel' : ''}`}
-                    style={isSel ? { background: '#ea580c', borderColor: '#ea580c', color: '#fff', fontWeight: 700 } : {}}
+                    style={isSel ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: 'var(--on-fill)', fontWeight: 700 } : {}}
                     aria-pressed={isSel}
                     onClick={() => {
                       const e = act((g) => setTemptingTarget(g, g.active, obj.id));
@@ -2786,7 +2786,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                 {(tHasStealth || tHasCover || tHasLoneOp) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                     {tHasStealth && (
-                      <span className="oath-tag" style={{ background: '#090d16', borderColor: '#38bdf8', color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
+                      <span className="oath-tag" style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 800 }}>
                         <Icon name="stealth" size={13} /> Stealth (−1 to Hit)
                       </span>
                     )}
@@ -3882,7 +3882,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                   const idx = s.objectives.findIndex((o) => o.id === P.sec.temptingTarget);
                                   const obj = s.objectives[idx];
                                   return (
-                                    <span style={{ color: '#ea580c', fontWeight: 700 }}>
+                                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
                                       Objective {idx + 1} {obj ? `(${objLocationDesc(s, obj)})` : ''}
                                     </span>
                                   );
@@ -3897,7 +3897,7 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
                                       <button
                                         key={obj.id}
                                         className={`unit-pill ${isSel ? 'sel' : ''}`}
-                                        style={isSel ? { background: '#ea580c', borderColor: '#ea580c', color: '#fff', fontWeight: 700, minHeight: 30, fontSize: 12, padding: '2px 8px' } : { minHeight: 30, fontSize: 12, padding: '2px 8px' }}
+                                        style={isSel ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: 'var(--on-fill)', fontWeight: 700, minHeight: 30, fontSize: 12, padding: '2px 8px' } : { minHeight: 30, fontSize: 12, padding: '2px 8px' }}
                                         onClick={() => {
                                           const e = act((g) => setTemptingTarget(g, p, obj.id));
                                           if (e) flash(e);

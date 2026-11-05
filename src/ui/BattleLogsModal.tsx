@@ -181,22 +181,22 @@ export function BattleLogsModal({ onClose, onReplay }: Props) {
                           borderRadius: 4,
                           background:
                             log.mode === 'simulator'
-                              ? 'rgba(56, 189, 248, 0.15)'
+                              ? 'var(--p0-soft)'
                               : log.mode === 'tabletop'
-                              ? 'rgba(74, 222, 128, 0.15)'
-                              : 'rgba(251, 191, 36, 0.15)',
+                              ? 'var(--good-soft)'
+                              : 'var(--warn-soft)',
                           color:
                             log.mode === 'simulator'
-                              ? '#38bdf8'
+                              ? 'var(--p0)'
                               : log.mode === 'tabletop'
-                              ? '#4ade80'
-                              : '#fbbf24',
+                              ? 'var(--good)'
+                              : 'var(--warn)',
                           border: `1px solid ${
                             log.mode === 'simulator'
-                              ? 'rgba(56, 189, 248, 0.35)'
+                              ? 'var(--p0)'
                               : log.mode === 'tabletop'
-                              ? 'rgba(74, 222, 128, 0.35)'
-                              : 'rgba(251, 191, 36, 0.35)'
+                              ? 'var(--good)'
+                              : 'var(--warn)'
                           }`,
                         }}
                       >

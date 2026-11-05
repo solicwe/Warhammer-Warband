@@ -156,7 +156,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
 
         {isFate && fPool.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
-            <span className="tiny" style={{ color: '#38bdf8', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="tiny" style={{ color: 'var(--accent)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Icon name="dice" size={14} /> Strands of Fate:
             </span>
             {fPool.map((v, idx) => {
@@ -364,7 +364,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
         )}
 
         {pending && (
-          <div className="tiny" style={{ padding: '0 14px', color: '#38bdf8' }}>
+          <div className="tiny" style={{ padding: '0 14px', color: 'var(--accent)', fontWeight: 700 }}>
             <Icon name="dice" size={13} /> {pending.which === 'all' ? 'Re-roll all (ability)' : 'Re-roll 1s (ability)'}: tap dice to select/deselect (failed dice pre-selected).
           </div>
         )}
