@@ -2384,11 +2384,21 @@ export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number
   return bankSecondary(s, p, id, vp);
 }
 
-/** Tactical: discard an active card; at the end of your own turn this gains 1CP. */
+/** Tactical: discard an active card; at the end of your own turn this gains 1CP.
+ *  If the card cannot be achieved (secondaryDead), immediately draw a replacement in tactical mode. */
 export function discardSecondary(s: GameState, p: PlayerId, id: string) {
   const P = s.players[p];
+  const dead = secondaryDead(s, p, id);
   P.secActive = P.secActive.filter((x) => x !== id);
-  if (s.active === p) { P.cp += 1; log(s, `${P.name} discards ${secondaryById(id).name} → +1CP`, 'cp', p); }
+  if (s.active === p) {
+    P.cp += 1;
+    log(s, `${P.name} discards ${secondaryById(id).name}${dead ? " (cannot be achieved)" : ""} → +1CP`, "cp", p);
+  } else {
+    log(s, `${P.name} discards ${secondaryById(id).name}${dead ? " (cannot be achieved)" : ""}`, "info", p);
+  }
+  if (P.secMode === "tactical" && dead) {
+    drawUpTo(s, p, 2);
+  }
 }
 
 /** Once per battle, end of your Command phase: pay 1CP to replace one active card. */

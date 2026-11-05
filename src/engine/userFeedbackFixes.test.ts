@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { canCrossDense, blockingWalls } from './pathing';
 import { weaponFx } from './weaponFx';
-import { stratagemBlock, stratRuleFor } from '../rules-engine/stratagems';
+import { stratagemBlock } from '../rules-engine/stratagems';
 import { discardSecondary } from './game';
 import { secondaryDead } from './secondaries';
-import type { GameState, ModelState, StratagemData } from './types';
+import type { GameState, ModelState, StratagemData, WeaponProfileData } from './types';
 
 describe('User Feedback Fixes Verification', () => {
   it('Beast keyword allows passing through dense walls', () => {
@@ -47,10 +47,10 @@ describe('User Feedback Fixes Verification', () => {
   });
 
   it('Fatecaster greatbow and other bows get arrow effect instead of psychic', () => {
-    const fatecasterProf = { name: 'Fatecaster greatbow', skill: 3, range: 30, A: '2', S: 5, AP: -2, D: '2', abilities: ['ignores cover', 'lethal hits', 'precision'] };
+    const fatecasterProf: WeaponProfileData = { name: 'Fatecaster greatbow', range: 30, A: '2', skill: '3+', S: 5, AP: -2, D: '2', abilities: ['ignores cover', 'lethal hits', 'precision'] };
     expect(weaponFx('Fatecaster greatbow', fatecasterProf, false)).toBe('arrow');
 
-    const dartBowProf = { name: 'Dart-bow and tri-blade', skill: 3, range: 24, A: 'D3+1', S: 4, AP: 0, D: '2', abilities: [] };
+    const dartBowProf: WeaponProfileData = { name: 'Dart-bow and tri-blade', range: 24, A: 'D3+1', skill: '3+', S: 4, AP: 0, D: '2', abilities: [] };
     expect(weaponFx('Dart-bow and tri-blade', dartBowProf, false)).toBe('arrow');
   });
 
@@ -72,22 +72,21 @@ describe('User Feedback Fixes Verification', () => {
       ],
     } as unknown as GameState;
 
-    const glimmershift = {
+    const glimmershift: StratagemData = {
       id: 'glimmershift-portal',
       name: 'GLIMMERSHIFT PORTAL',
       cp: 1,
       phase: 'fight',
       turn: 'opponent',
-      detachment: 'Changehost of Deceit',
       text: 'Remove those units from the battlefield and place them into Strategic Reserves.',
-    } as unknown as StratagemData;
+    };
 
     const targetUnit = s.units[0];
     const blockReason = stratagemBlock(s, 0, glimmershift, targetUnit, { react: true });
     expect(blockReason).toContain('Strategic Reserves limit reached');
   });
 
-  it('Discarding a secondary awards CP and swapSecondary replaces it', () => {
+  it('Discarding an unachievable secondary immediately draws a replacement', () => {
     const s = {
       round: 2,
       active: 0,
@@ -124,8 +123,9 @@ describe('User Feedback Fixes Verification', () => {
     expect(secondaryDead(s, 0, 'assassination')).toBe(true);
     discardSecondary(s, 0, 'assassination');
 
-    // It should have discarded assassination and awarded +1 CP
+    // It should have discarded assassination, drawn replacement immediately, and awarded +1 CP
     expect(s.players[0].secActive).not.toContain('assassination');
+    expect(s.players[0].secActive).toContain('no-prisoners');
     expect(s.players[0].cp).toBe(2);
   });
 });

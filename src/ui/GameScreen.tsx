@@ -3594,7 +3594,17 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
           </div>
         )}
       </div>
-      {isMobileScreen && <MapCam s={s} focus={camFocus(modeUnit ?? selUnit)} />}
+      {(isMobileScreen || liveMap) && (
+        <MapCam
+          s={s}
+          focus={camFocus(modeUnit ?? selUnit)}
+          onClose={() => {
+            setLiveMap(false);
+            flash('Mirror closed (re-enable in Menu)');
+          }}
+          forceShow={liveMap}
+        />
+      )}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
@@ -3890,6 +3900,9 @@ export function GameScreen({ initial, onExit }: { initial: GameState; onExit: ()
               </button>
               <button className="menu-item" onClick={() => { setShowMenu(false); setShowMissions(true); }}>
                 <Icon name="objective" size={22} /><span><b>Mission rules</b><small>Scoring for both sides, manual scoring</small></span>
+              </button>
+              <button className="menu-item" onClick={() => { const next = !liveMap; setLiveMap(next); setShowMenu(false); flash(next ? 'Mirror opened' : 'Mirror closed'); }}>
+                <Icon name="camera" size={22} /><span><b>Mirror camera</b><small>{liveMap ? 'Active · tap to hide' : 'Picture-in-picture view of battlefield'}</small></span>
               </button>
             </div>
             <div className="field">
