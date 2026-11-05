@@ -3224,6 +3224,20 @@ select option {
 }
 
 /* ---------- Tabletop Companion Layout & Wizard Styles ---------- */
+.tabletop-companion {
+  height: 100%;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tabletop-companion > .screen {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+}
 .tt-wizard { display: flex; flex-direction: column; gap: 14px; }
 .tt-step-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
 .tt-step-pill { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--text-3); }

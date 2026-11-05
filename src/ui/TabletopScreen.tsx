@@ -582,8 +582,8 @@ export function TabletopScreen({ index, onBack }: Props) {
   // ==========================================
   if (mode === 'setup') {
     return (
-      <div className="app tabletop-companion" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <header className="appbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="app tabletop-companion" style={{ height: '100%', maxHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header className="appbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className="icon-btn" onClick={onBack} aria-label="Back" style={{ minWidth: 40, minHeight: 40 }}>
               <Icon name="back" size={20} />
@@ -602,7 +602,7 @@ export function TabletopScreen({ index, onBack }: Props) {
         </header>
 
         {/* Step Indicator */}
-        <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: 'var(--surface-2)', borderBottom: '1px solid var(--line-2)' }}>
+        <div style={{ display: 'flex', gap: 6, padding: '8px 14px', background: 'var(--surface-2)', borderBottom: '1px solid var(--line-2)', flexShrink: 0 }}>
           <button
             className={`btn grow ${setupStep === 1 ? 'primary' : 'ghost'}`}
             style={{ minHeight: 34, fontSize: 11.5, padding: 0, fontWeight: 700 }}
@@ -626,7 +626,7 @@ export function TabletopScreen({ index, onBack }: Props) {
           </button>
         </div>
 
-        <main className="screen" style={{ flex: 1, padding: '14px', overflowY: 'auto' }}>
+        <main className="screen" style={{ flex: '1 1 0%', minHeight: 0, padding: '14px 14px calc(48px + env(safe-area-inset-bottom, 20px))', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {/* STEP 1: FORCE DISPOSITIONS & PLAYABLE LAYOUTS (LOCKED TO MATCHUP) */}
           {setupStep === 1 && (
             <div className="tt-wizard">
@@ -1045,9 +1045,9 @@ export function TabletopScreen({ index, onBack }: Props) {
   // RENDER: IN-MATCH (ACTIVE PLAYER OR OVERVIEW)
   // ==========================================
   return (
-    <div className="app tabletop-companion" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="app tabletop-companion" style={{ height: '100%', maxHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Top Header */}
-      <header className="appbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px' }}>
+      <header className="appbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button className="icon-btn" onClick={onBack} aria-label="Exit Tabletop" style={{ minWidth: 40, minHeight: 40 }}>
             <Icon name="back" size={20} />
@@ -1118,7 +1118,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
       {/* VIEW 1: ACTIVE PLAYER VIEW (Dedicated per player) */}
       {subView === 'player' && (
-        <main className="screen" style={{ flex: 1, padding: '12px 14px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <main className="screen" style={{ flex: '1 1 0%', minHeight: 0, padding: '12px 14px calc(48px + env(safe-area-inset-bottom, 20px))', overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Active Player Banner */}
           <div
             className="tt-active-player-banner"
@@ -1638,7 +1638,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
       {/* VIEW 2: TABLE OVERVIEW & LAYOUT INSPECTOR */}
       {subView === 'overview' && (
-        <main className="screen" style={{ flex: 1, padding: '14px 14px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <main className="screen" style={{ flex: '1 1 0%', minHeight: 0, padding: '14px 14px calc(48px + env(safe-area-inset-bottom, 20px))', overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Side-by-side Scoreboard */}
           <div className="card" style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
             <div style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
