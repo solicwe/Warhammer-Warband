@@ -81,5 +81,10 @@ Two bot-vs-bot games per faction with its quick-play list. Only the list's own d
 
 Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were checked rule by rule when they were added. The other factions were filled in by generator scripts (`scripts/gen-*`), and many of their entries only carry the card text with `"status": "auto"` and no effect. Those show as automated in the app but do nothing; they are counted as "text only" here.
 
-## Text-only and partial rules by faction
+## Owner-approved rule variations
 
+- Thousand Sons: a failed Ritual remains available to another eligible caster that still has an attempt.
+- Tzaangor Enlightened with Fatecaster Greatbows: Malign Trickery is offered once at the end of the opponent's
+  Movement phase when an enemy is within 12" and the unit is not engaged.
+
+## Text-only and partial rules by faction

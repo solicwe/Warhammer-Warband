@@ -23,7 +23,8 @@ which registers every faction with the hooks below.
   (see `src/engine/types.ts`). The UI and the bot call the same functions, so anything the player can do the bot can
   do, and every game can be replayed from its seed.
 - **`src/ui/`** renders a `GameState` and turns taps into engine calls. Game state lives in `store.ts` (`useGame`):
-  each action clones the state, applies one engine call and keeps an undo snapshot.
+  each action clones the state, applies one engine call and keeps an undo snapshot. Live games also record each
+  committed state for replay; undo removes the matching replay frame. Replay steps sync into the mounted screen.
 - **`data/`** holds the rules as data. Most rules are added or fixed here without touching code.
 
 ## The game loop
@@ -106,9 +107,11 @@ Most rules are not code but data, read by three engines:
    `if` lists conditions, all evaluated by `cond()`. `effectsFor(s, u)` collects everything in force on a unit
    from its abilities, enhancements, detachment rules, army rules and timed buffs.
 2. **Activations** (`activations.ts`): rules used at a moment. An `act` has `when` (a trigger such as
-   `commandStart`, `selectedToShoot`, `enemyMovedNear`), `limit` (once per phase / turn / round / battle), a
-   `target` filter and `do` (actions: `move`, `mortals`, `heal`, `buff` with `until`, `mark` ...). With `auto: true`
-   it fires by itself; otherwise the player gets a button and the bot decides with `botUse` / `botIf`.
+   `commandStart`, `selectedToShoot`, `enemyMovedNear`, `opponentMovementEnd`), `limit` (once per phase / turn /
+   round / battle), a `target` filter and `do` (actions: `move`, `mortals`, `heal`, `buff` with `until`, `mark` ...).
+   With `auto: true` it fires by itself; otherwise the player gets a button and the bot decides with `botUse` / `botIf`.
+   Phase-end triggers must be offered by the matching turn-loop path in `game.ts`; `opponentMovementEnd` opens its
+   reaction before the active player enters Shooting.
 3. **Stratagems** (`stratagems.ts`): a hand-written entry in `data/stratagems/<FACTION>.json` wins; otherwise the
    card text (WHEN / TARGET / EFFECT) is read into the same `effects` / `do` form. `canUseStratagem` and
    `spendStratagem` (`state.ts`) check the timing and target and take the CP for every stratagem.

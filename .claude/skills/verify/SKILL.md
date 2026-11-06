@@ -70,3 +70,6 @@ or run it on the old code), then pass.
   docs and skills are safe to edit.
 - Charge reach is measured to Engagement Range, not base contact: target filtering, charge result feedback and the
   auto-charge path must all allow the rolled distance plus the 1" Engagement Range.
+- On this Windows checkout, the default Vitest worker pool starved long bot-game tests and caused 300-second
+  timeouts. An isolated Changehost game passed with `--maxWorkers=1`; the full suite passed with `--maxWorkers=4`.
+  When failures are only timeouts, cap concurrency before treating them as code failures.

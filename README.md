@@ -52,6 +52,9 @@ The game follows the 11th edition core rules. A summary of what is modelled, wit
 
 - **Phases.** Each turn runs Command, Movement, Shooting, Charge and Fight, in that order. Command points, Battle-shock,
   reserves, Deep Strike, Advance, Fall Back, overwatch, heroic interventions, pile-in and consolidation are all in.
+- **Owner-approved rule variations.** Failed Thousand Sons Rituals can be retried by another eligible caster.
+  Tzaangor Enlightened with Fatecaster Greatbows can use Malign Trickery once at the end of the opponent's Movement
+  phase when an enemy is within 12" and the unit is not engaged.
 - **Battle formation.** Before setting anything up, each player declares which units start in Reserves (Strategic
   Reserves or Deep Strike), within the points limit. It cannot be changed later; deployment then only sets units up,
   one at a time each.
@@ -156,7 +159,10 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   the table (reserves and embarked units) and can be folded down to its handle.
 - While a sheet is up, a small live map window under the phase tabs shows the unit you picked, zoomed in; with nothing
   picked it shows the whole board while the sheet hides most of it. It never opens over the dice. Drag it to move it,
-  or close it.
+  or close it; it moves above an open mission sheet.
+- Mission sheets close from their handle by tapping or swiping down. The target panel and mission sheets scroll with
+  touch, and the Deep Strike panel shows the required distance from enemy units. Crushing Impact remains a manual
+  choice after a successful charge.
 - Pinch to zoom and drag to pan. You can zoom out to twice the table's width, so all of it fits above the bottom sheet.
   Missions that score by table quarter label Q1–Q4 and mark the central 6" exclusion zone. An objective's outline
   takes the colour of whoever has more OC on it right now; the game settles control at the end of each phase.
@@ -176,8 +182,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
   play. Closing the tab or the browser loses nothing.
-- **Battle history.** Finished simulator and campaign matches can be replayed one turn at a time from History. Replays
-  are read-only and do not replace the current save or create another history entry.
+- **Battle history.** Finished simulator and campaign matches can be replayed action by action from History, with
+  Previous, Next and Play/Pause. Replays are read-only and do not replace the current save or create another history
+  entry.
 
 Nothing leaves your device, and the site sends a Content Security Policy that only allows its own files and Google Fonts.
 

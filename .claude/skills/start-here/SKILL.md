@@ -114,9 +114,12 @@ If nothing new was learned, say so in one line; do not invent a lesson.
 
 Made in conversation, so they are not all visible in the code. A change that would undo one needs the owner's yes.
 
-- **Normal games follow the official rules.** House changes live in the campaign only: random Force Dispositions,
-  both sides drawing their Secondary cards at round 1, the small kill bonus (1 VP a unit, 2 for a character, vehicle
-  or monster, at most 12 a battle).
+- **Normal games follow the official rules, except for the owner-approved game-wide variations below.** Other house
+  changes live in the campaign only: random Force Dispositions, both sides drawing their Secondary cards at round 1,
+  the small kill bonus (1 VP a unit, 2 for a character, vehicle or monster, at most 12 a battle).
+- **Owner-approved game-wide exceptions** (confirmed in the Ritual / Tzaangor rules discussion): another eligible
+  Thousand Sons caster may retry a failed Ritual, and Fatecaster Greatbows use Malign Trickery once at the end of
+  the opponent's Movement phase when an enemy is within 12" and the unit is not engaged.
 - **Campaign battles are normal battles**: an official primary, Tactical secondaries, five rounds; won on points.
 - **Campaign events never pile on a losing player**: enemy reinforcements only while the player is ahead, on a roll,
   at most once a battle. A loss still pays Scrap; the Scrap reward card pays 80-120 ("more relic" meant that card); BATTLELINE and

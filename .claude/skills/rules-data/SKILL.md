@@ -49,6 +49,8 @@ skill is the checklist around them.
 - Do not trust every exported army-rule row to belong to its faction. The data export repeats Combat Doctrines for
   non-Space-Marine factions; compare the rule's faction keywords and add a regression test before regenerating
   `public/data/factions/`.
+- A new phase-end activation trigger must be wired into both the turn-loop end-phase path and `AUTO_ONLY`; data
+  validation alone only proves the trigger name is accepted. Test the actual reaction window through `endPhase`.
 - A stratagem window can open at the right moment and still offer the wrong targets: Fire Overwatch opened at the end
   of the Movement phase and let any enemy within 24" be shot, though only a unit that moved or was set up may be.
   Check the TARGET line as well as the WHEN line, in the engine (`overwatchTargets`), the player's target list and the

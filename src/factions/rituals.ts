@@ -1,5 +1,5 @@
 // Thousand Sons — Cabal of Sorcerers: at the start of the Shooting phase, models with the ability attempt Rituals.
-// Each model attempts one Ritual a turn (Magnus two), each Ritual is attempted once a turn by the army.
+// Each model attempts one Ritual a turn (Magnus two); a failed Ritual can be attempted again by another eligible model.
 // Psychic test: 2D6, Channel the Warp adds a third D6; any double or triple costs the model's unit D3 mortal wounds;
 // the total (plus bonuses) must reach the Ritual's Warp Charge. The rules that change any of this live here too:
 // Magnus, Ahriman, Spirit Snare, Immaterial Flare, the enhancements (Diabolic Savant, Warp Syphon, Warpmeld Dagger,
@@ -76,14 +76,14 @@ export function ritualRange(s: GameState, u: UnitState, m: ModelState): number {
 
 function ritualState(s: GameState, p: PlayerId) {
   const P = s.players[p];
-  if (!P.rituals || P.rituals.turn !== s.turn) P.rituals = { turn: s.turn, tried: [], by: {} };
+  if (!P.rituals || P.rituals.turn !== s.turn) P.rituals = { turn: s.turn, tried: [], failed: [], by: {} };
   return P.rituals;
 }
 
-/** Rituals the army can still attempt this turn (Doombolt again once per battle with the Incandaeum). */
+/** Rituals the army can still attempt this turn (failed tests may be retried; the Incandaeum also repeats Doombolt). */
 export function ritualsLeft(s: GameState, p: PlayerId, c?: Caster): Ritual[] {
   const R = ritualState(s, p);
-  return RITUALS.filter((r) => !R.tried.includes(r.id)
+  return RITUALS.filter((r) => !R.tried.includes(r.id) || R.failed?.includes(r.id)
     || (r.id === 'doombolt' && !!c && c.model.source.startsWith('Exalted Sorcerer') && enh(c.unit, 'Incandaeum', c.model) && !(s.players[p].abilityUsed ?? {}).incandaeum));
 }
 
@@ -143,8 +143,9 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   const t = targets.find((x) => x.id === targetId) ?? targets[0];
   if (!t) return { error: 'No unit in range' };
   const R = ritualState(s, p);
-  if (R.tried.includes(r.id) && r.id === 'doombolt') (s.players[p].abilityUsed ??= {}).incandaeum = 'battle';
-  R.tried.push(r.id);
+  const retryingFailure = !!R.failed?.includes(r.id);
+  if (R.tried.includes(r.id) && !retryingFailure && r.id === 'doombolt') (s.players[p].abilityUsed ??= {}).incandaeum = 'battle';
+  if (!R.tried.includes(r.id)) R.tried.push(r.id);
   R.by[c.model.id] = (R.by[c.model.id] ?? 0) + 1;
 
   // the Psychic test
@@ -187,6 +188,9 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   const casterDead = c.model.dead;
   const result = total();
   const manifested = !casterDead && result >= r.wc;
+  R.failed ??= [];
+  if (manifested) R.failed = R.failed.filter((id) => id !== r.id);
+  else if (!R.failed.includes(r.id)) R.failed.push(r.id);
   const bonusTxt = [mods ? `+${mods}` : '', chan ? `+${chan} (channel)` : ''].filter(Boolean).join(' ');
   pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${c.model.name}`, dice: values, result: `${casterDead ? 'the sorcerer fell' : `${result}${bonusTxt ? ` (${bonusTxt})` : ''} vs ${r.wc}+`} → ${manifested ? 'manifested' : 'failed'}${doubles ? ` · perils ${perils} MW` : ''}`, good: manifested });
   log(s, `${c.model.name}: ${r.name} — Psychic test [${values.join(' ')}]${how.channel ? ' (Channelled the Warp)' : ''}${bonusTxt ? ` ${bonusTxt}` : ''}${notes.length ? ` · ${notes.join(' · ')}` : ''} = ${result} vs ${r.wc} → ${manifested ? `manifested on ${t.name}` : 'failed'}`, 'roll', p);

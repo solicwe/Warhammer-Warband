@@ -468,8 +468,8 @@ export interface PlayerState {
   battleSize?: string; // incursion | strike | onslaught (some rules scale with it)
   saga?: { kind: 'hunter' | 'beastslayer' | 'bold'; tally: number; target: number; done: boolean; boasts: string[] }; // Space Wolves Sagas
   abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
-  /** Thousand Sons Cabal of Sorcerers: Rituals attempted this turn (ritual ids) and by which models (model id -> count) */
-  rituals?: { turn: number; tried: string[]; by: Record<string, number>; done?: boolean };
+  /** Thousand Sons Cabal of Sorcerers: Ritual attempts and failed Rituals available to retry this turn. */
+  rituals?: { turn: number; tried: string[]; failed?: string[]; by: Record<string, number>; done?: boolean };
   /** Hexwarp Thrallband: the areas in the Flow of Magic this phase */
   flow?: { key: string; nml: boolean; opp: boolean };
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
@@ -817,4 +817,3 @@ export interface GameState {
   /** T'au Empire For the Greater Good: Guided, Observer, and Spotted unit pairings this phase */
   ftggPairs?: { guidedId: string; observerId: string; spottedId: string; turn: number; phase: Phase }[];
 }
-

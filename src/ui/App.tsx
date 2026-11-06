@@ -76,7 +76,7 @@ export default function App() {
   // leaving a campaign battle goes back to the campaign map (its result moves the run on)
   const exitGame = () => { const sv = loadSaved(); setSaved(sv); setScreen(sv?.campaign ? { kind: 'campaign' } : { kind: 'home' }); };
   if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen
-    key={screen.replay ? `replay-${screen.replay.index}` : 'live'}
+    key={screen.replay ? 'replay' : 'live'}
     initial={screen.state}
     replay={!!screen.replay}
     replayIndex={screen.replay?.index}

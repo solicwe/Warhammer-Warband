@@ -22,7 +22,7 @@ import { endSpotBlocked, isMV, pathBlocked, pathLength, settleMove } from './pat
 import { detOnCommandStart } from '../rules-engine/detachments';
 import { activeRules, addTimed, applyStaticEffects, canDo, cond, effectsFor, expireTimed, isRiled, modelOc, rollMods, unitFlags } from '../rules-engine/effects';
 import { autoSelectRisenRubricae, hasRisenRubricae, risenRubricaeCandidates, setRisenRubricae, syncRisenRubricaeWithReserves, toggleRisenRubricae } from '../factions/thousandSons';
-import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
+import { arrivalShock, fire, fireAll, fireFor, initAbilityChoices, initSagas, ldTest, offerDone, offerOpponentMovementEnd, offerReactions, resolveRevivals, sagaBoasts, setEmbarkNear, setZoneCheck, shockTest } from '../rules-engine/activations';
 
 
 
@@ -1281,6 +1281,7 @@ export function endPhase(s: GameState) {
       if (!unitFlags(s, u).secureAtMovementEnd || !hasKw(u, 'INFANTRY')) continue;
       for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
+    if (offerOpponentMovementEnd(s)) return;
   }
   emit(s, 'phaseEnd', { phase: s.phase });
   resolveRevivals(s);

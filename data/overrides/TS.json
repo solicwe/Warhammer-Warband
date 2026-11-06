@@ -490,6 +490,15 @@
      "hellforged weapons"
     ]
    }
+  },
+  {
+   "name": "Tzaangor Enlightened with Fatecaster Greatbows",
+   "abilities": [
+    {
+     "name": "Malign Trickery",
+     "text": "At the end of your opponent's Movement phase, if this unit is not within Engagement Range of one or more enemy units and an enemy unit is within 12\" of it, this unit can make a Normal move of up to D6\"."
+    }
+   ]
   }
  ],
  "detachments": [

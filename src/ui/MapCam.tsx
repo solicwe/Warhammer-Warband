@@ -86,7 +86,13 @@ export function MapCam({
       setCovered(now);
 
       const board = document.querySelector('.board-wrap');
-      if (board) setTop(board.getBoundingClientRect().top + 8);
+      if (board) {
+        const baseTop = board.getBoundingClientRect().top + 8;
+        const tray = document.querySelector('.tray');
+        const cameraHeight = document.querySelector('.map-cam')?.getBoundingClientRect().height ?? 160;
+        const trayTop = tray ? tray.getBoundingClientRect().top - cameraHeight - 8 : baseTop;
+        setTop(Math.max(8, Math.min(baseTop, trayTop)));
+      }
     };
     check();
     const t = window.setInterval(check, 500);

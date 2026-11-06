@@ -7,12 +7,13 @@ import { applyDetachmentStratagem } from '../rules-engine/stratagems';
 import { botAct } from '../ai/bot';
 import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { listPoints, validateList } from './army';
-import { createGame, formationAt, placeUnit } from './game';
+import { createGame, endPhase, formationAt, placeUnit } from './game';
 import { inFlow } from '../factions/flow';
-import { attemptRitual, casters, ritualsPending, testOdds } from '../factions/rituals';
+import { attemptRitual, casters, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
 import { botRituals } from '../ai/botRituals';
 import { autoDue, autoSelectToShoot, autoStep } from '../ai/autoPlay';
 import { manualActs } from '../rules-engine/activations';
+import { unitDistance } from './state';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
@@ -106,7 +107,7 @@ describe('mustering', () => {
 });
 
 describe('Rituals', () => {
-  it('a Sorcerer can attempt each Ritual once per turn; Doombolt deals mortal wounds when manifested', () => {
+  it('a Sorcerer cannot repeat a manifested Ritual this turn; Doombolt deals mortal wounds', () => {
     const s = game([['Rubric Marines', 5, 100], ['Sorcerer', 1, 95, 'x0']], [['Boyz', 10, 90]]);
     put(s, 'p0-x0', { x: 20, y: 30 });
     const boyz = put(s, 'p1-x0', { x: 20, y: 45 });
@@ -127,6 +128,42 @@ describe('Rituals', () => {
     expect(manifested).toBe(true);
     expect(boyz.models.filter((m) => !m.dead).length).toBeLessThan(before);
     expect(attemptRitual(s, 0, cs[1].model.id, 'doombolt', boyz.id, { channel: false }).error).toMatch(/already attempted/);
+  });
+
+  it("offers Fatecaster Greatbows' Malign Trickery after the opponent's Movement phase", () => {
+    const s = game([['Tzaangor Enlightened with Fatecaster Greatbows', 3, 55]], [['Boyz', 10, 90]]);
+    const greatbows = put(s, 'p0-x0', { x: 20, y: 25 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 39 });
+    expect(unitDistance(greatbows, boyz)).toBeGreaterThan(8);
+    expect(unitDistance(greatbows, boyz)).toBeLessThan(12);
+    s.active = 1;
+    s.phase = 'movement';
+
+    endPhase(s);
+
+    expect(s.phase).toBe('movement');
+    expect(s.window?.kind).toBe('abilityMove');
+    if (s.window?.kind !== 'abilityMove') throw new Error('Expected Malign Trickery reaction window');
+    expect(s.window.player).toBe(0);
+    expect(s.window.offers).toContainEqual(expect.objectContaining({ unitId: greatbows.id, label: expect.stringContaining('Malign Trickery') }));
+  });
+  it('allows another eligible caster to retry a failed Ritual', () => {
+    let failedState: GameState | undefined;
+    for (let i = 0; i < 30 && !failedState; i++) {
+      const candidate = game([['Rubric Marines', 5, 100], ['Sorcerer', 1, 95, 'x0']], [['Boyz', 10, 90]]);
+      put(candidate, 'p0-x0', { x: 20, y: 30 });
+      const boyz = put(candidate, 'p1-x0', { x: 20, y: 45 });
+      candidate.phase = 'shooting';
+      candidate.rng = 3000 + i * 7919;
+      const result = attemptRitual(candidate, 0, casters(candidate, 0)[0].model.id, 'doombolt', boyz.id, { channel: false });
+      expect(result.error).toBeNull();
+      if (result.out?.manifested === false) failedState = candidate;
+    }
+    expect(failedState).toBeDefined();
+    if (!failedState) throw new Error('Could not generate a failed Ritual test');
+    const retry = casters(failedState, 0)[0];
+    expect(ritualsLeft(failedState, 0, retry).some((r) => r.id === 'doombolt')).toBe(true);
+    expect(attemptRitual(failedState, 0, retry.model.id, 'doombolt', 'p1-x0', { channel: false }).error).toBeNull();
   });
   it('Ritual of Regeneration: a wounded unit that manifests a Ritual heals (Sorcerous Invigoration), once a turn', () => {
     const s = game([['Rubric Marines', 5, 100], ['Sorcerer', 1, 95, 'x0']], [['Boyz', 10, 90]], 'Ritual of Regeneration');

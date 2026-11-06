@@ -2,7 +2,7 @@ import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToS
 import { pathBlocked, routeAround } from '../engine/pathing';
 import { KEYS, readText, writeText, saveBattleLog, loadBattleLogs, type BattleRecord } from '../services/storage';
 import { compressReplayTimeline } from '../services/replay';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
 import { modelPortraitKey } from './portraits';
@@ -44,7 +44,7 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds } from '../factions/rituals';
+import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds, type RitualOutcome } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
@@ -156,7 +156,23 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 };
 
 export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, onReplayStep }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; onReplayStep?: (index: number) => void }) {
-  const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay);
+  const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
+  const recordReplayCommit = useCallback((next: GameState, undone: boolean) => {
+    if (replay) return;
+    if (undone) {
+      if (replayFrames.current.length > 1) replayFrames.current.pop();
+    } else replayFrames.current.push(structuredClone(next));
+  }, [replay]);
+  const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
+  const [replayPlaying, setReplayPlaying] = useState(false);
+  useEffect(() => {
+    if (!replayPlaying || replayIndex + 1 >= replayCount) {
+      if (replayIndex + 1 >= replayCount) setReplayPlaying(false);
+      return;
+    }
+    const timer = window.setTimeout(() => onReplayStep?.(replayIndex + 1), 700);
+    return () => window.clearTimeout(timer);
+  }, [replayPlaying, replayIndex, replayCount, onReplayStep]);
   // idle lives in the game itself (both sides in s.bots), so saves, dice and reactions all go to the bot and it
   // survives leaving and continuing the battle
   const autoPlay = !!s.idleBots;
@@ -174,6 +190,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
   const [showMissions, setShowMissions] = useState(false);
+  const traySwipeStart = useRef<{ id: number; y: number } | null>(null);
   // how much the screen tells about each attack (the player's choice, kept on this device), and sound on/off
   const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
   const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); writeText(KEYS.fx, v); };
@@ -379,14 +396,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   useEffect(() => { if (!summary || !spectate) return; const tm = window.setTimeout(() => setSummary(null), 4000); return () => window.clearTimeout(tm); }, [summary, spectate]);
   const [finalSeen, setFinalSeen] = useState(replay);
   const loggedRef = useRef(replay || initial.phase === 'gameover');
-  const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
-  const lastReplayTurn = useRef(initial.turn);
-  useEffect(() => {
-    if (replay || s.turn === lastReplayTurn.current) return;
-    replayFrames.current.push(structuredClone(s));
-    lastReplayTurn.current = s.turn;
-  }, [s.turn, replay]);
-
   useEffect(() => {
     if (replay || s.phase !== 'gameover') return;
     for (const b of bots) speak(b, s.winner === b ? 'win' : 'lose');
@@ -672,6 +681,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
+  const [ritOutcome, setRitOutcome] = useState<{ ritualId: string; casterName: string; targetId: string; targetName: string; channel: boolean; out: RitualOutcome } | null>(null);
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
   const ritActiveCaster = useMemo(() => ritCasters.find((x) => x.model.id === rit.model) ?? null, [ritCasters, rit.model]);
@@ -771,8 +781,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           const cu = U(ch.unitId);
           flash(`${cu.name} charges ${U(unitId).name}!`);
           if (ch.heroic) act((g) => { g.window = heroicCandidates(g, cu.owner).length ? { kind: 'heroicIntervention', player: cu.owner } : null; });
-          const canCrush = (hasKw(cu, 'MONSTER') || hasKw(cu, 'VEHICLE')) && canUseStratagem(s, cu.owner, 'crushing-impact', cu) === null && isEngaged(s, cu);
-          if (canCrush) setMode({ k: 'crush', unitId: cu.id }); else setMode(null);
+          setSel(cu.id);
+          setMode(null);
         } else {
           const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
           setModeRaw({ ...ch, targets: targetsNow });
@@ -1717,6 +1727,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     return (
       <>
         <div className="small"><b>{u.name}</b></div>
+        {mode.how === 'deepStrike' && <div className="small muted">Deep Strike: set up more than {unitFlags(s, u).deepStrikeRange}" from enemy units.</div>}
         <div className="row">
           <button className="btn" onClick={() => { unTurn(); setMode(null); }}>Cancel</button>
           <button className="btn small" onClick={autoPlace}>Auto place</button>
@@ -2756,13 +2767,36 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const r = ritActiveRitual;
     const targets = ritActiveTargets;
     const odds = ritActiveOdds;
+    if (ritOutcome) {
+      const last = RITUALS.find((x) => x.id === ritOutcome.ritualId)!;
+      const retryCaster = !ritOutcome.out.manifested
+        ? cs.find((x) => ritualsLeft(s, p, x).some((candidate) => candidate.id === last.id)
+          && ritualTargets(s, x, last).some((target) => target.id === ritOutcome.targetId))
+        : undefined;
+      return (
+        <div className={`rit-result ${ritOutcome.out.manifested ? 'success' : 'failure'}`}>
+          <b>{last.name}: {ritOutcome.out.manifested ? 'Manifested' : 'Failed'}</b>
+          <div className="small">{ritOutcome.casterName} on {ritOutcome.targetName} · {ritOutcome.channel ? '2D6 + Channel die' : '2D6'} [{ritOutcome.out.dice.join(' ')}] · {ritOutcome.out.result} vs WC {last.wc}</div>
+          {ritOutcome.out.perils > 0 && <div className="small">Perils: D3 mortal wounds ({ritOutcome.out.perils}) to the caster's unit</div>}
+          {ritOutcome.out.casterDead && <div className="small">The caster was slain.</div>}
+          <div className="row wrap">
+            {retryCaster && <button className="btn" onClick={() => {
+              const next = act((g) => attemptRitual(g, p, retryCaster.model.id, last.id, ritOutcome.targetId, { channel: ritOutcome.channel }));
+              if (!next || next.error || !next.out) { flash(next?.error ?? 'Could not retry this Ritual'); return; }
+              setRitOutcome({ ...ritOutcome, casterName: retryCaster.model.name, out: next.out });
+            }}>Retry with {retryCaster.model.name}</button>}
+            <button className="btn primary" onClick={() => setRitOutcome(null)}>OK</button>
+          </div>
+        </div>
+      );
+    }
     return (
       <>
         <div className="handoff">Rituals · start of the Shooting phase</div>
         <div className="unit-strip rit-casters">
           {cs.map((x) => (
             <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id, channel: rit.channel }); setSel(x.unit.id); }}>
-              <span className="side-dot s0" aria-hidden="true" /> {x.model.name}{x.bonus ? ` +${x.bonus}` : ''}{x.tries > 1 ? ` ×${x.tries}` : ''}
+              <span className={`side-dot s${x.unit.owner}`} aria-hidden="true" /> {x.model.name}{x.bonus ? ` +${x.bonus}` : ''}{x.tries > 1 ? ` ×${x.tries}` : ''}
             </button>
           ))}
         </div>
@@ -2793,6 +2827,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           <button className="btn primary grow" disabled={!c || !r || !rit.target} onClick={() => {
             const res = act((g) => attemptRitual(g, p, c!.model.id, r!.id, rit.target, { channel: rit.channel }));
             if (res?.error) flash(res.error);
+            else if (res?.out) setRitOutcome({ ritualId: r!.id, casterName: c!.model.name, targetId: rit.target!, targetName: targets.find((t) => t.id === rit.target)?.name ?? '', channel: rit.channel, out: res.out });
             setRit({ channel: rit.channel });
           }}>Attempt {r ? r.name : 'Ritual'}</button>
         </div>
@@ -2801,7 +2836,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   };
 
   const shootPanel = () => {
-    if (ritualOn) return ritualPanel();
+    if (ritualOn || ritOutcome) return ritualPanel();
     if (mode?.k === 'explosives' && modeUnit) {
       const flags = unitFlags(s, modeUnit);
       const gheist = flags.gheistskull && !modeUnit.used?.['Gheistskull'];
@@ -3202,16 +3237,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         <>
           <div className="big-result">Charge roll: {roll}"</div>
           {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${Math.max(0, nearest - RULES.engagementRange).toFixed(1)}" to reach Engagement Range` : ''}</div>}
-          {(hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && (
-            <div className="small" style={{ color: '#fca5a5', marginTop: '0.2rem' }}>
-              Crushing Impact (1CP) available: rolls T{alive(modeUnit)[0]?.profile.T ?? 4}D6 on impact
-            </div>
-          )}
-          {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', () => {
-            finish();
-            const canCrush = (hasKw(modeUnit, 'MONSTER') || hasKw(modeUnit, 'VEHICLE')) && canUseStratagem(s, modeUnit.owner, 'crushing-impact', modeUnit) === null && isEngaged(s, modeUnit);
-            if (canCrush) setTimeout(() => setModeRaw({ k: 'crush', unitId: modeUnit.id }), 0);
-          }), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
+          {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', finish), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
           {check && !check.ok && <div className="tiny muted">Doesn't fit? Tap Auto, or "Cancel charge" (counts as a failed charge), then End Charge → Fight</div>}
           <div className="row">
             {canDetReroll(s, modeUnit, 'charge') && <button className="btn small" onClick={() => { act((g) => detReroll(g, unitById(g, modeUnit.id), 'charge', false, mode.heroic === 'fray' ? 6 : undefined)); setModeRaw({ ...mode, targets: [] }); setDraft(startPaths(modeUnit)); }}>Re-roll charge (Detachment, free)</button>}
@@ -3333,12 +3359,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               const madeUnits = now.filter((x) => isEngaged(g, x)).map((x) => x.id);
               return { n: now.length, made: madeUnits, short: now.filter((x) => !isEngaged(g, x)).map((x) => `${x.name} rolled ${x.chargeRoll}"`) };
             });
-            const crushCandidate = res?.made.length === 1 ? unitById(s, res.made[0]) : null;
-            if (crushCandidate && (hasKw(crushCandidate, 'MONSTER') || hasKw(crushCandidate, 'VEHICLE')) && canUseStratagem(s, s.active, 'crushing-impact', crushCandidate) === null) {
-              setMode({ k: 'crush', unitId: crushCandidate.id });
-            } else {
-              setSel(res?.made[0] ?? null);
-            }
+            setSel(res?.made[0] ?? null);
             if (res) flash(!res.n ? 'No unit has a fair chance to reach an enemy' : `${res.made.length} of ${res.n} charge${res.n > 1 ? 's' : ''} made it in${res.short.length ? ` · ${res.short.join(', ')}` : ''}`);
           }}>Charge for me</button>
         )}
@@ -3518,7 +3539,16 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const whenTh: Record<string, string> = { endOfYourTurn: 'end of your turn', endOfYourCommandPhase: 'end of your Command phase (last round: end of turn)', endOfBattle: 'end of the battle', endOfAnyTurn: 'end of every turn' };
     return (
       <div className="tray-backdrop" onClick={() => setShowMissions(false)}>
-        <div className="tray" onClick={(e) => e.stopPropagation()}>
+        <div className="tray has-swipe-handle" onClick={(e) => e.stopPropagation()}>
+          <button className="tray-swipe-zone" aria-label="Close mission sheet" onClick={() => setShowMissions(false)} onPointerDown={(e) => {
+            if (e.pointerType === 'mouse') return;
+            traySwipeStart.current = { id: e.pointerId, y: e.clientY };
+            e.currentTarget.setPointerCapture(e.pointerId);
+          }} onPointerUp={(e) => {
+            const start = traySwipeStart.current;
+            traySwipeStart.current = null;
+            if (start?.id === e.pointerId && e.clientY - start.y > 55) setShowMissions(false);
+          }} onPointerCancel={() => { traySwipeStart.current = null; }} />
           <div className="sheet-title">Mission</div>
           <div className="small muted">{L.name} · Layout {L.matchup.map((m) => dispositionById(m).name).join(' vs ')} #{L.number} · {s.objectives.length} objectives</div>
           {s.players.map((P, i) => {
@@ -3606,9 +3636,10 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     if (replay) return (
       <div className="row wrap">
         <div className="grow">
-          Replay · Step {replayIndex + 1}/{replayCount} · Round {s.round} · {PHASE_TH[s.phase]}
+          Replay · Action {replayIndex + 1}/{replayCount} · Round {s.round} · {PHASE_TH[s.phase]}
         </div>
         <button className="btn" disabled={replayIndex === 0} onClick={() => onReplayStep?.(replayIndex - 1)}>Previous</button>
+        <button className="btn" disabled={replayIndex + 1 >= replayCount} onClick={() => setReplayPlaying((playing) => !playing)}>{replayPlaying ? 'Pause' : 'Play'}</button>
         <button className="btn primary" disabled={replayIndex + 1 >= replayCount} onClick={() => onReplayStep?.(replayIndex + 1)}>Next</button>
         <button className="btn" onClick={onExit}>History</button>
       </div>
@@ -4014,7 +4045,16 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         const rounds = (r: number[]) => roundsText(r, lastRound(s));
         return (
           <div className="tray-backdrop" onClick={() => setShowCards(false)}>
-            <div className="tray mc" onClick={(e) => e.stopPropagation()}>
+            <div className="tray mc has-swipe-handle" onClick={(e) => e.stopPropagation()}>
+              <button className="tray-swipe-zone" aria-label="Close mission cards" onClick={() => setShowCards(false)} onPointerDown={(e) => {
+                if (e.pointerType === 'mouse') return;
+                traySwipeStart.current = { id: e.pointerId, y: e.clientY };
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }} onPointerUp={(e) => {
+                const start = traySwipeStart.current;
+                traySwipeStart.current = null;
+                if (start?.id === e.pointerId && e.clientY - start.y > 55) setShowCards(false);
+              }} onPointerCancel={() => { traySwipeStart.current = null; }} />
               <div className="row">
                 <div className="sheet-title grow">Mission cards</div>
                 <button className="btn small ghost" onClick={() => setShowCards(false)}>Close</button>

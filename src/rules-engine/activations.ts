@@ -20,7 +20,7 @@ import { unitVisibleTo } from '../engine/visibility';
 
 export type Trigger =
   | 'formation' | 'battleStart' | 'roundStart' | 'commandStart' | 'command' | 'anyCommand' | 'commandEnd'
-  | 'movement' | 'endOfNormalMove' | 'movementEnd' | 'shooting' | 'selectedToShoot' | 'afterShooting' | 'afterShootingButton'
+  | 'movement' | 'endOfNormalMove' | 'movementEnd' | 'opponentMovementEnd' | 'shooting' | 'selectedToShoot' | 'afterShooting' | 'afterShootingButton'
   | 'selectedToFight' | 'fightStart' | 'fightStartButton' | 'afterFighting' | 'endOfCharge'
   | 'anyPhase' | 'opponentTurnEnd' | 'opponentFightEnd' | 'onDeath' | 'friendlyDeath' | 'shotByEnemy' | 'enemyMovedNear' | 'enemyFellBack'
   | 'mortalTaken' | 'becameShocked' | 'passengerDisembarks' | 'movementStart' | 'fightEnd' | 'attackStart'
@@ -211,7 +211,7 @@ export interface ActSpec {
   auto?: boolean; // resolves by itself at the trigger (no decision needed or always worth it)
   if?: string[];
   target?: TargetSpec;
-  range?: number; // enemyMovedNear / friendlyDeath: how close the event has to be
+  range?: number; // enemyMovedNear / opponentMovementEnd / friendlyDeath: how close the event has to be
   deathUnits?: string[]; // friendlyDeath: keywords of the destroyed model's unit
   modelDeath?: boolean; // onDeath: fires when a model with the ability dies (not only when the unit is wiped out)
   needDestroyed?: boolean; // afterFighting/afterShooting: the target unit was destroyed
@@ -415,6 +415,7 @@ function timingOk(s: GameState, def: ActDef): string | null {
     case 'command': return s.phase === 'command' && own ? null : 'Your Command phase only';
     case 'anyCommand': return s.phase === 'command' ? null : 'Command phase only';
     case 'movement': return s.phase === 'movement' && own ? null : 'Your Movement phase only';
+    case 'opponentMovementEnd': return s.phase === 'movement' && !own ? null : "At the end of your opponent's Movement phase";
     case 'endOfNormalMove': return s.phase === 'movement' && own && u.move === 'normal' ? null : 'After a Normal move';
     case 'shooting': return s.phase === 'shooting' && own ? null : 'Your Shooting phase only';
     case 'charge': return s.phase === 'charge' && own ? null : 'Your Charge phase only';
@@ -1181,7 +1182,7 @@ export function bestTarget(s: GameState, def: ActDef, cands: UnitState[], ctx: F
 
 export interface ManualAct { def: ActDef; targets: UnitState[]; why: string | null; label: string }
 
-const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
+const AUTO_ONLY: Trigger[] = ['formation', 'roundStart', 'commandStart', 'commandEnd', 'movementEnd', 'opponentMovementEnd', 'fightStart', 'afterShooting', 'afterFighting', 'endOfCharge',
   'onDeath', 'friendlyDeath', 'shotByEnemy', 'enemyMovedNear', 'enemyFellBack', 'mortalTaken', 'becameShocked', 'passengerDisembarks', 'movementStart', 'fightEnd', 'attackStart',
   'attacked', 'friendlyTargeted', 'shootingStart', 'oppShootingStart', 'eachCommandStart', 'chargeEnd', 'shootingEnd', 'arrived', 'oppChargeStart', 'chargeStart'];
 
@@ -1272,6 +1273,29 @@ export function offerReactions(s: GameState, trigger: 'enemyMovedNear' | 'enemyF
   if (w) return;
   s.window = { kind: 'abilityMove', player: p, offers, label: `${mover.name} moved close` };
   log(s, `${s.players[p].name}: reaction abilities available (${offers.map((o) => o.label).join(', ')})`, 'info', p);
+}
+
+/** Offer out-of-turn movement abilities whose window is the end of the opponent's Movement phase. */
+export function offerOpponentMovementEnd(s: GameState): boolean {
+  if (s.phase !== 'movement' || s.window) return false;
+  const p = other(s.active);
+  const foes = boardUnits(s, s.active);
+  const offers: { unitId: string; key: string; label: string }[] = [];
+  for (const u of boardUnits(s, p)) {
+    for (const def of actsOfUnit(s, u)) {
+      if (def.spec.when !== 'opponentMovementEnd' || !limitLeft(s, def)) continue;
+      const offeredKey = `${baseKey(def)}:offered`;
+      if ((u.used ??= {})[offeredKey] === phaseKey(s)) continue;
+      if (!(def.spec.if ?? []).every((c) => cond(c, { s, A: u, holder: u, bearers: def.bearers }))) continue;
+      if (!foes.some((e) => near(from(def), e, def.spec.range ?? 0))) continue;
+      u.used[offeredKey] = phaseKey(s);
+      const move = def.spec.do?.find((a) => a.move)?.move ?? '';
+      offers.push({ unitId: u.id, key: def.key, label: `${def.name}: move ${move === 'M' ? 'Normal move' : `${move}"`}` });
+    }
+  }
+  if (!offers.length) return false;
+  s.window = { kind: 'abilityMove', player: p, offers, label: `${s.players[s.active].name} finished moving` };
+  return true;
 }
 
 /** Accept one offer of the reaction prompt: the ability is used and the unit gets its move (then the player drags it). */
