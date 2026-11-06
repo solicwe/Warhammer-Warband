@@ -41,6 +41,8 @@ and `src/engine/combatMods.ts`; each faction module registers in `src/factions/i
 | Event | Emitted | Payload |
 |---|---|---|
 | `setup` | end of `createGame`, before deployment | - |
+| `battleSetup` | after battle formations, before the first turn | - |
+| `reservesChanged` | after a player moves units to Reserves | `p` |
 | `battleStart` | first turn, before its Command phase | - |
 | `turnBegin` | a turn begins, before anything else | `p` |
 | `roundStart` | the first player's turn starts a new round | - |

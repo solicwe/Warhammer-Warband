@@ -73,3 +73,5 @@ or run it on the old code), then pass.
 - On this Windows checkout, the default Vitest worker pool starved long bot-game tests and caused 300-second
   timeouts. An isolated Changehost game passed with `--maxWorkers=1`; the full suite passed with `--maxWorkers=4`.
   When failures are only timeouts, cap concurrency before treating them as code failures.
+- Windows `path.normalize` uses backslashes, so layer checks that compare slash-separated paths can miss forbidden
+  imports locally. Normalize separators to `/` before matching; otherwise Linux CI can catch violations Windows misses.

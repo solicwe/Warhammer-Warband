@@ -5,7 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const files = (dir: string) => fs.readdirSync(dir).filter((f) => /\.tsx?$/.test(f) && !f.includes('.test.') && f !== 'testSetup.ts').map((f) => `${dir}/${f}`);
-const importsOf = (file: string) => [...fs.readFileSync(file, 'utf8').matchAll(/^import(?:[^;]*?from)? '(\.[^']+)'/gm)].map((m) => path.normalize(path.join(path.dirname(file), m[1])));
+const importsOf = (file: string) => [...fs.readFileSync(file, 'utf8').matchAll(/^import(?:[^;]*?from)? '(\.[^']+)'/gm)].map((m) => path.normalize(path.join(path.dirname(file), m[1])).replace(/\\/g, '/'));
 
 describe('engine layers', () => {
   it('engine and rules-engine import no faction module and no bot code', () => {

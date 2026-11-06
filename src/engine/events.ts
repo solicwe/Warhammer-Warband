@@ -10,6 +10,10 @@ import type { Active, Ctx, DetChoiceOption, Eligibility } from '../rules-engine/
 export interface GameEvents {
   /** the game was just created, before deployment */
   setup: Record<string, never>;
+  /** Battle formations and faction setup are complete, before the first turn starts */
+  battleSetup: Record<string, never>;
+  /** A player's units have been moved to Reserves */
+  reservesChanged: { p: PlayerId };
   /** deployment is over, before Scout moves (Resolve Pre-battle Abilities) */
   preBattle: Record<string, never>;
   /** the first turn begins, before its Command phase */

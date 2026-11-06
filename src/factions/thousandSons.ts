@@ -1,4 +1,5 @@
 import type { GameState, PlayerId, UnitState } from '../engine/types';
+import { on } from '../engine/events';
 import { hasKw, log } from '../engine/state';
 
 export interface RisenRubricaeCandidate {
@@ -184,3 +185,8 @@ export function syncRisenRubricaeWithReserves(s: GameState, p: PlayerId) {
     if (P) P.risenRubricae = [];
   }
 }
+
+on('battleSetup', (s) => {
+  for (const p of [0, 1] as PlayerId[]) autoSelectRisenRubricae(s, p);
+});
+on('reservesChanged', (s, { p }) => syncRisenRubricaeWithReserves(s, p));

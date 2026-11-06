@@ -430,7 +430,8 @@ describe('Risen Rubricae enhancement', () => {
   });
 
   it('synchronizes Risen Rubricae with Reserves, excluding units sent to reserves', async () => {
-    const { declareReserves, risenRubricaeCandidates } = await import('./game');
+    const { declareReserves } = await import('./game');
+    const { risenRubricaeCandidates } = await import('../factions/thousandSons');
     const s = game([
       ['Scarab Occult Terminators', 5, 180],
       ['Sorcerer In Terminator Armour', 1, 105, 'x0', { enhancement: 'Risen Rubricae' }],
