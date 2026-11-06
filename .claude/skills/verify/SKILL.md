@@ -15,7 +15,7 @@ description: How to prove a change to Warhammer Warband really works, per kind o
 | Build | `npx tsc -b && npx vite build` | must print `built in` |
 | Tests of what you touched | `npx vitest run <files>` | name the files and the count that passed |
 | Full suite before `main` | `npx vitest run` | about 20 minutes, 100+ files; run it in the background and wait for it; never fast-forward `main` on a red or unfinished run |
-| The site after `main` moves | the "Deploy to GitHub Pages" run, then the live `index.html` names the new `assets/index-*.js` | the player sees nothing until this is green. Pages names a deployment after its commit: once a commit's deploy times out, every re-run of that commit is "Deployment cancelled" at once, so the next real commit on `main` is what deploys (3 Nov 2026) |
+| The site after `main` moves | the "Deploy to GitHub Pages" run, then the live `index.html` names the new `assets/index-*.js` | the player sees nothing until this is green. `actions/deploy-pages@v4` defaults to a 10-minute timeout; this repo sets 30 minutes because Pages may queue deployments. If a deployment still times out, rerunning that commit can be cancelled; a new commit is needed to create a fresh deployment. |
 
 A test that passes without the change proves nothing. For a fix, make the new test fail first (comment the fix out
 or run it on the old code), then pass.
