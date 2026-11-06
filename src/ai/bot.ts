@@ -777,7 +777,7 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
       if (!botAttack(s, 'fight', u.id, scored[0].e.id, r.pools.length ? r.pools : scored[0].r.pools)) return true;
     }
   }
-  markFought(s, unitById(s, u.id));
+  markFought(s, unitById(s, u.id), eng.length > 0);
   openCounteroffensive(s, u.owner);
   return true;
 }

@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { expect, it } from 'vitest';
 import { buildFightPools } from './attack';
-import { autoPileMove, canOverrun, consolidateMode, createGame, endPileInStep, fightCandidates, formationAt, markFought, placeUnit } from './game';
+import { autoPileMove, canOverrun, consolidateEligible, consolidateMode, createGame, endConsolidateStep, endPileInStep, fightCandidates, formationAt, markFought, placeUnit } from './game';
 import { alive, unitDistance } from './state';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
@@ -66,6 +66,45 @@ it('a unit whose foe was destroyed is done on its own when no enemy is within 5"
   expect(canOverrun(s2, b2)).toBe(true);
   expect(fightCandidates(s2).units.map((u) => u.id)).toEqual([b2.id]);
   expect(unitDistance(b, far)).toBeGreaterThan(5);
+});
+
+it('offers consolidation after a unit fights, then returns to the next fight without offering it twice', () => {
+  const s = game([['Intercessor Squad', 5, 80], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90], ['Boyz', 10, 90]]);
+  const foe = put(s, 'p1-x0', { x: 22, y: 30 });
+  const a = put(s, 'p0-x0', { x: 22, y: 26.4 });
+  put(s, 'p0-x1', { x: 22, y: 33.6 });
+  put(s, 'p1-x1', { x: 22, y: 38 });
+  s.fight = { step: 'fight', stepPlayer: 0, chooser: 0, eligible: s.units.map((u) => u.id), fought: [], forcedNext: null, movedThisStep: [] };
+  for (const m of foe.models) m.dead = true;
+  foe.status = 'destroyed';
+
+  markFought(s, a);
+
+  expect(s.fight.step).toBe('consolidate');
+  expect(s.fight.pendingConsolidate).toBe(a.id);
+  expect(consolidateEligible(s, a)).toBe(true);
+
+  endConsolidateStep(s);
+
+  expect(s.fight.step).toBe('fight');
+  expect(s.fight.pendingConsolidate).toBeNull();
+  expect(consolidateEligible(s, a)).toBe(false);
+  expect(fightCandidates(s).player).toBe(1);
+});
+
+it('does not offer consolidation for a unit that skipped fighting', () => {
+  const s = game([['Intercessor Squad', 5, 80], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90], ['Boyz', 10, 90]]);
+  const a = put(s, 'p0-x0', { x: 22, y: 26.4 });
+  put(s, 'p0-x1', { x: 22, y: 33.6 });
+  put(s, 'p1-x0', { x: 22, y: 30 });
+  put(s, 'p1-x1', { x: 22, y: 38 });
+  s.fight = { step: 'fight', stepPlayer: 0, chooser: 0, eligible: s.units.map((u) => u.id), fought: [], forcedNext: null, movedThisStep: [] };
+
+  markFought(s, a, false);
+
+  expect(s.fight.step).toBe('fight');
+  expect(s.fight.pendingConsolidate).toBeUndefined();
+  expect(consolidateEligible(s, a)).toBe(false);
 });
 
 it('lets a fought unit consolidate toward an enemy farther than 3"', () => {

@@ -679,6 +679,8 @@ export interface FightState {
   chooser: PlayerId;
   eligible: string[]; // unit ids eligible at start of fight step
   fought: string[];
+  pendingConsolidate?: string | null;
+  consolidated?: string[];
   forcedNext: string | null; // counteroffensive
   movedThisStep: string[];
 }

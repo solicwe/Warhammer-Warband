@@ -212,6 +212,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   }, [fastShooting, s.defenderRolls]);
 
   useEffect(() => {
+    const charged = new Set(s.units.filter((u) => u.declaredCharge).map((u) => `${s.turn}:${u.id}`));
+    setCrushDeclined((previous) => {
+      const next = new Set([...previous].filter((key) => charged.has(key)));
+      return next.size === previous.size && [...previous].every((key) => next.has(key)) ? previous : next;
+    });
+  }, [s.turn, s.units]);
+
+  useEffect(() => {
     if (fastShooting && s.attack) {
       const at = s.attack;
       const attacker = s.units.find((u) => u.id === at.attackerId);
@@ -494,6 +502,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const taps = useRef<{ unitId?: string; modelId?: string; t: number[] }>({ t: [] });
   const [fly, setFly] = useState(false);
   const [showStrats, setShowStrats] = useState(false);
+  const [crushDeclined, setCrushDeclined] = useState<Set<string>>(() => new Set());
   const [stratUnit, setStratUnit] = useState<string>('');
   const [stratPick, setStratPick] = useState<{ p: PlayerId; ids: string[] } | null>(null); // choosing a stratagem's unit on the map
   const [stratPlayer, setStratPlayer] = useState<PlayerId | null>(null); // whose stratagems the sheet shows (null = who acts now)
@@ -3314,7 +3323,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </div>
             )}
             {unitCard(u)}
-            {u.declaredCharge && isEngaged(s, u) && (hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE')) && (() => {
+            {u.declaredCharge && isEngaged(s, u) && (hasKw(u, 'MONSTER') || hasKw(u, 'VEHICLE')) && !crushDeclined.has(`${s.turn}:${u.id}`) && (() => {
               const blocked = canUseStratagem(s, u.owner, 'crushing-impact', u);
               const enemies = engagedEnemies(s, u);
               const tVal = alive(u)[0]?.profile.T ?? 4;
@@ -3345,6 +3354,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                       ))}
                     </div>
                   )}
+                  <button
+                    type="button"
+                    className="btn small"
+                    style={{ marginTop: '0.45rem' }}
+                    onClick={() => setCrushDeclined((previous) => new Set(previous).add(`${s.turn}:${u.id}`))}
+                  >
+                    Continue without Crushing Impact
+                  </button>
                 </div>
               );
             })()}
@@ -3392,11 +3409,12 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       <>
         <div className="small"><b>{u.name}</b> · {mode.kind === 'pileIn' ? `Pile-in ${pileDistance(s, u, 'pileIn')}"${mode.overrun ? ' (Overrun)' : ''}` : `Consolidate ${pileDistance(s, u, 'consolidate')}" — mode: ${cm?.mode ?? '-'}`}</div>
         {moveControls(mode.kind === 'pileIn' ? 'pile-in' : 'consolidate', () => confirmMove(mode.kind, () => {
+          if (mode.kind === 'consolidate') act((g) => { if (g.fight?.pendingConsolidate) endConsolidateStep(g); });
           if (!mode.overrun) return;
           const eng = act((g) => {
             const gu = unitById(g, u.id);
             const e = engagedEnemies(g, gu).map((x) => x.id);
-            if (!e.length) markFought(g, gu);
+            if (!e.length) markFought(g, gu, false);
             return e;
           });
           if (eng.length) setModeRaw({ k: 'fight', unitId: u.id, target: eng.length === 1 ? eng[0] : null, epic: false });
@@ -3506,7 +3524,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           <div className="row">
             <span className="small grow">{selUnit!.name} is no longer engaged</span>
             <button className="btn primary small" onClick={() => setMode({ k: 'pile', unitId: selUnit!.id, kind: 'pileIn', overrun: true }, startPaths(selUnit!))}><Icon name="fight" /> Overrun (pile in {pileDistance(s, selUnit!, 'pileIn')}")</button>
-            <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit!.id)))}>Skip (does not fight)</button>
+            <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit!.id), false))}>Skip (does not fight)</button>
           </div>
         )}
         {cands.units.length === 0 && <div className="muted small">No units can fight</div>}

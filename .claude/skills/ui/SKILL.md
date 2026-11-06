@@ -92,3 +92,5 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   Skip showed), and a Consolidate was offered in the middle of the fights while the Consolidate step ran by itself.
   Now: Overrun button for an unengaged unit with an enemy within 5", `dropStranded` (engine) finishes those with none,
   and the Consolidate step lists the player's units. Before adding a fight-phase choice, check the step it belongs to.
+- A manual stratagem panel could remain visible without an explicit way to dismiss it (`Crushing Impact` after a charge in `GameScreen.tsx`). Give optional panels a clear continue/decline action; do not make the game action depend on using the stratagem.
+- Consolidation belongs to the unit that just fought, before the next fight activation. Keep a pending unit in `FightState`; a phase-end-only consolidation delays the choice and can miss the intended timing.

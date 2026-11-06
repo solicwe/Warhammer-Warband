@@ -50,4 +50,5 @@ look-ahead tries; the campaign and phones skip the look-ahead.
   once-per-battle Twisted Sorceries the moment it was picked to shoot.
 - The bot never made an Overrun fight: a unit whose foe died just ended. `botFightStep` now piles in when an enemy is
   within 5" (`canOverrun`). Melee weapons with strike / sweep still always use the first profile for the bot.
+- Consolidation is part of each unit's fight before the next activation; a bot that fails to get an Overrun into Engagement Range must be marked as not eligible to consolidate.
 - Deployment (smartPlacement in src/ai/deploy.ts): watchers sampled from the enemy zone must span both X and Y fully and include placed models; sampling a few points row-by-row and slicing to 8 left most of the enemy zone unchecked, so units thought they were hidden when they were exposed. Candidates also need shelter detection (isBehindTerrain) so spots standing behind obscuring footprints or solid walls rank high enough in the pre-sight pool.

@@ -2042,7 +2042,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
 // ---------- fight phase ----------
 
 function startFight(s: GameState) {
-  s.fight = { step: 'pileIn', stepPlayer: s.active, chooser: s.active, eligible: [], fought: [], forcedNext: null, movedThisStep: [] };
+  s.fight = { step: 'pileIn', stepPlayer: s.active, chooser: s.active, eligible: [], fought: [], pendingConsolidate: null, consolidated: [], forcedNext: null, movedThisStep: [] };
   emit(s, 'fightStart', {});
   // Acheron's Duty, Unrestrained Terror, Nightmare's Master: enemy units engaged with them take a Battle-shock test
   for (const u of boardUnits(s)) {
@@ -2076,7 +2076,10 @@ export const canOverrun = (s: GameState, u: UnitState) => boardUnits(s, other(u.
  *  has to pick them only to skip them. */
 function dropStranded(s: GameState) {
   const f = s.fight!;
-  for (const u of boardUnits(s)) if (fightEligibleNow(s, u) && !isEngaged(s, u) && !canOverrun(s, u)) { f.fought.push(u.id); u.fought = true; }
+  f.consolidated ??= [];
+  for (const u of boardUnits(s)) if (fightEligibleNow(s, u) && !isEngaged(s, u) && !canOverrun(s, u)) {
+    f.fought.push(u.id); f.consolidated.push(u.id); u.fought = true;
+  }
 }
 
 export const isFightsFirst = (s: GameState, u: UnitState) => !unitFlags(s, u).noFightsFirst && (u.chargedTurn === s.turn || !!u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn || u.buffs.some((b) => b.kind === 'fightsFirst') || unitFlags(s, u).fightsFirst);
@@ -2103,20 +2106,32 @@ export function fightCandidates(s: GameState): { player: PlayerId | null; units:
   return { player: other(f.chooser), units: pool.filter((u) => u.owner !== f.chooser) };
 }
 
-export function markFought(s: GameState, u: UnitState) {
+export function markFought(s: GameState, u: UnitState, canConsolidate = true) {
   const f = s.fight!;
   f.fought.push(u.id);
   u.fought = true;
   if (f.forcedNext === u.id) f.forcedNext = null;
   f.chooser = other(u.owner);
   dropStranded(s);
+  if (!canConsolidate) {
+    f.consolidated ??= [];
+    if (!f.consolidated.includes(u.id)) f.consolidated.push(u.id);
+  }
   if (!fightCandidates(s).units.length) startConsolidate(s);
+  else if (canConsolidate && onBoard(u) && consolidateMode(s, u).mode) {
+    f.step = 'consolidate';
+    f.stepPlayer = u.owner;
+    f.pendingConsolidate = u.id;
+    f.movedThisStep = [];
+  }
 }
 
 export function startConsolidate(s: GameState) {
   const f = s.fight!;
   f.step = 'consolidate';
   f.stepPlayer = s.active;
+  f.pendingConsolidate = null;
+  f.consolidated ??= [];
   f.movedThisStep = [];
 }
 
@@ -2141,10 +2156,23 @@ export function consolidateMode(s: GameState, u: UnitState): { mode: 'ongoing' |
   return { mode: null, enemies: [] };
 }
 
-export const consolidateEligible = (s: GameState, u: UnitState) => onBoard(u) && !!s.fight && (s.fight.fought.includes(u.id) || s.fight.eligible.includes(u.id));
+export const consolidateEligible = (s: GameState, u: UnitState) => onBoard(u) && !!s.fight
+  && (s.fight.pendingConsolidate ? s.fight.pendingConsolidate === u.id
+    : !s.fight.consolidated?.includes(u.id) && (s.fight.fought.includes(u.id) || s.fight.eligible.includes(u.id)));
 
 export function endConsolidateStep(s: GameState) {
   const f = s.fight!;
+  if (f.pendingConsolidate) {
+    const id = f.pendingConsolidate;
+    f.pendingConsolidate = null;
+    f.consolidated ??= [];
+    if (!f.consolidated.includes(id)) f.consolidated.push(id);
+    f.step = 'fight';
+    f.movedThisStep = [];
+    if (!fightCandidates(s).units.length) startConsolidate(s);
+    else openCounteroffensive(s, unitById(s, id).owner);
+    return;
+  }
   if (f.stepPlayer === s.active) { f.stepPlayer = other(s.active); f.movedThisStep = []; return; }
   endPhase(s);
 }

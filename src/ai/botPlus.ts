@@ -526,6 +526,7 @@ export function botCommandExtras(s: GameState, p: PlayerId) {
 
 /** End of a Fight phase: a once-per-battle move (Sweeping Advance) out of a fight it is losing, or on towards the enemy. */
 export function botFightEndActs(s: GameState, p: PlayerId) {
+  if (s.fight?.pendingConsolidate) return;
   for (const m of manualActs(s, p)) {
     if (m.why || m.def.spec.when !== 'fightEndButton' || !m.def.spec.do?.some((a) => a.move)) continue;
     const u = m.def.holder;
