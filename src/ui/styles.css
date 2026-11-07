@@ -120,6 +120,8 @@ h3, .label { margin: 0; font: 600 13px/1.2 var(--font-cond); letter-spacing: 0.1
 .screen { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(32px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px; }
 .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.replay-controls { display: grid; gap: 6px; width: 100%; }
+.replay-seek { width: 100%; margin: 0; accent-color: var(--accent); touch-action: pan-x; }
 .row.wrap { flex-wrap: wrap; }
 .grow { flex: 1; min-width: 0; }
 .muted { color: var(--text-2); }

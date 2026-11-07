@@ -81,7 +81,8 @@ export default function App() {
     replay={!!screen.replay}
     replayIndex={screen.replay?.index}
     replayCount={screen.replay?.states.length}
-    onReplayStep={screen.replay ? (index) => setScreen((current) => current.kind === 'game' && current.replay
+    replayStates={screen.replay?.states}
+    onReplaySeek={screen.replay ? (index) => setScreen((current) => current.kind === 'game' && current.replay
       ? { ...current, state: current.replay.states[index], replay: { ...current.replay, index } }
       : current) : undefined}
     onExit={() => {

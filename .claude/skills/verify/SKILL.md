@@ -49,7 +49,7 @@ or run it on the old code), then pass.
 - Look at it. Start `npx vite --port 5179 --strictPort` in the background, open the page with Playwright
   (`require('playwright')`, `chromium.launch()`, a phone viewport such as `devices['iPhone 13']`), screenshot, read
   the image. Kill vite by its PID afterwards.
-- For battle-history replay, click History, Replay, Previous / Next, and exit. Confirm the original record count and in-progress save are unchanged.
+- For battle-history replay, click History, Replay, seek to a movement and an attack, verify both players' moves animate and attack sounds play when enabled, Pause/Play, then exit. Confirm the original record count and in-progress save are unchanged.
 - Effects: a sheet page in `src/zz/` that renders `FxView` (export it for the run, put it back after) at two or three
   moments of each effect, board zoomed out (`<FxLayer fx={[]} viewW={44} />`). Send the sheet to the owner.
 - Frame cost: render an attack 61 times with `flushSync` and time it; count the SVG elements.
@@ -75,3 +75,5 @@ or run it on the old code), then pass.
   When failures are only timeouts, cap concurrency before treating them as code failures.
 - Windows `path.normalize` uses backslashes, so layer checks that compare slash-separated paths can miss forbidden
   imports locally. Normalize separators to `/` before matching; otherwise Linux CI can catch violations Windows misses.
+- For controlled range inputs such as replay seek, use Playwright `locator.fill(...)` or a real pointer action; setting
+  `.value` and dispatching generic input/change events did not update React state in the browser fixture.

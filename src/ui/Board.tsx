@@ -48,7 +48,7 @@ export interface BoardProps {
   maxFor?: (modelId: string) => number;
   /** the legal route for a model dragged along [start, wanted end]: around walls it can't cross, stopping where it can't go on */
   walk?: (modelId: string, path: Pt[]) => Pt[];
-  /** players whose moves are replayed as an animation (the bot) */
+  /** players whose moves are replayed as an animation */
   animateMoves?: PlayerId[];
   bad?: string[];
   targets?: string[];

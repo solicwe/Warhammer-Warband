@@ -5,6 +5,10 @@ import { energyTex, fireTex, fxTextures, type TexKind } from './fxTextures';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
 export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
+export function replayFrameDuration(events: FxEvent[]): number {
+  const attackReports = events.filter((e) => e.kind === 'attack' && e.report).length;
+  return Math.max(700, ...events.map((e, i) => FX_MS[e.kind] + i * 180), attackReports * 1630);
+}
 export interface ActiveFx { e: FxEvent; t0: number }
 const LIVE = new Set<FxEvent['kind']>(['attack', 'mortal', 'skill', 'ritual', 'shock', 'heal', 'explosion', 'roll', 'extract']);
 

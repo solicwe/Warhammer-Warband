@@ -24,7 +24,8 @@ which registers every faction with the hooks below.
   do, and every game can be replayed from its seed.
 - **`src/ui/`** renders a `GameState` and turns taps into engine calls. Game state lives in `store.ts` (`useGame`):
   each action clones the state, applies one engine call and keeps an undo snapshot. Live games also record each
-  committed state for replay; undo removes the matching replay frame. Replay steps sync into the mounted screen.
+  committed state for replay; undo removes the matching replay frame. Replay seeks through those states while the
+  board replays movement and attack effects without replacing the mounted screen.
 - **`data/`** holds the rules as data. Most rules are added or fixed here without touching code.
 
 ## The game loop

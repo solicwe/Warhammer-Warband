@@ -183,9 +183,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 
 - **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
   play. Closing the tab or the browser loses nothing.
-- **Battle history.** Finished simulator and campaign matches can be replayed action by action from History, with
-  Previous, Next and Play/Pause. Replays are read-only and do not replace the current save or create another history
-  entry.
+- **Battle history.** Finished simulator and campaign matches play from History with Play/Pause and a seek bar.
+  Movement and attack animations replay for both players, with attack sounds when sound is enabled. Replays are
+  read-only and do not replace the current save or create another history entry.
 
 Nothing leaves your device, and the site sends a Content Security Policy that only allows its own files and Google Fonts.
 

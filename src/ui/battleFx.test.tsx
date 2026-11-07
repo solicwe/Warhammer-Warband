@@ -2,7 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { ComponentProps } from 'react';
 import type { WeaponFx } from '../engine/weaponFx';
-import { AttackFx } from './BattleFx';
+import type { FxEvent } from '../engine/types';
+import { AttackFx, replayFrameDuration } from './BattleFx';
 
 const KINDS: WeaponFx[] = ['bolt', 'heavyBolt', 'gatling', 'shoota', 'shotgun', 'sniper', 'pulse', 'plasma', 'las', 'melta', 'volkite', 'grav', 'lightning', 'psychic',
   'flame', 'missile', 'shell', 'gauss', 'shuriken', 'bio', 'sonic', 'cryo', 'arrow', 'slash', 'power', 'chain', 'claw', 'crush'];
@@ -13,5 +14,15 @@ describe('every weapon kind draws an effect', () => {
       shooters: [{ x: 2, y: 4 }], victims: [{ x: 10, y: 4 }], volleys: [{ fx, shots: 3, hits: 2, models: 1, pow: 1, r: 0.6, from: [{ x: 2, y: 4 }] }] } as unknown as ComponentProps<typeof AttackFx>['e'];
     // something is on screen through the shot: while it flies and as it lands
     for (const f of [0.08, 0.2, 0.35]) expect(renderToStaticMarkup(<svg><AttackFx e={e} f={f} /></svg>)).toMatch(/<(circle|line|polyline|polygon|image|path|ellipse)/);
+  });
+
+  describe('battle replay pacing', () => {
+    it('lets attack reports finish their effects and sounds before advancing', () => {
+      const attack = (seq: number) => ({
+        seq, kind: 'attack', attackKind: 'shoot', owner: 0, attackerId: 'a', targetId: 't',
+        from: { x: 0, y: 0 }, to: { x: 1, y: 1 }, dmg: 0, killed: 0, dead: [], report: {},
+      }) as unknown as FxEvent;
+      expect(replayFrameDuration([attack(1), attack(2)])).toBe(3260);
+    });
   });
 });

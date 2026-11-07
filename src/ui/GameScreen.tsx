@@ -63,6 +63,7 @@ import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, placementRings, type Paths, type Ring } from './Board';
+import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
 import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/darkPacts';
@@ -156,7 +157,7 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   fightsFirst: ['Fights first', true], 'advanceCharge+1': ['+1 Adv/Charge', true],
 };
 
-export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, onReplayStep }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; onReplayStep?: (index: number) => void }) {
+export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, replayStates, onReplaySeek }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; replayStates?: GameState[]; onReplaySeek?: (index: number) => void }) {
   const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
   const recordReplayCommit = useCallback((next: GameState, undone: boolean) => {
     if (replay) return;
@@ -165,15 +166,21 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     } else replayFrames.current.push(structuredClone(next));
   }, [replay]);
   const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
-  const [replayPlaying, setReplayPlaying] = useState(false);
+  const [replayPlaying, setReplayPlaying] = useState(replay);
+  const replayEvents = useMemo(() => {
+    if (!replayStates || replayIndex === 0) return [];
+    const previous = replayStates[replayIndex - 1];
+    return (replayStates[replayIndex]?.fx ?? []).filter((e) => e.seq > (previous?.fxSeq ?? 0));
+  }, [replayIndex, replayStates]);
+  const replayDelay = replayFrameDuration(replayEvents);
   useEffect(() => {
     if (!replayPlaying || replayIndex + 1 >= replayCount) {
       if (replayIndex + 1 >= replayCount) setReplayPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => onReplayStep?.(replayIndex + 1), 700);
+    const timer = window.setTimeout(() => onReplaySeek?.(replayIndex + 1), replayDelay);
     return () => window.clearTimeout(timer);
-  }, [replayPlaying, replayIndex, replayCount, onReplayStep]);
+  }, [replayPlaying, replayIndex, replayCount, onReplaySeek, replayDelay]);
   // idle lives in the game itself (both sides in s.bots), so saves, dice and reactions all go to the bot and it
   // survives leaving and continuing the battle
   const autoPlay = !!s.idleBots;
@@ -3653,14 +3660,22 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
   const panel = () => {
     if (replay) return (
-      <div className="row wrap">
-        <div className="grow">
-          Replay · Action {replayIndex + 1}/{replayCount} · Round {s.round} · {PHASE_TH[s.phase]}
+      <div className="replay-controls">
+        <div className="row wrap">
+          <div className="grow">Replay · Round {s.round} · {PHASE_TH[s.phase]}</div>
+          <button className="btn primary" aria-label={replayPlaying ? 'Pause replay' : 'Play replay'} onClick={() => setReplayPlaying((playing) => !playing)}>{replayPlaying ? 'Pause' : 'Play'}</button>
+          <button className="btn" onClick={onExit}>History</button>
         </div>
-        <button className="btn" disabled={replayIndex === 0} onClick={() => onReplayStep?.(replayIndex - 1)}>Previous</button>
-        <button className="btn" disabled={replayIndex + 1 >= replayCount} onClick={() => setReplayPlaying((playing) => !playing)}>{replayPlaying ? 'Pause' : 'Play'}</button>
-        <button className="btn primary" disabled={replayIndex + 1 >= replayCount} onClick={() => onReplayStep?.(replayIndex + 1)}>Next</button>
-        <button className="btn" onClick={onExit}>History</button>
+        <input
+          type="range"
+          min={0}
+          max={Math.max(0, replayCount - 1)}
+          value={Math.min(replayIndex, replayCount - 1)}
+          aria-label="Seek replay"
+          className="replay-seek"
+          onChange={(e) => onReplaySeek?.(Number(e.currentTarget.value))}
+        />
+        <div className="row tiny muted"><span>Action {replayIndex + 1} / {replayCount}</span><span>{PHASE_TH[s.phase]}</span></div>
       </div>
     );
     if (s.phase === 'gameover') return (
@@ -3912,7 +3927,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             zoneGuide={zoneGuide}
             maxFor={mode?.k === 'place' ? undefined : maxFor}
             walk={mode?.k === 'place' ? undefined : walkDraft}
-            animateMoves={bots.length ? bots : undefined}
+            animateMoves={replay ? [0, 1] : bots.length ? bots : undefined}
             bad={check?.bad}
             targets={targets}
             picked={picked}
