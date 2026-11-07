@@ -92,6 +92,7 @@ export function ritualsPending(s: GameState, p: PlayerId): boolean {
   if (s.players[p]?.factionId !== 'TS') return false;
   if (s.phase !== 'shooting' || s.active !== p || s.window || s.attack) return false;
   const R = ritualState(s, p);
+  if (R.pending) return true;
   if (R.done) return false;
   // once a unit has been selected to shoot, the start of the phase is over
   if (boardUnits(s, p).some((u) => u.selectedToShoot || u.weaponsFired.length > 0)) { R.done = true; return false; }
@@ -133,8 +134,10 @@ function channelBonus(s: GameState, c: Caster, otherMods: number): number {
 const findStrat = (s: GameState, p: PlayerId, name: string): StratagemData | undefined =>
   s.players[p].detachments.flatMap((d) => d.stratagems).find((st) => st.name.toUpperCase() === name);
 
-/** Attempt one Ritual with one model. Returns null and the outcome, or an error. */
-export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritualId: string, targetId: string | undefined, how: RitualChoice): { error: string | null; out?: RitualOutcome } {
+/** Roll the first two dice and leave the test pending while the player decides whether to Channel. */
+export function beginRitual(s: GameState, p: PlayerId, modelId: string, ritualId: string, targetId: string | undefined): { error: string | null; dice?: number[] } {
+  const R = ritualState(s, p);
+  if (R.pending) return { error: 'Finish the pending Psychic test first' };
   const c = casters(s, p).find((x) => x.model.id === modelId);
   if (!c) return { error: 'This model cannot attempt a Ritual now' };
   const r = ritualById(ritualId);
@@ -142,15 +145,41 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   const targets = ritualTargets(s, c, r);
   const t = targets.find((x) => x.id === targetId) ?? targets[0];
   if (!t) return { error: 'No unit in range' };
-  const R = ritualState(s, p);
   const retryingFailure = !!R.failed?.includes(r.id);
   if (R.tried.includes(r.id) && !retryingFailure && r.id === 'doombolt') (s.players[p].abilityUsed ??= {}).incandaeum = 'battle';
   if (!R.tried.includes(r.id)) R.tried.push(r.id);
   R.by[c.model.id] = (R.by[c.model.id] ?? 0) + 1;
+  const dice = rollN(s, 2);
+  R.pending = { unitId: c.unit.id, modelId: c.model.id, ritualId: r.id, targetId: t.id, bonus: c.bonus, dice };
+  return { error: null, dice: [...dice] };
+}
 
-  // the Psychic test
-  let dice = rollN(s, 2);
-  let extra = how.channel ? d6(s) : null;
+/** Finish the pending test after the player chooses whether to roll a Channel die. */
+export function finishRitual(s: GameState, p: PlayerId, channel: boolean, choices: Omit<RitualChoice, 'channel'> = {}): { error: string | null; out?: RitualOutcome } {
+  const R = ritualState(s, p);
+  const pending = R.pending;
+  if (!pending) return { error: 'There is no pending Psychic test' };
+  const unit = unitById(s, pending.unitId);
+  const model = unit.models.find((m) => m.id === pending.modelId);
+  if (!model || model.dead) return { error: 'The Ritual caster is no longer alive' };
+  const c: Caster = { unit, model, tries: 0, bonus: pending.bonus, range: ritualRange(s, unit, model) };
+  const r = ritualById(pending.ritualId);
+  const target = unitById(s, pending.targetId);
+  R.pending = undefined;
+  const dice = [...pending.dice, ...(channel ? [d6(s)] : [])];
+  return { error: null, out: resolveRitualTest(s, p, c, r, target, { ...choices, channel }, dice) };
+}
+
+/** Attempt one Ritual with one model without pausing between the Psychic test dice. */
+export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritualId: string, targetId: string | undefined, how: RitualChoice): { error: string | null; out?: RitualOutcome } {
+  const start = beginRitual(s, p, modelId, ritualId, targetId);
+  if (start.error) return start;
+  return finishRitual(s, p, how.channel, how);
+}
+
+function resolveRitualTest(s: GameState, p: PlayerId, c: Caster, r: Ritual, t: UnitState, how: RitualChoice, initialDice: number[]): RitualOutcome {
+  let dice = initialDice.slice(0, 2);
+  let extra = how.channel ? initialDice[2] ?? d6(s) : null;
   const notes: string[] = [];
   const all = () => (extra !== null ? [...dice, extra] : [...dice]);
   let mods = c.bonus;
@@ -188,6 +217,7 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   const casterDead = c.model.dead;
   const result = total();
   const manifested = !casterDead && result >= r.wc;
+  const R = ritualState(s, p);
   R.failed ??= [];
   if (manifested) R.failed = R.failed.filter((id) => id !== r.id);
   else if (!R.failed.includes(r.id)) R.failed.push(r.id);
@@ -202,7 +232,7 @@ export function attemptRitual(s: GameState, p: PlayerId, modelId: string, ritual
   };
   pushFx(s, { kind: 'ritual', owner: p, ritual: r.id, name: r.name, from: { x: c.model.x, y: c.model.y }, to: mid(t), ok: manifested, text: manifested ? what[r.id] : undefined });
   if (manifested) resolveRitual(s, c, r, unitById(s, t.id), result);
-  return { error: null, out: { manifested, result, dice: values, perils, casterDead } };
+  return { manifested, result, dice: values, perils, casterDead };
 }
 
 function resolveRitual(s: GameState, c: Caster, r: Ritual, t: UnitState, result: number) {

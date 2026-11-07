@@ -9,11 +9,12 @@ import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { listPoints, validateList } from './army';
 import { createGame, endPhase, formationAt, placeUnit } from './game';
 import { inFlow } from '../factions/flow';
-import { attemptRitual, casters, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
+import { attemptRitual, beginRitual, casters, finishRitual, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
 import { botRituals } from '../ai/botRituals';
 import { autoDue, autoSelectToShoot, autoStep } from '../ai/autoPlay';
 import { manualActs } from '../rules-engine/activations';
 import { unitDistance } from './state';
+import { rollExpr, rollN } from './dice';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
@@ -107,6 +108,56 @@ describe('mustering', () => {
 });
 
 describe('Rituals', () => {
+  it('shows the 2D6 result before the player chooses whether to Channel', () => {
+    const s = game([['Sorcerer', 1, 95]], [['Boyz', 10, 90]]);
+    put(s, 'p0-x0', { x: 20, y: 30 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 45 });
+    s.phase = 'shooting';
+    const seed = Array.from({ length: 100 }, (_, i) => i + 1).find((candidate) => rollN({ rng: candidate }, 2).reduce((a, b) => a + b, 0) >= 5);
+    if (seed === undefined) throw new Error('Could not find a passing 2D6 Psychic test');
+    s.rng = seed;
+    const start = beginRitual(s, 0, casters(s, 0)[0].model.id, 'destinys-ruin', boyz.id);
+    expect(start.error).toBeNull();
+    expect(start.dice).toHaveLength(2);
+    expect(start.dice?.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(5);
+    expect(s.players[0].rituals?.pending?.dice).toEqual(start.dice);
+    expect(ritualsPending(s, 0)).toBe(true);
+
+    const afterTwoDice = s.rng;
+    const result = finishRitual(s, 0, true);
+    expect(result.error).toBeNull();
+    expect(result.out?.dice).toHaveLength(3);
+    expect(s.rng).not.toBe(afterTwoDice);
+    expect(s.players[0].rituals?.pending).toBeUndefined();
+  });
+
+  it('applies one D3 Perils result for a pair or triple among the Psychic test dice', () => {
+    for (const n of [2, 3] as const) {
+      const seed = Array.from({ length: 10000 }, (_, i) => i + 1).find((candidate) => {
+        const dice = rollN({ rng: candidate }, n);
+        return n === 2 ? dice[0] === dice[1] : dice.every((die) => die === dice[0]);
+      });
+      expect(seed).toBeDefined();
+      if (seed === undefined) throw new Error(`Could not find a repeated ${n}D6 result`);
+
+      const s = game([['Sorcerer', 1, 95]], [['Boyz', 10, 90]]);
+      put(s, 'p0-x0', { x: 20, y: 30 });
+      const boyz = put(s, 'p1-x0', { x: 20, y: 45 });
+      s.phase = 'shooting';
+      s.rng = seed;
+      const start = beginRitual(s, 0, casters(s, 0)[0].model.id, 'destinys-ruin', boyz.id);
+      expect(start.error).toBeNull();
+      const expected = { rng: seed };
+      rollN(expected, n);
+      rollExpr(expected, 'D3');
+      const result = finishRitual(s, 0, n === 3);
+
+      expect(result.out?.dice).toHaveLength(n);
+      expect(result.out?.perils).toBeGreaterThan(0);
+      expect(s.rng).toBe(expected.rng);
+    }
+  });
+
   it('a Sorcerer cannot repeat a manifested Ritual this turn; Doombolt deals mortal wounds', () => {
     const s = game([['Rubric Marines', 5, 100], ['Sorcerer', 1, 95, 'x0']], [['Boyz', 10, 90]]);
     put(s, 'p0-x0', { x: 20, y: 30 });

@@ -59,3 +59,6 @@ skill is the checklist around them.
   bot.
 - A rule that "heals" restores wounds only to a damaged model (`heal` in `activations.ts`); with every model at full
   wounds it does nothing visible. That is not a bug in the rule (checked for Sorcerous Invigoration).
+- A Ritual that pauses for a decision after its first dice roll must keep that roll in game state so reload preserves
+  the decision. Undo should reverse the roll and return to the state before the attempt; resolve doubles/triples with
+  one Perils event after the final dice are chosen.

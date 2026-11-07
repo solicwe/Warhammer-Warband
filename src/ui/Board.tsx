@@ -52,6 +52,7 @@ export interface BoardProps {
   animateMoves?: PlayerId[];
   bad?: string[];
   targets?: string[];
+  marked?: string[];
   picked?: string[];
   rings?: Ring[];
   zones?: boolean;
@@ -1805,7 +1806,7 @@ function BoardImpl(props: BoardProps) {
       {units.map((u) => {
         const isDraft = !!(localDraft ?? draft) && draftUnit === u.id;
         const isSel = props.selected === u.id;
-        const isTarget = props.targets?.includes(u.id);
+        const isTarget = props.targets?.includes(u.id) || props.marked?.includes(u.id);
         const isPicked = props.picked?.includes(u.id);
         const isMovable = props.movable?.includes(u.id);
         const col = COLORS[u.owner];

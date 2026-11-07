@@ -45,7 +45,7 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { attemptRitual, casters, endRituals, RITUALS, ritualsLeft, ritualsPending, ritualTargets, testOdds, type RitualOutcome } from '../factions/rituals';
+import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, ritualsPending, ritualTargets } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
@@ -697,15 +697,13 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   }, [s.phase, s.turn, s.active, s.units]);
 
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
-  const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string; channel: boolean }>({ channel: false });
-  const [ritOutcome, setRitOutcome] = useState<{ ritualId: string; casterName: string; targetId: string; targetName: string; channel: boolean; out: RitualOutcome } | null>(null);
+  const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string }>({});
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
   const ritActiveCaster = useMemo(() => ritCasters.find((x) => x.model.id === rit.model) ?? null, [ritCasters, rit.model]);
   const ritActiveLeft = useMemo(() => (ritActiveCaster ? ritualsLeft(s, s.active, ritActiveCaster) : []), [s, ritActiveCaster]);
   const ritActiveRitual = useMemo(() => (ritActiveLeft.find((x) => x.id === rit.ritual) ?? null), [ritActiveLeft, rit.ritual]);
   const ritActiveTargets = useMemo(() => (ritActiveCaster && ritActiveRitual ? ritualTargets(s, ritActiveCaster, ritActiveRitual) : []), [s, ritActiveCaster, ritActiveRitual]);
-  const ritActiveOdds = useMemo(() => (ritActiveCaster && ritActiveRitual ? testOdds(rit.channel ? 3 : 2, ritActiveCaster.bonus, ritActiveRitual.wc) : null), [ritActiveCaster, ritActiveRitual, rit.channel]);
 
   // on the map: the sorcerers glow until one is picked, then the units its Ritual can target
   const ritMap = useMemo(() => {
@@ -733,6 +731,9 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     : mode?.k === 'fight' ? fightTargets
     : mode?.k === 'explosives' ? explosiveTargets
     : mode?.k === 'crush' ? crushTargets
+    : [];
+  const destinyRuinTargets = s.phase === 'shooting'
+    ? s.units.filter((u) => u.owner !== s.active && u.timed?.some((t) => t.mark === "Destiny's Ruin" && t.by === s.active && t.turn === s.turn)).map((u) => u.id)
     : [];
   const picked = ritMap ? ritMap.picked : mode?.k === 'shoot' || mode?.k === 'fight' || mode?.k === 'explosives' ? (mode.target ? [mode.target] : []) : mode?.k === 'charge' ? mode.targets : [];
 
@@ -783,7 +784,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const inUnit = ritMap.cs.filter((x) => x.unit.id === unitId);
       if (inUnit.length) {
         const c = inUnit.find((x) => x.model.id === modelId) ?? inUnit[(inUnit.findIndex((x) => x.model.id === rit.model) + 1) % inUnit.length];
-        setRit({ model: c.model.id, channel: rit.channel });
+        setRit({ model: c.model.id });
         setSel(unitId);
         return;
       }
@@ -2783,26 +2784,26 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const left = ritActiveLeft;
     const r = ritActiveRitual;
     const targets = ritActiveTargets;
-    const odds = ritActiveOdds;
-    if (ritOutcome) {
-      const last = RITUALS.find((x) => x.id === ritOutcome.ritualId)!;
-      const retryCaster = !ritOutcome.out.manifested
-        ? cs.find((x) => ritualsLeft(s, p, x).some((candidate) => candidate.id === last.id)
-          && ritualTargets(s, x, last).some((target) => target.id === ritOutcome.targetId))
-        : undefined;
+    const pending = s.players[p].rituals?.pending;
+    if (pending) {
+      const ritual = RITUALS.find((x) => x.id === pending.ritualId)!;
+      const unit = U(pending.unitId);
+      const caster = unit.models.find((m) => m.id === pending.modelId);
+      const target = U(pending.targetId);
+      const score = pending.dice.reduce((a, b) => a + b, 0) + pending.bonus;
+      const finish = (channel: boolean) => {
+        const res = act((g) => finishRitual(g, p, channel));
+        if (res?.error || !res?.out) { flash(res?.error ?? 'Could not finish this Psychic test'); return; }
+        flash(`${ritual.name}: ${res.out.manifested ? 'Manifested' : 'Failed'} · [${res.out.dice.join(' ')}] · ${res.out.result} vs WC ${ritual.wc}${res.out.perils ? ` · ${res.out.perils} mortal wounds` : ''}`);
+      };
       return (
-        <div className={`rit-result ${ritOutcome.out.manifested ? 'success' : 'failure'}`}>
-          <b>{last.name}: {ritOutcome.out.manifested ? 'Manifested' : 'Failed'}</b>
-          <div className="small">{ritOutcome.casterName} on {ritOutcome.targetName} · {ritOutcome.channel ? '2D6 + Channel die' : '2D6'} [{ritOutcome.out.dice.join(' ')}] · {ritOutcome.out.result} vs WC {last.wc}</div>
-          {ritOutcome.out.perils > 0 && <div className="small">Perils: D3 mortal wounds ({ritOutcome.out.perils}) to the caster's unit</div>}
-          {ritOutcome.out.casterDead && <div className="small">The caster was slain.</div>}
+        <div className="rit-result">
+          <b>{ritual.name}: Psychic test</b>
+          <div className="small">{caster?.name ?? unit.name} on {target.name} · 2D6 [{pending.dice.join(' ')}] +{pending.bonus} = {score} vs WC {ritual.wc}</div>
+          <div className="small">Choose whether to add a Channel die, even if the test already passes.</div>
           <div className="row wrap">
-            {retryCaster && <button className="btn" onClick={() => {
-              const next = act((g) => attemptRitual(g, p, retryCaster.model.id, last.id, ritOutcome.targetId, { channel: ritOutcome.channel }));
-              if (!next || next.error || !next.out) { flash(next?.error ?? 'Could not retry this Ritual'); return; }
-              setRitOutcome({ ...ritOutcome, casterName: retryCaster.model.name, out: next.out });
-            }}>Retry with {retryCaster.model.name}</button>}
-            <button className="btn primary" onClick={() => setRitOutcome(null)}>OK</button>
+            <button className="btn primary" onClick={() => finish(true)}>Channel the Warp · roll 1D6</button>
+            <button className="btn" onClick={() => finish(false)}>Resolve with 2D6</button>
           </div>
         </div>
       );
@@ -2812,7 +2813,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         <div className="handoff">Rituals · start of the Shooting phase</div>
         <div className="unit-strip rit-casters">
           {cs.map((x) => (
-            <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id, channel: rit.channel }); setSel(x.unit.id); }}>
+            <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id }); setSel(x.unit.id); }}>
               <span className={`side-dot s${x.unit.owner}`} aria-hidden="true" /> {x.model.name}{x.bonus ? ` +${x.bonus}` : ''}{x.tries > 1 ? ` ×${x.tries}` : ''}
             </button>
           ))}
@@ -2833,19 +2834,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             {targets.length ? (
               <div className="unit-strip rit-targets">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
             ) : <div className="small muted">No unit in range and in sight (a ruin or wall in between blocks sight; a ruin your unit stands in does not)</div>}
-            <div className="row">
-              <button className={`btn small ${rit.channel ? 'on' : ''}`} aria-pressed={rit.channel} onClick={() => setRit({ ...rit, channel: !rit.channel })}>Channel the Warp (3D6)</button>
-              {odds && <span className="tiny muted grow">{Math.round(odds.pass * 100)}% to manifest · {Math.round(odds.perils * 100)}% perils</span>}
-            </div>
           </>
         )}
         <div className="row">
-          <button className="btn" onClick={() => { act((g) => endRituals(g, p)); setRit({ channel: false }); }}>Done with Rituals</button>
+          <button className="btn" onClick={() => { act((g) => endRituals(g, p)); setRit({}); }}>Done with Rituals</button>
           <button className="btn primary grow" disabled={!c || !r || !rit.target} onClick={() => {
-            const res = act((g) => attemptRitual(g, p, c!.model.id, r!.id, rit.target, { channel: rit.channel }));
+            const res = act((g) => beginRitual(g, p, c!.model.id, r!.id, rit.target));
             if (res?.error) flash(res.error);
-            else if (res?.out) setRitOutcome({ ritualId: r!.id, casterName: c!.model.name, targetId: rit.target!, targetName: targets.find((t) => t.id === rit.target)?.name ?? '', channel: rit.channel, out: res.out });
-            setRit({ channel: rit.channel });
+            else setRit({});
           }}>Attempt {r ? r.name : 'Ritual'}</button>
         </div>
       </>
@@ -2853,7 +2849,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   };
 
   const shootPanel = () => {
-    if (ritualOn || ritOutcome) return ritualPanel();
+    if (ritualOn) return ritualPanel();
     if (mode?.k === 'explosives' && modeUnit) {
       const flags = unitFlags(s, modeUnit);
       const gheist = flags.gheistskull && !modeUnit.used?.['Gheistskull'];
@@ -3354,6 +3350,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                           onClick={() => {
                             const rolls = act((g) => crushingImpact(g, unitById(g, u.id), t.id));
                             flash(`Crushing Impact vs ${t.name}: [${rolls.join(' ')}]`);
+                            setCrushDeclined((previous) => new Set(previous).add(`${s.turn}:${u.id}`));
                           }}
                         >
                           Crush {t.name}
@@ -3930,6 +3927,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             animateMoves={replay ? [0, 1] : bots.length ? bots : undefined}
             bad={check?.bad}
             targets={targets}
+            marked={destinyRuinTargets}
             picked={picked}
             rings={rings}
             badges={badges}

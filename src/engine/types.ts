@@ -469,7 +469,14 @@ export interface PlayerState {
   saga?: { kind: 'hunter' | 'beastslayer' | 'bold'; tally: number; target: number; done: boolean; boasts: string[] }; // Space Wolves Sagas
   abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
   /** Thousand Sons Cabal of Sorcerers: Ritual attempts and failed Rituals available to retry this turn. */
-  rituals?: { turn: number; tried: string[]; failed?: string[]; by: Record<string, number>; done?: boolean };
+  rituals?: {
+    turn: number;
+    tried: string[];
+    failed?: string[];
+    by: Record<string, number>;
+    done?: boolean;
+    pending?: { unitId: string; modelId: string; ritualId: string; targetId: string; bonus: number; dice: number[] };
+  };
   /** Hexwarp Thrallband: the areas in the Flow of Magic this phase */
   flow?: { key: string; nml: boolean; opp: boolean };
   /** Chapter Approved: chosen Force Disposition and the primary mission it gives against the opponent's */
