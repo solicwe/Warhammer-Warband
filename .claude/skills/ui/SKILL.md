@@ -94,4 +94,5 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
   and the Consolidate step lists the player's units. Before adding a fight-phase choice, check the step it belongs to.
 - A manual stratagem panel could remain visible after use (`Crushing Impact` after a charge in `GameScreen.tsx`): the continue button dismissed it, but the use button did not. Make both branches dismiss the same prompt, and keep the game action independent of using the stratagem.
 - Consolidation belongs to the unit that just fought, before the next fight activation. Keep a pending unit in `FightState`; a phase-end-only consolidation delays the choice and can miss the intended timing.
+- The shared delayed movement effect in `GameScreen.tsx` must auto-move player Pile-ins only; auto-moving Consolidation there skips the manual choice panel. Bot Consolidation remains automatic in `fightPanel`.
 - Replay snapshots only animate unit moves whose owner is in `Board.animateMoves`; `GameScreen` must include both players in replay mode or one side will appear to teleport.

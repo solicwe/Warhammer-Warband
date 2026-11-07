@@ -174,7 +174,7 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
 - **Auto fit.** A unit set down against a wall or another model shuffles to the nearest legal spot, and a long base
   also turns to find an angle that fits. Pile-in is automatic: each model tries every spot around the nearest enemy
   models, base contact first, while the unit stays in coherency. After each unit fights, choose its Consolidation
-  position before the next unit fights, or use Auto; the bot's units do it on their own.
+  position before the next unit fights; it moves automatically only if you press Auto. The bot's units move on their own.
 - **Fight choices.** A melee weapon with several profiles (strike / sweep) gets profile cards, as in shooting. A unit
   whose foe was destroyed before it fought may Overrun (pile in again, then fight) when an enemy is within 5"; with
   none, it is done on its own and you do not have to pick it to skip it.

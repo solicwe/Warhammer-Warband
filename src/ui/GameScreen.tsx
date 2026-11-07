@@ -468,11 +468,10 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
   }, [s, autoWho, rolling, thinking, viewing, replay]); // eslint-disable-line react-hooks/exhaustive-deps
-  // pile-in / consolidate on the player's side: every unit moves in by itself (as many models into the fight as
-  // possible); the step ends by itself unless a fight-start ability is waiting to be used
+  // Pile-in on the player's side happens automatically; Consolidation is chosen in the phase panel.
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
   useEffect(() => {
-    if (replay || !pileKey || s.manualPile || s.attack || s.window) return;
+    if (replay || !pileKey || s.manualPile || s.fight?.step === 'consolidate' || s.attack || s.window) return;
     const f = s.fight!;
     if (bots.includes(f.stepPlayer) || onAuto(s, f.stepPlayer)) return;
     const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
