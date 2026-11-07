@@ -11,6 +11,7 @@ import { pickDetChoice } from '../rules-engine/detachments';
 import { createGame, formationAt, placeUnit, settleMove } from '../engine/game';
 import { knightsCommandStart, knightsTurnEnd } from './knights';
 import { stratRuleFor } from '../rules-engine/stratagems';
+import { placementRings } from '../ui/Board';
 import { PRESETS } from '../ui/presets';
 import type { ArmyList, FactionData, GameState, UnitState } from '../engine/types';
 
@@ -163,6 +164,18 @@ describe('Imperial Knights', () => {
 });
 
 describe('Chaos Knights', () => {
+  it('shows the 12" Bastion of Corruption keep-out ring during Reinforcement placement', () => {
+    const list = { ...PRESETS.QT, units: [{ uid: 'tyrant', datasheet: 'Knight Tyrant', models: 1, pts: 535 }] };
+    const s = game(list, QT);
+    const tyrant = unit(s, 0, 'Knight Tyrant');
+
+    const reinforcementRings = placementRings(s, [tyrant], 9, true);
+    const infiltratorRings = placementRings(s, [tyrant], 9, false);
+
+    expect(reinforcementRings[0].r).toBe(tyrant.models[0].r + 12);
+    expect(infiltratorRings[0].r).toBe(tyrant.models[0].r + 9);
+  });
+
   it('Deathly Terror: enemy units within 9" have -1 Leadership; Darkness gives Stealth', () => {
     const s = game(with_(PRESETS.QT, 'Traitoris Lance'), QT);
     s.terrain = [];

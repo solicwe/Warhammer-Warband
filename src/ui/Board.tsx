@@ -22,6 +22,13 @@ export type Paths = Map<string, Pt[]>;
 
 export interface Ring { c: Pt; r: number; color: string; dash?: boolean }
 
+export function placementRings(s: GameState, enemyUnits: UnitState[], keep: number, includeOmniScramblers: boolean): Ring[] {
+  return enemyUnits.flatMap((u) => {
+    const range = Math.max(keep, includeOmniScramblers ? unitFlags(s, u).omniScrambler : 0);
+    return alive(u).map((m) => ({ c: m, r: m.r + range, color: 'rgba(239,68,68,0.55)', dash: true }));
+  });
+}
+
 export interface BoardProps {
   s: GameState;
   viewer: PlayerId;

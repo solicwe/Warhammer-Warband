@@ -161,8 +161,9 @@ battles, elite fights (enemies with a special rule), supply drops, armories, med
   picked it shows the whole board while the sheet hides most of it. It never opens over the dice. Drag it to move it,
   or close it; it moves above an open mission sheet.
 - Mission sheets close from their handle by tapping or swiping down. The target panel and mission sheets scroll with
-  touch, and the Deep Strike panel shows the required distance from enemy units. Crushing Impact remains a manual
-  choice after a successful charge, with a button to continue without using it.
+  touch, and the Deep Strike panel shows the required distance from enemy units, including enemy reserve-scrambler
+  ranges on the board. Crushing Impact remains a manual choice after a successful charge, with a button to continue
+  without using it.
 - Pinch to zoom and drag to pan. You can zoom out to twice the table's width, so all of it fits above the bottom sheet.
   Missions that score by table quarter label Q1–Q4 and mark the central 6" exclusion zone. An objective's outline
   takes the colour of whoever has more OC on it right now; the game settles control at the end of each phase.

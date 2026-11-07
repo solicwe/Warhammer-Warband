@@ -62,7 +62,7 @@ import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engi
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
-import { Board, type Paths, type Ring } from './Board';
+import { Board, placementRings, type Paths, type Ring } from './Board';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
 import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/darkPacts';
@@ -1233,7 +1233,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     // Keep-out distance while arriving or infiltrating: model circles mark enemy ranges.
     if (mode?.k === 'place' && modeUnit && (mode.how === 'deepStrike' || mode.how === 'ingress' || mode.how === 'infiltrate')) {
       const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
-      for (const e of boardUnits(s, other(modeUnit.owner))) for (const n of alive(e)) r.push({ c: n, r: n.r + keep, color: 'rgba(239,68,68,0.55)', dash: true });
+      r.push(...placementRings(s, boardUnits(s, other(modeUnit.owner)), keep, mode.how !== 'infiltrate'));
     }
     return r;
   }, [mode, modeUnit, s]);

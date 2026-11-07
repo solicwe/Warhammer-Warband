@@ -51,6 +51,8 @@ skill is the checklist around them.
   `public/data/factions/`.
 - A new phase-end activation trigger must be wired into both the turn-loop end-phase path and `AUTO_ONLY`; data
   validation alone only proves the trigger name is accepted. Test the actual reaction window through `endPhase`.
+- `omniScrambler` can block Reserve placement in `game.ts` while the board still shows only the normal 9" ring;
+  compare validation with the UI guide and use each enemy's effective `unitFlags` range.
 - A stratagem window can open at the right moment and still offer the wrong targets: Fire Overwatch opened at the end
   of the Movement phase and let any enemy within 24" be shot, though only a unit that moved or was set up may be.
   Check the TARGET line as well as the WHEN line, in the engine (`overwatchTargets`), the player's target list and the
