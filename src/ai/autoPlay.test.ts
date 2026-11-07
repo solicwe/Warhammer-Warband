@@ -65,6 +65,10 @@ describe('the player decides', () => {
     expect(autoDue(s, 0)).toBe(false);
     s.window = { kind: 'fireOverwatch', player: 0 };
     expect(autoDue(s, 0)).toBe(false);
+    s.window = null;
+    s.phase = 'fight';
+    s.fight = { step: 'consolidate', stepPlayer: 0, chooser: 0, eligible: [], fought: [], forcedNext: null, movedThisStep: [] };
+    expect(autoDue(s, 0)).toBe(false);
     s.decides = [];
     expect(autoDue(s, 0)).toBe(true); // "Automatic": the app answers for them again
   });

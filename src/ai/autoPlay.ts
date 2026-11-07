@@ -36,7 +36,7 @@ export function autoDue(s: GameState, p: PlayerId): boolean {
   if (s.phase === 'movement') return s.active === p && !decides(s, p) && !(s.botTried ?? []).includes(`${s.turn}|auto-move|${p}`);
   if (s.phase === 'shooting') return ritualsPending(s, p) && !decides(s, p);
   if (s.phase === 'fight' && s.fight) {
-    if (s.fight.step !== 'fight') return s.fight.stepPlayer === p;
+    if (s.fight.step !== 'fight') return s.fight.stepPlayer === p && !decides(s, p);
     return fightCandidates(s).player === p && !decides(s, p); // they pick who fights and use their stratagems
   }
   return false;

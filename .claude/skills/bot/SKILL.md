@@ -48,6 +48,7 @@ look-ahead tries; the campaign and phones skip the look-ahead.
 - Every person is on auto rules and also in `s.decides` (`withAutoRules`). Any `autoPlay.ts` helper that presses a
   button or spends CP for them must check `decides(s, p)` first: `autoSelectToShoot` once spent a Sorcerer's
   once-per-battle Twisted Sorceries the moment it was picked to shoot.
+- `autoDue` must also check `decides` for Fight substeps such as Pile-in and Consolidation; otherwise a human's Consolidation goes through `botFightStep` even when the Fight panel offers a manual choice.
 - The bot never made an Overrun fight: a unit whose foe died just ended. `botFightStep` now piles in when an enemy is
   within 5" (`canOverrun`). Melee weapons with strike / sweep still always use the first profile for the bot.
 - Consolidation is part of each unit's fight before the next activation; a bot that fails to get an Overrun into Engagement Range must be marked as not eligible to consolidate.
