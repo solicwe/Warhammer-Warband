@@ -27,7 +27,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit } from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
@@ -166,7 +166,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     } else replayFrames.current.push(structuredClone(next));
   }, [replay]);
   const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
-  const [replayPlaying, setReplayPlaying] = useState(replay);
+  const [replayPlaying, setReplayPlaying] = useState(false);
   const replayEvents = useMemo(() => {
     if (!replayStates || replayIndex === 0) return [];
     const previous = replayStates[replayIndex - 1];
@@ -436,16 +436,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
         replayState: {
           seed: s.rng,
-          savedGame: s,
         },
       };
       saveBattleLog(record);
       const timeline = [...replayFrames.current];
       if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
       void compressReplayTimeline(timeline).then((encoded) => {
-        if (loadBattleLogs().some((saved) => saved.id === record.id)) {
-          saveBattleLog({ ...record, replayState: { ...record.replayState!, timeline: encoded } });
-        }
+        saveBattleLog({ ...record, replayState: { seed: s.rng, timeline: encoded } });
+        window.dispatchEvent(new CustomEvent('battle-logs-updated'));
       }).catch((error: unknown) => {
         console.error('Could not save replay timeline', error);
         window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
@@ -972,8 +970,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   };
   const turnButtons = () => modeUnit && alive(modeUnit).some((m) => m.hl) ? (
     <>
-      <button className="btn small" title="Turn 45° counter-clockwise" onClick={() => turnDraft(-Math.PI / 4)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCcw" size={14} /></button>
-      <button className="btn small" title="Turn 45° clockwise" onClick={() => turnDraft(Math.PI / 4)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCw" size={14} /></button>
+      <button className="btn small" title="Turn 15° counter-clockwise" onClick={() => turnDraft(-Math.PI / 12)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCcw" size={14} /></button>
+      <button className="btn small" title="Turn 15° clockwise" onClick={() => turnDraft(Math.PI / 12)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="rotateCw" size={14} /></button>
     </>
   ) : null;
   /** The furthest every model of the moving unit may go. */
@@ -1184,13 +1182,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           setMode({ k: 'charge', unitId: selUnit.id, targets: [] }, startPaths(selUnit));
         },
       });
-    } else if (s.phase === 'fight' && onBoard(selUnit) && !selUnit.fought && isEngaged(s, selUnit)) {
+    } else if (s.phase === 'fight' && onBoard(selUnit) && !selUnit.fought && (isEngaged(s, selUnit) || selUnit.chargedTurn === s.turn)) {
       actions.push({
         label: 'Fight',
         primary: true,
         onClick: () => {
           const eng = engagedEnemies(s, selUnit).map((e) => e.id);
-          setModeRaw({ k: 'fight', unitId: selUnit.id, target: eng.length === 1 ? eng[0] : null, epic: false });
+          const tgt = eng.length === 1 ? eng[0] : (selUnit.chargeTargets?.length === 1 ? selUnit.chargeTargets[0] : null);
+          setModeRaw({ k: 'fight', unitId: selUnit.id, target: tgt, epic: false });
         },
       });
     }
@@ -1449,6 +1448,38 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             </div>
           )}
           {flags.length > 0 && <div className="tiny" style={{ color: 'var(--warn)' }}>{flags.join(' · ')}</div>}
+          {(() => {
+            const touchedObjs = unitTouchedObjectives(s, u);
+            if (touchedObjs.length <= 1) return null;
+            const assignedObjId = assignedObjective(s, u);
+            return (
+              <div className="row wrap tiny" style={{ marginTop: 4, alignItems: 'center', gap: 6 }}>
+                <span style={{ fontWeight: 600, color: 'var(--accent)' }}>Contesting:</span>
+                {touchedObjs.map((t) => {
+                  const isChosen = assignedObjId === t.objective.id;
+                  const objIndex = s.objectives.findIndex((o) => o.id === t.objective.id);
+                  return (
+                    <button
+                      key={t.objective.id}
+                      type="button"
+                      className={`chip ${isChosen ? 'on' : ''}`}
+                      style={{ cursor: 'pointer', padding: '2px 8px', fontSize: 11 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        act((g) => {
+                          const gu = unitById(g, u.id);
+                          gu.assignedObjective = t.objective.id;
+                          updateControl(g);
+                        });
+                      }}
+                    >
+                      OBJ {objIndex + 1} ({t.count} models)
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
         <button
           type="button"
@@ -2739,8 +2770,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                 {canFly && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
                 {alive(u).some((m) => m.hl) && (
                   <>
-                    <button className="btn small" title="Pivot counter-clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, -Math.PI / 4)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCcw" size={13} /> −45°</button>
-                    <button className="btn small" title="Pivot clockwise 45°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, Math.PI / 4)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCw" size={13} /> +45°</button>
+                    <button className="btn small" title="Pivot counter-clockwise 15°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, -Math.PI / 12)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCcw" size={13} /> −15°</button>
+                    <button className="btn small" title="Pivot clockwise 15°" onClick={() => { const res = act((g) => rotateUnit(g, u.id, Math.PI / 12)); if (res?.reason) flash(res.reason); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="rotateCw" size={13} /> +15°</button>
                   </>
                 )}
               </div>
@@ -3064,7 +3095,9 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                   <b>{p.weapon}{p.profile.name !== p.weapon ? ` – ${p.profile.name}` : ''}</b> <span className="muted">×{models}</span>
                   <div className="statline">
                     Hit <b>{p.autoHit ? 'auto' : p.hitOn6Only ? '6' : `${p.skill}+`}</b>{p.hitMod ? ` (${p.hitMod > 0 ? '+' : ''}${p.hitMod})` : ''} · Wound <b>{p.woundNeed}+</b>{p.woundMod ? ` (+${p.woundMod})` : ''} · AP <b>{p.ap}</b> · D <b>{p.damage}</b>
-                    {covered ? ` · cover ${covered}/${models}` : ''}{p.rerollAllHits ? ' · Oath' : ''}
+                    {covered ? ` · cover ${covered}/${models}` : ''}
+                    {p.rerollAllHits && <span className="oath-tag" style={{ background: 'rgba(217,119,6,0.18)', borderColor: '#d97706', color: '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="reroll" size={12} /> Re-roll Hits</span>}
+                    {p.rerollHits1 && !p.rerollAllHits && !(p.rerollHits1 && p.rerollWounds1) && <span className="oath-tag" style={{ background: 'rgba(217,119,6,0.18)', borderColor: '#d97706', color: '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="reroll" size={12} /> Re-roll Hit 1s</span>}
                     {p.skillNote?.includes('For the Greater Good +1 BS') && <span className="oath-tag guided-tag"><Icon name="crosshair" size={12} /> Guided +1 BS</span>}
                     {p.skillNote?.includes('For the Greater Good (non-spotted)') && <span className="oath-tag" style={{ background: '#c62828' }}><Icon name="shock" size={12} /> Non-spotted −1 BS</span>}
                     {p.rerollHits1 && p.rerollWounds1 && <span className="oath-tag observer-tag"><Icon name="radar" size={12} /> Spotter 1s</span>}
@@ -3509,17 +3542,18 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       );
     }
     const cands = fc!;
-    const overrunReady = selUnit && cands.units.includes(selUnit) && !isEngaged(s, selUnit);
+    const overrunReady = selUnit && cands.units.includes(selUnit) && !isEngaged(s, selUnit) && selUnit.chargedTurn !== s.turn;
     return (
       <>
         {cands.player !== null && <div className="handoff">{pName(s, cands.player)} selects a unit to fight{cands.units.some((u) => u.chargedTurn === s.turn || u.core.fightsFirst || u.foughtFirstUntilTurn === s.turn) ? ' (Fights First units first)' : ''}</div>}
 
         {selUnit && cands.units.includes(selUnit) && unitCard(selUnit)}
-        {selUnit && cands.units.includes(selUnit) && isEngaged(s, selUnit) && selUnit.owner === cands.player && (
+        {selUnit && cands.units.includes(selUnit) && (isEngaged(s, selUnit) || selUnit.chargedTurn === s.turn) && selUnit.owner === cands.player && (
           <div className="row">
             <button className="btn primary grow" onClick={() => {
               const eng = engagedEnemies(s, selUnit).map((e) => e.id);
-              setModeRaw({ k: 'fight', unitId: selUnit.id, target: eng.length === 1 ? eng[0] : null, epic: false });
+              const tgt = eng.length === 1 ? eng[0] : (selUnit.chargeTargets?.length === 1 ? selUnit.chargeTargets[0] : null);
+          setModeRaw({ k: 'fight', unitId: selUnit.id, target: tgt, epic: false });
             }}><Icon name="fight" /> Fight with {selUnit.name}</button>
           </div>
         )}
@@ -3659,7 +3693,18 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       <div className="replay-controls">
         <div className="row wrap">
           <div className="grow">Replay · Round {s.round} · {PHASE_TH[s.phase]}</div>
-          <button className="btn primary" aria-label={replayPlaying ? 'Pause replay' : 'Play replay'} onClick={() => setReplayPlaying((playing) => !playing)}>{replayPlaying ? 'Pause' : 'Play'}</button>
+          <button className="btn" disabled={replayIndex <= 0} onClick={() => onReplaySeek?.(Math.max(0, replayIndex - 1))} aria-label="Previous step">◀</button>
+          <button
+            className="btn primary"
+            aria-label={replayPlaying ? 'Pause replay' : 'Play replay'}
+            onClick={() => {
+              if (replayIndex + 1 >= replayCount) onReplaySeek?.(0);
+              setReplayPlaying((playing) => !playing);
+            }}
+          >
+            {replayPlaying ? 'Pause' : 'Play'}
+          </button>
+          <button className="btn" disabled={replayIndex + 1 >= replayCount} onClick={() => onReplaySeek?.(Math.min(replayCount - 1, replayIndex + 1))} aria-label="Next step">▶</button>
           <button className="btn" onClick={onExit}>History</button>
         </div>
         <input
@@ -3940,12 +3985,11 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             measure={tape.on ? { a: tape.a, b: tape.b, label: tapeInfo?.text, los: tapeInfo?.los } : undefined}
             onTapBoard={onTapBoard}
             onDraft={(d) => {
+              setDraft(d);
               if (mode?.k === 'place' && modeUnit && (mode.how === 'ingress' || mode.how === 'deepStrike' || mode.how === 'infiltrate')) {
-                const pos = nudgePlacement(s, modeUnit, lastPos(d), mode.how);
-                setDraft(placePaths(pos));
-                const chk = validatePlacement(s, modeUnit, pos, mode.how);
+                const chk = validatePlacement(s, modeUnit, lastPos(d), mode.how);
                 setCheck(chk.ok ? null : chk);
-              } else { setDraft(d); setCheck(null); }
+              } else { setCheck(null); }
             }}
             onMoveDeathstrikeMarker={(unitId, pt) => {
               act((g) => {
@@ -3988,7 +4032,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         )}
       </div>
-      {(isMobileScreen || liveMap) && (
+      {(isMobileScreen || liveMap) && !viewing && !sheet && !showStrats && (
         <MapCam
           s={s}
           focus={camFocus(modeUnit ?? selUnit)}
@@ -4145,7 +4189,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                             progress={dead ? 'Cannot be achieved any more: discard it' : vp ? `If the turn ended now: +${vp} VP` : `To do: ${goal.todo}`}
                           />
                           {id === 'beacon' && (
-                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                            <div style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
                                 Beacon: {P.sec.beacon ? <span style={{ color: 'var(--accent)' }}>{s.units.find((u) => u.id === P.sec.beacon)?.name}</span> : <span className="muted">None selected</span>}
                               </div>
@@ -4174,7 +4218,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                             </div>
                           )}
                           {id === 'burden-of-trust' && (
-                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                            <div style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
                                 Guards ({P.sec.guards?.length ?? 0} assigned):
                               </div>
@@ -4220,7 +4264,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                             </div>
                           )}
                           {id === 'a-tempting-target' && (
-                            <div style={{ width: '100%', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
+                            <div style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px', background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 6, fontSize: 12 }}>
                               <div style={{ fontWeight: 600, marginBottom: 4 }}>
                                 Decoy Target: {P.sec.temptingTarget ? (() => {
                                   const idx = s.objectives.findIndex((o) => o.id === P.sec.temptingTarget);

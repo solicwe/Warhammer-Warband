@@ -4,7 +4,7 @@ import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
-import { mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle } from './missions';
+import { assignedObjective, mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle, unitTouchedObjectives } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries, secondaryDead } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body, bodyBox } from './geometry';
@@ -575,7 +575,15 @@ function engagedAt(s: GameState, u: UnitState, pos: Map<string, Pt>, enemy?: Uni
   const enemies = enemy ? [enemy] : boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
   return enemies.filter((e) => alive(u).some((m) => {
     const p = pos.get(m.id) ?? m;
-    return alive(e).some((n) => gap(bodyAt(m, p), n) <= RULES.engagementRange + 1e-6);
+    const bm = bodyAt(m, p);
+    if (alive(e).some((n) => gap(bm, n) <= RULES.engagementRange + 1e-6)) return true;
+    return boardUnits(s, u.owner).some((fu) => alive(fu).some((f) => {
+      if (f.id === m.id) return false;
+      const fp = fu.id === u.id ? (pos.get(f.id) ?? f) : f;
+      const bf = bodyAt(f, fp);
+      if (gap(bm, bf) > 0.05) return false;
+      return alive(e).some((n) => gap(bf, n) <= 0.05);
+    }));
   }));
 }
 
@@ -682,6 +690,21 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   return { ok: errors.length === 0, errors: [...new Set(errors)], bad: [...bad] };
 }
 
+export function modelCanFitWhollyInZone(m: Body, zone: Pt[]): boolean {
+  const xs = zone.map((p) => p.x), ys = zone.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  for (let y = minY + 1; y <= maxY - 1; y += 2) {
+    for (let x = minX + 1; x <= maxX - 1; x += 2) {
+      if (!pointInPoly({ x, y }, zone)) continue;
+      for (const rot of [0, Math.PI / 2, m.rot ?? 0]) {
+        if (bodyWhollyInPoly(bodyAt(m, { x, y, rot }), zone)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate'): MoveCheck {
   const W = tableW(s), H = tableH(s);
   const errors: string[] = [];
@@ -693,8 +716,14 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
   const omnis = how === 'ingress' || how === 'deepStrike' ? enemies.map((e) => ({ e, omni: unitFlags(s, e).omniScrambler })).filter((x) => x.omni) : [];
   for (const m of alive(u)) {
     const p = pos.get(m.id) ?? m;
-    // a Titan's footprint can be wider than a 12" deployment strip: its centre in the zone is enough (it may overhang)
-    if (how === 'deploy' && !(m.keywords.includes('TITANIC') ? pointInPoly(p, zoneOf(s, u.owner)) : bodyWhollyInPoly(bodyAt(m, p), zoneOf(s, u.owner)))) {
+    // a Titan's footprint can be wider than a 12" deployment strip: its centre in the zone is enough only if it physically cannot fit wholly
+    const zone = zoneOf(s, u.owner);
+    const wholly = bodyWhollyInPoly(bodyAt(m, p), zone);
+    const titanRear = !wholly && m.keywords.includes('TITANIC')
+      && !modelCanFitWhollyInZone(m, zone)
+      && Math.min(p.x, p.y, W - p.x, H - p.y) <= (m.r ?? 1) + 0.5
+      && pointInPoly(p, zone);
+    if (how === 'deploy' && !(wholly || titanRear)) {
       errors.push('Must be set up wholly within your deployment zone'); bad.add(m.id);
     }
     // Teleport Homer: arriving in the opponent's turn (Rapid Ingress, 0CP) is within 3" of its token, and 8" is enough
@@ -1277,7 +1306,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtMovementEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
     if (offerOpponentMovementEnd(s)) return;
   }
@@ -1291,7 +1320,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
     }
     sagaBoasts(s, 'commandEnd');
     scoreTiming(s, 'endOfYourCommandPhase');
@@ -1583,6 +1612,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
   }
   // stratagems: "just after an enemy unit ends a Normal, Advance or Fall Back move" (Squad Tactics …)
   if (reactAfterMove) emitReact(s, other(u.owner), 'enemyMoved', { unitId: u.id });
+  delete u.assignedObjective;
 }
 
 /** A Deadly Prize: an enemy unit ending a move on a Sabotaged objective rolls a D6, on 2+ it suffers D3 mortal wounds. */
@@ -1877,7 +1907,10 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
   const out = boardUnits(s, other(u.owner)).filter((e) => {
     if (hasKw(e, 'AIRCRAFT') && !hasKw(u, 'FLY')) return false;
     const d = unitDistance(u, e);
-    if (d > RULES.charge.declareRange || d > chargeReach(s, u, [e]) + RULES.engagementRange + 1e-6) return false;
+    const reach = chargeReach(s, u, [e]);
+    const friendsInContact = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id && alive(fu).some((f) => alive(e).some((n) => baseDist(f, n) <= 0.05)));
+    const canReachFriend = friendsInContact.some((fu) => unitDistance(u, fu) <= reach + 0.05);
+    if (d > RULES.charge.declareRange || (!canReachFriend && d > reach + RULES.engagementRange + 1e-6)) return false;
     if (opts.within !== undefined && d > opts.within) return false;
     if (u.chargeOnly?.turn === s.turn && !u.chargeOnly.ids.includes(e.id)) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
@@ -2005,6 +2038,14 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
         if (t > maxDist + 1e-6) continue;
         const g = gapTo(m, c);
         if (g < g0 - 0.05 && g <= RULES.engagementRange) spots.push({ p: c, g: Math.max(g, 0.05), t });
+      }
+      const friendsInContact = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id).flatMap(alive).filter((f) => enemyModels.some((e) => baseDist(f, e) <= 0.05));
+      for (const f of friendsInContact) for (let k = 0; k < 24; k++) {
+        const c = contactAt(m, f, (k / 24) * Math.PI * 2, 0.02);
+        const t = dist(m, c);
+        if (t > maxDist + 1e-6) continue;
+        const g = gapTo(m, c);
+        if (g < g0 - 0.05) spots.push({ p: c, g: 0.06, t });
       }
       spots.sort((a, b) => a.g - b.g || a.t - b.t);
       let placed = false, tries = 0;
@@ -2276,7 +2317,7 @@ export function useCounteroffensive(s: GameState, u: UnitState) {
 
 // ---------- objectives & scoring ----------
 
-export { objectivePolys };
+export { objectivePolys, unitTouchedObjectives, assignedObjective };
 
 export function objectiveTerrain(s: GameState, o: ObjectiveState) {
   return s.terrain.find((t) => t.id === o.terrainId)!;
@@ -2291,14 +2332,17 @@ export function levelOfControl(s: GameState, o: ObjectiveState): [number, number
   const polys = objectivePolys(s, o);
   const lv: [number, number] = [0, 0];
   for (const u of boardUnits(s)) {
+    if (assignedObjective(s, u) !== o.id) continue;
     for (const m of alive(u)) if (polys.some((p) => bodyTouchesPoly(m, 0, p))) lv[u.owner] += modelOc(s, u, m);
   }
   return lv;
 }
 
 export function updateControl(s: GameState) {
-  for (const o of s.objectives) {
-    const [a, b] = levelOfControl(s, o);
+  const levels = s.objectives.map((o) => levelOfControl(s, o));
+  for (let i = 0; i < s.objectives.length; i++) {
+    const o = s.objectives[i];
+    const [a, b] = levels[i];
     let c: PlayerId | null = a > b ? 0 : b > a ? 1 : null;
     // "secured" objectives (Objective Secured …) stay yours until the opponent controls them
     if (o.secured !== undefined && o.secured !== null) {
@@ -2307,7 +2351,6 @@ export function updateControl(s: GameState) {
     }
     o.controller = c;
     if (o.warded != null && c === other(o.warded)) o.warded = null;
-
   }
 }
 

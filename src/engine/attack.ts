@@ -358,7 +358,9 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
   const sens = targetBlock(s, A, T, 'fight');
   if (sens) return { pools: [], notes: [], error: sens };
   for (const m of fighters) {
-    if (!modelEngagedWith(m, T) && !(reach3 && alive(T).some((t) => baseDist(m, t) <= 3 + 1e-6))) continue;
+    const direct = modelEngagedWith(m, T) || (reach3 && alive(T).some((t) => baseDist(m, t) <= 3 + 1e-6));
+    const behindFriend = !direct && boardUnits(s, A.owner).flatMap(alive).some((f) => f.id !== m.id && baseDist(m, f) <= 0.05 && alive(T).some((t) => baseDist(f, t) <= 0.05));
+    if (!direct && !behindFriend) continue;
     if (taunters.some((e) => modelEngagedWith(m, e))) continue;
     if (glamour && engagedEnemies(s, A).some((e) => e.id !== T.id && e.factionKeywords.includes('SCINTILLATING LEGIONS') && modelEngagedWith(m, e))) continue;
     const d = Math.min(...alive(T).map((t) => baseDist(m, t)));

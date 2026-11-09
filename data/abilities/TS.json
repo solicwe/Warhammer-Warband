@@ -864,8 +864,10 @@
  },
  "Malign Trickery": {
   "act": {
-   "when": "enemyMovedNear",
-   "range": 8,
+   "when": "opponentMovementEnd",
+   "limit": "phase",
+   "range": 12,
+   "label": "Normal move D6 after the opponent's Movement phase",
    "if": [
     "notEngaged"
    ],
@@ -877,6 +879,23 @@
    ]
   }
  },
+  "Malign Trickery@Tzaangor Enlightened": {
+   "act": {
+    "when": "opponentMovementEnd",
+    "limit": "phase",
+    "range": 12,
+    "if": [
+     "notEngaged"
+    ],
+    "label": "Normal move D6 after the opponent's Movement phase",
+    "do": [
+     {
+      "on": "self",
+      "move": "D6"
+     }
+    ]
+   }
+  },
   "Malign Trickery@Tzaangor Enlightened with Fatecaster Greatbows": {
    "act": {
     "when": "opponentMovementEnd",

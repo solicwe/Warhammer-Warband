@@ -34,6 +34,9 @@ Priority = (impact + risk) x (6 - effort), each scored 1 to 5.
 | Crushing Impact prompt stayed open after use | The skip button dismissed the panel, but using Crushing Impact did not record the same dismissal | Both using Crushing Impact and continuing without it dismiss the prompt for that unit this turn |
 | Tyranid campaign arsenal had no named end node when no priced Bio-titan was recruitable | The Titan keystone was removed to match the current recruit pool, leaving the ordinary keystone empty | Added the Great Devourer ordinary keystone and checked that every army's arsenal has a named keystone |
 | Compound wargear text could become a fake item name | `parseWargearOption` kept the "is replaced with" sentence as a weapon choice | Extract the replacement item before canonicalising choices; regenerated faction data |
+| Tzaangor Enlightened Malign Trickery and Prophesied Doom | Malign Trickery fell back to enemyMovedNear when sheet name was Tzaangor Enlightened; Prophesied Doom rolled 1 die when 0 models in ER | Keyed Malign Trickery for both base and unit-specific keys to opponentMovementEnd (12" range); added !n guard in activations.ts |
+| Deep Strike / Reserves placement dragging lag | nudgePlacement ran up to 192 iterations per model on every pointer frame during onDraft | onDraft updates draft position and validation only; nudgePlacement executes on drag release (onDragEnd) with max 2 passes and 8 steps |
+| LOS leak behind green walls and ruins | Target model behind green walls/ruins could be shot due to unit-aware standsIn disabling obscuring for all squadmates, missing t.box area blocker, and paper-thin WALL_HALF (0.04") corner grazing | Restricted standsIn unit-awareness to shooter (target uses modelStandsIn), added t.box as obscuring area blocker, and set WALL_HALF to 0.18" (matching rendered wall thickness, reducing 1,959 ray leaks to 0 across 25,339 layout tests) |
 
 ## Open, by priority
 

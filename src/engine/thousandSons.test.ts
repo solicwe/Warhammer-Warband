@@ -131,6 +131,25 @@ describe('Rituals', () => {
     expect(s.players[0].rituals?.pending).toBeUndefined();
   });
 
+  it("Destiny's Ruin applies re-roll hits and notes to Mutalith Vortex Beast ranged attacks", () => {
+    const s = game([['Sorcerer', 1, 95], ['Mutalith Vortex Beast', 1, 170]], [['Boyz', 10, 90]]);
+    put(s, 'p0-x0', { x: 20, y: 30 });
+    const mvb = put(s, 'p0-x1', { x: 20, y: 25 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 40 });
+    s.phase = 'shooting';
+    s.active = 0;
+    const start = beginRitual(s, 0, casters(s, 0)[0].model.id, 'destinys-ruin', boyz.id);
+    expect(start.error).toBeNull();
+    const res = finishRitual(s, 0, false);
+    expect(res.out?.manifested).toBe(true);
+
+    const pools = buildShootPools(s, mvb.id, boyz.id, { mode: 'normal' });
+    expect(pools.pools.length).toBeGreaterThan(0);
+    const pool = pools.pools[0];
+    expect(pool.rerollHits1 || pool.rerollAllHits).toBe(true);
+    expect(pool.hitNote).toContain("Destiny's Ruin: re-roll hit");
+  });
+
   it('applies one D3 Perils result for a pair or triple among the Psychic test dice', () => {
     for (const n of [2, 3] as const) {
       const seed = Array.from({ length: 10000 }, (_, i) => i + 1).find((candidate) => {
@@ -196,6 +215,20 @@ describe('Rituals', () => {
     expect(s.window?.kind).toBe('abilityMove');
     if (s.window?.kind !== 'abilityMove') throw new Error('Expected Malign Trickery reaction window');
     expect(s.window.player).toBe(0);
+    expect(s.window.offers).toContainEqual(expect.objectContaining({ unitId: greatbows.id, label: expect.stringContaining('Malign Trickery') }));
+  });
+  it("offers Malign Trickery when unit sheet is named Tzaangor Enlightened", () => {
+    const s = game([['Tzaangor Enlightened with Fatecaster Greatbows', 3, 55]], [['Boyz', 10, 90]]);
+    const u = s.units.find((x) => x.owner === 0)!;
+    u.name = 'Tzaangor Enlightened';
+    u.sources = ['Tzaangor Enlightened'];
+    const greatbows = put(s, 'p0-x0', { x: 20, y: 25 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 35 });
+    s.active = 1;
+    s.phase = 'movement';
+    endPhase(s);
+    expect(s.window?.kind).toBe('abilityMove');
+    if (s.window?.kind !== 'abilityMove') throw new Error('Expected Malign Trickery reaction window');
     expect(s.window.offers).toContainEqual(expect.objectContaining({ unitId: greatbows.id, label: expect.stringContaining('Malign Trickery') }));
   });
   it('allows another eligible caster to retry a failed Ritual', () => {

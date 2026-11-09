@@ -1089,6 +1089,7 @@ export function useAct(s: GameState, def: ActDef, targetId?: string, ctx: FireCt
   for (const tg of targets) {
     if (def.spec.roll || def.spec.perModel) {
       const n = def.spec.perModel ? alive(def.holder).filter((m) => alive(tg).some((e) => baseDist(m, e) <= RULES.engagementRange + 1e-6)).length : def.spec.rollCount ?? 1;
+      if (def.spec.perModel && !n) continue;
       const dice = rollN(s, Math.max(1, n));
       // Warphead: the Weirdboy re-rolls a psychic roll of 1 (the Perils result)
       if (/psychic/i.test(def.name) && dice[0] === 1 && def.holder.enhancements?.some((e) => e.name === 'Warphead')) { dice[0] = rollN(s, 1)[0]; log(s, `Warphead: psychic roll of 1 re-rolled → ${dice[0]}`, 'roll', def.holder.owner); }

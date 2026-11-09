@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { clearBattleLogs, deleteBattleLog, loadBattleLogs, saveBattleLog, type BattleRecord } from '../services/storage';
+import { useEffect, useState } from 'react';
+import { deleteBattleLog, loadBattleLogs, type BattleRecord } from '../services/storage';
 import { Icon } from './Icon';
 
 interface Props {
@@ -11,73 +11,16 @@ interface Props {
 export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
   const [logs, setLogs] = useState<BattleRecord[]>(loadBattleLogs);
   const [filter, setFilter] = useState<'all' | 'simulator' | 'tabletop' | 'campaign'>('all');
-  const [armedClear, setArmedClear] = useState(false);
+
+  useEffect(() => {
+    const onUpdate = () => setLogs(loadBattleLogs());
+    window.addEventListener('battle-logs-updated', onUpdate);
+    return () => window.removeEventListener('battle-logs-updated', onUpdate);
+  }, []);
+
 
   const handleDelete = (id: string) => {
     deleteBattleLog(id);
-    setLogs(loadBattleLogs());
-  };
-
-  const handleClearAll = () => {
-    if (!armedClear) {
-      setArmedClear(true);
-      setTimeout(() => setArmedClear(false), 3000);
-      return;
-    }
-    clearBattleLogs();
-    setLogs([]);
-    setArmedClear(false);
-  };
-
-  const handleSeedSample = () => {
-    const demoLogs: BattleRecord[] = [
-      {
-        id: `tabletop-${Date.now() - 3600000 * 2}`,
-        timestamp: Date.now() - 3600000 * 2,
-        mode: 'tabletop',
-        title: 'Tabletop Match · Layout 01',
-        layoutName: 'Layout 01 (Hammer & Anvil)',
-        players: [
-          { name: 'Player 1', faction: 'SM', score: 68, cp: 2, isWinner: true },
-          { name: 'Player 2', faction: 'TYR', score: 54, cp: 1, isWinner: false },
-        ],
-        turn: 5,
-        maxTurns: 5,
-        summary: 'Primary: 40-35 · Tactical Secondaries: 28-19 (Victory P1)',
-      },
-      {
-        id: `sim-${Date.now() - 3600000 * 24}`,
-        timestamp: Date.now() - 3600000 * 24,
-        mode: 'simulator',
-        title: 'Simulator Battle · Search & Destroy',
-        layoutName: 'Layout 04 (Search & Destroy)',
-        players: [
-          { name: 'Strike Force Alpha', faction: 'SM', score: 72, cp: 0, isWinner: false },
-          { name: 'Waaagh! Ghazghkull', faction: 'ORK', score: 81, cp: 1, isWinner: true },
-        ],
-        turn: 5,
-        maxTurns: 5,
-        summary: 'Final VP: 72 - 81 (Ork Waaagh! Victory)',
-      },
-      {
-        id: `campaign-${Date.now() - 3600000 * 48}`,
-        timestamp: Date.now() - 3600000 * 48,
-        mode: 'campaign',
-        title: 'Roguelike Sector Encounter',
-        layoutName: 'Layout 02 (Dawn of War)',
-        players: [
-          { name: 'Vanguard Crusaders', faction: 'SM', score: 65, cp: 3, isWinner: true },
-          { name: 'Necron Dynastic Patrol', faction: 'NEC', score: 48, cp: 0, isWinner: false },
-        ],
-        turn: 5,
-        maxTurns: 5,
-        summary: 'Sector Cleared · Relic Acquired (Victory P1)',
-      },
-    ];
-
-    for (const dl of demoLogs) {
-      saveBattleLog(dl);
-    }
     setLogs(loadBattleLogs());
   };
 
@@ -140,13 +83,6 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
                   Complete a simulator battle, campaign sector, or tabletop match to automatically record match history here.
                 </div>
               </div>
-              <button
-                className="btn primary"
-                style={{ marginTop: 8, fontSize: 13, minHeight: 38, padding: '6px 16px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                onClick={handleSeedSample}
-              >
-                <Icon name="plus" size={16} /> Seed Sample History Records
-              </button>
             </div>
           ) : (
             filtered.map((log) => {
@@ -240,7 +176,7 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
                       {log.turn ? `Turn ${log.turn}` : ''} {log.summary ? `· ${log.summary}` : ''}
                     </span>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      {log.replayState?.savedGame && (
+                      {log.replayState?.timeline && (
                         <button
                           className="btn"
                           style={{ minHeight: 32, padding: '2px 8px', fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -266,29 +202,7 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
           )}
         </div>
 
-        {/* Footer */}
-        {logs.length > 0 && (
-          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--line-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="tiny muted">{filtered.length} log(s) shown</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn ghost"
-                style={{ minHeight: 32, fontSize: 11.5, padding: '2px 10px' }}
-                onClick={handleSeedSample}
-                title="Add sample history records"
-              >
-                + Add Sample
-              </button>
-              <button
-                className={`btn ${armedClear ? 'danger on-armed' : 'ghost'}`}
-                style={{ minHeight: 32, fontSize: 11.5, padding: '2px 10px' }}
-                onClick={handleClearAll}
-              >
-                {armedClear ? 'Tap again to confirm' : 'Clear all'}
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );

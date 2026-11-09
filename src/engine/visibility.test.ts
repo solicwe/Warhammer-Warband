@@ -84,6 +84,24 @@ describe('unit-level obscuring', () => {
     const squad = { units: [{ id: 'A', models: [inside, outside] }, { id: 'B', models: [viewer] }], terrain: [t] } as unknown as GameState;
     expect(hasLos(squad, inside, viewer)).toBe(true); // inside the ruin: sees out to viewer
     expect(hasLos(squad, outside, viewer)).toBe(true); // the whole unit counts as standing in the ruin
+    expect(hasLos(squad, viewer, outside)).toBe(false); // viewer cannot see outside model through the ruin footprint
+  });
+
+  it('solid box blocks sight even if model stands on the terrain plate', () => {
+    const t = area(10, 10, 30, 30, 'dense');
+    t.box = [P(15, 15), P(25, 15), P(25, 25), P(15, 25)];
+    const a = model(12, 20); // on the plate, west of the box
+    const b = model(28, 20); // on the plate, east of the box
+    const s = { units: [{ id: 'A', models: [a] }, { id: 'B', models: [b] }], terrain: [t] } as unknown as GameState;
+    expect(hasLos(s, a, b)).toBe(false);
+  });
+
+  it('model 1 inch behind a 2 inch wall is not seen by off-angle shooter', () => {
+    const wall = area(10, 10, 20, 20, 'dense', [[P(14, 15), P(16, 15)]]);
+    const target = model(15, 16); // 1" behind wall at y=15
+    const shooter = model(18, 10); // off-angle shooter
+    const s = { units: [{ id: 'A', models: [target] }, { id: 'B', models: [shooter] }], terrain: [wall] } as unknown as GameState;
+    expect(hasLos(s, shooter, target)).toBe(false);
   });
 });
 

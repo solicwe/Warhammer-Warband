@@ -242,6 +242,8 @@ export interface UnitState {
   embarkedIn: string | null;
   /** Seeker of the Unfound: the objective picked when the unit was first set up */
   seekerObjective?: string;
+  /** If the unit is within range of multiple objectives, which one it is contesting/controlling */
+  assignedObjective?: string;
   /** Teleport Homer: where its token was set up at the start of the battle (removed once used) */
   homer?: Pt;
   /** abilities used once per battle / per turn by key (Miraculous Saviour, Emergency Combat Embarkation …) */

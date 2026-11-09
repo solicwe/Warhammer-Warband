@@ -320,8 +320,8 @@ export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: D
               <div className="ds-body">Can be attached to:{sheet.leads.map((l) => <div key={l} className="ds-lead">• {l}</div>)}</div>
             </>
           )}
-          <div className="ds-kw"><span>FACTION KEYWORDS:</span> {sheet.factionKeywords.join(', ')}</div>
-          <div className="kw ds-kw2">KEYWORDS: {sheet.keywords.join(', ')}</div>
+          <div className="ds-kw"><b>FACTION KEYWORDS:</b> {sheet.factionKeywords.join(', ')}</div>
+          <div className="kw ds-kw2"><b>KEYWORDS:</b> {sheet.keywords.join(', ')}</div>
           {(() => {
             // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
             // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one
@@ -439,7 +439,7 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
           </div>
         );
       })()}
-      <div className="kw">{[...u.factionKeywords, ...u.keywords].join(', ')}</div>
+      <div className="kw"><b>KEYWORDS:</b> {[...u.factionKeywords, ...u.keywords].join(', ')}</div>
     </div>
   );
 }

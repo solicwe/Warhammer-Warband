@@ -558,7 +558,7 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ds-body { margin: 0 14px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.5; }
 .ds-lead { padding-left: 8px; font-weight: 600; }
 .ds-kw { margin: 8px 14px 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--text); }
-.ds-kw span { font: 600 12.5px var(--font-cond); letter-spacing: 0.1em; color: var(--text-2); margin-right: 4px; }
+.ds-kw span, .ds-kw b, .ds-kw2 b, .kw b { font: 700 12.5px var(--font-cond); letter-spacing: 0.1em; color: var(--text-2); margin-right: 4px; }
 .ds-kw2 { margin: 0 14px; font-size: 12.5px; text-transform: uppercase; color: var(--text-2); }
 .ds-kit { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .ds-kit-row { padding: 8px 10px; border-radius: 6px; background: var(--surface-2); }
@@ -755,7 +755,9 @@ b.em { font-weight: 700; color: var(--text); }
   fill: rgba(32, 37, 46, 0.98);
 }
 .goal-ring { opacity: 0.9; }
-.sec-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sec-slot { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box; overflow-x: hidden; }
+.sec-slot .sec-card { align-self: center; }
+.sec-slot .unit-pill { white-space: normal; text-align: left; word-break: break-word; height: auto; min-height: 28px; line-height: 1.25; max-width: 100%; box-sizing: border-box; }
 .prim-row { padding: 4px 0; border-bottom: 1px dashed var(--line); }
 .prim-row:last-of-type { border-bottom: none; }
 .sec-block { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
@@ -796,8 +798,8 @@ b.em { font-weight: 700; color: var(--text); }
 .ab-det.on .ab-check { background: var(--accent); border-color: var(--accent); }
 
 /* ---------- sheets and dice ---------- */
-.tray-backdrop { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: var(--overlay); }
-.tray { width: 100%; max-width: 720px; max-height: 88%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; display: flex; flex-direction: column; gap: 12px; padding: 22px 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--surface); color: var(--text); border-radius: 14px 14px 0 0; position: relative; box-shadow: var(--shadow); }
+.tray-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; background: var(--overlay); }
+.tray { width: 100%; max-width: 720px; max-height: 88%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; display: flex; flex-direction: column; gap: 12px; padding: 22px 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--surface); color: var(--text); border-radius: 14px 14px 0 0; position: relative; box-shadow: var(--shadow); box-sizing: border-box; }
 .tray.has-swipe-handle { padding-top: 30px; }
 /* a sheet scrolls as a whole: its blocks keep their full height (a clipped block hid the datasheet in the Add list) */
 .tray > * { flex-shrink: 0; }
@@ -1468,23 +1470,24 @@ b.em { font-weight: 700; color: var(--text); }
 .ro-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(8, 10, 12, 0.55); animation: ro-fade 0.2s ease-out; }
 .ro-backdrop.light { background: rgba(8, 10, 12, 0.28); }
 @keyframes ro-fade { from { opacity: 0; } to { opacity: 1; } }
-.ro-card { min-width: 240px; max-width: 92vw; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 22px 20px; border-radius: 10px; background: #171a1e; color: #eceff1; border: 1px solid #2c3137; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); animation: ro-pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.ro-card { min-width: 240px; max-width: min(92vw, 420px); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 20px 20px; border-radius: 12px; background: #171a1e; color: #eceff1; border: 1px solid #2c3137; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); animation: ro-pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1); }
 .ro-card.hit { animation: ro-shake 0.38s ease-out; }
 @keyframes ro-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes ro-shake { 0% { transform: translate(0, 0); } 20% { transform: translate(-7px, 3px); } 40% { transform: translate(6px, -4px); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(2px, -1px); } 100% { transform: translate(0, 0); } }
 .ro-title { font: 600 18px var(--font-cond); letter-spacing: 0.06em; text-transform: uppercase; text-align: center; color: #ffffff; }
-.ro-dice { display: flex; gap: 12px; justify-content: center; }
+.ro-dice { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 100%; }
 .ro-die { display: inline-block; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
 .ro-dice.tumble .ro-die { animation: ro-tumble 0.18s linear infinite; }
 .ro-dice.land .ro-die { animation: ro-land 0.42s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
 .ro-dice.win .ro-die svg { filter: drop-shadow(0 0 12px #e2b464); }
 @keyframes ro-tumble { 0% { transform: rotate(0) translateY(0) scale(0.9); } 50% { transform: rotate(160deg) translateY(-14px) scale(1.05); } 100% { transform: rotate(320deg) translateY(0) scale(0.9); } }
 @keyframes ro-land { 0% { transform: scale(1.7) rotate(-12deg); } 60% { transform: scale(0.92) rotate(3deg); } 100% { transform: scale(1) rotate(0); } }
-.ro-result { text-align: center; font: 700 24px var(--font-cond); letter-spacing: 0.04em; opacity: 0; transform: translateY(8px) scale(0.9); transition: opacity 0.25s, transform 0.3s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.ro-result { text-align: center; font: 700 22px var(--font-cond); letter-spacing: 0.03em; line-height: 1.25; word-break: break-word; max-width: 100%; opacity: 0; transform: translateY(8px) scale(0.9); transition: opacity 0.25s, transform 0.3s cubic-bezier(0.2, 1.6, 0.4, 1); }
 .ro-result.show { opacity: 1; transform: none; }
 .ro-result.good { color: #86d6a4; }
 .ro-result.bad { color: #f2a19a; }
-.ro-sum { color: #a7b0b8; font-weight: 500; font-size: 17px; }
+.ro-sum { color: #a7b0b8; font-weight: 500; font-size: 14.5px; margin-bottom: 2px; }
+.ro-outcome { font-weight: 700; }
 .ro-versus { display: flex; gap: 28px; align-items: flex-end; }
 .ro-side { display: flex; flex-direction: column; align-items: center; gap: 8px; transition: opacity 0.3s, transform 0.3s; }
 .ro-side.won { transform: scale(1.12); }
@@ -1523,6 +1526,9 @@ b.em { font-weight: 700; color: var(--text); }
 @keyframes sec-show { 0% { visibility: hidden; } 50% { visibility: visible; } 100% { visibility: visible; } }
 @keyframes sec-hide { 0% { visibility: visible; } 50% { visibility: hidden; } 100% { visibility: hidden; } }
 .sec-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 12px; justify-items: center; }
+@media (max-width: 640px) {
+  .sec-list { grid-template-columns: 1fr; width: 100%; }
+}
 .sec-list .sec-card, .sec-list .sec-card.up { animation: none; }
 .sec-list .sec-card.up .sec-front { visibility: visible; animation: none; }
 .sec-list .sec-card.up .sec-back { visibility: hidden; animation: none; }
@@ -3100,7 +3106,7 @@ select option {
 
 /* keyword lines: a little air between the words so the run of capitals reads as separate keywords */
 .ds-kw, .ds-kw2 { word-spacing: 0.3em; letter-spacing: 0.02em; line-height: 1.6; }
-.ds-kw span { word-spacing: normal; }
+.ds-kw span, .ds-kw b, .ds-kw2 b, .kw b { word-spacing: normal; }
 
 /* rules with named options (Mission Tactics, Combat Doctrines): intro, then one block per option */
 .rl-blocks { white-space: normal; display: flex; flex-direction: column; gap: 8px; }

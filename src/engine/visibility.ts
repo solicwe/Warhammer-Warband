@@ -262,7 +262,11 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
   const y0 = Math.min(a.y - a.r, b.y - b.r), y1 = Math.max(a.y + a.r, b.y + b.r);
   const near = s.terrain.filter((t) => { const q = boxOf(t); return q.x1 >= x0 && q.x0 <= x1 && q.y1 >= y0 && q.y0 <= y1; });
   const obscuring = near.filter((t) => (denseOnly ? t.category === 'dense' : t.category !== 'exposed'));
-  const areas: { poly: Pt[] }[] = obscuring.filter((t) => !standsIn(s, a, t) && !standsIn(s, b, t));
+  const areas: { poly: Pt[] }[] = [];
+  for (const t of obscuring) {
+    if (!standsIn(s, a, t) && !modelStandsIn(s, b, t)) areas.push(t);
+    if (t.box && (!bodyWhollyInPoly(a, t.box) || !bodyWhollyInPoly(b, t.box))) areas.push({ poly: t.box });
+  }
   for (const br of bridgesOf(s)) {
     if (denseOnly && !br.dense) continue;
     const q = br.box;
@@ -275,7 +279,7 @@ function blockers(s: GameState, a: ModelState, b: ModelState, denseOnly = false)
 }
 
 /** Half the thickness of a ruin wall: a line of sight can't slip through the hairline where two walls meet. */
-const WALL_HALF = 0.04;
+const WALL_HALF = 0.18;
 // a wall end or the joint of two walls blocks too: a 1mm line can't slip through a corner
 // bounding boxes of walls and footprints, so a line only does the exact test against what it can reach
 const segBoxes = new WeakMap<object, Box>();

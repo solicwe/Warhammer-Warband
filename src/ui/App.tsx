@@ -173,18 +173,18 @@ export default function App() {
           onClose={() => setShowLogsModal(false)}
           replayError={replayError}
           onReplay={async (log) => {
-            if (log.replayState?.savedGame) {
+            if (log.replayState?.timeline) {
               try {
-                const states = log.replayState.timeline
-                  ? await decompressReplayTimeline(log.replayState.timeline)
-                  : [log.replayState.savedGame];
-                if (!states.length) throw new Error('This battle has no replay states.');
+                const states = await decompressReplayTimeline(log.replayState.timeline);
+                if (!states.length) throw new Error('แมตช์นี้ไม่มีข้อมูลสถานะเกมสำหรับ Replay');
                 setReplayError(null);
                 setShowLogsModal(false);
                 setScreen({ kind: 'game', state: withAutoRules(states[0]), replay: { states: states.map(withAutoRules), index: 0 } });
               } catch (error) {
                 setReplayError(error instanceof Error ? error.message : String(error));
               }
+            } else {
+              setReplayError('แมตช์นี้ไม่มีบันทึก Timeline ย้อนหลัง (บันทึกจากเวอร์ชันเก่า)');
             }
           }}
         />

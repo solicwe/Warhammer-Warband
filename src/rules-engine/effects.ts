@@ -82,6 +82,7 @@ export interface Defend {
 
 /** A mark on an enemy unit that makes attacks against it better for the marking player's units. */
 export interface Incoming {
+  label?: string;
   by: PlayerId; // filled in when the mark is placed
   units?: string[]; // only attacks by these units of the marking player
   attack?: 'melee' | 'ranged';
@@ -1068,9 +1069,21 @@ export function offenceFor(s: GameState, A: UnitState, m: ModelState, T: UnitSta
 
 /** Marks on the target ("hit by Multi-spectrum Array: +1 to hit for your ADEPTUS ASTARTES") that help this attacker. */
 export function incomingFor(s: GameState, A: UnitState, m: ModelState, T: UnitState, kind: 'melee' | 'ranged'): Incoming[] {
-  return (T.timed ?? []).map((t) => t.e.incoming).filter((i): i is Incoming => !!i && i.by === A.owner && (!i.attack || i.attack === kind) && unitMatches(A, i.units)
-    && (!i.fromTransport || (A.disembarkedTurn === s.turn && A.disembarkedFrom === i.fromTransport))
-    && (!i.disembarked || A.disembarkedTurn === s.turn));
+  const out: Incoming[] = [];
+  for (const t of T.timed ?? []) {
+    if (!t.e.incoming) continue;
+    const i: Incoming = { ...t.e.incoming, label: t.mark ?? t.label };
+    if (i.by === A.owner && (!i.attack || i.attack === kind) && unitMatches(A, i.units)
+  
+      && (!i.fromTransport || (A.disembarkedTurn === s.turn && A.disembarkedFrom === i.fromTransport))
+      && (!i.disembarked || A.disembarkedTurn === s.turn)) {
+      out.push(i);
+    }
+  }
+  return out;
+
+
+
 }
 
 /** Extra Range for one weapon from effects that cover only some weapons (Imbued Manifestation: Psychic weapons +6"). */
@@ -1113,8 +1126,8 @@ export function applyAttackEffects(s: GameState, A: UnitState, T: UnitState, poo
     if (i.ap) { pool.ap -= i.ap; notes.push(`marked target: +${i.ap} AP`); }
     if (i.critWoundAp) { pool.critWoundAp = (pool.critWoundAp ?? 0) + i.critWoundAp; notes.push(`marked target: +${i.critWoundAp} AP on critical wound`); }
     if (i.critHitOn) { pool.critHitOn = Math.min(pool.critHitOn ?? 6, i.critHitOn); notes.push(`marked target: crit hit ${i.critHitOn}+`); }
-    for (const r of rerolls(i)) applyReroll(pool, r, 'marked target', notes);
-    if (i.blastReroll && pool.profile.abilities.includes('blast')) applyReroll(pool, 'hits', 'marked target (Blast)', notes);
+    for (const r of rerolls(i)) applyReroll(pool, r, i.label ?? 'marked target', notes);
+    if (i.blastReroll && pool.profile.abilities.includes('blast')) applyReroll(pool, 'hits', `${i.label ?? 'marked target'} (Blast)`, notes);
     if (i.damage) { pool.damage = addToExpr(pool.damage, i.damage); notes.push(`marked target: +${i.damage} D`); }
     for (const ab of i.abilities ?? []) applyAbility(pool, ab, 'marked target', notes, kind, A, s, T);
   }
@@ -1204,8 +1217,8 @@ function defenceInto(pool: Pool, def: Active[], strength: number, toughness: num
 }
 
 function applyReroll(pool: Pool, r: Reroll, label: string, notes: string[]) {
-  if (r === 'hits' && !pool.rerollAllHits) { pool.rerollAllHits = true; notes.push(`${label}: re-roll hit`); }
-  if (r === 'hits1' && !pool.rerollHits1) { pool.rerollHits1 = true; notes.push(`${label}: re-roll hit 1`); }
+  if (r === 'hits' && !pool.rerollAllHits) { pool.rerollAllHits = true; notes.push(`${label}: re-roll hit`); pool.hitNote = [pool.hitNote, `${label}: re-roll hits`].filter(Boolean).join(' · '); }
+  if (r === 'hits1' && !pool.rerollHits1) { pool.rerollHits1 = true; notes.push(`${label}: re-roll hit 1`); pool.hitNote = [pool.hitNote, `${label}: re-roll hit 1s`].filter(Boolean).join(' · '); }
   if (r === 'wounds' && !pool.rerollAllWounds) { pool.rerollAllWounds = true; notes.push(`${label}: re-roll wound`); }
   if (r === 'wounds1' && !pool.rerollWounds1) { pool.rerollWounds1 = true; notes.push(`${label}: re-roll wound 1`); }
   if (r === 'wounds12' && !pool.rerollWounds12) { pool.rerollWounds12 = true; notes.push(`${label}: re-roll wound 1-2`); }

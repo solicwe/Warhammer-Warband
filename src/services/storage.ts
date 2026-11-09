@@ -77,21 +77,56 @@ export interface BattleRecord {
   summary?: string;
   replayState?: {
     seed: number;
-    savedGame: GameState;
     timeline?: string;
+    savedGame?: GameState;
   };
 }
 
 export function loadBattleLogs(): BattleRecord[] {
   const logs = readJSON<BattleRecord[]>(KEYS.battleLogs);
-  return Array.isArray(logs) ? logs : [];
+  if (!Array.isArray(logs)) return [];
+  let hadSavedGame = false;
+  const cleaned = logs.map((r) => {
+    if (r.replayState && 'savedGame' in r.replayState) {
+      hadSavedGame = true;
+      const { savedGame: _, ...cleanReplay } = r.replayState as { savedGame?: unknown; seed: number; timeline?: string };
+      return { ...r, replayState: cleanReplay };
+    }
+    return r;
+  });
+  if (hadSavedGame) {
+    writeJSON(KEYS.battleLogs, cleaned);
+  }
+  return cleaned;
 }
 
 export function saveBattleLog(record: BattleRecord): void {
   const current = loadBattleLogs();
-  const filtered = current.filter((r) => r.id !== record.id);
-  const updated = [record, ...filtered].slice(0, 50);
-  writeJSON(KEYS.battleLogs, updated);
+  const cleanRecord: BattleRecord = {
+    ...record,
+    replayState: record.replayState ? {
+      seed: record.replayState.seed,
+      ...(record.replayState.timeline ? { timeline: record.replayState.timeline } : {}),
+    } : undefined,
+  };
+  const filtered = current.filter((r) => r.id !== cleanRecord.id);
+  const trimmed = [cleanRecord, ...filtered].slice(0, 30).map((r, idx) => {
+    if (idx >= 10 && r.replayState?.timeline) {
+      const { timeline: _, ...restReplay } = r.replayState;
+      return { ...r, replayState: restReplay };
+    }
+    return r;
+  });
+  if (!writeJSON(KEYS.battleLogs, trimmed)) {
+    const minimal = [cleanRecord, ...filtered].slice(0, 15).map((r, idx) => {
+      if (idx >= 5 && r.replayState?.timeline) {
+        const { timeline: _, ...restReplay } = r.replayState;
+        return { ...r, replayState: restReplay };
+      }
+      return r;
+    });
+    writeJSON(KEYS.battleLogs, minimal);
+  }
 }
 
 export function deleteBattleLog(id: string): void {

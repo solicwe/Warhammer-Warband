@@ -128,7 +128,12 @@ export const modelEngagedWith = (m: ModelState, u: UnitState) => {
 
 export function engagedEnemies(s: GameState, u: UnitState): UnitState[] {
   if (!onBoard(u)) return [];
-  return boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') && alive(u).some((m) => modelEngagedWith(m, e)));
+  const foes = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT'));
+  const friendlyInCombat = boardUnits(s, u.owner).flatMap(alive);
+  return foes.filter((e) => alive(u).some((m) => {
+    if (modelEngagedWith(m, e)) return true;
+    return friendlyInCombat.some((f) => f.id !== m.id && baseDist(m, f) <= 0.05 && alive(e).some((n) => baseDist(f, n) <= 0.05));
+  }));
 }
 export const isEngaged = (s: GameState, u: UnitState) => engagedEnemies(s, u).length > 0;
 

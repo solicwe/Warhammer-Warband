@@ -3,7 +3,7 @@
 import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById } from './state';
-import type { GameState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
+import type { GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
 import { unitVisibleTo } from './visibility';
 
 
@@ -57,12 +57,76 @@ function homerPoint(s: GameState, p: PlayerId): Pt {
 }
 
 /** Is any model of the unit within range of the objective (on its terrain area / baseplate, or within 3" of a marker in the open)? */
+export function modelTouchesObjective(m: ModelState, o: ObjectiveState, polys: Pt[][]): boolean {
+  if (!polys.length) return Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4;
+  return polys.some((p) => bodyTouchesPoly(m, 0, p));
+}
+
+/** Is any model of the unit within range of the objective (on its terrain area / baseplate, or within 3" of a marker in the open)? */
 export const unitInRange = (s: GameState, u: UnitState, o: ObjectiveState) => {
   const polys = objectivePolys(s, o);
-  // no area at all (a bare marker): within 3" of the 40mm marker
-  if (!polys.length) return alive(u).some((m) => Math.hypot(m.x - o.x, m.y - o.y) <= 3 + 20 / 25.4 + (m.r ?? 0.6) + 1e-4);
-  return alive(u).some((m) => polys.some((p) => bodyTouchesPoly(m, 0, p)));
+  return alive(u).some((m) => modelTouchesObjective(m, o, polys));
 };
+
+export function unitTouchedObjectives(s: GameState, u: UnitState): { objective: ObjectiveState; count: number }[] {
+  const result: { objective: ObjectiveState; count: number }[] = [];
+  for (const o of s.objectives) {
+    const polys = objectivePolys(s, o);
+    const count = alive(u).filter((m) => modelTouchesObjective(m, o, polys)).length;
+    if (count > 0) result.push({ objective: o, count });
+  }
+  return result;
+}
+
+/**
+ * When a unit spans across multiple objectives, it can only contest/control one.
+ * Priority:
+ * 1. Most models touching the objective.
+ * 2. If tied: whichever objective our side does NOT control yet (if one is already held, pick the other).
+ */
+export function assignedObjective(s: GameState, u: UnitState): string | null {
+  const touched = unitTouchedObjectives(s, u);
+  if (touched.length === 0) return null;
+  if (touched.length === 1) return touched[0].objective.id;
+
+  if (u.assignedObjective && touched.some((t) => t.objective.id === u.assignedObjective)) {
+    return u.assignedObjective;
+  }
+
+  let maxCount = 0;
+  for (const t of touched) {
+    if (t.count > maxCount) maxCount = t.count;
+  }
+  const topCands = touched.filter((t) => t.count === maxCount);
+  if (topCands.length === 1) {
+    return topCands[0].objective.id;
+  }
+
+  const isHeldByOurSide = (o: ObjectiveState) => {
+    if (o.secured === u.owner || o.controller === u.owner) return true;
+    const polys = objectivePolys(s, o);
+    return boardUnits(s, u.owner).some((otherU) =>
+      otherU.id !== u.id && alive(otherU).some((m) => modelTouchesObjective(m, o, polys))
+    );
+  };
+
+  const heldByUs = topCands.filter((t) => isHeldByOurSide(t.objective));
+  const notHeldByUs = topCands.filter((t) => !isHeldByOurSide(t.objective));
+
+  if (heldByUs.length > 0 && notHeldByUs.length > 0) {
+    const neutral = notHeldByUs.filter((t) => t.objective.controller === null && t.objective.secured == null);
+    if (neutral.length > 0) return neutral[0].objective.id;
+    return notHeldByUs[0].objective.id;
+  }
+
+  const neutral = topCands.filter((t) => t.objective.controller === null && t.objective.secured == null);
+  if (neutral.length > 0 && neutral.length < topCands.length) {
+    return neutral[0].objective.id;
+  }
+
+  return topCands[0].objective.id;
+}
+
 const unitInTerrain = (u: UnitState, t: TerrainPiece) => alive(u).some((m) => bodyTouchesPoly(m, 0, t.poly));
 const isOwnHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === p;
 const isEnemyHome = (o: ObjectiveState, p: PlayerId) => o.type === 'home' && o.owner === other(p);
@@ -70,7 +134,7 @@ const objInTerritory = (s: GameState, o: ObjectiveState, p: PlayerId) => pointIn
 const ocOf = (u: UnitState) => (u.battleShocked ? 0 : alive(u).reduce((a, m) => a + (m.profile.OC ?? 0), 0));
 
 /** Does this player control the objective, and does this particular unit contribute? */
-const unitControls = (s: GameState, u: UnitState, o: ObjectiveState) => o.controller === u.owner && unitInRange(s, u, o);
+const unitControls = (s: GameState, u: UnitState, o: ObjectiveState) => o.controller === u.owner && unitInRange(s, u, o) && assignedObjective(s, u) === o.id;
 
 // ---------- bookkeeping hooks called by the game ----------
 

@@ -39,9 +39,10 @@ function Dice({ values, color, landed, winner }: { values: number[]; color?: str
     return () => window.clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [landed, values.join(',')]);
+  const size = values.length <= 2 ? 68 : values.length <= 4 ? 54 : 44;
   return (
-    <div className={`ro-dice ${landed ? 'land' : 'tumble'} ${winner ? 'win' : ''}`}>
-      {faces.map((v, i) => <span key={i} className="ro-die" style={{ animationDelay: `${i * 60}ms` }}><Die v={v} color={color} /></span>)}
+    <div className={`ro-dice ${landed ? 'land' : 'tumble'} ${winner ? 'win' : ''}`} style={values.length > 4 ? { maxWidth: 260, gap: '8px 10px' } : undefined}>
+      {faces.map((v, i) => <span key={i} className="ro-die" style={{ animationDelay: `${i * 60}ms` }}><Die v={v} color={color} size={size} /></span>)}
     </div>
   );
 }
@@ -151,7 +152,8 @@ export function RollOverlay({ s, onBusy, quick }: { s: GameState; onBusy?: (busy
         <div className="ro-title">{cur.title}</div>
         <Dice values={cur.dice} color={color} landed={landed} />
         <div className={`ro-result ${landed ? 'show' : ''} ${cur.good === false ? 'bad' : cur.good ? 'good' : ''}`}>
-          {cur.dice.length > 1 && <span className="ro-sum">{cur.dice.join(' + ')} = {cur.dice.reduce((a, b) => a + b, 0)} · </span>}{cur.result}
+          {cur.dice.length > 1 && <div className="ro-sum">{cur.dice.join(' + ')} = {cur.dice.reduce((a, b) => a + b, 0)}</div>}
+          <div className="ro-outcome">{cur.result}</div>
         </div>
         <div className="ro-hint">{landed ? 'Tap to close' : 'Tap to see the result now'}</div>
       </div>

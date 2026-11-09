@@ -6,7 +6,7 @@
 //  - units spread out rather than packed together (blast weapons, room to move), vehicles never boxed in.
 import { RULES } from '../engine/config';
 import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from '../engine/game';
-import { circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap, segCrossesPoly, segSegDist } from '../engine/geometry';
+import { bodyAt, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap, segCrossesPoly, segSegDist } from '../engine/geometry';
 import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, securesObjectives, unitValue } from './botEval';
 import { alive, onBoard, other, tableH, tableW, withinTerrain } from '../engine/state';
@@ -151,6 +151,11 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       const ms = alive(u).map((m) => ({ ...m, ...pos.get(m.id)! }) as ModelState);
       const centre = polyCentroid(ms);
       let score = 0;
+      const wholly = ms.every((m) => bodyWhollyInPoly(bodyAt(m, m), zone));
+      if (how === 'deploy') {
+        if (!wholly) continue;
+        score += 50;
+      }
 
       // shelter: physically behind a terrain footprint or solid wall relative to enemy zone
       const sheltered = isBehindTerrain(s, ec, centre);
