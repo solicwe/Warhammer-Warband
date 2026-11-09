@@ -279,7 +279,8 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
       }
       return best && (best[1] - best[0]) / N * dist(w.a, w.b) >= 1 ? { a: at(best[0] / N), b: at(best[1] / N) } : null;
     };
-    t.walls = [clip(best.s), clip(cross.s)].filter((w): w is Seg => !!w);
+    const clean = [clip(best.s), clip(cross.s)].filter((w): w is Seg => !!w);
+    if (clean.length) t.walls = clean;
   }
   // what is left crowded (a wall within 1.2" of another without meeting it at a corner reads as one clump on the table)
   // keeps its longer walls

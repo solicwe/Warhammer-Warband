@@ -45,3 +45,32 @@ it('walls stay on their plate', () => {
   }
   expect(off).toEqual([]);
 });
+
+it('every layout has ruin walls on dense terrain and no blank terrain pieces', () => {
+  for (const L of LAYOUTS) {
+    const { terrain, objectives } = buildTerrain(L.id);
+    const totalWalls = terrain.reduce((sum, t) => sum + t.walls.length, 0);
+    expect(totalWalls, `layout ${L.id} should have adequate walls`).toBeGreaterThanOrEqual(30);
+
+    for (const t of terrain) {
+      const hasWalls = t.walls.length > 0;
+      const hasObs = (t.obstacles ?? []).length > 0;
+      const hasBox = !!t.box;
+      expect(hasWalls || hasObs || hasBox, `layout ${L.id} piece ${t.id} must not be blank`).toBe(true);
+
+      if (t.category === 'dense' && !t.box) {
+        expect(t.walls.length, `dense ruin ${t.id} in ${L.id} must have walls`).toBeGreaterThan(0);
+      }
+    }
+
+    // Every central objective placed on a terrain footprint must have walls
+    for (const o of objectives) {
+      if (o.terrainId) {
+        const t = terrain.find((piece) => piece.id === o.terrainId);
+        if (t && t.category === 'dense') {
+          expect(t.walls.length, `objective ${o.id} in ${L.id} on dense terrain must have walls`).toBeGreaterThan(0);
+        }
+      }
+    }
+  }
+});

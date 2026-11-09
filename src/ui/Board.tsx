@@ -2248,7 +2248,7 @@ function plateFor(t: TerrainPiece): { href: string; ax: number; ay: number; ang:
   const us = P.map((p) => (p.x - a.x) * ux + (p.y - a.y) * uy), vs = P.map((p) => -(p.x - a.x) * uy + (p.y - a.y) * ux);
   const u0 = Math.min(...us), v0 = Math.min(...vs), L = Math.max(...us) - u0, Wd = Math.max(...vs) - v0;
   if (L < 0.5 || Wd < 0.3) return null;
-  const strip = Wd < 1.8 && L / Wd > 2.2;
+  const strip = (Wd < 3.2 && L / Wd > 1.8) || t.walls.length === 0;
   const kind: keyof typeof PLATES = strip ? (P.length > 4 || L > 5 ? 'stripLong' : 'stripShort') : t.category === 'dense' ? 'large' : 'medium';
   return { href: `${IMAGE_BASE}terrain/${PLATE_FILE[kind]}.webp`, ax: a.x, ay: a.y, ang, x: u0, y: v0, w: L, h: Wd };
 }
