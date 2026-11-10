@@ -619,7 +619,9 @@ export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
   const fl = unitFlags(s, u);
-  const M0 = (fl.moveSet || (m.profile.M ?? 0)) + fl.move;
+  const fervourBonus = u.combatState?.tokens.fervour ?? 0;
+  const pinnedPenalty = Math.min(4, u.combatState?.ailments.pinned ?? 0);
+  const M0 = Math.max(1, (fl.moveSet || (m.profile.M ?? 0)) + fl.move + fervourBonus - pinnedPenalty);
   const M = fl.moveHalve ? M0 / 2 : M0; // Gravitic Pulse: halve the Move characteristic and Advance rolls
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
@@ -1807,7 +1809,10 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
   if (u.move === 'fallback' && !canDo(s, u, 'chargeAfterFallBack')) return 'Fell Back this turn';
   if (u.cantCharge) return 'Disembarked (Rapid / Combat) or used an ability that prevents charging this turn';
   if (u.noChargeTurn === s.turn) return 'Arrived closer to the enemy than normal (Meteoric Descent): cannot charge this turn';
-  if (u.move === 'advance' && !isRiledUp(s, u) && !canDo(s, u, 'chargeAfterAdvance')) return 'Advanced this turn';
+  const canChargeAdv = isRiledUp(s, u) || canDo(s, u, 'chargeAfterAdvance')
+    || (u.combatState?.tokens.fervour ?? 0) >= 3
+    || (s.players[u.owner]?.waaaghMomentum ?? 0) >= 67;
+  if (u.move === 'advance' && !canChargeAdv) return 'Advanced this turn';
   if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `No enemy within ${RULES.charge.declareRange}"`;
   return null;
 }

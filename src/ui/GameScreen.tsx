@@ -44,6 +44,7 @@ import { Icon } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { castDoomboltCascade, castTemporalTwist, toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
+import { triggerGunshipOverclock } from '../engine/combatEngine';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, ritualsPending, ritualTargets } from '../factions/rituals';
@@ -1171,6 +1172,18 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           onClick: () => {
             act((g) => autoSelectToShoot(g, unitById(g, selUnit.id)));
             setMode({ k: 'shoot', unitId: selUnit.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
+          },
+        });
+      }
+      if (selUnit.combatRole === 'GUNSHIP' && !selUnit.combatState?.overheated) {
+        actions.push({
+          label: '⚡ Overclock Reactor (+50% Atks)',
+          onClick: () => {
+            act((g) => {
+              const res = triggerGunshipOverclock(g, unitById(g, selUnit.id));
+              if (res.overheated) flash(`${selUnit.name} reactor overheated! Suffered heat damage.`);
+              else flash(`${selUnit.name} reactor overclocked! +50% Attacks unlocked!`);
+            });
           },
         });
       }
