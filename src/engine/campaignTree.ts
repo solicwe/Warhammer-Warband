@@ -47,19 +47,19 @@ const R = (e: Effect, ...rounds: ('early' | 'late')[]): Effect => ({ ...e, if: [
 
 const SPOKES: Branch[] = [
   {
-    id: 'fire', name: 'Fire', about: 'Shooting: range, re-rolls, AP and Strength for ranged weapons. Keystone Iron Discipline: +1 to Hit, -2\" Move.',
+    id: 'fire', name: 'Precision & Auspex', about: 'Blue tokens, critical strikes, and targeting. Keystone Point Blank Doctrines: +1 AP & +1 Dmg at half range.',
     main: [
       s('Steady Aim', 'INFANTRY ranged weapons: +3" Range.', 'INFANTRY', { rangeBonus: 3, attack: 'ranged' }),
       s('Drilled Volleys', 'BATTLELINE ranged attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'ranged' }),
       { ...s('Gun Line', 'Units that Remained Stationary: +1 to Hit with ranged attacks.', undefined, { hit: 1, attack: 'ranged', if: ['stationary'] }) },
       s('Heavy Rounds', 'VEHICLE ranged weapons: +1 Strength.', 'VEHICLE', { strength: 1, attack: 'ranged' }),
       s('Marksmen', 'CHARACTER ranged weapons: +1 Ballistic Skill.', 'CHARACTER', { skill: 1, attack: 'ranged' }),
-      { ...s('Focused Fire', 'Ranged attacks against a unit below its Starting Strength: +1 AP.', undefined, { ap: 1, attack: 'ranged', if: ['targetBelowStarting'] }),
-        bonus: { count: 6, text: 'With 6 Fire nodes: those attacks also get +1 to Wound.', e: { wound: 1, attack: 'ranged', if: ['targetBelowStarting'] } } },
-      s('Iron Discipline', 'Keystone. Ranged attacks: +1 to Hit. Every unit: -2" Move.', undefined, [{ hit: 1, attack: 'ranged' }, { move: -2 }]),
+      { ...s('Target Lock Matrix', 'Auspex max cap +1. Critical hits ignore Benefit of Cover.', undefined, { abilities: ['ignores cover'], attack: 'ranged' }),
+        bonus: { count: 6, text: 'With 6 Precision nodes: those attacks also get +1 to Wound.', e: { wound: 1, attack: 'ranged', if: ['targetBelowStarting'] } } },
+      s('Point Blank Doctrines', 'Keystone. Ranged attacks within half range: +1 AP & +1 Damage. Beyond half range: damage halved, cannot Crit.', undefined, [{ ap: 1, damage: 1, attack: 'ranged' }]),
     ],
     sideA: [
-      s('Hunter\'s Eye', 'Ranged attacks against MONSTER or VEHICLE units: +1 AP.', undefined, { ap: 1, attack: 'ranged', if: ['targetMV'] }),
+      s("Hunter's Eye", 'Ranged attacks against MONSTER or VEHICLE units: +1 AP.', undefined, { ap: 1, attack: 'ranged', if: ['targetMV'] }),
       s('Spotters', 'INFANTRY ranged attacks re-roll Wound rolls of 1.', 'INFANTRY', { reroll: 'wounds1', attack: 'ranged' }),
       s('Overlapping Fields', 'Ranged weapons have [IGNORES COVER].', undefined, { abilities: ['ignores cover'], attack: 'ranged' }),
     ],
@@ -70,16 +70,16 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'assault', name: 'Assault', about: 'Melee and charging: Strength, re-rolls, extra Attacks after a charge. Keystone Berserk Fury: +1 Attack in melee, -1 to Hit when shooting.',
+    id: 'assault', name: 'Tempo & Fervour', about: 'Red tokens, movement velocity, and extra attacks. Keystone Blood Pact Munitions: 0 CP stratagems, burns wounds.',
     main: [
       s('Bayonet Drill', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       s('Blood Up', 'INFANTRY: +1 to Charge rolls.', 'INFANTRY', { chargeBonus: 1 }),
       s('Hammer Blow', 'CHARACTER melee weapons: +1 Strength and +1 AP.', 'CHARACTER', { strength: 1, ap: 1, attack: 'melee' }),
       s('Brutal Edge', 'MONSTER and WALKER melee weapons: +1 Strength.', 'MONSTER|WALKER', { strength: 1, attack: 'melee' }),
       s('Savagery', 'Units that charged this turn re-roll melee Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'melee', if: ['charged'] }),
-      { ...s('Shock Assault', 'Units that charged this turn: +1 Attack in melee.', undefined, { attacks: 1, attack: 'melee', if: ['charged'] }),
-        bonus: { count: 6, text: 'With 6 Assault nodes: those attacks also get +1 Damage.', e: { damage: 1, attack: 'melee', if: ['charged'] } } },
-      s('Berserk Fury', 'Keystone. Melee weapons: +1 Attack. Ranged attacks: -1 to Hit.', undefined, [{ attacks: 1, attack: 'melee' }, { hit: -1, attack: 'ranged' }]),
+      { ...s('Adrenaline Surge', 'Fervour max cap +1. Fervour tokens do not decay at turn end.', undefined, { attacks: 1, attack: 'melee', if: ['charged'] }),
+        bonus: { count: 6, text: 'With 6 Tempo nodes: those attacks also get +1 Damage.', e: { damage: 1, attack: 'melee', if: ['charged'] } } },
+      s('Blood Pact Munitions', 'Keystone. Stratagems cost 0 CP! Instead, burn 1d3 Wounds from own unit per 1 CP and gain 3 Fervour.', undefined, [{ attacks: 1, attack: 'melee' }]),
     ],
     sideA: [
       s('Close Quarters', 'INFANTRY melee attacks re-roll Wound rolls of 1.', 'INFANTRY', { reroll: 'wounds1', attack: 'melee' }),
@@ -93,16 +93,16 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'armour', name: 'Armour', about: 'Staying alive: Toughness, saves and Feel No Pain. Keystone Fortress: +1 Toughness, -2\" Move.',
+    id: 'armour', name: 'Bastion & Fortification', about: 'Gold tokens, Feel No Pain, and armor absorption. Keystone Warp Inoculation: Energy Shield conversion.',
     main: [
       s('Thick Hide', 'MONSTER: +1 Toughness.', 'MONSTER', { toughness: 1 }),
       s('Warded Hulls', 'VEHICLE: Feel No Pain 6+ against mortal wounds.', 'VEHICLE', { defend: { fnp: 6, fnpVs: 'mortal' } }),
       s('Combat Stimms', 'INFANTRY: Feel No Pain 6+.', 'INFANTRY', { defend: { fnp: 6 } }),
       s('Bodyguard Plate', 'CHARACTER: Feel No Pain 6+.', 'CHARACTER', { defend: { fnp: 6 } }),
       s('Dig In', 'Units on an objective: +1 to saving throws.', undefined, { defend: { save: 1 }, if: ['onObjective'] }),
-      { ...s('Unbreakable', 'Units below Half-strength: Feel No Pain 5+.', undefined, { defend: { fnp: 5 }, if: ['belowHalfStrength'] }),
-        bonus: { count: 6, text: 'With 6 Armour nodes: those units also get +1 Toughness.', e: { toughness: 1, if: ['belowHalfStrength'] } } },
-      s('Fortress', 'Keystone. Every unit: +1 Toughness and -2" Move.', undefined, [{ toughness: 1 }, { move: -2 }]),
+      { ...s('Unyielding Bulwark', 'Bastion max cap +1. Units with max Bastion cannot be Battle-shocked.', undefined, { defend: { fnp: 5 }, if: ['belowHalfStrength'] }),
+        bonus: { count: 6, text: 'With 6 Bastion nodes: those units also get +1 Toughness.', e: { toughness: 1, if: ['belowHalfStrength'] } } },
+      s('Warp Inoculation', 'Keystone. Max HP reduced to 1! Gain 150% Max HP as Warp Ward (Energy Shield) that fully recharges when undamaged.', undefined, [{ defend: { fnp: 5 } }]),
     ],
     sideA: [
       s('Smoke Screens', 'Ranged attacks against VEHICLE units: -1 to Hit.', 'VEHICLE', { defend: { hit: -1, vs: 'ranged' } }),
@@ -116,16 +116,16 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'speed', name: 'Speed', about: 'Moving fast: Move, Advance and Charge bonuses and re-rolls. Keystone Blitz: +2\" Move, -1 Toughness.',
+    id: 'speed', name: 'Ailment & Entropy', about: 'DoT and debuffs: Soulfire, Bleeding, Corroded and Pinned overloads. Keystone Avatar of the Warp: Soulfire on 6s.',
     main: [
       s('Forced March', 'INFANTRY: +1" Move.', 'INFANTRY', { move: 1 }),
       s('Outriders', 'MOUNTED: +2" Move.', 'MOUNTED', { move: 2 }),
       s('Swift Strike', 'Every unit re-rolls Advance rolls.', undefined, { rerollAdvance: true }),
       s('Jump Troops', 'FLY: +1" Move.', 'FLY', { move: 1 }),
       s('Fast Engines', 'VEHICLE: +2" Move.', 'VEHICLE', { move: 2 }),
-      { ...s('Rapid Assault', 'Every unit re-rolls Charge rolls.', undefined, { rerollCharge: true }),
-        bonus: { count: 6, text: 'With 6 Speed nodes: +1 to Charge rolls too.', e: { chargeBonus: 1 } } },
-      s('Blitz', 'Keystone. Every unit: +2" Move and -1 Toughness.', undefined, [{ move: 2 }, { toughness: -1 }]),
+      { ...s('Pandemic Contagion', 'When an enemy with ailments is destroyed, all its ailments proliferate to enemies within 6".', undefined, { rerollCharge: true }),
+        bonus: { count: 6, text: 'With 6 Entropy nodes: +1 to Charge rolls too.', e: { chargeBonus: 1 } } },
+      s('Avatar of the Warp', 'Keystone. Cannot score Critical Wounds normally. Hit/wound rolls of 6 inflict 2 Soulfire stacks; max cap 10!', undefined, [{ move: 2 }]),
     ],
     sideA: [
       s('Light Packs', 'INFANTRY: +1 to Advance rolls.', 'INFANTRY', { advanceBonus: 1 }),
@@ -139,19 +139,19 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'command', name: 'Command', about: 'Command points and leaders: extra CP every battle, Battle-shock re-rolls, CHARACTER buffs. Keystone Total War: +2 CP, -1 OC.',
+    id: 'command', name: 'Combined Arms', about: 'Cross-role synergies between Vanguard, Breacher, Skirmisher, Gunship, and Conduit. Keystone Machine Instability.',
     main: [
       s('Steady Nerves', 'BATTLELINE re-rolls Battle-shock tests.', 'BATTLELINE', { rerollShock: true }),
       s('Officer Corps', 'CHARACTER re-rolls Hit rolls of 1.', 'CHARACTER', { reroll: 'hits1' }),
       { name: 'War Council', text: '+1 CP at the start of every battle.', cp: 1 },
       s('Iron Will', 'INFANTRY re-rolls Battle-shock tests.', 'INFANTRY', { rerollShock: true }),
       s('Executioners', 'CHARACTER melee attacks re-roll Wound rolls of 1.', 'CHARACTER', { reroll: 'wounds1', attack: 'melee' }),
-      { name: 'Master Tactician', text: '+1 CP at the start of every battle.', cp: 1,
-        bonus: { count: 6, text: 'With 6 Command nodes: +1 CP more.', cp: 1 } },
-      { ...s('Total War', 'Keystone. +2 CP at the start of every battle. Every unit: -1 OC.', undefined, { oc: -1 }), cp: 2 },
+      { name: 'Combined Fire Protocol', text: 'When VANGUARD shoots an enemy, allied GUNSHIPs shooting that target gain Indirect Fire. +1 CP at battle start.', cp: 1,
+        bonus: { count: 6, text: 'With 6 Combined Arms nodes: +1 CP more.', cp: 1 } },
+      { ...s('Machine Instability', 'Keystone. When GUNSHIP or BEHEMOTH HP drops <= 25%, automatically detonates for 100% Max HP Mortal Wounds to enemies within 6"! +2 CP at battle start.', undefined, { oc: -1 }), cp: 2 },
     ],
     sideA: [
-      s('Heroes\' Example', 'CHARACTER melee weapons have [PRECISION].', 'CHARACTER', { abilities: ['precision'], attack: 'melee' }),
+      s("Heroes' Example", 'CHARACTER melee weapons have [PRECISION].', 'CHARACTER', { abilities: ['precision'], attack: 'melee' }),
       s('Lead from the Front', 'CHARACTER ranged weapons: +1 Strength.', 'CHARACTER', { strength: 1, attack: 'ranged' }),
       s('Inspiring Presence', 'Units led by a CHARACTER: +1 to Hit in melee.', undefined, { hit: 1, attack: 'melee', if: ['attached'] }),
     ],
@@ -162,16 +162,16 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'objectives', name: 'Objectives', about: 'Holding ground: OC and buffs for units on an objective. Keystone Endless Ranks: BATTLELINE +2 OC.',
+    id: 'objectives', name: 'Battlefield Control', about: 'Zone denial, sticky objectives, and defensive bastions. Keystone Unwavering Stance: immovable fortress.',
     main: [
       s('Hold the Line', 'BATTLELINE: +1 OC.', 'BATTLELINE', { oc: 1 }),
       s('Entrench', 'Units on an objective: Feel No Pain 6+.', undefined, { defend: { fnp: 6 }, if: ['onObjective'] }),
       s('Objective Secured', 'INFANTRY: +1 OC.', 'INFANTRY', { oc: 1 }),
       s('Area Denial', 'VEHICLE and MONSTER: +1 OC.', 'VEHICLE|MONSTER', { oc: 1 }),
       s('Stubborn', 'BATTLELINE units on an objective: +1 to saving throws.', 'BATTLELINE', { defend: { save: 1 }, if: ['onObjective'] }),
-      { ...s('Fortified Ground', 'Units on an objective: +1 to Hit.', undefined, { hit: 1, if: ['onObjective'] }),
-        bonus: { count: 6, text: 'With 6 Objectives nodes: those units also get +1 OC.', e: { oc: 1, if: ['onObjective'] } } },
-      s('Endless Ranks', 'Keystone. BATTLELINE: +2 OC and -1" Move.', 'BATTLELINE', [{ oc: 2 }, { move: -1 }]),
+      { ...s('Scorched Earth Booby-Traps', 'Securing an objective plants booby traps: enemies entering suffer 1d3+1 Mortal Wounds and 3 Pinned stacks.', undefined, { hit: 1, if: ['onObjective'] }),
+        bonus: { count: 6, text: 'With 6 Control nodes: those units also get +1 OC.', e: { oc: 1, if: ['onObjective'] } } },
+      s('Unwavering Stance', 'Keystone. Cannot Advance or Fall Back; Invulnerable saves disabled and converted to +2 Toughness. Always stationary.', undefined, [{ toughness: 2 }, { move: -1 }]),
     ],
     sideA: [
       s('Sentries', 'Units on an objective re-roll Hit rolls of 1.', undefined, { reroll: 'hits1', if: ['onObjective'] }),
@@ -185,16 +185,16 @@ const SPOKES: Branch[] = [
     ],
   },
   {
-    id: 'logistics', name: 'Logistics', about: 'The campaign itself: more Scrap after each win, buffs for VETERAN units. Keystone Living Legends: VETERAN +1 Attack and +1 Damage, less Scrap.',
+    id: 'logistics', name: 'Logistics & Salvage', about: 'Scrap harvest, relic socket expansion, and rare archeotech. Keystone Lone Wolf Protocol: Apex Bosses.',
     main: [
       { name: 'Salvage Crews', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Blooded', 'VETERAN: +1 OC.', 'VETERAN', { oc: 1 }),
       s('Veteran Cadre', 'VETERAN re-rolls Hit rolls of 1.', 'VETERAN', { reroll: 'hits1' }),
       { name: 'Scavengers', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Battle-scarred', 'VETERAN: Feel No Pain 6+.', 'VETERAN', { defend: { fnp: 6 } }),
-      { name: 'Tithe Masters', text: '+25 Scrap after every won battle.', scrap: 25,
+      { name: 'Master Artificer', text: 'Common units gain +1 Relic Socket (from 1 to 2 sockets). +25 Scrap after every won battle.', scrap: 25,
         bonus: { count: 6, text: 'With 6 Logistics nodes: +1 CP at the start of every battle.', cp: 1 } },
-      { ...s('Living Legends', 'Keystone. VETERAN units: +1 Attack and +1 Damage. -15 Scrap after every won battle.', 'VETERAN', [{ attacks: 1 }, { damage: 1 }]), scrap: -15 },
+      { ...s('Lone Wolf Protocol', 'Keystone. Max 4 units allowed in your army! All 4 units become Apex Bosses: 2x HP, 2 Actions per turn, 3x OC! -15 Scrap after every won battle.', undefined, [{ attacks: 1 }, { damage: 1 }]), scrap: -15 },
     ],
     sideA: [
       s('Hardened Survivors', 'VETERAN: +1" Move.', 'VETERAN', { move: 1 }),
@@ -429,12 +429,12 @@ const BRIDGES: Spec[] = [
 
 /** Outer ring: keystones between the tips of neighbouring shared spokes. They convert keywords. */
 const CONVERSIONS: Spec[] = [
-  { name: 'Brute Gunners', text: 'Keystone. MONSTER units also count as VEHICLE for tree nodes.', as: { from: 'MONSTER', to: 'VEHICLE' } },
-  { name: 'Iron Hulks', text: 'Keystone. VEHICLE units also count as MONSTER for tree nodes.', as: { from: 'VEHICLE', to: 'MONSTER' } },
+  { name: 'Glass Cannon Overdrive', text: 'Keystone. Armor Save worsened by 2. All attacks score Critical Hit on 4+ (instead of 6+)!', e: { hit: 1 } },
+  { name: 'Vaal Soul-Harvester', text: 'Keystone. Normal CP disabled. Kill models for Soul Charges; at 10 Souls trigger Unleash Warp Storm for an extra turn!' },
   { name: 'Mechanised Infantry', text: 'Keystone. INFANTRY units also count as VEHICLE for tree nodes.', as: { from: 'INFANTRY', to: 'VEHICLE' } },
-  { name: 'Mounted Officers', text: 'Keystone. MOUNTED units also count as CHARACTER for tree nodes.', as: { from: 'MOUNTED', to: 'CHARACTER' } },
-  { name: 'Every Soldier a Hero', text: 'Keystone. BATTLELINE units also count as CHARACTER for tree nodes.', as: { from: 'BATTLELINE', to: 'CHARACTER' } },
-  { name: 'Old Guard', text: 'Keystone. BATTLELINE units also count as VETERAN for tree nodes.', as: { from: 'BATTLELINE', to: 'VETERAN' } },
+  { name: 'Temporal Distortion', text: 'Keystone. Battle lasts 7 rounds. Rounds 1-2 deal half damage; rounds 4+ grant Full Re-rolls and +2 HP regen per turn!' },
+  { name: 'Synchronized Hive-Mind', text: 'Keystone. All units within 6" of CONDUIT share a unified HP pool!' },
+  { name: 'Necromantic Conduit', text: 'Keystone. Slain models leave Corpse Markers. CONDUIT detonates corpses to revive infantry or siphon for +2 Strength.' },
 ];
 
 // ---------- the army's own branch: per family, and per army for the armies below ----------
@@ -452,7 +452,7 @@ export function getFactionFamily(factionId: string): Family {
 
 const FAMILY_BRANCHES: Record<Family, Branch> = {
   IMPERIUM: {
-    id: 'army', name: 'Faith and Duty', about: 'Imperium: Feel No Pain for infantry and vehicles, [LETHAL HITS] in melee, CP. Keystone Indomitus Mandate: [LETHAL HITS] on every weapon, -1 OC.',
+    id: 'army', name: 'Faith and Duty', about: 'Imperium: Feel No Pain for infantry and vehicles, righteous melee fury, CP. Keystone Indomitus Mandate: +1 AP and +1 to Wound, -1 OC.',
     main: [
       s('Litany of Hate', 'BATTLELINE melee attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'melee' }),
       s('Blessed Plating', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
@@ -488,7 +488,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   NECRONS: {
-    id: 'army', name: 'The Dynasty', about: 'Necrons: Feel No Pain, gauss [LETHAL HITS], CP. Keystone: +1 to Hit, -2\" Move.',
+    id: 'army', name: 'The Dynasty', about: 'Necrons: Feel No Pain, gauss firepower, CP. Keystone: +1 to Hit, -2\" Move.',
     main: [
       s('Living Metal', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
       s('Gauss Calibration', 'INFANTRY ranged weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'ranged' }),
@@ -524,7 +524,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   TYRANIDS: {
-    id: 'army', name: 'The Hive Mind', about: 'Tyranids: Feel No Pain for monsters, OC and Battle-shock for the swarm, [LETHAL HITS] in melee.',
+    id: 'army', name: 'The Hive Mind', about: 'Tyranids: Feel No Pain for monsters, OC and Battle-shock for the swarm, chitinous melee strikes.',
     main: [
       s('Chitin', 'MONSTER: Feel No Pain 6+.', 'MONSTER', { defend: { fnp: 6 } }),
       s('Swarm', 'INFANTRY: +1" Move.', 'INFANTRY', { move: 1 }),
@@ -542,7 +542,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     ],
   },
   XENOS: {
-    id: 'army', name: 'Alien Ingenuity', about: 'Xenos: sturdier vehicles, ranged [LETHAL HITS], speed. Keystone: +1 Damage, -1 Toughness.',
+    id: 'army', name: 'Alien Ingenuity', about: 'Xenos: sturdier vehicles, high-yield ranged firepower, speed. Keystone: +1 Damage, -1 Toughness.',
     main: [
       s('Target Lock', 'INFANTRY ranged attacks re-roll Hit rolls of 1.', 'INFANTRY', { reroll: 'hits1', attack: 'ranged' }),
       { name: 'Black Market', text: '+10 Scrap after every won battle.', scrap: 10 },
