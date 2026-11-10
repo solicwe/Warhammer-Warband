@@ -66,7 +66,7 @@ const SPOKES: Branch[] = [
     sideB: [
       s('Heavy Ordnance', 'MONSTER ranged weapons: +1 Strength.', 'MONSTER', { strength: 1, attack: 'ranged' }),
       s('Long Barrels', 'VEHICLE and MONSTER ranged weapons: +4" Range.', 'VEHICLE|MONSTER', { rangeBonus: 4, attack: 'ranged' }),
-      s('Opening Salvo', 'Rounds 1-2: ranged weapons have [SUSTAINED HITS 1].', undefined, R({ abilities: ['sustained hits 1'], attack: 'ranged' }, 'early')),
+      s('Opening Salvo', 'Rounds 1-2: ranged weapons +1 AP.', undefined, R({ ap: 1, attack: 'ranged' }, 'early')),
     ],
   },
   {
@@ -74,7 +74,7 @@ const SPOKES: Branch[] = [
     main: [
       s('Bayonet Drill', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       s('Blood Up', 'INFANTRY: +1 to Charge rolls.', 'INFANTRY', { chargeBonus: 1 }),
-      s('Hammer Blow', 'CHARACTER melee weapons have [LETHAL HITS].', 'CHARACTER', { abilities: ['lethal hits'], attack: 'melee' }),
+      s('Hammer Blow', 'CHARACTER melee weapons: +1 Strength and +1 AP.', 'CHARACTER', { strength: 1, ap: 1, attack: 'melee' }),
       s('Brutal Edge', 'MONSTER and WALKER melee weapons: +1 Strength.', 'MONSTER|WALKER', { strength: 1, attack: 'melee' }),
       s('Savagery', 'Units that charged this turn re-roll melee Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'melee', if: ['charged'] }),
       { ...s('Shock Assault', 'Units that charged this turn: +1 Attack in melee.', undefined, { attacks: 1, attack: 'melee', if: ['charged'] }),
@@ -84,7 +84,7 @@ const SPOKES: Branch[] = [
     sideA: [
       s('Close Quarters', 'INFANTRY melee attacks re-roll Wound rolls of 1.', 'INFANTRY', { reroll: 'wounds1', attack: 'melee' }),
       s('Duellists', 'CHARACTER melee weapons: +1 Strength.', 'CHARACTER', { strength: 1, attack: 'melee' }),
-      s('Reaping Strokes', 'INFANTRY melee weapons have [SUSTAINED HITS 1].', 'INFANTRY', { abilities: ['sustained hits 1'], attack: 'melee' }),
+      s('Reaping Strokes', 'INFANTRY melee weapons: +1 Attack.', 'INFANTRY', { attacks: 1, attack: 'melee' }),
     ],
     sideB: [
       s('Momentum', 'MOUNTED melee weapons: +1 Strength.', 'MOUNTED', { strength: 1, attack: 'melee' }),
@@ -214,12 +214,12 @@ const SIDE_C: Record<string, Spec[]> = {
   fire: [
     s('Suppressing Fire', 'BATTLELINE ranged weapons: +3" Range.', 'BATTLELINE', { rangeBonus: 3, attack: 'ranged' }),
     s('Tank Hunters', 'VEHICLE ranged attacks re-roll Wound rolls of 1.', 'VEHICLE', { reroll: 'wounds1', attack: 'ranged' }),
-    s('Killing Field', 'From round 3: ranged weapons have [LETHAL HITS].', undefined, R({ abilities: ['lethal hits'], attack: 'ranged' }, 'late')),
+    s('Killing Field', 'From round 3: ranged weapons +1 AP and +1 to Wound.', undefined, R({ ap: 1, wound: 1, attack: 'ranged' }, 'late')),
   ],
   assault: [
     s('Close Order', 'BATTLELINE melee attacks re-roll Hit rolls of 1.', 'BATTLELINE', { reroll: 'hits1', attack: 'melee' }),
     s('Blade Masters', 'CHARACTER melee weapons: +1 AP.', 'CHARACTER', { ap: 1, attack: 'melee' }),
-    s('Bloodbath', 'From round 3: melee weapons have [SUSTAINED HITS 1].', undefined, R({ abilities: ['sustained hits 1'], attack: 'melee' }, 'late')),
+    s('Bloodbath', 'From round 3: melee weapons +1 Attack and +1 AP.', undefined, R({ attacks: 1, ap: 1, attack: 'melee' }, 'late')),
   ],
   armour: [
     s('Ablative Hides', 'MONSTER: +1 Toughness.', 'MONSTER', { toughness: 1 }),
@@ -459,9 +459,9 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
       s('Emperor\'s Aegis', 'INFANTRY and CHARACTER: Feel No Pain 6+.', 'INFANTRY|CHARACTER', { defend: { fnp: 6 } }),
       s('Orbital Spotters', 'VEHICLE ranged weapons: +3" Range.', 'VEHICLE', { rangeBonus: 3, attack: 'ranged' }),
       s('Righteous Zeal', 'CHARACTER melee weapons: +1 Strength.', 'CHARACTER', { strength: 1, attack: 'melee' }),
-      { ...s('Righteous Vengeance', 'Melee weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'melee' }),
+      { ...s('Righteous Vengeance', 'Melee weapons get +1 to Wound.', undefined, { wound: 1, attack: 'melee' }),
         bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 Strength.', e: { strength: 1, attack: 'melee' } } },
-      s('Indomitus Mandate', 'Keystone. Melee and ranged weapons have [LETHAL HITS]. Every unit: -1 OC.', undefined, [{ abilities: ['lethal hits'] }, { oc: -1 }]),
+      s('Indomitus Mandate', 'Keystone. Every attack gets +1 AP and +1 to Wound. Every unit: -1 OC.', undefined, [{ ap: 1 }, { wound: 1 }, { oc: -1 }]),
     ],
     sideA: [
       { name: 'Munitorum Tithes', text: '+10 Scrap after every won battle.', scrap: 10 },
@@ -495,7 +495,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
       s('Reanimation Surge', 'INFANTRY: Feel No Pain 6+.', 'INFANTRY', { defend: { fnp: 6 } }),
       { name: 'Canoptek Salvage', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Phase Shift', 'INFANTRY: +1" Move.', 'INFANTRY', { move: 1 }),
-      { ...s('Gauss Disintegration', 'Ranged weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'ranged' }),
+      { ...s('Gauss Disintegration', 'Ranged weapons +1 AP and +1 Strength.', undefined, { ap: 1, strength: 1, attack: 'ranged' }),
         bonus: { count: 6, text: 'With 6 branch nodes: ranged attacks against MONSTER or VEHICLE units +1 AP.', e: { ap: 1, attack: 'ranged', if: ['targetMV'] } } },
       s('Awakened Command', 'Keystone. Every attack: +1 to Hit. Every unit: -2" Move.', undefined, [{ hit: 1 }, { move: -2 }]),
     ],
@@ -510,7 +510,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
     main: [
       s('Choppa Drill', 'INFANTRY melee weapons: +1 Strength.', 'INFANTRY', { strength: 1, attack: 'melee' }),
       { name: 'Grot Scavengers', text: '+15 Scrap after every won battle.', scrap: 15 },
-      s('More Dakka', 'INFANTRY ranged weapons have [SUSTAINED HITS 1].', 'INFANTRY', { abilities: ['sustained hits 1'], attack: 'ranged' }),
+      s('More Dakka', 'INFANTRY ranged weapons: +1 Attack.', 'INFANTRY', { attacks: 1, attack: 'ranged' }),
       s('Ramshackle', 'VEHICLE: Feel No Pain 6+.', 'VEHICLE', { defend: { fnp: 6 } }),
       s('Speed Freeks', 'VEHICLE and MOUNTED: +2" Move.', 'VEHICLE|MOUNTED', { move: 2 }),
       { ...s('Extra Choppy', 'Melee weapons: +1 AP.', undefined, { ap: 1, attack: 'melee' }),
@@ -531,7 +531,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
       s('Synaptic Dominance', 'INFANTRY: +1 OC and re-rolls Battle-shock tests.', 'INFANTRY', { oc: 1, rerollShock: true }),
       { name: 'Biomass Pools', text: '+10 Scrap after every won battle.', scrap: 10 },
       s('Adrenal Glands', 'MONSTER melee weapons: +1 Strength.', 'MONSTER', { strength: 1, attack: 'melee' }),
-      { ...s('Hyper-Adaptation', 'Melee weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'melee' }),
+      { ...s('Hyper-Adaptation', 'Melee weapons: +1 Strength and +1 AP.', undefined, { strength: 1, ap: 1, attack: 'melee' }),
         bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 AP.', e: { ap: 1, attack: 'melee' } } },
       s('Endless Swarm', 'Keystone. Every unit re-rolls Charge rolls and gets +1 Attack in melee; -1 to saving throws.', undefined, [{ rerollCharge: true, attacks: 1, attack: 'melee' }, { defend: { save: -1 } }]),
     ],
@@ -549,7 +549,7 @@ const FAMILY_BRANCHES: Record<Family, Branch> = {
       s('Shield Matrices', 'VEHICLE: +1 to saving throws against ranged attacks.', 'VEHICLE', { defend: { save: 1, vs: 'ranged' } }),
       s('Grav Skimmers', 'FLY and VEHICLE: +2" Move.', 'FLY|VEHICLE', { move: 2 }),
       s('Drone Routines', 'INFANTRY: +1 OC.', 'INFANTRY', { oc: 1 }),
-      { ...s('Hyper-Frequency', 'Ranged weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'ranged' }),
+      { ...s('Hyper-Frequency', 'Ranged weapons: +1 AP and +3" Range.', undefined, { ap: 1, rangeBonus: 3, attack: 'ranged' }),
         bonus: { count: 6, text: 'With 6 branch nodes: ranged weapons +1 AP.', e: { ap: 1, attack: 'ranged' } } },
       s('Singularity Weapons', 'Keystone. Every weapon: +1 Damage. Every unit: -1 Toughness.', undefined, [{ damage: 1 }, { toughness: -1 }]),
     ],
@@ -646,7 +646,7 @@ const FACTION_BRANCHES: Record<string, Branch> = {
       s('Synaptic Imperative', 'Units within Synapse range re-roll melee Hit rolls of 1.', undefined, { reroll: 'hits1', attack: 'melee', if: ['inSynapse'] }),
       s('Harvester Strains', 'HARVESTER: +1 OC.', 'HARVESTER', { oc: 1 }),
       s('Chitin', 'MONSTER: Feel No Pain 6+.', 'MONSTER', { defend: { fnp: 6 } }),
-      { ...s('Hyper-Adaptation', 'Melee weapons have [LETHAL HITS].', undefined, { abilities: ['lethal hits'], attack: 'melee' }),
+      { ...s('Hyper-Adaptation', 'Melee weapons: +1 Strength and +1 AP.', undefined, { strength: 1, ap: 1, attack: 'melee' }),
         bonus: { count: 6, text: 'With 6 branch nodes: melee weapons +1 AP.', e: { ap: 1, attack: 'melee' } } },
       s('Endless Swarm', 'Keystone. Every unit re-rolls Charge rolls and gets +1 Attack in melee; -1 to saving throws.', undefined, [{ rerollCharge: true, attacks: 1, attack: 'melee' }, { defend: { save: -1 } }]),
     ],

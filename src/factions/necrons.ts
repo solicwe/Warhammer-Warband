@@ -36,6 +36,7 @@ export function activateReanimation(s: GameState, u: UnitState, die: 'D3' | 'D6'
   // Their Number is Legion: re-roll a low result
   if (has(u, 'Their Number is Legion') && n <= (die === 'D3' ? 1 : 3)) n = rollExpr(s, die).total;
   if (u.enhancements?.some((e) => e.name === 'Recursive Reanimation')) n += 1;
+  if (s.players[u.owner]?.dynasticGridMode === 'resurrection') n += 1;
   const friends = boardUnits(s, u.owner).filter((f) => f.id !== u.id);
   if (friends.some((f) => has(f, 'Nanoscarab Reanimation Beam (Aura)') && within(f, u, 3))) n += rollExpr(s, 'D3').total;
   const projector = friends.find((f) => has(f, 'Nanoscarab Projector') && within(f, u, 3) && f.used?.nanoscarab !== `${s.round}`);

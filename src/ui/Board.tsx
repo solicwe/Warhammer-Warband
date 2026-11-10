@@ -408,6 +408,30 @@ const ModelToken = memo(function ModelToken({
         ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
         : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
       {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
+      {u.combatState && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
+        const cs = u.combatState!;
+        const badges: { text: string; bg: string }[] = [];
+        if (cs.tokens.auspex > 0) badges.push({ text: `⚡${cs.tokens.auspex}`, bg: '#0284c7' });
+        if (cs.tokens.fervour > 0) badges.push({ text: `🔥${cs.tokens.fervour}`, bg: '#dc2626' });
+        if (cs.tokens.bastion > 0) badges.push({ text: `🛡️${cs.tokens.bastion}`, bg: '#d97706' });
+        if (cs.isExposed) badges.push({ text: '🎯', bg: '#b45309' });
+        if (cs.ailments.soulfire > 0) badges.push({ text: `🔥${cs.ailments.soulfire}`, bg: '#7c2d12' });
+        if (cs.ailments.bleeding > 0) badges.push({ text: `🩸${cs.ailments.bleeding}`, bg: '#881337' });
+        if (cs.ailments.corroded > 0) badges.push({ text: `🧪${cs.ailments.corroded}`, bg: '#581c87' });
+        if (cs.ailments.pinned > 0) badges.push({ text: `⚓${cs.ailments.pinned}`, bg: '#334155' });
+        if (!badges.length) return null;
+        const totalW = badges.length * 0.7;
+        return (
+          <g pointerEvents="none" transform={`translate(${p.x - totalW / 2} ${p.y - m.r * 1.1})`}>
+            {badges.map((b, bi) => (
+              <g key={bi} transform={`translate(${bi * 0.72} 0)`}>
+                <rect x={0} y={-0.3} width={0.68} height={0.42} rx={0.21} fill={b.bg} stroke="#ffffff" strokeWidth={0.04} />
+                <text x={0.34} y={-0.02} fontSize={0.24} textAnchor="middle" fill="#ffffff" fontWeight={900}>{b.text}</text>
+              </g>
+            ))}
+          </g>
+        );
+      })()}
       {((m.profile.W > 1 && disp.wounds < m.profile.W) || (m.dead && disp.wounds > 0)) && (() => {
         const fsz = Math.max(0.48, Math.min(0.85, m.r * 0.55));
         const by = p.y + m.r * 0.98;
@@ -1736,6 +1760,81 @@ function BoardImpl(props: BoardProps) {
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '+' : ''}</text>
         </g>
       ))}
+      {/* Dynamic Battlefield Anomalies (PoE League Mechanics) */}
+      {(s.anomalies ?? []).map((a) => {
+        const isAwake = s.round >= a.activeRound;
+        const isTriggered = a.triggered;
+        const color = a.type === 'WARP_BREACH' ? '#c084fc'
+          : a.type === 'ARCHEOTECH_SHRINE' ? '#fbbf24'
+          : a.type === 'ELDRITCH_ALTAR' ? '#ef4444'
+          : '#f97316';
+        const bgFill = a.type === 'WARP_BREACH' ? 'rgba(147, 51, 234, 0.12)'
+          : a.type === 'ARCHEOTECH_SHRINE' ? 'rgba(251, 191, 36, 0.10)'
+          : a.type === 'ELDRITCH_ALTAR' ? 'rgba(239, 68, 68, 0.12)'
+          : 'rgba(249, 115, 22, 0.12)';
+        const titleText = a.type === 'WARP_BREACH'
+          ? `WARP BREACH (Active Round ${a.activeRound}+): Move within ${a.radius}" to collapse. Deals 1d3 Mortal Wounds to nearby enemies and harvests +60 Scrap!`
+          : a.type === 'ARCHEOTECH_SHRINE'
+          ? `ARCHEOTECH SHRINE [${a.effectPayload?.shrineBuff ?? 'BLESSING'}]: Move within ${a.radius}" to claim ancient Archeotech blessings (${a.effectPayload?.shrineBuff === 'GOLIATH' ? '+1 Toughness & +2 Wounds' : '+1 Attack & +1 Strength'})!`
+          : a.type === 'ELDRITCH_ALTAR'
+          ? `ELDRITCH WAR-ALTAR: Pact of Ruin. Move within ${a.radius}" to harvest +120 Salvage Scrap and forbidden loot!`
+          : `PROMETHIUM HAZARD: Ruptures on proximity, showering combatants within 5" in 2 stacks of [Soulfire]!`;
+
+        const badgeLabel = isTriggered
+          ? (a.type === 'WARP_BREACH' ? 'COLLAPSED' : a.type === 'ARCHEOTECH_SHRINE' ? 'CLAIMED' : a.type === 'ELDRITCH_ALTAR' ? 'SEALED' : 'BURNT OUT')
+          : !isAwake
+          ? `AWAKENS RND ${a.activeRound}`
+          : (a.type === 'WARP_BREACH' ? 'WARP BREACH' : a.type === 'ARCHEOTECH_SHRINE' ? `SHRINE (${a.effectPayload?.shrineBuff ?? 'BUFF'})` : a.type === 'ELDRITCH_ALTAR' ? 'ELDRITCH ALTAR' : 'PROMETHIUM');
+
+        return (
+          <g key={a.id} transform={`translate(${a.position.x} ${a.position.y})`} pointerEvents="none" opacity={isTriggered ? 0.35 : isAwake ? 1 : 0.6}>
+            <title>{titleText}</title>
+            <circle r={a.radius} fill={bgFill} stroke={color} strokeWidth={isTriggered ? 0.05 : 0.12} strokeDasharray={isTriggered ? '0.3 0.3' : '0.8 0.4'} />
+            {a.type === 'WARP_BREACH' && (
+              <g>
+                <circle r={0.9} fill="rgba(59, 7, 100, 0.85)" stroke="#c084fc" strokeWidth={0.12} />
+                <circle r={0.5} fill="#9333ea" opacity={0.6} />
+                <text y={0.25} fontSize={0.7} textAnchor="middle" fill="#fff" fontWeight={900}>🌀</text>
+              </g>
+            )}
+            {a.type === 'ARCHEOTECH_SHRINE' && (
+              <g>
+                <polygon points="0,-0.9 0.8,0 0,0.9 -0.8,0" fill="rgba(69, 26, 3, 0.9)" stroke="#fbbf24" strokeWidth={0.12} />
+                <text y={0.22} fontSize={0.65} textAnchor="middle" fill="#fbbf24" fontWeight={900}>⚡</text>
+              </g>
+            )}
+            {a.type === 'ELDRITCH_ALTAR' && (
+              <g>
+                <circle r={0.85} fill="rgba(69, 10, 10, 0.9)" stroke="#ef4444" strokeWidth={0.14} />
+                <polygon points="0,-0.75 0.65,0.4 -0.65,0.4" fill="none" stroke="#ef4444" strokeWidth={0.06} />
+                <polygon points="0,0.75 0.65,-0.4 -0.65,-0.4" fill="none" stroke="#ef4444" strokeWidth={0.06} />
+                <text y={0.22} fontSize={0.65} textAnchor="middle" fill="#ef4444" fontWeight={900}>🩸</text>
+              </g>
+            )}
+            {a.type === 'PROMETHIUM_HAZARD' && (
+              <g>
+                <circle r={0.85} fill="rgba(67, 20, 7, 0.9)" stroke="#f97316" strokeWidth={0.12} />
+                <text y={0.24} fontSize={0.65} textAnchor="middle" fill="#f97316" fontWeight={900}>🔥</text>
+              </g>
+            )}
+            <g transform={`translate(0 ${a.radius > 3 ? a.radius + 0.6 : 3.6})`}>
+              <rect
+                x={-(badgeLabel.length * 0.17 + 0.6)}
+                y={-0.35}
+                width={badgeLabel.length * 0.34 + 1.2}
+                height={0.7}
+                rx={0.35}
+                fill="rgba(15, 23, 42, 0.92)"
+                stroke={color}
+                strokeWidth={0.08}
+              />
+              <text y={0.15} fontSize={0.36} textAnchor="middle" fill={color} fontWeight={900} letterSpacing={0.03}>
+                {badgeLabel}
+              </text>
+            </g>
+          </g>
+        );
+      })}
       {s.players.flatMap((P, pi) => (P.tunnels ?? []).map((t, i) => (
         <g key={`tunnel${pi}-${i}`} transform={`translate(${t.x} ${t.y})`} pointerEvents="none">
           <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[pi]} strokeWidth={0.15} />

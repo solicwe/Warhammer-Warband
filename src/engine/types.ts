@@ -139,6 +139,49 @@ export interface ArmyUnitEntry {
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
   battles?: number; // campaign battles fought; at 3 the unit is VETERAN for the army tree
   customName?: string;
+  maxSockets?: 1 | 2 | 3;
+  socketedRelics?: string[];
+  veterancyTraits?: string[];
+  isCorrupted?: boolean;
+  corruptionModifier?: string;
+}
+
+// 3. ระบบการ์ด Relic แบบสวมใส่ใน Socket (PoE Skill/Support Gems)
+export type RelicCategory = 'MUTATOR' | 'TRIGGER_PROC' | 'UTILITY_AURA';
+
+export type TriggerEventType =
+  | 'ON_CRIT_HIT'
+  | 'ON_MODEL_KILL'
+  | 'ON_MELEE_KILL'
+  | 'ON_CHARGE_COMPLETE'
+  | 'ON_TOKEN_EXPEND'
+  | 'ON_DAMAGE_TAKEN';
+
+export interface SocketedRelicCard {
+  id: string;
+  name: string;
+  category: RelicCategory;
+  level: 1 | 2 | 3 | 4; // Lv.4 ได้จากการกด Warp Corruption เท่านั้น
+  isCorrupted?: boolean;
+  grantedWeaponKeywords?: Array<'DEVASTATING_WOUNDS' | 'SUSTAINED_HITS' | 'LETHAL_HITS' | 'MELTA' | 'BLAST' | 'LANCE'>;
+  triggerEvent?: TriggerEventType;
+  procPayloadId?: 'ARC_LIGHTNING' | 'CORPSE_BLOOM' | 'VAMPIRIC_HEAL' | 'NOVA_SHIELD' | 'FLICKER_STEP';
+  fusedSecondaryEffectId?: string;
+  description?: string;
+}
+
+export interface BattlefieldAnomaly {
+  id: string;
+  type: 'WARP_BREACH' | 'ARCHEOTECH_SHRINE' | 'ELDRITCH_ALTAR' | 'PROMETHIUM_HAZARD';
+  position: { x: number; y: number };
+  radius: number;
+  triggered: boolean;
+  activeRound: number;
+  effectPayload?: {
+    shrineBuff?: string;
+    altarRisk?: string;
+    altarReward?: string;
+  };
 }
 
 export interface ArmyList {
@@ -156,6 +199,44 @@ export interface ArmyList {
 }
 
 // ---------- Game state ----------
+
+// ============================================================================
+// WARHAMMER WARBAND v2.0 — COMBAT ARCHETYPES, TOKENS & AILMENTS
+// ============================================================================
+
+export type UnitCombatRole =
+  | 'VANGUARD'    // Tactical spotters: mark targets [Exposed] for token generation
+  | 'BREACHER'    // Armored walls: build Bastion on saves, kinetic mortal wounds on charge
+  | 'SKIRMISHER'  // High-speed strikers: AP / Bleeding scale with distance moved
+  | 'GUNSHIP'     // Heavy weapons/tanks: Overclock reactor action
+  | 'BEHEMOTH'    // Massive monsters: Reverse-bracketing Enraged shockwave when HP <= 50%
+  | 'CONDUIT';    // Leaders/Psykers: Command Link shares tokens and 1st relic to attached unit
+
+export interface CombatTokens {
+  auspex: number;   // Blue: expands Crit range / expend for indirect / devastating
+  fervour: number;  // Red: +1" Move per stack, at max stacks +1 Attack / expend to flee or charge
+  bastion: number;  // Gold: FNP 6+ (2: 5+, 3: 5+ & -1 AP received) / expend to negate MW
+}
+
+export interface TacticalAilments {
+  soulfire: number; // Command phase DoT, max 5 explodes 3 MW & spreads 4"
+  bleeding: number; // 1 MW per move/charge (>6" double), max 5 disables advance & +1 to wound
+  corroded: number; // Every 2 stacks worsens armor save by 1, max 5 shuts down Invuln
+  pinned: number;   // -1" Move per stack, max 5 disables Overwatch & forces Fights Last
+}
+
+export interface UnitCombatState {
+  tokens: CombatTokens;
+  maxTokenCaps: CombatTokens;
+  ailments: TacticalAilments;
+  isExposed?: boolean;
+  warpWardHP?: number;
+  maxWarpWardHP?: number;
+  overheated?: boolean;
+  enraged?: boolean;
+  savesPassedCount?: number;
+  distanceMovedThisTurn?: number;
+}
 
 export type PlayerId = 0 | 1;
 export interface Pt { x: number; y: number }
@@ -215,6 +296,11 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  combatRole?: UnitCombatRole;
+  combatState?: UnitCombatState;
+  maxSockets?: 1 | 2 | 3;
+  socketedRelics?: string[];
+  veterancyTraits?: string[];
   dsMarker?: Pt; // Deathstrike Target marker
   parasiteKills?: number; // INFANTRY models the barbed ovipositor destroyed during the current attack (Parasitic Infection)
   startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
@@ -356,6 +442,10 @@ export interface PlayerState {
   bloodshed?: number;
   /** Khorne Daemonkin: Blood Tithe points */
   tithe?: number;
+  cabalFlux?: number; // Thousand Sons Arcane Flux gauge (0 - 12)
+  waaaghMomentum?: number; // Orks WAAAGH! Momentum (0 - 100)
+  dynasticGridMode?: 'resurrection' | 'detonation'; // Necrons Dynastic Grid
+  engramMarkers?: { x: number; y: number; id: string }[];
   /** Death Guard: the army's Plague, a second one (Final Ingredient / Host of the Hybridised Pox), places that make
    *  enemy units Afflicted (Worldblight / Signal Pox objectives, Blighted Land terrain), the Numberless Horde template */
   plague?: string;
@@ -795,6 +885,7 @@ export interface GameState {
   titanAlert?: { unitName: string; factionName: string; round: number; text: string; triggered: boolean } | null;
   screenShake?: number;
   warpStormActive?: boolean;
+  anomalies?: BattlefieldAnomaly[];
   campaignScrap?: number; // scrap salvaged during campaign battle
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase

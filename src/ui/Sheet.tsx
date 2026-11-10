@@ -379,6 +379,23 @@ export function UnitView({ u, model }: { u: UnitState; model?: string }) {
           <span key={`ord-${i}`} className="chip on" style={{ background: '#1c3d24', color: '#86efac', borderColor: '#22c55e', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="bullhorn" size={13} /> {t.label}</span>
         ))}
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
+        {u.combatRole && (
+          <span className="chip" style={{
+            background: u.combatRole === 'VANGUARD' ? '#1e3a8a' : u.combatRole === 'BREACHER' ? '#713f12' : u.combatRole === 'SKIRMISHER' ? '#164e63' : u.combatRole === 'GUNSHIP' ? '#7c2d12' : u.combatRole === 'BEHEMOTH' ? '#831843' : '#581c87',
+            color: '#fff',
+            fontWeight: 800,
+          }}>
+            ROLE: {u.combatRole}
+          </span>
+        )}
+        {u.combatState?.tokens.auspex ? <span className="chip" style={{ background: '#0284c7', color: '#fff', fontWeight: 700 }}>⚡ Auspex {u.combatState.tokens.auspex}/{u.combatState.maxTokenCaps.auspex}</span> : null}
+        {u.combatState?.tokens.fervour ? <span className="chip" style={{ background: '#dc2626', color: '#fff', fontWeight: 700 }}>🔥 Fervour {u.combatState.tokens.fervour}/{u.combatState.maxTokenCaps.fervour}</span> : null}
+        {u.combatState?.tokens.bastion ? <span className="chip" style={{ background: '#d97706', color: '#fff', fontWeight: 700 }}>🛡️ Bastion {u.combatState.tokens.bastion}/{u.combatState.maxTokenCaps.bastion}</span> : null}
+        {u.combatState?.isExposed ? <span className="chip warn" style={{ background: '#78350f', color: '#fef08a', borderColor: '#facc15', fontWeight: 800 }}>🎯 EXPOSED</span> : null}
+        {u.combatState?.ailments.soulfire ? <span className="chip warn" style={{ background: '#7c2d12', color: '#fed7aa' }}>🔥 Soulfire ({u.combatState.ailments.soulfire}/5)</span> : null}
+        {u.combatState?.ailments.bleeding ? <span className="chip warn" style={{ background: '#881337', color: '#fecdd3' }}>🩸 Bleeding ({u.combatState.ailments.bleeding}/5)</span> : null}
+        {u.combatState?.ailments.corroded ? <span className="chip warn" style={{ background: '#581c87', color: '#f3e8ff' }}>🧪 Corroded ({u.combatState.ailments.corroded}/5)</span> : null}
+        {u.combatState?.ailments.pinned ? <span className="chip warn" style={{ background: '#334155', color: '#cbd5e1' }}>⚓ Pinned ({u.combatState.ailments.pinned}/5)</span> : null}
       </div>
       {(() => {
         const allWeps = new Map<string, { w: WeaponData; count: number }>();

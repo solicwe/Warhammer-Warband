@@ -111,6 +111,30 @@ export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: G
           </span>
         );
       })()}
+      {P.cabalFlux !== undefined && (
+        <span className="miracle-pool" title={`Cabalistic Arcane Flux: ${P.cabalFlux} / 12 Flux (fuels Doombolt Cascade & Temporal Twist)`}>
+          <Icon name="sparkles" size={11} />
+          <b className="miracle-more" style={{ color: '#818cf8' }}>{P.cabalFlux} Flux</b>
+        </span>
+      )}
+      {P.waaaghMomentum !== undefined && (
+        <span className="miracle-pool" title={`WAAAGH! Momentum: ${P.waaaghMomentum}% (Tier ${P.waaaghMomentum >= 67 ? '3: Da Biggest' : P.waaaghMomentum >= 34 ? '2: Proper Killy' : '1: Rowdy'})`}>
+          <Icon name="skull" size={11} />
+          <b className="miracle-more" style={{ color: '#84cc16' }}>{P.waaaghMomentum}% Waaagh</b>
+        </span>
+      )}
+      {P.dynasticGridMode && (
+        <span className="miracle-pool" title={`Dynastic Grid: ${P.dynasticGridMode === 'resurrection' ? 'Resurrection Protocol (+1 wound reanimated)' : 'Detonation Protocol (5+ Crit & +1 AP)'}`}>
+          <Icon name="gear" size={11} />
+          <b className="miracle-more" style={{ color: '#22c55e' }}>{P.dynasticGridMode === 'resurrection' ? 'Grid: Reanim' : 'Grid: Deton'}</b>
+        </span>
+      )}
+      {P.tithe !== undefined && (
+        <span className="miracle-pool" title={`Blood Tithe: ${P.tithe} / 8 points (fuels Khorne Blessings)`}>
+          <Icon name="skull" size={11} />
+          <b className="miracle-more" style={{ color: '#f43f5e' }}>{P.tithe} Tithe</b>
+        </span>
+      )}
       {gain && <span key={gain.k} className="ss-gain">+{gain.n} VP</span>}
     </button>
   );

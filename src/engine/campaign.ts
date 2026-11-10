@@ -8,6 +8,8 @@ import { AUX_EXCLUSIONS } from './autoList';
 import type { ArmyList, ArmyUnitEntry, BotLevel, DatasheetData, FactionData, GameState, PlayerId, UnitState } from './types';
 import { hasPicture } from './state';
 import { applyTree, enemyTree, enemyTreePoints, fitsArmy, getFactionFamily, RENOWN, titanUnlocked, treeCp, treeScrap } from './campaignTree';
+import { applyKeystoneBattleSetup } from './keystones';
+import { spawnBattlefieldAnomalies } from './anomalies';
 import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
@@ -653,6 +655,8 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
     }
   }
   applyTree(s, run, me);
+  applyKeystoneBattleSetup(s, me);
+  spawnBattlefieldAnomalies(s);
   const cleanRules: string[] = [];
   for (const rawId of rules) {
     const b = bossRuleById(rawId);

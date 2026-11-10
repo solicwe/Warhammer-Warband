@@ -43,6 +43,7 @@ import { actionOptions, startAction } from '../engine/missions';
 import { Icon } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
+import { castDoomboltCascade, castTemporalTwist, toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, ritualsPending, ritualTargets } from '../factions/rituals';
@@ -2529,6 +2530,150 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         ))}
         {selUnit && selUnit.owner === s.active && abilityBar(selUnit.owner, { unitId: selUnit.id, whens: ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase'] })}
+        {/* Faction Ascendancy Controls (PoE League Specialization) */}
+        {(() => {
+          const P = s.players[s.active];
+          const hasTsons = P.cabalFlux !== undefined;
+          const hasOrk = P.waaaghMomentum !== undefined;
+          const hasNecron = P.dynasticGridMode !== undefined;
+          const hasTithe = P.tithe !== undefined;
+
+          if (!hasTsons && !hasOrk && !hasNecron && !hasTithe) return null;
+
+          return (
+            <div className="card" style={{ padding: 10, background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8))', border: '1px solid rgba(129, 140, 248, 0.4)' }}>
+              <div className="row" style={{ alignItems: 'center', marginBottom: 6 }}>
+                <b style={{ color: '#818cf8', fontSize: '0.85rem' }}>⚡ FACTION ASCENDANCY DOCK</b>
+                <span className="tiny muted" style={{ marginLeft: 'auto' }}>Turn {s.turn} · Round {s.round}</span>
+              </div>
+
+              {/* Thousand Sons: Cabalistic Arcane Flux */}
+              {hasTsons && (
+                <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(129, 140, 248, 0.2)' }}>
+                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span className="small"><b>Cabalistic Arcane Flux:</b> <span style={{ color: '#818cf8', fontWeight: 800 }}>{P.cabalFlux} / 12</span></span>
+                    <div className="tiny muted">Recharges +2 every Command Phase</div>
+                  </div>
+                  <div className="row" style={{ gap: 6, marginTop: 4 }}>
+                    <button
+                      className="btn small"
+                      style={{ background: P.cabalFlux! >= 6 ? 'rgba(99, 102, 241, 0.3)' : undefined, borderColor: '#818cf8' }}
+                      disabled={P.cabalFlux! < 6 || !selUnit || selUnit.owner === s.active}
+                      onClick={() => {
+                        if (!selUnit || selUnit.owner === s.active) {
+                          flash('Select an enemy target unit to strike with Doombolt Cascade!');
+                          return;
+                        }
+                        act((g) => { castDoomboltCascade(g, g.active, selUnit.id); });
+                        flash(`Doombolt Cascade unleashed on ${selUnit.name}!`);
+                      }}
+                    >
+                      🔮 Doombolt (6 Flux) {selUnit && selUnit.owner !== s.active ? `-> ${selUnit.name}` : ''}
+                    </button>
+
+                    <button
+                      className="btn small"
+                      style={{ background: P.cabalFlux! >= 4 ? 'rgba(129, 140, 248, 0.25)' : undefined }}
+                      disabled={P.cabalFlux! < 4 || !selUnit || selUnit.owner !== s.active}
+                      onClick={() => {
+                        if (!selUnit || selUnit.owner !== s.active) {
+                          flash('Select a friendly unit to empower with Temporal Twist!');
+                          return;
+                        }
+                        act((g) => { castTemporalTwist(g, g.active, selUnit.id); });
+                        flash(`Temporal Twist applied to ${selUnit.name} (+3" Move)!`);
+                      }}
+                    >
+                      ⏳ Temporal Twist (4 Flux) {selUnit && selUnit.owner === s.active ? `-> ${selUnit.name}` : ''}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Orks: WAAAGH! Momentum */}
+              {hasOrk && (() => {
+                const tierInfo = getWaaaghTier(P.waaaghMomentum!);
+                return (
+                  <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(132, 204, 22, 0.3)' }}>
+                    <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span className="small">
+                        <b>WAAAGH! Momentum:</b> <span style={{ color: '#84cc16', fontWeight: 800 }}>{P.waaaghMomentum}%</span>
+                        <span className="chip" style={{ marginLeft: 6, background: 'rgba(132, 204, 22, 0.2)', color: '#84cc16' }}>
+                          Tier {tierInfo.tier}: {tierInfo.name}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="tiny" style={{ marginTop: 4, color: '#bef264' }}>
+                      Active Bonuses: {tierInfo.description} (Surges on Charge, Kills, & taking damage)
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Necrons: Dynastic Grid Mode Toggle */}
+              {hasNecron && (
+                <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="small">
+                      <b>Dynastic Awakening Grid:</b>{' '}
+                      <span style={{ color: '#22c55e', fontWeight: 800 }}>
+                        [{P.dynasticGridMode === 'resurrection' ? 'REANIMATION OVERDRIVE' : 'GAUSS DETONATION'}]
+                      </span>
+                    </span>
+                    <button
+                      className="btn small"
+                      style={{ borderColor: '#22c55e', color: '#86efac' }}
+                      onClick={() => {
+                        act((g) => { toggleDynasticGrid(g, g.active); });
+                        flash('Dynastic Grid Mode Reconfigured!');
+                      }}
+                    >
+                      Toggle Mode ⚙️
+                    </button>
+                  </div>
+                  <div className="tiny muted" style={{ marginTop: 4 }}>
+                    {P.dynasticGridMode === 'resurrection'
+                      ? 'Reanimation Protocols heal +1 extra wound. Excellent for attrition and board hold.'
+                      : 'Gauss weapons score Critical Hits on 5+ and gain +1 AP! Lethal armor piercing.'}
+                  </div>
+                </div>
+              )}
+
+              {/* World Eaters: Blood Tithe Altar */}
+              {hasTithe && (
+                <div style={{ marginTop: 4, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(244, 63, 94, 0.3)' }}>
+                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="small">
+                      <b>Blood Tithe Altar:</b> <span style={{ color: '#f43f5e', fontWeight: 800 }}>{P.tithe} / 8 Skulls</span>
+                    </span>
+                  </div>
+                  <div className="row" style={{ gap: 6, marginTop: 4 }}>
+                    <button
+                      className="btn small"
+                      disabled={P.tithe! < 3}
+                      onClick={() => {
+                        act((g) => { spendBloodTithe(g, g.active, 3, 'Total Carnage'); });
+                        flash('Total Carnage invoked for 3 Tithe Points!');
+                      }}
+                    >
+                      ⚔️ Total Carnage (3 Tithe)
+                    </button>
+                    <button
+                      className="btn small"
+                      disabled={P.tithe! < 4}
+                      onClick={() => {
+                        act((g) => { spendBloodTithe(g, g.active, 4, 'Spiteful Demise'); });
+                        flash('Spiteful Demise invoked for 4 Tithe Points!');
+                      }}
+                    >
+                      🩸 Spiteful Demise (4 Tithe)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {hasArmyRule(s, s.active, 'Waaagh!') && (
           <div className="card row" style={{ padding: 8 }}>
             <div className="grow small"><b>WAAAGH!</b> (once per battle) — Orks are riled up: 5+ invulnerable save, ranged weapons have [ASSAULT], can charge after advancing, until the end of the next turn</div>

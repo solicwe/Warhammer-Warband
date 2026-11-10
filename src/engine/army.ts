@@ -1,6 +1,7 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
 import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf } from './allies';
+import { determineCombatRole, initCombatState } from './combatEngine';
 import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
@@ -953,8 +954,19 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const marks = [...new Set([e, ...joiners].map((x) => x.mark ?? (sheetOf(x).abilities.some((a) => a.name === 'Daemonic Allegiance') ? 'NURGLE' : undefined)).filter((k): k is string => !!k))];
     if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
     const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks, ...(sheet.name === 'Sanctifiers' && joiners.length > 0 ? ['SCOUTS'] : [])])];
+    const combatRole = determineCombatRole(keywords, sheet.models[0], sheet.role);
+    const combatState = initCombatState(combatRole);
+    const defaultSockets: 1 | 2 | 3 = (e.warlord || joiners.length > 0 || keywords.includes('CHARACTER')) ? 3 : (sheet.role === 'Battleline' ? 1 : 2);
+    const maxSockets = e.maxSockets ?? defaultSockets;
+    const socketedRelics = e.socketedRelics ? [...e.socketedRelics] : [];
+    const veterancyTraits = e.veterancyTraits ? [...e.veterancyTraits] : [];
     units.push({
       id,
+      combatRole,
+      combatState,
+      maxSockets,
+      socketedRelics,
+      veterancyTraits,
       owner,
       name: joiners.length ? `${joiners.map((j) => j.datasheet).join(' + ')} + ${sheet.name}` : sheet.name,
       sources: sheets.map((s) => s.name),

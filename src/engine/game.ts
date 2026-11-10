@@ -1,5 +1,10 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
+import { clearCombatTokens, onBreacherChargeComplete, processCommandPhaseAilments, processMovementAilments } from './combatEngine';
+import { triggerRelicEvent } from './relicEngine';
+import { hasActiveKeystone, processKeystoneTurnStart } from './keystones';
+import { checkAnomalyTriggers, spawnBattlefieldAnomalies } from './anomalies';
+import { addWaaaghMomentum, processAscendancyTurnStart } from './ascendancy';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
@@ -1208,6 +1213,9 @@ export function campaignRequisition(s: GameState) {
 
 function startCommand(s: GameState) {
   s.phase = 'command';
+  processCommandPhaseAilments(s, s.active);
+  processKeystoneTurnStart(s, s.active);
+  processAscendancyTurnStart(s, s.active);
   s.ordersUsed = {};
   expireTimed(s, 'commandStart', s.active);
   // Instant of Grace / Birth of a Saga end
@@ -1216,7 +1224,11 @@ function startCommand(s: GameState) {
     if (m) { m.isCharacter = false; m.keywords = m.keywords.filter((k) => k !== 'CHARACTER'); }
   }
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
-  for (const p of [0, 1] as PlayerId[]) s.players[p].cp += RULES.cpPerCommandPhase;
+  for (const p of [0, 1] as PlayerId[]) {
+    if (!hasActiveKeystone(s, p, 'Vaal Soul-Harvester') && !hasActiveKeystone(s, p, 'vaal_harvester')) {
+      s.players[p].cp += RULES.cpPerCommandPhase;
+    }
+  }
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
   if (s.campaign && s.active === 0) campaignRequisition(s);
   emit(s, 'commandStart', { p: s.active });
@@ -1288,7 +1300,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   const was = u.battleShocked;
   u.battleShocked = !t.passed;
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
-  if (!was && !t.passed) fire(s, 'becameShocked', [u]);
+  if (!was && !t.passed) { fire(s, 'becameShocked', [u]); clearCombatTokens(u); }
   emit(s, 'shockResult', { u, passed: t.passed });
 }
 
@@ -1438,6 +1450,11 @@ function endBattle(s: GameState) {
 // ---------- movement phase actions ----------
 
 export function rollAdvance(s: GameState, u: UnitState) {
+  if (hasActiveKeystone(s, u.owner, 'unwavering_stance') || hasActiveKeystone(s, u.owner, 'Unwavering Stance')) {
+    u.advanceRoll = 0;
+    log(s, `${u.name} cannot Advance (Unwavering Stance)`, 'info', u.owner);
+    return;
+  }
   const det = rollMods(s, u);
   if (det.advanceFixed) {
     // Full Throttle / Target Sighted: no Advance roll, a fixed bonus instead
@@ -1594,6 +1611,18 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     if (u.movedOver.ids.length) fire(s, 'endOfNormalMove', [u]);
   }
   onMoveEnd(s, u, kind);
+  processMovementAilments(s, u, maxMoved);
+  checkAnomalyTriggers(s, u);
+  if (kind === 'charge') {
+    const foe = engagedEnemies(s, u)[0];
+    if (foe) {
+      if (u.combatRole === 'BREACHER') onBreacherChargeComplete(s, u, foe);
+      triggerRelicEvent(s, 'ON_CHARGE_COMPLETE', u, foe);
+      if (hasKw(u, 'ORK') || hasKw(u, 'ORKS')) {
+        addWaaaghMomentum(s, u.owner, 20);
+      }
+    }
+  }
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
   if (kind === 'advance' && unitFlags(s, u).advanceHazard) {
@@ -2230,7 +2259,7 @@ export function overwatchTargets(s: GameState, p: PlayerId): UnitState[] {
 export function overwatchCandidates(s: GameState, p: PlayerId): UnitState[] {
   if (canUseStratagem(s, p, 'fire-overwatch')) return [];
   const targets = overwatchTargets(s, p);
-  return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && !hasKw(u, 'TITANIC') && u.stratagemPhase !== `${s.turn}:${s.phase}` && !unitFlags(s, u).noOverwatch
+  return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && !hasKw(u, 'TITANIC') && u.stratagemPhase !== `${s.turn}:${s.phase}` && !unitFlags(s, u).noOverwatch && (u.combatState?.ailments.pinned ?? 0) < 5
     && alive(u).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0])))
     && targets.some((e) => unitDistance(u, e) <= RULES.snapShooting.range && alive(u).some((m) => unitVisibleTo(s, m, e))));
 }
