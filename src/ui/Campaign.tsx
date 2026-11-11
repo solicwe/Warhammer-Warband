@@ -229,12 +229,39 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <section className="cmp-intro slate"><div className="slate-in">
             <div className="cmp-kicker">Roguelike Tactical Run</div>
             <div className="cmp-title">Fight your way to the Warlord</div>
-            <ul className="cmp-points">
-              <li><Icon name="fight" size={16} /> {START_POINTS}-point army, full battles with secondaries</li>
-              <li><Icon name="shop" size={16} /> Earn Scrap for recruits and wargear, and Renown for the army tree</li>
-              <li><Icon name="cards" size={16} /> Relics & boons: stack powerful army-wide modifiers</li>
-              <li><Icon name="fate" size={16} /> 3 Fate: each defeat costs one</li>
-            </ul>
+            <div style={{ overflowX: 'auto', marginTop: 12 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
+                    <th style={{ padding: '6px 10px', color: '#fef08a' }}>Core System</th>
+                    <th style={{ padding: '6px 10px', color: '#fef08a' }}>Mechanics</th>
+                    <th style={{ padding: '6px 10px', color: '#fef08a' }}>Tactical Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #334155' }}>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Fleet Integrity</td>
+                    <td style={{ padding: '6px 10px' }}>100 HP Health Bar</td>
+                    <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Defeats deal scaled damage; comeback supply drops at 75, 50, 25 HP</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #334155' }}>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Scrap Economy</td>
+                    <td style={{ padding: '6px 10px' }}>10% Interest & Consolation</td>
+                    <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Defeats award bonus Scrap (Damage x 3) to fund rapid comeback recruits</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid #334155' }}>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Compression Engine</td>
+                    <td style={{ padding: '6px 10px' }}>Merge Duplicates (Tier I-III)</td>
+                    <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Deploy max 8 squads; elite multipliers without board clutter or lag</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>War Room Council</td>
+                    <td style={{ padding: '6px 10px' }}>Clock & Advisors</td>
+                    <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Pre-set 5 turn directives and Command Phase advisor perks</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div></section>
           <section className="group pad" aria-label="Your army">
             <div className="group-head"><h3>Your army</h3><span className="group-note">select your starting faction</span></div>
@@ -633,9 +660,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           War Room
         </button>
         <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
-        <span className="cmp-fate" role="img" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
-          {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
-        </span>
       </header>
 
       <main className="screen">
@@ -970,8 +994,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
             {focused.kind === 'medicae' && (
               <div className="row" style={{ marginTop: 8, gap: 8 }}>
-                <button className="btn small primary" disabled={run.fate >= 3 || (run.scrap ?? 0) < 60} onClick={() => { setRun(applyMedicaeService(run, 'fate')); play('good'); }}>
-                  <Icon name="heal" size={14} /> Restore 1 Fate (60 Scrap)
+                <button
+                  className="btn small primary"
+                  disabled={(run.fleetIntegrityHP ?? 100) >= (run.maxFleetIntegrityHP ?? 100) || (run.scrap ?? 0) < 60}
+                  onClick={() => { setRun(applyMedicaeService(run, 'repair')); play('good'); }}
+                >
+                  <Icon name="heal" size={14} /> Repair Fleet Integrity (+25 HP) (60 Scrap)
                 </button>
                 <button className="btn small" disabled={(run.scrap ?? 0) < 45} onClick={() => { setRun(applyMedicaeService(run, 'cp')); play('good'); }}>
                   <Icon name="strat" size={14} /> War Council: +1 CP (45 Scrap)

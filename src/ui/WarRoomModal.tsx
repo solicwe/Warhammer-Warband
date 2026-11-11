@@ -135,50 +135,112 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
           {/* TAB 1: ARMY COMPRESSION & APEX */}
           {tab === 'compression' && (
             <div>
-              <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                <b style={{ color: '#f59e0b' }}>Anti-Lag Elite Compression Engine:</b>
-                <div style={{ fontSize: '0.85em', color: '#d1d5db', marginTop: 4, lineHeight: 1.4 }}>
-                  Maximum 8 active squads are deployed on the battlefield at once. Merge duplicate squads of the same datasheet to increase Veteran Rank without adding board lag:
-                  Tier I (Standard 1.0x) to Tier II (Wounds ×1.8, Attacks ×1.6, OC +1, Sv +1) to Tier III (Wounds ×2.6, Attacks ×2.3, +1 Dmg, Feel No Pain 5+).
+              {/* Compression Engine Rules Table */}
+              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #d97706' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                  <b style={{ color: '#f59e0b', fontSize: '0.95em' }}>Anti-Lag Elite Compression Engine</b>
+                  <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
+                    Deployment Limit: Max 8 Active Squads
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 10 }}>
+                  Merge duplicate squads of the same datasheet to increase Veteran Rank without adding board clutter or lag:
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
+                    <thead>
+                      <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Rank</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Required Squads</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Wounds (HP)</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Attacks</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Combat Bonuses</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid #334155' }}>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#94a3b8' }}>Tier I</td>
+                        <td style={{ padding: '6px 10px' }}>1 Squad</td>
+                        <td style={{ padding: '6px 10px' }}>1.0x (Base)</td>
+                        <td style={{ padding: '6px 10px' }}>1.0x (Base)</td>
+                        <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Standard datasheet profile</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #334155', background: 'rgba(245, 158, 11, 0.05)' }}>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#fbbf24' }}>Tier II (Elite)</td>
+                        <td style={{ padding: '6px 10px' }}>2 Duplicate Squads</td>
+                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>1.8x</td>
+                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>1.6x</td>
+                        <td style={{ padding: '6px 10px', color: '#fef08a' }}>+1 Objective Control (OC), +1 Armour Save</td>
+                      </tr>
+                      <tr style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#f87171' }}>Tier III (Apex)</td>
+                        <td style={{ padding: '6px 10px' }}>3 Duplicate Squads</td>
+                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>2.6x</td>
+                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>2.3x</td>
+                        <td style={{ padding: '6px 10px', color: '#f87171', fontWeight: 'bold' }}>+1 Damage (All Weapons), Feel No Pain 5+</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* Apex Designations Overview */}
-              <div style={{ marginBottom: 20 }}>
-                <h4 style={{ margin: '0 0 10px 0', color: '#e5e7eb' }}>Apex Battlefield Designations (Max 1 squad per badge):</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
-                  {(Object.keys(APEX_DESIGNATIONS) as ApexDesignationId[]).map((apexId) => {
-                    const def = APEX_DESIGNATIONS[apexId];
-                    const assignedUnit = units.find((u) => u.apexDesignation === apexId);
-                    const assignedSheet = assignedUnit ? faction?.datasheets?.find((d) => d.name === assignedUnit.datasheet) : null;
-                    const sameUnits = assignedUnit ? units.filter((x) => x.datasheet === assignedUnit.datasheet) : [];
-                    const isDup = sameUnits.length > 1;
-                    const squadIdx = isDup ? sameUnits.findIndex((x) => x.uid === assignedUnit?.uid) + 1 : null;
-                    const assignedLabel = assignedUnit ? (isDup ? `${assignedUnit.datasheet} #${squadIdx}` : assignedUnit.datasheet) : null;
+              {/* Apex Designations Overview Table */}
+              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                  <b style={{ color: '#38bdf8', fontSize: '0.95em' }}>Apex Battlefield Designations</b>
+                  <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
+                    Max 1 Squad Per Badge
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 10 }}>
+                  Assign exclusive command roles to specialized squads in your roster:
+                </div>
 
-                    return (
-                      <div key={apexId} style={{ background: 'rgba(255,255,255,0.04)', padding: 10, borderRadius: 6, border: assignedUnit ? '1px solid #10b981' : '1px dashed #64748b' }}>
-                        <div style={{ fontWeight: 'bold', fontSize: '0.9em', color: assignedUnit ? '#34d399' : '#e2e8f0' }}>
-                          {def.name}
-                        </div>
-                        <div style={{ fontSize: '0.78em', color: '#94a3b8', margin: '4px 0', lineHeight: 1.35 }}>
-                          {def.desc}
-                        </div>
-                        <div style={{ fontSize: '0.8em', marginTop: 6, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {assignedUnit ? (
-                            <>
-                              <span style={{ width: 20, height: 20, borderRadius: 3, overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
-                                <UnitArt sheet={assignedSheet ?? undefined} />
-                              </span>
-                              <span style={{ color: '#10b981' }}>{assignedLabel}</span>
-                            </>
-                          ) : (
-                            <span style={{ color: '#64748b' }}>[Unassigned]</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
+                    <thead>
+                      <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Badge</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Tactical Directive</th>
+                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Assigned Squad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(Object.keys(APEX_DESIGNATIONS) as ApexDesignationId[]).map((apexId) => {
+                        const def = APEX_DESIGNATIONS[apexId];
+                        const assignedUnit = units.find((u) => u.apexDesignation === apexId);
+                        const assignedSheet = assignedUnit ? faction?.datasheets?.find((d) => d.name === assignedUnit.datasheet) : null;
+                        const sameUnits = assignedUnit ? units.filter((x) => x.datasheet === assignedUnit.datasheet) : [];
+                        const isDup = sameUnits.length > 1;
+                        const squadIdx = isDup ? sameUnits.findIndex((x) => x.uid === assignedUnit?.uid) + 1 : null;
+                        const assignedLabel = assignedUnit ? (isDup ? `${assignedUnit.datasheet} #${squadIdx}` : assignedUnit.datasheet) : null;
+
+                        return (
+                          <tr key={apexId} style={{ borderBottom: '1px solid #334155' }}>
+                            <td style={{ padding: '6px 10px', fontWeight: 'bold', color: assignedUnit ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>
+                              {def.name}
+                            </td>
+                            <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>
+                              {def.desc}
+                            </td>
+                            <td style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
+                              {assignedUnit ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#34d399', fontWeight: 'bold' }}>
+                                  <span style={{ width: 22, height: 22, borderRadius: 3, overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
+                                    <UnitArt sheet={assignedSheet ?? undefined} />
+                                  </span>
+                                  <span>{assignedLabel}</span>
+                                </span>
+                              ) : (
+                                <span style={{ color: '#64748b' }}>[Unassigned]</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -350,6 +412,37 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 )}
               </div>
 
+              {/* Advisors Overview Table */}
+              <div style={{ background: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
+                <b style={{ color: '#38bdf8', fontSize: '0.9em', display: 'block', marginBottom: 6 }}>High Command Advisor Abilities</b>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
+                    <thead>
+                      <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Advisor</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Command Phase Aura</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Passive Campaign Perk</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Cost</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(Object.keys(HIGH_COMMAND_ADVISORS) as AdvisorId[]).map((advId) => {
+                        const def = HIGH_COMMAND_ADVISORS[advId];
+                        const isHired = activeAdvisors.includes(advId);
+                        return (
+                          <tr key={advId} style={{ borderBottom: '1px solid #334155', background: isHired ? 'rgba(16, 185, 129, 0.08)' : 'transparent' }}>
+                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isHired ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>{def.name}</td>
+                            <td style={{ padding: '5px 8px', color: '#cbd5e1' }}>{def.battleDesc}</td>
+                            <td style={{ padding: '5px 8px', color: '#38bdf8' }}>{def.campaignDesc}</td>
+                            <td style={{ padding: '5px 8px', color: '#fef08a', whiteSpace: 'nowrap' }}>{def.hireCost} Scrap</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {/* Advisors Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {(Object.keys(HIGH_COMMAND_ADVISORS) as AdvisorId[]).map((advId) => {
@@ -504,6 +597,41 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 <h4 style={{ margin: 0, color: '#f8fafc' }}>Sector Patronage Contracts:</h4>
                 <div style={{ fontSize: '0.85em', color: '#94a3b8', marginTop: 4 }}>
                   Sign a covenant with one of the grand 40k factions for this sector. Meet their army condition to gain sector-long buffs and a massive boss payout.
+                </div>
+              </div>
+
+              {/* Patron Comparison Table */}
+              <div style={{ background: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
+                <b style={{ color: '#f59e0b', fontSize: '0.9em', display: 'block', marginBottom: 6 }}>Patron Covenants Comparison</b>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
+                    <thead>
+                      <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Patron Faction</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Roster Condition</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Sector Buff</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Boss Bounty</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(Object.keys(PATRON_CONTRACTS) as PatronContractId[]).map((cid) => {
+                        const def = PATRON_CONTRACTS[cid];
+                        const isSigned = run.activePatronContract === cid;
+                        return (
+                          <tr key={cid} style={{ borderBottom: '1px solid #334155', background: isSigned ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
+                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isSigned ? '#fbbf24' : '#e2e8f0', whiteSpace: 'nowrap' }}>{def.name}</td>
+                            <td style={{ padding: '5px 8px', color: '#38bdf8' }}>{def.conditionDesc}</td>
+                            <td style={{ padding: '5px 8px', color: '#cbd5e1' }}>{def.buffDesc}</td>
+                            <td style={{ padding: '5px 8px', color: '#4ade80' }}>{def.bossRewardDesc}</td>
+                            <td style={{ padding: '5px 8px', whiteSpace: 'nowrap' }}>
+                              {isSigned ? <span style={{ color: '#10b981', fontWeight: 'bold' }}>[Signed]</span> : <span style={{ color: '#94a3b8' }}>Available</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 

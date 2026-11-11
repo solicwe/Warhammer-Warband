@@ -727,8 +727,9 @@ export function afterBattle(
       run.triggeredComebackThresholds ?? { hp75: false, hp50: false, hp25: false }
     );
 
-    const fate = run.fate - 1;
-    const isOver = nextHP <= 0 || fate <= 0;
+    // Fleet Integrity (100 HP) is the single source of truth for campaign life.
+    // Defeats no longer deduct Fate; isOver is strictly determined by nextHP <= 0.
+    const isOver = nextHP <= 0;
 
     const updatedUnits = run.list.units.map((u) => {
       const copy = { ...u, battles: (u.battles ?? 0) + 1 };
@@ -744,7 +745,7 @@ export function afterBattle(
       fleetIntegrityHP: nextHP,
       winLossStreak: nextStreak,
       triggeredComebackThresholds: comeback.updated,
-      fate: Math.max(0, fate),
+      fate: run.fate ?? 0,
       scrap: (run.scrap ?? 0) + totalSalvage + comeback.scrapReward,
       renown: (run.renown ?? 0) + RENOWN.loss + comeback.renownReward,
       desperateCrusadeActive: run.desperateCrusadeActive || comeback.grantDesperateCrusade,
@@ -1119,10 +1120,18 @@ export function dismissUnit(run: Run, unitUid: string): Run {
 }
 
 /** Use Medicae Tent services */
-export function applyMedicaeService(run: Run, service: 'fate' | 'cp'): Run {
-  if (service === 'fate') {
-    if (run.fate >= 3 || (run.scrap ?? 0) < 60) return run;
-    return { ...run, fate: run.fate + 1, scrap: (run.scrap ?? 0) - 60, story: [...run.story, 'Medicae: Restored 1 Fate'] };
+export function applyMedicaeService(run: Run, service: 'fate' | 'cp' | 'repair'): Run {
+  if (service === 'fate' || service === 'repair') {
+    const curHP = run.fleetIntegrityHP ?? 100;
+    const maxHP = run.maxFleetIntegrityHP ?? 100;
+    if (curHP >= maxHP || (run.scrap ?? 0) < 60) return run;
+    const nextHP = Math.min(maxHP, curHP + 25);
+    return {
+      ...run,
+      fleetIntegrityHP: nextHP,
+      scrap: (run.scrap ?? 0) - 60,
+      story: [...run.story, `Medicae: Repaired Fleet Integrity (+25 HP -> ${nextHP}/${maxHP})`],
+    };
   } else {
     if ((run.scrap ?? 0) < 45) return run;
     return { ...run, cp: run.cp + 1, scrap: (run.scrap ?? 0) - 45, story: [...run.story, 'Field Briefing: +1 CP each battle'] };
@@ -1166,9 +1175,10 @@ export function continueNextLoop(run: Run, faction: FactionData): Run {
     offer: undefined,
     picksLeft: undefined,
     over: undefined,
+    fleetIntegrityHP: Math.min(run.maxFleetIntegrityHP ?? 100, (run.fleetIntegrityHP ?? 100) + 30),
     fate: Math.min(5, (run.fate ?? 0) + 2),
     scrap: (run.scrap ?? 0) + 120,
-    story: [...run.story, `Entered ${sectorTitle}! Enemy forces reinforced. (+120 Scrap, +2 Fate)`],
+    story: [...run.story, `Entered ${sectorTitle}! Enemy forces reinforced. (+120 Scrap, +30 Fleet Integrity repaired)`],
   };
 }
 

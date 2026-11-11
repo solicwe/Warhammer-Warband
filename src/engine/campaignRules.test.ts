@@ -112,11 +112,11 @@ describe('campaign nodes and defeats', () => {
     expect(next.offer?.map((o) => o.kind)).toEqual(['unit', 'unit', 'relic']);
   });
 
-  it('a defeat costs a Fate point, still pays Renown and salvage, and says so', () => {
+  it('a defeat damages Fleet Integrity, still pays Renown and salvage, and says so', () => {
     let run = newRun(SM, autoList(SM, 500, 3), ['ORK'], 3);
     run = enter(run, run.map.find((n) => n.enemy)!.id, SM);
     const lost = afterBattle(run, 1, SM, 'Orks', 80);
-    expect(lost.fate).toBe(run.fate - 1);
+    expect(lost.fleetIntegrityHP).toBeLessThan(100);
     expect(lost.renown).toBe((run.renown ?? 0) + 1);
     expect(lost.scrap).toBeGreaterThan((run.scrap ?? 0) + 150); // 11e High-Scrap consolation salvage
     expect(lost.story.at(-1)).toMatch(/Defeated by Orks/);

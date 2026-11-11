@@ -65,9 +65,10 @@ describe('campaign', () => {
     expect(effectsFor(s, foe).some((x) => x.label === 'Iron Will')).toBe(true);
     expect(s.campaign?.relics).toContain('stimms');
 
-    // three losses end the run
-    for (let i = 0; i < 3; i++) run = afterBattle({ ...run, fighting: reachable(run)[0]?.id ?? run.fighting }, 1, sm, 'Orks');
-    expect(run.fate).toBe(0);
+    // losses deplete Fleet Integrity until the run collapses
+    run.fleetIntegrityHP = 5;
+    run = afterBattle({ ...run, fighting: reachable(run)[0]?.id ?? run.fighting }, 1, sm, 'Orks');
+    expect(run.fleetIntegrityHP).toBe(0);
     expect(run.over).toBe('lost');
   });
 
@@ -161,6 +162,7 @@ describe('campaign', () => {
     run.over = 'won';
     run.wins = 6;
     run.fate = 1;
+    run.fleetIntegrityHP = 60;
     run.scrap = 50;
 
     const sector2 = continueNextLoop(run, sm);
@@ -168,6 +170,7 @@ describe('campaign', () => {
     expect(sector2.over).toBeUndefined();
     expect(sector2.path).toEqual([]);
     expect(sector2.fate).toBe(3); // 1 + 2 bonus fate
+    expect(sector2.fleetIntegrityHP).toBe(90); // 60 + 30 repair
     expect(sector2.scrap).toBe(170); // 50 + 120 bonus scrap
     expect(sector2.map.length).toBeGreaterThan(0);
 
