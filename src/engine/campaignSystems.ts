@@ -22,10 +22,17 @@ export type TacticalClockDirectiveId =
   | 'WARMASTER_ASCENDANCY'; // R-Buff: Double OC (x2) & Crit Hit 5+ on Objectives
 
 export type ApexDesignationId =
-  | 'VANGUARD_SPEARHEAD'    // Infiltrators, Scouts 6", Suppress on hit
-  | 'IMMOVABLE_ANVIL'       // +30% Wounds, Immune Battle-shock, +1 Save Aura on Obj
-  | 'EXECUTIONER'           // Full rerolls & +1 Dmg vs highest-point enemy unit
-  | 'GRAND_SPOTTER';        // +6" Range, grants +1 Hit & Ignores Cover to allies vs target
+  | 'APEX_INFANTRY'         // Infantry Cohort: +1" Move, +1 OC, Stealth outside 18"
+  | 'APEX_VEHICLE'          // Armoured Spearhead: +2 Toughness, +1 Damage on Main Guns
+  | 'APEX_MOUNTED'          // Cavalry Blitz: +3" Move, [Lance] (+1 Wound on Charge)
+  | 'APEX_CHARACTER'        // Heroic Vanguard: 4++ Invuln, +1 Attack, [Precision]
+  | 'APEX_HEAVY'            // Heavy Ordnance: +1 to Hit, +1 AP on Heavy weapons
+  | 'APEX_FLY'              // Aerial Superiority: +2" Move, Hard to Hit (-1 to be hit)
+  | 'APEX_ASSAULT'          // Close-Quarters Assault: +1 to Charge, [Sustained Hits 1] Melee
+  | 'VANGUARD_SPEARHEAD'
+  | 'IMMOVABLE_ANVIL'
+  | 'EXECUTIONER'
+  | 'GRAND_SPOTTER';
 
 export type MunitorumAmmoId =
   | 'KRAKEN_BOLTS'          // 35 Scrap: +6" Range, +1 AP, Ignores Cover (1 battle)
@@ -163,6 +170,48 @@ export interface ApexDesignationDef {
 }
 
 export const APEX_DESIGNATIONS: Record<ApexDesignationId, ApexDesignationDef> = {
+  APEX_INFANTRY: {
+    id: 'APEX_INFANTRY',
+    name: 'Infantry Cohort Protocol',
+    icon: 'target',
+    desc: 'All friendly INFANTRY gain +1" Movement, +1 Objective Control (OC), and [Stealth] outside 18".',
+  },
+  APEX_VEHICLE: {
+    id: 'APEX_VEHICLE',
+    name: 'Armoured Spearhead Protocol',
+    icon: 'tank',
+    desc: 'All friendly VEHICLES, WALKERS & MONSTERS gain +2 Toughness and +1 Damage on all ranged weapons.',
+  },
+  APEX_MOUNTED: {
+    id: 'APEX_MOUNTED',
+    name: 'Cavalry Blitz Protocol',
+    icon: 'advance',
+    desc: 'All friendly MOUNTED & BEAST units gain +3" Movement and [Lance] (+1 to Wound on Charge).',
+  },
+  APEX_CHARACTER: {
+    id: 'APEX_CHARACTER',
+    name: 'Heroic Vanguard Protocol',
+    icon: 'trophy',
+    desc: 'All friendly CHARACTERS gain 4+ Invulnerable Save, +1 Attack, and [Precision] on melee strikes.',
+  },
+  APEX_HEAVY: {
+    id: 'APEX_HEAVY',
+    name: 'Heavy Ordnance Protocol',
+    icon: 'crosshair',
+    desc: 'All friendly Heavy & Artillery weapons improve Armour Penetration (AP) by 1 and gain +1 to Hit.',
+  },
+  APEX_FLY: {
+    id: 'APEX_FLY',
+    name: 'Aerial Superiority Protocol',
+    icon: 'flight',
+    desc: 'All friendly FLY units gain +2" Movement and enemies shooting them suffer -1 to Hit.',
+  },
+  APEX_ASSAULT: {
+    id: 'APEX_ASSAULT',
+    name: 'Close-Quarters Assault Protocol',
+    icon: 'swords',
+    desc: 'All friendly Melee units gain +1 to Charge rolls and [Sustained Hits 1] in close combat.',
+  },
   VANGUARD_SPEARHEAD: {
     id: 'VANGUARD_SPEARHEAD',
     name: 'Apex: Vanguard Spearhead',
@@ -188,6 +237,83 @@ export const APEX_DESIGNATIONS: Record<ApexDesignationId, ApexDesignationDef> = 
     desc: '+6" Range. When this unit hits an enemy, all other friendly units shooting that target gain +1 to Hit and [IGNORES COVER].',
   },
 };
+
+export function setActiveApexDoctrine(run: any, doctrineId: ApexDesignationId | null): any {
+  return {
+    ...run,
+    activeApexDoctrine: doctrineId ?? undefined,
+    story: doctrineId
+      ? [...(run.story ?? []), `Strategium Council: Activated Apex Protocol [${APEX_DESIGNATIONS[doctrineId]?.name ?? doctrineId}]`]
+      : run.story,
+  };
+}
+
+
+export interface RoundDoctrineDef {
+  round: number;
+  id: string;
+  name: string;
+  cost: number;
+  icon: string;
+  desc: string;
+}
+
+export const ROUND_DOCTRINES: Record<number, RoundDoctrineDef> = {
+  1: {
+    round: 1,
+    id: 'R1_SHROUD',
+    name: 'Round 1 Surge: Shroud of Night',
+    cost: 40,
+    icon: 'stealth',
+    desc: 'All friendly units gain [Stealth] (-1 to be hit) and Benefit of Cover for Battle Round 1.',
+  },
+  2: {
+    round: 2,
+    id: 'R2_BLITZ',
+    name: 'Round 2 Surge: Blitzkrieg Thrust',
+    cost: 50,
+    icon: 'advance',
+    desc: 'All friendly units gain +2" Movement and +1 to Charge rolls for Battle Round 2.',
+  },
+  3: {
+    round: 3,
+    id: 'R3_ANNIHILATION',
+    name: 'Round 3 Surge: Annihilation Volley',
+    cost: 60,
+    icon: 'shoot',
+    desc: 'All ranged weapons gain [Sustained Hits 1] (Critical Hits generate 1 extra hit) for Battle Round 3.',
+  },
+  4: {
+    round: 4,
+    id: 'R4_IRON_AEGIS',
+    name: 'Round 4 Surge: Aegis of Iron',
+    cost: 70,
+    icon: 'shield',
+    desc: 'All friendly units gain +1 Toughness and improve Armour Save by 1 for Battle Round 4.',
+  },
+  5: {
+    round: 5,
+    id: 'R5_WARMASTER',
+    name: 'Round 5 Surge: Warmaster Decapitation',
+    cost: 80,
+    icon: 'swords',
+    desc: 'All friendly weapons gain [Lethal Hits] and score Critical Hits on 5+ for Battle Round 5.',
+  },
+};
+
+export function buyRoundDoctrine(run: any, round: number): any {
+  const def = ROUND_DOCTRINES[round];
+  if (!def) return run;
+  const purchased: number[] = run.purchasedRoundDoctrines ?? [];
+  if (purchased.includes(round)) return run;
+  if ((run.scrap ?? 0) < def.cost) return run;
+  return {
+    ...run,
+    scrap: (run.scrap ?? 0) - def.cost,
+    purchasedRoundDoctrines: [...purchased, round],
+    story: [...(run.story ?? []), `Tactical Doctrines: Purchased ${def.name} (-${def.cost} Scrap)`],
+  };
+}
 
 export interface MunitorumAmmoDef {
   id: MunitorumAmmoId;
@@ -490,19 +616,22 @@ export function calculateGildedBonus(scrap: number): {
  */
 export function getCompressionStatScaling(tier: 1 | 2 | 3 = 1): {
   woundsMult: number;
+  woundsBonus: number;
   attacksMult: number;
+  attacksBonus: number;
+  strBonus: number;
   ocBonus: number;
   saveBonus: number;
   damageBonus: number;
   fnp?: number;
 } {
   if (tier === 3) {
-    return { woundsMult: 2.6, attacksMult: 2.3, ocBonus: 1, saveBonus: 1, damageBonus: 1, fnp: 5 };
+    return { woundsMult: 1.5, woundsBonus: 2, attacksMult: 1.3, attacksBonus: 1, strBonus: 1, ocBonus: 1, saveBonus: 1, damageBonus: 0, fnp: 6 };
   }
   if (tier === 2) {
-    return { woundsMult: 1.8, attacksMult: 1.6, ocBonus: 1, saveBonus: 1, damageBonus: 0 };
+    return { woundsMult: 1.25, woundsBonus: 1, attacksMult: 1.2, attacksBonus: 1, strBonus: 0, ocBonus: 1, saveBonus: 1, damageBonus: 0 };
   }
-  return { woundsMult: 1.0, attacksMult: 1.0, ocBonus: 0, saveBonus: 0, damageBonus: 0 };
+  return { woundsMult: 1.0, woundsBonus: 0, attacksMult: 1.0, attacksBonus: 0, strBonus: 0, ocBonus: 0, saveBonus: 0, damageBonus: 0 };
 }
 
 /**
@@ -797,10 +926,8 @@ export function unlockAdvisorSlot(run: any): any {
 export function hireAdvisor(run: any, advisorId: AdvisorId): any {
   const def = HIGH_COMMAND_ADVISORS[advisorId];
   if (!def) return run;
-  const maxSlots = run.unlockedAdvisorSlots ?? 1;
   const currentAdvisors: AdvisorId[] = run.activeAdvisors ?? [];
   if (currentAdvisors.includes(advisorId)) return run;
-  if (currentAdvisors.length >= maxSlots) return run;
   if ((run.scrap ?? 0) < def.hireCost) return run;
 
   return {
@@ -1070,6 +1197,8 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
   // 5. High Command Advisors & Patron Contract
   s.advisorsActive = run.activeAdvisors ?? [];
   s.patronContract = run.activePatronContract ?? null;
+  (s as any).activeApexDoctrine = run.activeApexDoctrine ?? null;
+  (s as any).purchasedRoundDoctrines = run.purchasedRoundDoctrines ?? [];
 
   // 6. Apply Unit Extensions (Apex, Ammo, Compression Tier)
   const rosterMap = new Map<string, ArmyUnitEntry>();
@@ -1082,24 +1211,34 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
     const tier = rosterEntry?.compressionTier ?? u.compressionTier ?? 1;
     u.compressionTier = tier;
 
-    // Rank Compression stat scaling
+    // Rank Compression stat scaling (Safe non-multiplying veteran buffs)
     if (tier > 1) {
       const scaling = getCompressionStatScaling(tier);
-      for (const m of u.models) {
-        m.wounds = Math.round(m.wounds * scaling.woundsMult);
-        if (m.profile) {
-          m.profile.W = Math.round(m.profile.W * scaling.woundsMult);
-          if (scaling.saveBonus) m.profile.Sv = Math.max(2, m.profile.Sv - scaling.saveBonus);
-          if (scaling.ocBonus && m.profile.OC !== null) m.profile.OC += scaling.ocBonus;
+      if (!(u as any)._compressionApplied) {
+        (u as any)._compressionApplied = tier;
+        for (const m of u.models) {
+          if ((m as any)._baseWounds === undefined) {
+            (m as any)._baseWounds = m.wounds;
+          }
+          const baseW = (m as any)._baseWounds;
+          m.wounds = baseW + scaling.woundsBonus;
+          if (m.profile) {
+            if ((m.profile as any)._baseW === undefined) {
+              (m.profile as any)._baseW = m.profile.W;
+            }
+            m.profile.W = (m.profile as any)._baseW + scaling.woundsBonus;
+            if (scaling.saveBonus) m.profile.Sv = Math.max(2, m.profile.Sv - scaling.saveBonus);
+            if (scaling.ocBonus && m.profile.OC !== null) m.profile.OC += scaling.ocBonus;
+          }
         }
+        if (scaling.attacksBonus || scaling.strBonus) {
+          addTimed(s, u, { e: { attacks: scaling.attacksBonus, strength: scaling.strBonus }, label: `Tier ${tier} Veteran Mastery (+${scaling.attacksBonus} Attack${scaling.strBonus ? ', +1 Str' : ''})`, until: 'battle', by: me });
+        }
+        if (scaling.fnp) {
+          addTimed(s, u, { e: { defend: { fnp: scaling.fnp } }, label: `Tier ${tier} Resilience (FNP ${scaling.fnp}+)`, until: 'battle', by: me });
+        }
+        log(s, `[Compression] ${u.name} Tier ${tier} (+${scaling.woundsBonus} W, +${scaling.attacksBonus} A, Sv +1, OC +1)`, 'info', me);
       }
-      if (scaling.fnp) {
-        addTimed(s, u, { e: { defend: { fnp: scaling.fnp } }, label: `Tier ${tier} Resilience (FNP ${scaling.fnp}+)`, until: 'battle', by: me });
-      }
-      if (scaling.damageBonus) {
-        addTimed(s, u, { e: { damage: scaling.damageBonus }, label: `Tier ${tier} Annihilation (+${scaling.damageBonus} Damage)`, until: 'battle', by: me });
-      }
-      log(s, `[Compression] ${u.name} Tier ${tier} (Wounds x${scaling.woundsMult}, Attacks x${scaling.attacksMult})`, 'info', me);
     }
 
     // Apex Designations
@@ -1137,6 +1276,97 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
     // Desperate Crusade permanent buff (< 25 HP Comeback)
     if (run.desperateCrusadeActive) {
       addTimed(s, u, { e: { hit: 1 }, label: 'Desperate Crusade (+1 Attack)', until: 'battle', by: me });
+    }
+  }
+
+  // 5.5 Apply Active Apex Category Protocol to entire unit category
+  const activeApex = run.activeApexDoctrine;
+  if (activeApex) {
+    const def = APEX_DESIGNATIONS[activeApex as ApexDesignationId];
+    if (def) {
+      for (const u of s.units.filter((x) => x.owner === me)) {
+        const kw = (u.keywords || []).map((k: string) => k.toUpperCase());
+        const isInf = kw.includes('INFANTRY');
+        const isVeh = kw.includes('VEHICLE') || kw.includes('WALKER') || kw.includes('MONSTER');
+        const isMounted = kw.includes('MOUNTED') || kw.includes('BEAST');
+        const isChar = kw.includes('CHARACTER');
+        const isHeavy = kw.includes('HEAVY') || kw.includes('ARTILLERY') || isVeh;
+        const isFly = kw.includes('FLY');
+        const isAssault = kw.includes('MELEE') || kw.includes('JUMP PACK') || kw.some((k: string) => k.includes('ASSAULT'));
+
+        if (activeApex === 'APEX_INFANTRY' && isInf) {
+          for (const m of u.models) {
+            if (m.profile) {
+              m.profile.M = (m.profile.M ?? 6) + 1;
+              if (m.profile.OC !== null) m.profile.OC = (m.profile.OC ?? 1) + 1;
+            }
+          }
+          addTimed(s, u, { e: { stealth: true }, label: `${def.name} (+1" M, +1 OC, Stealth)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_VEHICLE' && isVeh) {
+          for (const m of u.models) {
+            if (m.profile) m.profile.T = (m.profile.T ?? 9) + 2;
+          }
+          addTimed(s, u, { e: { damage: 1 }, label: `${def.name} (+2 T, +1 Dmg)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_MOUNTED' && isMounted) {
+          for (const m of u.models) {
+            if (m.profile) m.profile.M = (m.profile.M ?? 10) + 3;
+          }
+          addTimed(s, u, { e: { abilities: ['lance'] }, label: `${def.name} (+3" M, Lance)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_CHARACTER' && isChar) {
+          addTimed(s, u, { e: { attacks: 1, defend: { inv: 4 }, abilities: ['precision'] }, label: `${def.name} (4++, +1 Atk, Precision)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_HEAVY' && isHeavy) {
+          addTimed(s, u, { e: { hit: 1, critWoundAp: 1 }, label: `${def.name} (+1 Hit, +1 AP)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_FLY' && isFly) {
+          for (const m of u.models) {
+            if (m.profile) m.profile.M = (m.profile.M ?? 12) + 2;
+          }
+          addTimed(s, u, { e: { stealth: true }, label: `${def.name} (+2" M, Hard to Hit)`, until: 'battle', by: me });
+        } else if (activeApex === 'APEX_ASSAULT' && isAssault) {
+          addTimed(s, u, { e: { abilities: ['sustained hits 1'] }, label: `${def.name} (+1 Charge, Sustained Hits 1)`, until: 'battle', by: me });
+        }
+      }
+      log(s, `[Apex Protocol] Army Protocol Activated: ${def.name}!`, 'info', me);
+    }
+  }
+
+  // 6.5 Enemy Unit Scaling (Scales enemy forces alongside player progression)
+  const enemyPlayer = (1 - me) as PlayerId;
+  const sector = run.sector || run.loop || 1;
+  const isBossOrElite = run.currentBattleType === 'boss' || run.currentBattleType === 'elite' || sector >= 2;
+  if (isBossOrElite) {
+    const enemyUnits = s.units.filter((x) => x.owner === enemyPlayer);
+    let tier2Count = sector >= 4 ? 2 : sector >= 3 ? 2 : sector >= 2 ? 1 : 0;
+    let tier3Count = (run.currentBattleType === 'boss' || sector >= 5) ? 1 : 0;
+
+    let appliedT3 = 0;
+    let appliedT2 = 0;
+    for (const eu of enemyUnits) {
+      if ((eu as any)._compressionApplied) continue;
+      if (appliedT3 < tier3Count && (eu.isWarlordUnit || eu.name.toLowerCase().includes('boss') || appliedT3 === 0)) {
+        (eu as any)._compressionApplied = 3;
+        const scaling = getCompressionStatScaling(3);
+        for (const m of eu.models) {
+          m.wounds += scaling.woundsBonus;
+          if (m.profile) {
+            m.profile.W += scaling.woundsBonus;
+            m.profile.Sv = Math.max(2, m.profile.Sv - 1);
+          }
+        }
+        addTimed(s, eu, { e: { attacks: 1, strength: 1, defend: { fnp: 6 } }, label: 'Veteran Enemy Tier III (+2 W, +1 Atk, +1 Str, FNP 6+)', until: 'battle', by: enemyPlayer });
+        appliedT3++;
+      } else if (appliedT2 < tier2Count) {
+        (eu as any)._compressionApplied = 2;
+        const scaling = getCompressionStatScaling(2);
+        for (const m of eu.models) {
+          m.wounds += scaling.woundsBonus;
+          if (m.profile) {
+            m.profile.W += scaling.woundsBonus;
+            m.profile.Sv = Math.max(2, m.profile.Sv - 1);
+          }
+        }
+        addTimed(s, eu, { e: { attacks: 1 }, label: 'Veteran Enemy Tier II (+1 W, +1 Atk, Sv +1)', until: 'battle', by: enemyPlayer });
+        appliedT2++;
+      }
     }
   }
 

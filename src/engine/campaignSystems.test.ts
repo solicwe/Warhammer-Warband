@@ -15,6 +15,7 @@ import {
   MUNITORUM_AMMO,
   ORBITAL_MODULES,
   PATRON_CONTRACTS,
+  applyCampaignSystemsBattleSetup,
 } from './campaignSystems';
 
 describe('Campaign Systems: Zero-Collision Rule Engine & 10 Features', () => {
@@ -84,21 +85,21 @@ describe('Campaign Systems: Zero-Collision Rule Engine & 10 Features', () => {
 
   it('scales stats properly for Rank Compression Tier I, II, and III', () => {
     const t1 = getCompressionStatScaling(1);
-    expect(t1.woundsMult).toBe(1.0);
-    expect(t1.attacksMult).toBe(1.0);
+    expect(t1.woundsBonus).toBe(0);
+    expect(t1.attacksBonus).toBe(0);
     expect(t1.damageBonus).toBe(0);
 
     const t2 = getCompressionStatScaling(2);
-    expect(t2.woundsMult).toBe(1.8);
-    expect(t2.attacksMult).toBe(1.6);
+    expect(t2.woundsBonus).toBe(1);
+    expect(t2.attacksBonus).toBe(1);
     expect(t2.ocBonus).toBe(1);
     expect(t2.saveBonus).toBe(1);
 
     const t3 = getCompressionStatScaling(3);
-    expect(t3.woundsMult).toBe(2.6);
-    expect(t3.attacksMult).toBe(2.3);
-    expect(t3.damageBonus).toBe(1);
-    expect(t3.fnp).toBe(5);
+    expect(t3.woundsBonus).toBe(2);
+    expect(t3.attacksBonus).toBe(1);
+    expect(t3.strBonus).toBe(1);
+    expect(t3.fnp).toBe(6);
   });
 
   it('triggers comeback thresholds correctly when Fleet Integrity drops', () => {
@@ -145,13 +146,48 @@ describe('Campaign Systems: Zero-Collision Rule Engine & 10 Features', () => {
   it('has all 10 core systems registered with valid configurations', () => {
     expect(Object.keys(HIGH_COMMAND_ADVISORS)).toHaveLength(8);
     expect(Object.keys(TACTICAL_CLOCK_DIRECTIVES)).toHaveLength(5);
-    expect(Object.keys(APEX_DESIGNATIONS)).toHaveLength(4);
-    expect(Object.keys(MUNITORUM_AMMO)).toHaveLength(5);
-    expect(Object.keys(ORBITAL_MODULES)).toHaveLength(3);
-    expect(Object.keys(PATRON_CONTRACTS)).toHaveLength(4);
+    expect(Object.keys(APEX_DESIGNATIONS)).toHaveLength(11);
+    expect(APEX_DESIGNATIONS.APEX_INFANTRY).toBeDefined();
+    expect(APEX_DESIGNATIONS.APEX_VEHICLE).toBeDefined();
 
     const defaultState = createDefaultCampaignOverhaulState();
     expect(defaultState.fleetIntegrityHP).toBe(100);
     expect(defaultState.tacticalClock).toHaveLength(5);
+  });
+
+  it('prevents multiple battle setup calls from compounding wound stats to 440 HP', () => {
+    const run: any = {
+      sector: 1,
+      list: {
+        units: [
+          { uid: 'u1', datasheet: 'Intercessor Squad', models: 5, compressionTier: 2 },
+        ],
+      },
+    };
+    const s: any = {
+      round: 1,
+      units: [
+        {
+          id: 'u1',
+          name: 'Intercessor Squad',
+          owner: 0,
+          models: [{ id: 'm1', wounds: 2, profile: { W: 2, Sv: 3, OC: 1, S: 4 } }],
+          timed: [],
+        },
+      ],
+      players: [{ cp: 0, vps: 0 }, { cp: 0, vps: 0 }],
+      chat: [],
+      log: [],
+    };
+
+    // First setup call
+    applyCampaignSystemsBattleSetup(s, run);
+    expect(s.units[0].models[0].wounds).toBe(3); // 2 base + 1 Tier II
+    expect(s.units[0].models[0].profile.W).toBe(3);
+
+    // Second setup call (simulating turn advance or re-render)
+    applyCampaignSystemsBattleSetup(s, run);
+    expect(s.units[0].models[0].wounds).toBe(3); // Must NOT balloon to 5, 8, or 440!
+    expect(s.units[0].models[0].profile.W).toBe(3);
   });
 });

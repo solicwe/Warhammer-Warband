@@ -18,6 +18,9 @@ import {
   HIGH_COMMAND_ADVISORS,
   TACTICAL_CLOCK_DIRECTIVES,
   APEX_DESIGNATIONS,
+  ROUND_DOCTRINES,
+  buyRoundDoctrine,
+  setActiveApexDoctrine,
   MUNITORUM_AMMO,
   ORBITAL_MODULES,
   PATRON_CONTRACTS,
@@ -116,7 +119,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             style={{ padding: '10px 16px', fontWeight: tab === 'highCommand' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'highCommand' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'highCommand' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             <Icon name="leader" size={14} />
-            <span>High Command ({activeAdvisors.length}/{maxSlots})</span>
+            <span>High Command ({activeAdvisors.length}/4)</span>
           </button>
           <button
             type="button"
@@ -125,7 +128,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             style={{ padding: '10px 16px', fontWeight: tab === 'tacticalClock' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'tacticalClock' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'tacticalClock' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             <Icon name="history" size={14} />
-            <span>5-Round Clock</span>
+            <span>Round Doctrines</span>
           </button>
           <button
             type="button"
@@ -185,10 +188,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         </td>
                         <td style={{ padding: '6px 10px' }}>2 Duplicate Squads</td>
                         <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> 1.8x</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> +1 W flat</span>
                         </td>
                         <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> 1.6x</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> +1 Attack</span>
                         </td>
                         <td style={{ padding: '6px 10px', color: '#fef08a' }}>+1 Objective Control (OC), +1 Armour Save</td>
                       </tr>
@@ -198,80 +201,99 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         </td>
                         <td style={{ padding: '6px 10px' }}>3 Duplicate Squads</td>
                         <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> 2.6x</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> +2 W flat</span>
                         </td>
                         <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> 2.3x</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> +1 Attack, +1 Str</span>
                         </td>
-                        <td style={{ padding: '6px 10px', color: '#f87171', fontWeight: 'bold' }}>+1 Damage (All Weapons), Feel No Pain 5+</td>
+                        <td style={{ padding: '6px 10px', color: '#f87171', fontWeight: 'bold' }}>Feel No Pain 6+, +1 Objective Control (OC)</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              {/* Apex Designations Overview Table */}
-              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
+              {/* Category-Wide Apex Protocols */}
+              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #0284c7' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
                   <b style={{ color: '#38bdf8', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Icon name="crosshair" size={16} />
-                    <span>Apex Battlefield Designations</span>
+                    <span>Category-Wide Apex Protocols (Whole-Army Specialization)</span>
                   </b>
                   <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                    Max 1 Squad Per Badge
+                    Select 1 Active Army Protocol
                   </span>
                 </div>
-                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 10 }}>
-                  Assign exclusive command roles to specialized squads in your roster:
+                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 12 }}>
+                  Instead of micro-managing single models, activate an Apex Protocol that buffs an entire unit category across your whole army:
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
-                    <thead>
-                      <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
-                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Badge</th>
-                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Tactical Directive</th>
-                        <th style={{ padding: '6px 10px', color: '#fef08a' }}>Assigned Squad</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(Object.keys(APEX_DESIGNATIONS) as ApexDesignationId[]).map((apexId) => {
-                        const def = APEX_DESIGNATIONS[apexId];
-                        const assignedUnit = units.find((u) => u.apexDesignation === apexId);
-                        const assignedSheet = assignedUnit ? faction?.datasheets?.find((d) => d.name === assignedUnit.datasheet) : null;
-                        const sameUnits = assignedUnit ? units.filter((x) => x.datasheet === assignedUnit.datasheet) : [];
-                        const isDup = sameUnits.length > 1;
-                        const squadIdx = isDup ? sameUnits.findIndex((x) => x.uid === assignedUnit?.uid) + 1 : null;
-                        const assignedLabel = assignedUnit ? (isDup ? `${assignedUnit.datasheet} #${squadIdx}` : assignedUnit.datasheet) : null;
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+                  {[
+                    'APEX_INFANTRY',
+                    'APEX_VEHICLE',
+                    'APEX_MOUNTED',
+                    'APEX_CHARACTER',
+                    'APEX_HEAVY',
+                    'APEX_FLY',
+                    'APEX_ASSAULT',
+                  ].map((apexKey) => {
+                    const apexId = apexKey as ApexDesignationId;
+                    const def = APEX_DESIGNATIONS[apexId];
+                    if (!def) return null;
+                    const isActive = run.activeApexDoctrine === apexId;
 
-                        return (
-                          <tr key={apexId} style={{ borderBottom: '1px solid #334155' }}>
-                            <td style={{ padding: '6px 10px', fontWeight: 'bold', color: assignedUnit ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                <Icon name={(def.icon || 'star') as IconName} size={14} />
-                                <span>{def.name}</span>
+                    return (
+                      <div
+                        key={apexId}
+                        style={{
+                          padding: 12,
+                          borderRadius: 8,
+                          background: isActive ? 'rgba(56, 189, 248, 0.14)' : 'rgba(255, 255, 255, 0.04)',
+                          border: isActive ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <b style={{ color: isActive ? '#7dd3fc' : '#f8fafc', fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Icon name={(def.icon || 'star') as IconName} size={15} />
+                              <span>{def.name}</span>
+                            </b>
+                            {isActive && (
+                              <span style={{ background: '#38bdf8', color: '#000', fontSize: 10, fontWeight: 'bold', padding: '1px 6px', borderRadius: 4 }}>
+                                ACTIVE
                               </span>
-                            </td>
-                            <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>
-                              {def.desc}
-                            </td>
-                            <td style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>
-                              {assignedUnit ? (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#34d399', fontWeight: 'bold' }}>
-                                  <span style={{ width: 22, height: 22, borderRadius: 3, overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
-                                    <UnitArt sheet={assignedSheet ?? undefined} />
-                                  </span>
-                                  <span>{assignedLabel}</span>
-                                </span>
-                              ) : (
-                                <span style={{ color: '#64748b' }}>[Unassigned]</span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.8em', color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}>
+                            {def.desc}
+                          </div>
+                        </div>
+
+                        <div>
+                          {isActive ? (
+                            <span style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Icon name="check" size={12} /> [Current Army Protocol]
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn small"
+                              onClick={() => onUpdateRun(setActiveApexDoctrine(run, apexId))}
+                              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                            >
+                              <Icon name="check" size={12} />
+                              <span>Activate Protocol</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -502,7 +524,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 {(Object.keys(HIGH_COMMAND_ADVISORS) as AdvisorId[]).map((advId) => {
                   const def = HIGH_COMMAND_ADVISORS[advId];
                   const isHired = activeAdvisors.includes(advId);
-                  const canHire = !isHired && activeAdvisors.length < maxSlots && scrap >= def.hireCost;
+                  const canHire = !isHired && scrap >= def.hireCost;
 
                   return (
                     <div
@@ -607,16 +629,90 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: 5-ROUND TACTICAL CLOCK */}
+          {/* TAB 3: ROUND TACTICAL DOCTRINES & SURGES */}
           {tab === 'tacticalClock' && (
             <div>
+              {/* Purchasable Round Doctrines */}
+              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #d97706' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                  <b style={{ color: '#f59e0b', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="zap" size={16} />
+                    <span>Round Tactical Doctrines (Purchasable Surges):</span>
+                  </b>
+                  <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
+                    Active for Battle Rounds 1 - 5
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 12 }}>
+                  Purchase high-impact battle surges with Scrap. When that battle round begins, the surge triggers automatically across your whole army!
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+                  {[1, 2, 3, 4, 5].map((roundNum) => {
+                    const def = ROUND_DOCTRINES[roundNum];
+                    if (!def) return null;
+                    const purchased = (run.purchasedRoundDoctrines ?? []).includes(roundNum);
+                    const canBuy = !purchased && scrap >= def.cost;
+
+                    return (
+                      <div
+                        key={roundNum}
+                        style={{
+                          padding: 12,
+                          borderRadius: 8,
+                          background: purchased ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                          border: purchased ? '1.5px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ background: purchased ? '#10b981' : '#f59e0b', color: '#000', fontWeight: 'bold', fontSize: 11, padding: '2px 6px', borderRadius: 4 }}>
+                              Round {roundNum}
+                            </span>
+                            <span style={{ fontSize: '0.8em', color: '#fcd34d', fontWeight: 'bold' }}>{def.cost} Scrap</span>
+                          </div>
+                          <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: 13.5, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Icon name={(def.icon || 'zap') as IconName} size={14} />
+                            <span>{def.name}</span>
+                          </div>
+                          <div style={{ fontSize: '0.8em', color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>
+                            {def.desc}
+                          </div>
+                        </div>
+                        <div>
+                          {purchased ? (
+                            <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Icon name="check" size={12} /> [Surge Ready for Round {roundNum}]
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn small primary"
+                              disabled={!canBuy}
+                              onClick={() => onUpdateRun(buyRoundDoctrine(run, roundNum))}
+                              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                            >
+                              <Icon name="plus" size={12} />
+                              <span>Purchase Surge ({def.cost} Scrap)</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div style={{ background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                 <b style={{ color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Icon name="history" size={16} />
-                  <span>Pre-Battle Tactical Clock (5-Round Operation Timeline):</span>
+                  <span>Pre-Battle Tactical Clock Sequence:</span>
                 </b>
                 <div style={{ fontSize: '0.85em', color: '#d1d5db', marginTop: 4, lineHeight: 1.4 }}>
-                  Arrange 5 distinct Battleplan Directives across Battle Rounds 1 to 5. The engine activates each directive automatically at the start of that battle round. Click Up/Down to reorder.
+                  Arrange 5 distinct Battleplan Directives across Battle Rounds 1 to 5. Click Up/Down to reorder.
                 </div>
               </div>
 
@@ -695,7 +791,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                     <thead>
                       <tr style={{ background: '#334155', textAlign: 'left', borderBottom: '1px solid #475569' }}>
                         <th style={{ padding: '5px 8px', color: '#fef08a' }}>Patron Faction</th>
-                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Roster Condition</th>
+                        <th style={{ padding: '5px 8px', color: '#fef08a' }}>Enemy Hunt Bounty</th>
                         <th style={{ padding: '5px 8px', color: '#fef08a' }}>Sector Buff</th>
                         <th style={{ padding: '5px 8px', color: '#fef08a' }}>Boss Bounty</th>
                         <th style={{ padding: '5px 8px', color: '#fef08a' }}>Status</th>

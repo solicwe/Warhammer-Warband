@@ -551,6 +551,30 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     } else {
       content = (
         <>
+          {sheet && !sheet.keywords.includes('EPIC HERO') && (
+            <button
+              type="button"
+              style={{ background: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', color: '#fef08a' }}
+              onClick={() => {
+                const cost = recruitScrapCost(run, sheet, u.pts);
+                if ((run.scrap ?? 0) < cost) {
+                  setInfo(`Not enough Scrap for duplicate ${u.datasheet} (${cost} needed, you have ${run.scrap ?? 0})`);
+                  close();
+                  return;
+                }
+                const next = recruitUnit(run, fac, u.datasheet, u.models);
+                if (next !== run) {
+                  setRun(next);
+                  play('good');
+                  setInfo(`Recruited duplicate ${u.datasheet} (-${cost} Scrap). Merge in War Room to rank up!`);
+                }
+                close();
+              }}
+            >
+              <Icon name="plus" size={22} />
+              <span>Recruit Duplicate ({recruitScrapCost(run, sheet, u.pts)} Scrap)</span>
+            </button>
+          )}
           {squadsFor.length > 0 && <button type="button" onClick={() => setPop({ ...pop, mode: 'squad' })}><Icon name="plus" size={22} />Add Squad</button>}
           {canLeader && <button type="button" onClick={() => setPop({ ...pop, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader</button>}
           {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
@@ -1921,6 +1945,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       const sortedUs = [...us].sort((a, b) => {
                         const sheetA = fac.datasheets.find((x) => x.name === a.datasheet);
                         const sheetB = fac.datasheets.find((x) => x.name === b.datasheet);
+                        if (sec.id === 'characters') {
+                          const aEpic = Number((sheetA?.keywords || []).includes('EPIC HERO'));
+                          const bEpic = Number((sheetB?.keywords || []).includes('EPIC HERO'));
+                          if (bEpic !== aEpic) return bEpic - aEpic; // Epic Heroes first
+                        }
                         const kindA = sheetA ? unitKind(sheetA) : 'Other';
                         const kindB = sheetB ? unitKind(sheetB) : 'Other';
                         return KINDS.indexOf(kindA) - KINDS.indexOf(kindB) || a.datasheet.localeCompare(b.datasheet);
@@ -2118,14 +2147,24 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           if (!sheetsInSec.length) return null;
 
                           const detAlly = (d: DatasheetData) => detachmentAllyOf(fac.id, d);
-                          const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d));
+                          const groupOf = (d: DatasheetData) => {
+                            if (sec.id === 'characters') {
+                              return (d.keywords || []).includes('EPIC HERO') ? 'Epic Heroes' : 'Characters & Leaders';
+                            }
+                            return d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d);
+                          };
 
-                          const sortedSheets = [...sheetsInSec].sort((a, b) =>
-                            (a.allyName ?? '').localeCompare(b.allyName ?? '') ||
-                            KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) ||
-                            Number(!!b.subfaction) - Number(!!a.subfaction) ||
-                            a.name.localeCompare(b.name)
-                          );
+                          const sortedSheets = [...sheetsInSec].sort((a, b) => {
+                            if (sec.id === 'characters') {
+                              const aEpic = Number((a.keywords || []).includes('EPIC HERO'));
+                              const bEpic = Number((b.keywords || []).includes('EPIC HERO'));
+                              if (bEpic !== aEpic) return bEpic - aEpic; // Epic heroes first!
+                            }
+                            return (a.allyName ?? '').localeCompare(b.allyName ?? '') ||
+                              KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) ||
+                              Number(!!b.subfaction) - Number(!!a.subfaction) ||
+                              a.name.localeCompare(b.name);
+                          });
 
                           return (
                             <section key={sec.id} className="ab-section">

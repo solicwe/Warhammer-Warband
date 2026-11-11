@@ -171,6 +171,8 @@ export interface Run {
   garrisonedNodeIds?: string[];
   fortifiedNodeIds?: string[];
   activePatronContract?: PatronContractId | null;
+  activeApexDoctrine?: ApexDesignationId;
+  purchasedRoundDoctrines?: number[];
   orbitalModules?: {
     activeModule: OrbitalModuleId;
     levels: Record<OrbitalModuleId, 1 | 2 | 3>;

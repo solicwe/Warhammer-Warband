@@ -203,8 +203,8 @@ describe('11th Edition Campaign Overhaul Systems', () => {
     // Compressed unit Tier II has scaled Wounds and +1 Save
     const unit = s.units.find((u) => u.owner === 0);
     expect(unit?.compressionTier).toBe(2);
-    // Base W was 2, x1.8 rounded = 4 Wounds per model
-    expect(unit?.models[0].wounds).toBe(4);
+    // Base W was 2, Tier II +1 Wound bonus = 3 Wounds per model
+    expect(unit?.models[0].wounds).toBe(3);
     // Base Sv was 3, save bonus +1 -> Sv 2+
     expect(unit?.models[0].profile.Sv).toBe(2);
   });

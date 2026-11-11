@@ -31,7 +31,14 @@ export function withFastPlanning<T>(fn: () => T): T {
   fastPlanning = true;
   try { return fn(); } finally { fastPlanning = was; }
 }
-export const isFastPlanning = (s: GameState, u?: UnitState) => fastPlanning || !!s.campaign || bigBoard(s) || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
+export const isLargeBattle = (s: GameState) =>
+  s.units.length >= 10 ||
+  s.units.reduce((n, u) => n + u.models.length, 0) >= 30 ||
+  s.units.reduce((n, u) => n + (u.pts ?? 0), 0) >= 1200 ||
+  bigBoard(s);
+
+export const isFastPlanning = (s: GameState, u?: UnitState) =>
+  fastPlanning || !!s.campaign || isLargeBattle(s) || bigBoard(s) || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
 
 /** Models the two armies brought (the dead count too, so a big game stays big as it goes) above which the bot plans
  *  moves the quick way: at 2000+ points every spot it tried was checked model by model for line of sight, and one
@@ -720,6 +727,17 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
 /** Points worth heading for: objectives, the enemy units that matter, nearby terrain, and a few directions. */
 function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   const c = centre(u);
+  // Large battle fast heuristic: rush nearest enemy units and closest objective!
+  if (isLargeBattle(s)) {
+    const pts: Pt[] = [];
+    const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));
+    const nearestModel = (e: UnitState) => alive(e).reduce((a, m) => (dist(m, c) < dist(a, c) ? m : a));
+    for (const f of foes.slice(0, 2)) pts.push(nearestModel(f.u));
+    const objs = s.objectives.map((o) => objPoint(s, o)).sort((a, b) => dist(c, a) - dist(c, b));
+    if (objs.length > 0) pts.push(objs[0]);
+    if (pts.length === 0) pts.push(c);
+    return pts;
+  }
   const pts: Pt[] = [];
   const objs = s.objectives.map((o) => objPoint(s, o)).sort((a, b) => dist(c, a) - dist(c, b));
   pts.push(...objs.filter((p, i) => i < 2 || dist(c, p) <= max + 10));

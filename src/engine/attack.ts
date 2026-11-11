@@ -493,13 +493,14 @@ export function expectedDamage(s: GameState, pool: Pool, target: UnitState): { a
   const pW = pW0 + (pool.rerollAllWounds ? 1 - pW0 : pool.rerollWounds12 ? Math.min(2 / 6, 1 - pW0) : pool.rerollWounds1 ? 1 / 6 : 0) * pW0;
   const lethal = pool.lethal ? attacks * pCrit : 0;
   const wounds = (hits - lethal) * pW + lethal;
-  const m = alive(target)[0];
+  const m = alive(target)[0] || target.models[0];
+  if (!m || !m.profile) return { attacks: 0, hits: 0, wounds: 0, unsaved: 0, models: 0 };
   const sv = m.profile.Sv - pool.ap;
   const best = Math.min(sv, effectiveInSv(s, target, m) ?? 7);
   const pFail = Math.min(1, Math.max(1 / 6, (best - 1) / 6));
   const unsaved = wounds * pFail;
-  const dmg = Math.min(exprAverage(pool.damage), m.profile.W);
-  return { attacks, hits, wounds, unsaved, models: (unsaved * dmg) / m.profile.W };
+  const dmg = Math.min(exprAverage(pool.damage), m.profile.W || 1);
+  return { attacks, hits, wounds, unsaved, models: (unsaved * dmg) / (m.profile.W || 1) };
 }
 
 // ---------- running the session ----------

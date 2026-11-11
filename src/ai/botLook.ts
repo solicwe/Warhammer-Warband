@@ -144,6 +144,9 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
 
 /** The style that leaves p best off after playing this turn and the opponent's next one on copies of the game. */
 export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): string {
+  if (s.units.reduce((n, u) => n + (u.pts ?? 0), 0) >= 2000 || s.units.length >= 20) {
+    return 'aggressive';
+  }
   const b = budgetMs ?? lookBudget(s, p);
   if (s.phase === 'gameover') return 'steady';
   if (s.campaign || (s as any).idleMode) return s.idleTactic === 'assault' ? 'assault' : 'rogue';

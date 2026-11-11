@@ -70,7 +70,13 @@ import {
   TACTICAL_CLOCK_DIRECTIVES,
   PATRON_CONTRACTS,
   HIGH_COMMAND_ADVISORS,
+  APEX_DESIGNATIONS,
+  ROUND_DOCTRINES,
+  type AdvisorId,
+  type ApexDesignationId,
+  type PatronContractId,
 } from '../engine/campaignSystems';
+import { relicById } from '../engine/campaign';
 import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
@@ -4079,6 +4085,73 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       : []),
     ...(s.players[p].painTokens !== undefined
       ? [<div key={`drukhari${p}`} className={`buffcard p${p}`}><b>Power from Pain ({s.players[p].painTokens} Tokens)</b><span>Spend 1 Pain token to Empower a unit{s.players[p].drukhariWagerWinning ? ` · Reaper's Wager: ${s.players[p].drukhariWagerWinning} winning` : ''}</span></div>]
+      : []),
+    // Campaign Army-Wide Buffs (Relics, Apex Protocol, Advisors, Gilded Arsenal, Round Surge, Patron Bounty)
+    ...(p === 0 && s.campaign?.relics
+      ? s.campaign.relics.map((rid) => {
+          const r = relicById(rid);
+          if (!r) return null;
+          const lvl = s.campaign?.relicLevels?.[rid] ?? 1;
+          const desc = (r as any).levels && (r as any).levels[lvl - 1] ? (r as any).levels[lvl - 1] : r.text;
+          return (
+            <div key={`relic-${rid}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #f59e0b' }}>
+              <b style={{ color: '#fef08a' }}>Relic: {r.name}{lvl > 1 ? ` (Lv.${lvl})` : ''}</b>
+              <span>{desc}</span>
+            </div>
+          );
+        }).filter(Boolean)
+      : []),
+    ...(p === 0 && (s as any).activeApexDoctrine
+      ? (() => {
+          const def = APEX_DESIGNATIONS[(s as any).activeApexDoctrine as ApexDesignationId];
+          if (!def) return [];
+          return [
+            <div key="apex-protocol" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #38bdf8' }}>
+              <b style={{ color: '#7dd3fc' }}>Apex Protocol: {def.name}</b>
+              <span>{def.desc}</span>
+            </div>,
+          ];
+        })()
+      : []),
+    ...(p === 0 && (s as any).advisorsActive?.length
+      ? (s as any).advisorsActive.map((advId: AdvisorId) => {
+          const def = HIGH_COMMAND_ADVISORS[advId];
+          if (!def) return null;
+          return (
+            <div key={`adv-${advId}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #10b981' }}>
+              <b style={{ color: '#86efac' }}>Council: {def.name}</b>
+              <span>{def.battleDesc}</span>
+            </div>
+          );
+        }).filter(Boolean)
+      : []),
+    ...(p === 0 && (s as any).gildedBonus?.damagePercent > 0
+      ? [
+          <div key="gilded-bonus" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #fbbf24' }}>
+            <b style={{ color: '#fde047' }}>Gilded Arsenal (+{(s as any).gildedBonus.damagePercent}%)</b>
+            <span>Salvaged wealth converts into raw weapon energy: +{(s as any).gildedBonus.damagePercent}% final damage multiplier.</span>
+          </div>,
+        ]
+      : []),
+    ...(p === 0 && ROUND_DOCTRINES[s.round] && ((s as any).purchasedRoundDoctrines || []).includes(s.round)
+      ? [
+          <div key={`round-surge-${s.round}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #ec4899' }}>
+            <b style={{ color: '#f472b6' }}>Tactical Surge: {ROUND_DOCTRINES[s.round].name}</b>
+            <span>{ROUND_DOCTRINES[s.round].desc}</span>
+          </div>,
+        ]
+      : []),
+    ...(p === 0 && (s as any).patronContract
+      ? (() => {
+          const def = PATRON_CONTRACTS[(s as any).patronContract as PatronContractId];
+          if (!def) return [];
+          return [
+            <div key="patron-bounty" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #a855f7' }}>
+              <b style={{ color: '#d8b4fe' }}>Patron Bounty: {def.name}</b>
+              <span><b>Target:</b> {def.conditionDesc} · <b>Sector Buff:</b> {def.buffDesc}</span>
+            </div>,
+          ];
+        })()
       : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
