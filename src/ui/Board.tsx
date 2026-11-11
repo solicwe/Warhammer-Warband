@@ -1645,15 +1645,7 @@ function BoardImpl(props: BoardProps) {
         const isTemptingTarget = s.players.some((p) => p.secActive?.includes('a-tempting-target') && p.sec?.temptingTarget === o.id);
 
         return (
-          <g
-            key={o.id}
-            pointerEvents="all"
-            style={{ cursor: 'pointer' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              props.onSelectObjective?.(o);
-            }}
-          >
+          <g key={o.id} pointerEvents="none">
             {/* the objective: all plates under the marker as one shape. Held: tinted in the holder's army colour;
                 the edge is one thin line round the outside (a mask keeps only what lies outside every plate). */}
             <defs>
