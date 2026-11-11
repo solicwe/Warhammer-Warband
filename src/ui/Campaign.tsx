@@ -54,17 +54,11 @@ const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string
   battle: { name: 'Battle', icon: 'fight', note: 'A full battle: the mission, Tactical secondaries, 5 rounds. Win to earn Scrap and rewards.' },
   elite: { name: 'Elite Miniboss', icon: 'skull', note: 'A full battle against a tougher foe with a boss rule. Yields high Scrap and rare relics.' },
   armory: { name: 'Munitorum Depot', icon: 'shop', note: '+25 Scrap, then take one: a reinforcement unit for free, or a relic (one you hold levels up).' },
-  medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Restore lost Fate, hold a tactical briefing for +1 CP per battle, or refund army tree nodes.' },
+  medicae: { name: 'Medicae Field Camp', icon: 'heal', note: 'Repair Fleet Integrity, hold a tactical briefing for +1 CP per battle, or refund army tree nodes.' },
   supply: { name: 'Supply drop', icon: 'cards', note: 'Secure a supply cache: choose from units, relics, or scrap.' },
   boss: { name: 'The Warlord Boss', icon: 'trophy', note: 'A 5-round climactic battle against the enemy warlord with two special rules.' },
 };
 const LEVEL: Record<string, string> = { easy: 'Easy', normal: 'Normal', hard: 'Hard', expert: 'Expert' };
-const PATRON_ICONS: Record<PatronContractId, string> = {
-  PATRON_MECHANICUS: '[Mechanicus]',
-  PATRON_ROGUE_TRADER: '[Rogue Trader]',
-  PATRON_INQUISITION: '[Inquisition]',
-  PATRON_AUXILIA: '[Auxilia]',
-};
 
 
 export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: Props) {
@@ -240,22 +234,42 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 </thead>
                 <tbody>
                   <tr style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Fleet Integrity</td>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <Icon name="heal" size={13} />
+                        <span>Fleet Integrity</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '6px 10px' }}>100 HP Health Bar</td>
                     <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Defeats deal scaled damage; comeback supply drops at 75, 50, 25 HP</td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Scrap Economy</td>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <Icon name="shop" size={13} />
+                        <span>Scrap Economy</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '6px 10px' }}>10% Interest & Consolation</td>
                     <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Defeats award bonus Scrap (Damage x 3) to fund rapid comeback recruits</td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid #334155' }}>
-                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>Compression Engine</td>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <Icon name="shield" size={13} />
+                        <span>Compression Engine</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '6px 10px' }}>Merge Duplicates (Tier I-III)</td>
                     <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Deploy max 8 squads; elite multipliers without board clutter or lag</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>War Room Council</td>
+                    <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <Icon name="tabletop" size={13} />
+                        <span>War Room Council</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '6px 10px' }}>Clock & Advisors</td>
                     <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Pre-set 5 turn directives and Command Phase advisor perks</td>
                   </tr>
@@ -640,12 +654,23 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
         <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <span className="cmp-scrap" title="Fleet Integrity: campaign HP">
-          <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold' }}>
-            Fleet HP: {run.fleetIntegrityHP ?? 100}/100
+          <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Icon name="heal" size={13} />
+            <span>Fleet HP: {run.fleetIntegrityHP ?? 100}/100</span>
           </span>
           {(run.winLossStreak ?? 0) !== 0 && (
-            <span style={{ marginLeft: 4, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444' }}>
-              {(run.winLossStreak ?? 0) > 0 ? `Streak: +${run.winLossStreak}` : `Losses: ${Math.abs(run.winLossStreak ?? 0)}`}
+            <span style={{ marginLeft: 4, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              {(run.winLossStreak ?? 0) > 0 ? (
+                <>
+                  <Icon name="zap" size={12} />
+                  <span>Streak: +{run.winLossStreak}</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="skull" size={12} />
+                  <span>Losses: {Math.abs(run.winLossStreak ?? 0)}</span>
+                </>
+              )}
             </span>
           )}
         </span>
@@ -653,11 +678,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <button
           type="button"
           className="btn small"
-          style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold', marginLeft: 6 }}
+          style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}
           onClick={() => { setWarRoomTab('compression'); setShowWarRoom(true); }}
           title="Open War Room & Strategium Council"
         >
-          War Room
+          <Icon name="tabletop" size={14} />
+          <span>War Room</span>
         </button>
         <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
       </header>
@@ -683,13 +709,30 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             {run.list.units.map((u) => {
               const attachedSquad = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : undefined;
               const ledBy = run.list.units.filter((x) => x.attachTo === u.uid);
+              const tier = u.compressionTier ?? 1;
               return (
                 <div key={u.uid} className="cmp-unit">
                   <div>
-                    {isVeteran(u) && <span className="cmp-rank-badge">VETERAN</span>}
+                    {isVeteran(u) && <span className="cmp-rank-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="sparkles" size={10} /> VETERAN</span>}
+                    {tier > 1 && (
+                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', borderColor: '#f59e0b' }}>
+                        <Icon name="star" size={10} /> Tier {tier}
+                      </span>
+                    )}
+                    {u.apexDesignation && (
+                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#34d399', borderColor: '#10b981' }}>
+                        <Icon name="trophy" size={10} /> {APEX_DESIGNATIONS[u.apexDesignation]?.name}
+                      </span>
+                    )}
+                    {u.tempAmmoLoadout && (
+                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#60a5fa', borderColor: '#3b82f6' }}>
+                        <Icon name="crosshair" size={10} /> {MUNITORUM_AMMO[u.tempAmmoLoadout]?.name}
+                      </span>
+                    )}
                     <span>{u.datasheet}{u.models > 1 ? ` ×${u.models}` : ''}</span>
                     {attachedSquad && (
                       <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+                        <Icon name="leader" size={11} />
                         {getPortrait(attachedSquad.datasheet) && (
                           <img src={getPortrait(attachedSquad.datasheet)!} alt="" style={{ width: 14, height: 14, borderRadius: 3, objectFit: 'cover' }} />
                         )}
@@ -698,6 +741,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     )}
                     {ledBy.length > 0 && (
                       <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}>
+                        <Icon name="leader" size={11} />
                         {ledBy.map((l) => {
                           const lp = getPortrait(l.datasheet);
                           return (
@@ -923,10 +967,25 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         {/* Cleared Garrison Outpost Detail Panel */}
         {focused && !run.over && run.path.includes(focused.id) && !run.offer && (
           <section className="cmp-detail slate garrison-outpost"><div className="slate-in">
-            <div className="cmp-kicker">Sector Garrison Outpost</div>
+            <div className="cmp-kicker" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Icon name="hold" size={13} />
+              <span>Sector Garrison Outpost</span>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, padding: '4px 8px', borderRadius: 4, background: run.fortifiedNodeIds?.includes(focused.id) ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)', color: run.fortifiedNodeIds?.includes(focused.id) ? '#f59e0b' : '#38bdf8', border: '1px solid currentColor' }}>{run.fortifiedNodeIds?.includes(focused.id) ? 'BASTION' : 'GARRISON'}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, padding: '4px 8px', borderRadius: 4, background: run.fortifiedNodeIds?.includes(focused.id) ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)', color: run.fortifiedNodeIds?.includes(focused.id) ? '#f59e0b' : '#38bdf8', border: '1px solid currentColor', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {run.fortifiedNodeIds?.includes(focused.id) ? (
+                    <>
+                      <Icon name="shield" size={12} />
+                      <span>BASTION</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="hold" size={12} />
+                      <span>GARRISON</span>
+                    </>
+                  )}
+                </span>
                 <div>
                   <b style={{ color: '#fef08a' }}>{KIND[focused.kind].name} Outpost (Layer {focused.layer + 1})</b>
                   <div className="tiny muted">
@@ -946,12 +1005,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     setInfo(`Fortified ${KIND[focused.kind].name} into Bastion (+100% Buffs)!`);
                     play('good');
                   }}
-                  style={{ fontWeight: 800 }}
+                  style={{ fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                 >
-                  Fortify Outpost (60 Scrap)
+                  <Icon name="shield" size={13} />
+                  <span>Fortify Outpost (60 Scrap)</span>
                 </button>
               ) : (
-                <span className="chip good small" style={{ fontWeight: 800 }}>Bastion Lv.2 (Max Level)</span>
+                <span className="chip good small" style={{ fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Icon name="check" size={11} />
+                  <span>Bastion Lv.2 (Max Level)</span>
+                </span>
               )}
             </div>
 
@@ -963,14 +1026,17 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               const buffs = calculateGarrisonBuffs(visitedGarrisons, run.fortifiedNodeIds ?? []);
               return (
                 <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 6, fontSize: 12 }}>
-                  <div style={{ fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>Active Sector Garrison Benefits:</div>
+                  <div style={{ fontWeight: 700, color: '#f59e0b', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Icon name="hold" size={13} />
+                    <span>Active Sector Garrison Benefits:</span>
+                  </div>
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', color: '#e2e8f0' }}>
-                    {buffs.scrapDropPercent > 0 && <span>+{buffs.scrapDropPercent}% Scrap Drops</span>}
-                    {buffs.startingShield > 0 && <span>+{buffs.startingShield} Starting Shield HP</span>}
-                    {buffs.startingCP > 0 && <span>+{buffs.startingCP} Starting CP</span>}
-                    {buffs.critDamagePercent > 0 && <span>+{buffs.critDamagePercent}% Crit Damage</span>}
-                    {buffs.earlyRoundsAP > 0 && <span>+{buffs.earlyRoundsAP} AP in R1-R2</span>}
-                    {buffs.turnStartHeal > 0 && <span>+{buffs.turnStartHeal} HP Regeneration</span>}
+                    {buffs.scrapDropPercent > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="shop" size={12} /> +{buffs.scrapDropPercent}% Scrap Drops</span>}
+                    {buffs.startingShield > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="shield" size={12} /> +{buffs.startingShield} Starting Shield HP</span>}
+                    {buffs.startingCP > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="strat" size={12} /> +{buffs.startingCP} Starting CP</span>}
+                    {buffs.critDamagePercent > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="target" size={12} /> +{buffs.critDamagePercent}% Crit Damage</span>}
+                    {buffs.earlyRoundsAP > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="crosshair" size={12} /> +{buffs.earlyRoundsAP} AP in R1-R2</span>}
+                    {buffs.turnStartHeal > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={12} /> +{buffs.turnStartHeal} HP Regeneration</span>}
                   </div>
                 </div>
               );
@@ -1017,7 +1083,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 {/* 1. Pre-Battle Dock Header with Auto-Optimize button */}
                 <div className="prebattle-header">
                   <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    Pre-Battle Strategium Dock
+                    <Icon name="radar" size={15} />
+                    <span>Pre-Battle Strategium Dock</span>
                   </span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
@@ -1031,6 +1098,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         padding: '4px 10px',
                         borderRadius: 6,
                         boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
                       }}
                       onClick={() => {
                         setRun(autoOptimizePreBattle(run, fac));
@@ -1039,18 +1109,20 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       }}
                       title="Automatically configures the Tactical Clock to your army's weapon profile and equips available Apex badges"
                     >
-                      Auto-Optimize Tactics
+                      <Icon name="sparkles" size={13} />
+                      <span>Auto-Optimize Tactics</span>
                     </button>
                     <button
                       type="button"
                       className="btn small ghost"
-                      style={{ fontSize: 11 }}
+                      style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                       onClick={() => {
                         setWarRoomTab('tacticalClock');
                         setShowWarRoom(true);
                       }}
                     >
-                      Configure
+                      <Icon name="gear" size={12} />
+                      <span>Configure</span>
                     </button>
                   </div>
                 </div>
@@ -1097,8 +1169,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         }}
                       >
                         <span className="prebattle-clock-round">Round {rIdx + 1}</span>
-                        
-                        <span className="prebattle-clock-name">{d?.name ?? directiveId}</span>
+                        <span className="prebattle-clock-name" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <Icon name={(d?.icon || 'history') as IconName} size={13} />
+                          <span>{d?.name ?? directiveId}</span>
+                        </span>
                       </div>
                     );
                   })}
@@ -1107,8 +1181,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 {/* 3. Munitorum Ammo & Stimms Quick Shop */}
                 <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 8, marginTop: 4 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#f59e0b' }}>
-                      Munitorum Loadout (1-Match Consumables):
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="wargear" size={14} />
+                      <span>Munitorum Loadout (1-Match Consumables):</span>
                     </span>
                     <span className="tiny muted">Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0} Scrap</b></span>
                   </div>
@@ -1135,7 +1210,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           title={def.desc}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <b>{def.name}</b>
+                            <b style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <Icon name={(def.icon || 'crosshair') as IconName} size={14} />
+                              <span>{def.name}</span>
+                            </b>
                             <span style={{ color: '#fef08a', fontWeight: 700 }}>{cost} Scrap</span>
                           </div>
                           <span className="tiny muted" style={{ fontSize: 9.5, lineHeight: 1.2 }}>
@@ -1151,8 +1229,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     <div style={{ marginTop: 10, padding: 12, background: '#111418', borderRadius: 8, border: '1.5px solid #38bdf8' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <div>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
-                            Select Squad to Equip {MUNITORUM_AMMO[ammoShopTarget].name}:
+                          <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Icon name="target" size={15} />
+                            <span>Select Squad to Equip {MUNITORUM_AMMO[ammoShopTarget].name}:</span>
                           </span>
                           <div className="tiny muted" style={{ marginTop: 2 }}>{MUNITORUM_AMMO[ammoShopTarget].desc}</div>
                         </div>
@@ -1196,11 +1275,31 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                   </div>
                                   <div className="tiny muted" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
                                     <span>{u.pts + (u.wargearPts ?? 0)} pts</span>
-                                    {tier > 1 && <span style={{ color: '#f59e0b', fontWeight: 800 }}>Tier {tier}</span>}
-                                    {attachedTo && <span style={{ color: '#f59e0b' }}>[With {attachedTo.datasheet}]</span>}
-                                    {ledByUnits.length > 0 && <span style={{ color: '#38bdf8' }}>[Led by {ledByUnits.map((l) => l.datasheet).join(', ')}]</span>}
-                                    {enhList.length > 0 && <span style={{ color: '#c084fc' }}>[{enhList[0]}]</span>}
-                                    {hasOther && <span style={{ color: '#94a3b8' }}>[{u.tempAmmoLoadout?.split('_')[0]}]</span>}
+                                    {tier > 1 && (
+                                      <span style={{ color: '#f59e0b', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                        <Icon name="star" size={10} /> Tier {tier}
+                                      </span>
+                                    )}
+                                    {attachedTo && (
+                                      <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                        <Icon name="leader" size={10} /> [With {attachedTo.datasheet}]
+                                      </span>
+                                    )}
+                                    {ledByUnits.length > 0 && (
+                                      <span style={{ color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                        <Icon name="leader" size={10} /> [Led by {ledByUnits.map((l) => l.datasheet).join(', ')}]
+                                      </span>
+                                    )}
+                                    {enhList.length > 0 && (
+                                      <span style={{ color: '#c084fc', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                        <Icon name="enhancement" size={10} /> [{enhList[0]}]
+                                      </span>
+                                    )}
+                                    {hasOther && (
+                                      <span style={{ color: '#94a3b8', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                                        <Icon name="crosshair" size={10} /> [{u.tempAmmoLoadout?.split('_')[0]}]
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -1208,7 +1307,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                               <button
                                 type="button"
                                 className={`btn small ${isEquipped ? 'ghost' : 'primary'}`}
-                                style={{ padding: '4px 10px', fontSize: 11, flexShrink: 0, fontWeight: 700 }}
+                                style={{ padding: '4px 10px', fontSize: 11, flexShrink: 0, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}
                                 onClick={() => {
                                   if (isEquipped) {
                                     const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, tempAmmoLoadout: undefined } : x));
@@ -1216,12 +1315,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                                     play('tick');
                                   } else {
                                     setRun(buyMunitorumAmmo(run, u.uid, ammoShopTarget));
-                                    play('good');
                                     setInfo(`Equipped ${MUNITORUM_AMMO[ammoShopTarget].name} on ${squadLabel}!`);
                                   }
                                 }}
                               >
-                                {isEquipped ? 'Remove' : 'Equip'}
+                                <Icon name={isEquipped ? 'check' : 'plus'} size={11} />
+                                <span>{isEquipped ? 'Remove' : 'Equip'}</span>
                               </button>
                             </div>
                           );
@@ -1255,15 +1354,19 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <div className="cmp-armory-modal" style={{ maxHeight: '90vh', maxWidth: 640 }}>
             <div className="cmp-armory-header">
               <div className="cmp-armory-header-center">
-                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>Warlord Trophy Claim</div>
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Icon name="trophy" size={20} />
+                  <span>Warlord Trophy Claim</span>
+                </div>
                 <div className="cmp-armory-sub">The Enemy Warlord has fallen! Absorb a Boss Rule into your Trophy Rack (max 3 slots).</div>
               </div>
             </div>
             <div className="cmp-armory-body" style={{ padding: 16 }}>
               {/* Current Trophy Rack */}
               <div style={{ marginBottom: 14, padding: 10, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', marginBottom: 6 }}>
-                  Active Trophy Rack ({run.absorbedBossRules?.length ?? 0}/3 Slots Filled):
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Icon name="trophy" size={13} />
+                  <span>Active Trophy Rack ({run.absorbedBossRules?.length ?? 0}/3 Slots Filled):</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {[0, 1, 2].map((slotIdx) => {
@@ -1286,8 +1389,9 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
               </div>
 
               {/* Boss Rules Available */}
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>
-                Select a Warlord Rule to Absorb:
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="skull" size={14} style={{ color: '#ef4444' }} />
+                <span>Select a Warlord Rule to Absorb:</span>
               </div>
               <div className="trophy-grid">
                 {run.pendingBossTrophyRules.map((rId) => {
@@ -1323,6 +1427,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         type="button"
                         className="btn primary small wide"
                         disabled={isLv2 || rackFull}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                         onClick={() => {
                           const nextRun = absorbBossRule(run, b.id);
                           setRun({ ...nextRun, pendingBossTrophyRules: undefined });
@@ -1330,7 +1435,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           play('good');
                         }}
                       >
-                        {isLv2 ? 'Already at Max Lv.2' : rackFull ? 'Trophy Rack Full' : isLv1 ? 'Ascend to Apex Lv.2' : 'Absorb Boss Rule'}
+                        <Icon name={isLv2 ? 'check' : isLv1 ? 'star' : 'trophy'} size={13} />
+                        <span>{isLv2 ? 'Already at Max Lv.2' : rackFull ? 'Trophy Rack Full' : isLv1 ? 'Ascend to Apex Lv.2' : 'Absorb Boss Rule'}</span>
                       </button>
                     </div>
                   );
@@ -1342,13 +1448,15 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 <button
                   type="button"
                   className="btn ghost small"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   onClick={() => {
                     setRun({ ...run, scrap: (run.scrap ?? 0) + 100, pendingBossTrophyRules: undefined });
                     setInfo('Scavenged +100 Scrap from the defeated Warlord!');
                     play('gem');
                   }}
                 >
-                  Salvage Remains for +100 Scrap instead
+                  <Icon name="shop" size={13} />
+                  <span>Salvage Remains for +100 Scrap instead</span>
                 </button>
               </div>
             </div>
@@ -1362,7 +1470,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <div className="cmp-armory-modal" style={{ maxHeight: '92vh', maxWidth: 680 }}>
             <div className="cmp-armory-header">
               <div className="cmp-armory-header-center">
-                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>High Lords of Terra: Faction Patronage</div>
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Icon name="cards" size={20} />
+                  <span>High Lords of Terra: Faction Patronage</span>
+                </div>
                 <div className="cmp-armory-sub">Select your sponsor covenant for this Sector campaign to receive permanent buffs & rewards.</div>
               </div>
               <button type="button" className="cmp-close-btn" onClick={() => setDismissPatronModal(true)} title="Decide Later">
@@ -1388,8 +1499,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       }}
                     >
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                          <Icon name={(p.icon || 'cards') as IconName} size={22} style={{ color: '#f59e0b', flexShrink: 0 }} />
                           <div>
                             <b style={{ color: '#fef08a', fontSize: 14 }}>{p.name}</b>
                             <div className="tiny muted">{p.sponsor}</div>
@@ -1406,6 +1517,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       <button
                         type="button"
                         className="btn primary small wide"
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                         onClick={() => {
                           setRun(selectPatronContract(run, cid));
                           setDismissPatronModal(true);
@@ -1413,7 +1525,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           play('good');
                         }}
                       >
-                        Sign Covenant
+                        <Icon name="check" size={13} />
+                        <span>Sign Covenant</span>
                       </button>
                     </div>
                   );
@@ -1424,9 +1537,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 <button
                   type="button"
                   className="btn ghost small"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   onClick={() => setDismissPatronModal(true)}
                 >
-                  Decide Later in War Room
+                  <Icon name="tabletop" size={13} />
+                  <span>Decide Later in War Room</span>
                 </button>
               </div>
             </div>
@@ -1458,15 +1573,33 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </div>
 
             <div className="cmp-armory-body">
-              <div className="cmp-armory-tabs">
-                <button className={`cmp-armory-tab ${rosterTab === 'roster' ? 'active' : ''}`} onClick={() => setRosterTab('roster')}>
-                  Active Roster ({run.list.units.length})
+              <div className="cmp-armory-tabs" style={{ display: 'flex', gap: 4 }}>
+                <button
+                  type="button"
+                  className={`cmp-armory-tab ${rosterTab === 'roster' ? 'active' : ''}`}
+                  onClick={() => setRosterTab('roster')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Icon name="shield" size={14} />
+                  <span>Active Roster ({run.list.units.length})</span>
                 </button>
-                <button className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`} onClick={() => setRosterTab('tech')}>
-                  Army Tree{run.renown ? ` (${run.renown})` : ''}
+                <button
+                  type="button"
+                  className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`}
+                  onClick={() => setRosterTab('tech')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Icon name="trophy" size={14} />
+                  <span>Army Tree{run.renown ? ` (${run.renown})` : ''}</span>
                 </button>
-                <button className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`} onClick={() => setRosterTab('detachments')}>
-                  Detachments ({run.list.detachments?.length ?? 1})
+                <button
+                  type="button"
+                  className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`}
+                  onClick={() => setRosterTab('detachments')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Icon name="swords" size={14} />
+                  <span>Detachments ({run.list.detachments?.length ?? 1})</span>
                 </button>
               </div>
 
@@ -1688,6 +1821,15 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   const load = transportLoads(run.list, fac).find((t) => t.uid === u.uid);
                   const carried = load?.riders.map((r) => run.list.units.find((x) => x.uid === r)?.datasheet).filter(Boolean) ?? [];
                   const wg = wargearSummary(sheet, u);
+                  const dupes = run.list.units.filter((x) => x.datasheet === u.datasheet);
+                  const dupeIdx = dupes.length > 1 ? dupes.findIndex((x) => x.uid === u.uid) + 1 : null;
+                  const squadLabel = dupeIdx ? `${u.datasheet} #${dupeIdx}` : u.datasheet;
+                  const rank = u.compressionTier ?? 1;
+                  const apex = u.apexDesignation ? APEX_DESIGNATIONS[u.apexDesignation] : null;
+                  const ammo = u.tempAmmoLoadout ? MUNITORUM_AMMO[u.tempAmmoLoadout] : null;
+                  const enhList = (u.enhancements && u.enhancements.length > 0)
+                    ? u.enhancements
+                    : (u.enhancement ? [{ name: u.enhancement, pts: u.enhancementPts ?? 0 }] : []);
                   const line = [
                     u.warlord && 'Warlord',
                     leads && !inGroup && `${supportIn(run.list, sheet) ? 'Support for' : 'Leading'} ${leads.datasheet}`,
@@ -1703,15 +1845,36 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       <button type="button" className="ab-row-main" onClick={() => setMenu(isOpen ? null : u.uid)}>
                         <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
                         <span className="ab-row-text">
-                          <span className="ab-name">
-                            {u.datasheet} <span className="ab-count">({u.models})</span>
+                          <span className="ab-name" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span>{squadLabel}</span>
+                            <span className="ab-count">({u.models})</span>
+                            {rank > 1 && (
+                              <span className="chip warn small" style={{ fontSize: 10, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name="star" size={10} /> Tier {rank === 3 ? 'III' : 'II'}
+                              </span>
+                            )}
+                            {apex && (
+                              <span className="chip good small" style={{ fontSize: 10, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name="trophy" size={10} /> {apex.name}
+                              </span>
+                            )}
+                            {ammo && (
+                              <span className="chip subtle small" style={{ fontSize: 10, padding: '1px 5px', color: '#38bdf8', borderColor: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name="crosshair" size={10} /> {ammo.name}
+                              </span>
+                            )}
+                            {enhList.length > 0 && (
+                              <span className="chip warn small" style={{ fontSize: 10, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name="enhancement" size={10} /> {enhList.length > 1 ? `${enhList.length} Enh` : enhList[0].name}
+                              </span>
+                            )}
                             {sheet && sheet.keywords.includes('EPIC HERO') && (
-                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                              <span className="chip subtle small" style={{ color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.4)', background: 'rgba(192, 132, 252, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
                                 Epic Hero
                               </span>
                             )}
                             {sheet && sheet.keywords.includes('CHARACTER') && !sheet.keywords.includes('EPIC HERO') && (
-                              <span className="chip subtle small" style={{ marginLeft: 6, color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
+                              <span className="chip subtle small" style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.12)', fontSize: '11px', padding: '1px 6px' }}>
                                 Character
                               </span>
                             )}
@@ -1727,7 +1890,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       <button
                         type="button"
                         className="ab-kebab"
-                        aria-label={`Options for ${u.datasheet}`}
+                        aria-label={`Options for ${squadLabel}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           const r = e.currentTarget.getBoundingClientRect();

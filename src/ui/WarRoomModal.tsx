@@ -27,7 +27,7 @@ import {
   type PatronContractId,
   type TacticalClockDirectiveId,
 } from '../engine/campaignSystems';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { UnitArt } from './ArmyBuilder';
 
 interface WarRoomModalProps {
@@ -81,11 +81,15 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
         <div className="cmp-armory-header">
           <button type="button" className="appbar-back-btn" onClick={onClose} aria-label="Back">&lt;</button>
           <div className="cmp-armory-header-center">
-            <div className="cmp-armory-title">
+            <div className="cmp-armory-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Icon name="tabletop" size={18} />
               <span>War Room & Strategium Council</span>
             </div>
-            <div className="cmp-armory-sub">
-              Zero-Collision Rule Engine · Fleet Integrity: {run.fleetIntegrityHP ?? 100}/100 HP
+            <div className="cmp-armory-sub" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span>Zero-Collision Rule Engine</span>
+              <span>·</span>
+              <Icon name="heal" size={13} style={{ color: '#10b981' }} />
+              <span>Fleet Integrity: {run.fleetIntegrityHP ?? 100}/100 HP</span>
             </div>
           </div>
           <div className="cmp-armory-header-right">
@@ -100,33 +104,37 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             type="button"
             className={`cmp-armory-tab ${tab === 'compression' ? 'active' : ''}`}
             onClick={() => setTab('compression')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'compression' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'compression' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'compression' ? '2px solid #f59e0b' : 'none', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', fontWeight: tab === 'compression' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'compression' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'compression' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            Army & Compression ({units.length}/8)
+            <Icon name="shield" size={14} />
+            <span>Army & Compression ({units.length}/8)</span>
           </button>
           <button
             type="button"
             className={`cmp-armory-tab ${tab === 'highCommand' ? 'active' : ''}`}
             onClick={() => setTab('highCommand')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'highCommand' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'highCommand' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'highCommand' ? '2px solid #f59e0b' : 'none', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', fontWeight: tab === 'highCommand' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'highCommand' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'highCommand' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            High Command ({activeAdvisors.length}/{maxSlots})
+            <Icon name="leader" size={14} />
+            <span>High Command ({activeAdvisors.length}/{maxSlots})</span>
           </button>
           <button
             type="button"
             className={`cmp-armory-tab ${tab === 'tacticalClock' ? 'active' : ''}`}
             onClick={() => setTab('tacticalClock')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'tacticalClock' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'tacticalClock' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'tacticalClock' ? '2px solid #f59e0b' : 'none', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', fontWeight: tab === 'tacticalClock' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'tacticalClock' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'tacticalClock' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            5-Round Clock
+            <Icon name="history" size={14} />
+            <span>5-Round Clock</span>
           </button>
           <button
             type="button"
             className={`cmp-armory-tab ${tab === 'patron' ? 'active' : ''}`}
             onClick={() => setTab('patron')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'patron' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'patron' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'patron' ? '2px solid #f59e0b' : 'none', cursor: 'pointer' }}
+            style={{ padding: '10px 16px', fontWeight: tab === 'patron' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'patron' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'patron' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            Patron Contracts
+            <Icon name="cards" size={14} />
+            <span>Patron Contracts</span>
           </button>
         </div>
 
@@ -138,7 +146,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
               {/* Compression Engine Rules Table */}
               <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #d97706' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <b style={{ color: '#f59e0b', fontSize: '0.95em' }}>Anti-Lag Elite Compression Engine</b>
+                  <b style={{ color: '#f59e0b', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="shield" size={16} />
+                    <span>Anti-Lag Elite Compression Engine</span>
+                  </b>
                   <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
                     Deployment Limit: Max 8 Active Squads
                   </span>
@@ -160,24 +171,38 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                     </thead>
                     <tbody>
                       <tr style={{ borderBottom: '1px solid #334155' }}>
-                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#94a3b8' }}>Tier I</td>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#94a3b8' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="check" size={12} /> Tier I</span>
+                        </td>
                         <td style={{ padding: '6px 10px' }}>1 Squad</td>
                         <td style={{ padding: '6px 10px' }}>1.0x (Base)</td>
                         <td style={{ padding: '6px 10px' }}>1.0x (Base)</td>
                         <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>Standard datasheet profile</td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #334155', background: 'rgba(245, 158, 11, 0.05)' }}>
-                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#fbbf24' }}>Tier II (Elite)</td>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#fbbf24' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="star" size={12} /> Tier II (Elite)</span>
+                        </td>
                         <td style={{ padding: '6px 10px' }}>2 Duplicate Squads</td>
-                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>1.8x</td>
-                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>1.6x</td>
+                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> 1.8x</span>
+                        </td>
+                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> 1.6x</span>
+                        </td>
                         <td style={{ padding: '6px 10px', color: '#fef08a' }}>+1 Objective Control (OC), +1 Armour Save</td>
                       </tr>
                       <tr style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
-                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#f87171' }}>Tier III (Apex)</td>
+                        <td style={{ padding: '6px 10px', fontWeight: 'bold', color: '#f87171' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Icon name="trophy" size={12} /> Tier III (Apex)</span>
+                        </td>
                         <td style={{ padding: '6px 10px' }}>3 Duplicate Squads</td>
-                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>2.6x</td>
-                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>2.3x</td>
+                        <td style={{ padding: '6px 10px', color: '#34d399', fontWeight: 'bold' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={11} /> 2.6x</span>
+                        </td>
+                        <td style={{ padding: '6px 10px', color: '#38bdf8', fontWeight: 'bold' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="swords" size={11} /> 2.3x</span>
+                        </td>
                         <td style={{ padding: '6px 10px', color: '#f87171', fontWeight: 'bold' }}>+1 Damage (All Weapons), Feel No Pain 5+</td>
                       </tr>
                     </tbody>
@@ -188,7 +213,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
               {/* Apex Designations Overview Table */}
               <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <b style={{ color: '#38bdf8', fontSize: '0.95em' }}>Apex Battlefield Designations</b>
+                  <b style={{ color: '#38bdf8', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="crosshair" size={16} />
+                    <span>Apex Battlefield Designations</span>
+                  </b>
                   <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
                     Max 1 Squad Per Badge
                   </span>
@@ -219,7 +247,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         return (
                           <tr key={apexId} style={{ borderBottom: '1px solid #334155' }}>
                             <td style={{ padding: '6px 10px', fontWeight: 'bold', color: assignedUnit ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>
-                              {def.name}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <Icon name={(def.icon || 'star') as IconName} size={14} />
+                                <span>{def.name}</span>
+                              </span>
                             </td>
                             <td style={{ padding: '6px 10px', color: '#cbd5e1' }}>
                               {def.desc}
@@ -245,7 +276,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
               </div>
 
               {/* Squad List with Portraits, Distinct Numbering, Upgrades & Compress Buttons */}
-              <h4 style={{ margin: '16px 0 8px 0', color: '#e5e7eb' }}>Active Squads & Rank Compression:</h4>
+              <h4 style={{ margin: '16px 0 8px 0', color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="fight" size={16} />
+                <span>Active Squads & Rank Compression:</span>
+              </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {units.map((u) => {
                   const tier = u.compressionTier ?? 1;
@@ -309,13 +343,15 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                               {u.pts + (u.wargearPts ?? 0)} pts · {u.models} models
                             </span>
                             {tier > 1 && (
-                              <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: tier === 3 ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)', color: tier === 3 ? '#fcd34d' : '#38bdf8', border: `1px solid ${tier === 3 ? '#f59e0b' : '#38bdf8'}` }}>
-                                {tier === 3 ? 'Tier III (Apex Legend)' : 'Tier II (Elite)'}
+                              <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: tier === 3 ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)', color: tier === 3 ? '#fcd34d' : '#38bdf8', border: `1px solid ${tier === 3 ? '#f59e0b' : '#38bdf8'}`, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name={tier === 3 ? 'trophy' : 'star'} size={10} />
+                                <span>{tier === 3 ? 'Tier III (Apex Legend)' : 'Tier II (Elite)'}</span>
                               </span>
                             )}
                             {isOverStrikeCap && (
-                              <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#334155', color: '#cbd5e1' }}>
-                                Support Bench (Reserves)
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#334155', color: '#cbd5e1', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                <Icon name="reserves" size={10} />
+                                <span>Support Bench (Reserves)</span>
                               </span>
                             )}
                           </div>
@@ -323,28 +359,33 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                           {/* Upgrades, Attachments & Ammo Badges */}
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                             {attachedTo && (
-                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                                Attached to: {attachedTo.datasheet}
+                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name="leader" size={11} />
+                                <span>Attached to: {attachedTo.datasheet}</span>
                               </span>
                             )}
                             {ledByUnits.map((l) => (
-                              <span key={l.uid} style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-                                Led by: {l.datasheet}
+                              <span key={l.uid} style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name="leader" size={11} />
+                                <span>Led by: {l.datasheet}</span>
                               </span>
                             ))}
                             {enhancements.map((enh, enhIdx) => (
-                              <span key={enhIdx} style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-                                Enhancement: {enh}
+                              <span key={enhIdx} style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name="enhancement" size={11} />
+                                <span>Enhancement: {enh}</span>
                               </span>
                             ))}
                             {u.tempAmmoLoadout && (
-                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                                Ammo: {MUNITORUM_AMMO[u.tempAmmoLoadout]?.name}
+                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name={(MUNITORUM_AMMO[u.tempAmmoLoadout]?.icon || 'crosshair') as IconName} size={11} />
+                                <span>Ammo: {MUNITORUM_AMMO[u.tempAmmoLoadout]?.name}</span>
                               </span>
                             )}
                             {u.apexDesignation && (
-                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                                {APEX_DESIGNATIONS[u.apexDesignation]?.name}
+                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <Icon name={(APEX_DESIGNATIONS[u.apexDesignation]?.icon || 'trophy') as IconName} size={11} />
+                                <span>{APEX_DESIGNATIONS[u.apexDesignation]?.name}</span>
                               </span>
                             )}
                           </div>
@@ -377,10 +418,11 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                           <button
                             type="button"
                             className="btn small primary"
-                            style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold' }}
+                            style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                             onClick={() => onUpdateRun(compressSquad(run, u.uid))}
                           >
-                            Rank Up to Tier {tier + 1}
+                            <Icon name="star" size={13} />
+                            <span>Rank Up to Tier {tier + 1}</span>
                           </button>
                         )}
                       </div>
@@ -396,8 +438,11 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <h4 style={{ margin: 0, color: '#f8fafc' }}>Strategium Council ({activeAdvisors.length}/{maxSlots} Slots Unlocked)</h4>
-                  <div style={{ fontSize: '0.85em', color: '#94a3b8' }}>Advisors trigger powerful effects in every Command Phase and grant passive campaign bonuses.</div>
+                  <h4 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="leader" size={16} />
+                    <span>Strategium Council ({activeAdvisors.length}/{maxSlots} Slots Unlocked)</span>
+                  </h4>
+                  <div style={{ fontSize: '0.85em', color: '#94a3b8', marginTop: 2 }}>Advisors trigger powerful effects in every Command Phase and grant passive campaign bonuses.</div>
                 </div>
                 {maxSlots < 3 && (
                   <button
@@ -405,16 +450,20 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                     className="btn small"
                     disabled={scrap < (maxSlots === 1 ? 100 : 200)}
                     onClick={() => onUpdateRun(unlockAdvisorSlot(run))}
-                    style={{ background: '#3b82f6', color: '#fff', fontWeight: 'bold' }}
+                    style={{ background: '#3b82f6', color: '#fff', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
-                    Unlock Slot {maxSlots + 1} ({maxSlots === 1 ? '100' : '200'} Scrap)
+                    <Icon name="plus" size={12} />
+                    <span>Unlock Slot {maxSlots + 1} ({maxSlots === 1 ? '100' : '200'} Scrap)</span>
                   </button>
                 )}
               </div>
 
               {/* Advisors Overview Table */}
               <div style={{ background: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
-                <b style={{ color: '#38bdf8', fontSize: '0.9em', display: 'block', marginBottom: 6 }}>High Command Advisor Abilities</b>
+                <b style={{ color: '#38bdf8', fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Icon name="leader" size={14} />
+                  <span>High Command Advisor Abilities</span>
+                </b>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
                     <thead>
@@ -431,7 +480,12 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         const isHired = activeAdvisors.includes(advId);
                         return (
                           <tr key={advId} style={{ borderBottom: '1px solid #334155', background: isHired ? 'rgba(16, 185, 129, 0.08)' : 'transparent' }}>
-                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isHired ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>{def.name}</td>
+                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isHired ? '#34d399' : '#e2e8f0', whiteSpace: 'nowrap' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                <Icon name={(def.icon || 'leader') as IconName} size={13} />
+                                <span>{def.name}</span>
+                              </span>
+                            </td>
                             <td style={{ padding: '5px 8px', color: '#cbd5e1' }}>{def.battleDesc}</td>
                             <td style={{ padding: '5px 8px', color: '#38bdf8' }}>{def.campaignDesc}</td>
                             <td style={{ padding: '5px 8px', color: '#fef08a', whiteSpace: 'nowrap' }}>{def.hireCost} Scrap</td>
@@ -461,7 +515,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <b style={{ color: '#f8fafc' }}>{def.name}</b>
+                        <b style={{ color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Icon name={(def.icon || 'leader') as IconName} size={15} />
+                          <span>{def.name}</span>
+                        </b>
                         <span style={{ fontSize: '0.8em', color: '#fcd34d', fontWeight: 'bold' }}>{def.hireCost} Scrap</span>
                       </div>
                       <div style={{ fontSize: '0.8em', color: '#38bdf8', margin: '6px 0 2px 0', lineHeight: 1.35 }}>
@@ -471,16 +528,19 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         <b>Campaign:</b> {def.campaignDesc}
                       </div>
                       {isHired ? (
-                        <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.85em' }}>[Appointed]</span>
+                        <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.85em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="check" size={13} /> [Appointed]
+                        </span>
                       ) : (
                         <button
                           type="button"
                           className="btn small"
                           disabled={!canHire}
                           onClick={() => onUpdateRun(hireAdvisor(run, advId))}
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
                         >
-                          Hire ({def.hireCost} Scrap)
+                          <Icon name="plus" size={12} />
+                          <span>Hire ({def.hireCost} Scrap)</span>
                         </button>
                       )}
                     </div>
@@ -489,7 +549,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
               </div>
 
               {/* Orbital Strike Bay */}
-              <h4 style={{ margin: '16px 0 8px 0', color: '#f8fafc' }}>Flagship Orbital Bay (Fires in Round 1):</h4>
+              <h4 style={{ margin: '16px 0 8px 0', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="zap" size={16} />
+                <span>Flagship Orbital Bay (Fires in Round 1):</span>
+              </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12 }}>
                 {(Object.keys(ORBITAL_MODULES) as OrbitalModuleId[]).map((modId) => {
                   const def = ORBITAL_MODULES[modId];
@@ -508,7 +571,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <b style={{ color: '#f8fafc' }}>{def.name} (Lv.{currentLvl})</b>
+                        <b style={{ color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Icon name={(def.icon || 'zap') as IconName} size={15} />
+                          <span>{def.name} (Lv.{currentLvl})</span>
+                        </b>
                         {isActive && <span style={{ color: '#60a5fa', fontSize: '0.75em', fontWeight: 'bold' }}>[ACTIVE]</span>}
                       </div>
                       <div style={{ fontSize: '0.8em', color: '#cbd5e1', margin: '6px 0', lineHeight: 1.35 }}>
@@ -516,8 +582,9 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                       </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                         {!isActive && (
-                          <button type="button" className="btn small" onClick={() => onUpdateRun(selectOrbitalModule(run, modId))}>
-                            Select Active
+                          <button type="button" className="btn small" onClick={() => onUpdateRun(selectOrbitalModule(run, modId))} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Icon name="check" size={12} />
+                            <span>Select Active</span>
                           </button>
                         )}
                         {currentLvl < 3 && (
@@ -526,8 +593,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                             className="btn small primary"
                             disabled={scrap < upgradeCost}
                             onClick={() => onUpdateRun(upgradeOrbitalModule(run, modId))}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           >
-                            Upgrade to Lv.{currentLvl + 1} ({upgradeCost} Scrap)
+                            <Icon name="star" size={12} />
+                            <span>Upgrade to Lv.{currentLvl + 1} ({upgradeCost} Scrap)</span>
                           </button>
                         )}
                       </div>
@@ -542,7 +611,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
           {tab === 'tacticalClock' && (
             <div>
               <div style={{ background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                <b style={{ color: '#60a5fa' }}>Pre-Battle Tactical Clock (5-Round Operation Timeline):</b>
+                <b style={{ color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="history" size={16} />
+                  <span>Pre-Battle Tactical Clock (5-Round Operation Timeline):</span>
+                </b>
                 <div style={{ fontSize: '0.85em', color: '#d1d5db', marginTop: 4, lineHeight: 1.4 }}>
                   Arrange 5 distinct Battleplan Directives across Battle Rounds 1 to 5. The engine activates each directive automatically at the start of that battle round. Click Up/Down to reorder.
                 </div>
@@ -570,17 +642,26 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                           Round {idx + 1}
                         </div>
                         <div>
-                          <b style={{ color: '#f8fafc', fontSize: 14 }}>{def?.name || dirId}</b>
+                          <b style={{ color: '#f8fafc', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Icon name={(def?.icon || 'history') as IconName} size={15} />
+                            <span>{def?.name || dirId}</span>
+                          </b>
                           <div style={{ fontSize: '0.8em', color: '#94a3b8', marginTop: 2 }}>{def?.desc}</div>
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', gap: 6 }}>
                         {idx > 0 && (
-                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx - 1)}>Up</button>
+                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx - 1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                            <Icon name="back" size={11} style={{ transform: 'rotate(90deg)' }} />
+                            <span>Up</span>
+                          </button>
                         )}
                         {idx < 4 && (
-                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx + 1)}>Down</button>
+                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx + 1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                            <Icon name="down" size={11} />
+                            <span>Down</span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -594,7 +675,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
           {tab === 'patron' && (
             <div>
               <div style={{ marginBottom: 12 }}>
-                <h4 style={{ margin: 0, color: '#f8fafc' }}>Sector Patronage Contracts:</h4>
+                <h4 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="cards" size={16} />
+                  <span>Sector Patronage Contracts:</span>
+                </h4>
                 <div style={{ fontSize: '0.85em', color: '#94a3b8', marginTop: 4 }}>
                   Sign a covenant with one of the grand 40k factions for this sector. Meet their army condition to gain sector-long buffs and a massive boss payout.
                 </div>
@@ -602,7 +686,10 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
 
               {/* Patron Comparison Table */}
               <div style={{ background: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid #334155' }}>
-                <b style={{ color: '#f59e0b', fontSize: '0.9em', display: 'block', marginBottom: 6 }}>Patron Covenants Comparison</b>
+                <b style={{ color: '#f59e0b', fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Icon name="cards" size={14} />
+                  <span>Patron Covenants Comparison</span>
+                </b>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78em', color: '#f8fafc', background: '#1e293b', borderRadius: 6, overflow: 'hidden' }}>
                     <thead>
@@ -620,12 +707,17 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         const isSigned = run.activePatronContract === cid;
                         return (
                           <tr key={cid} style={{ borderBottom: '1px solid #334155', background: isSigned ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
-                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isSigned ? '#fbbf24' : '#e2e8f0', whiteSpace: 'nowrap' }}>{def.name}</td>
+                            <td style={{ padding: '5px 8px', fontWeight: 'bold', color: isSigned ? '#fbbf24' : '#e2e8f0', whiteSpace: 'nowrap' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                <Icon name={(def.icon || 'cards') as IconName} size={13} />
+                                <span>{def.name}</span>
+                              </span>
+                            </td>
                             <td style={{ padding: '5px 8px', color: '#38bdf8' }}>{def.conditionDesc}</td>
                             <td style={{ padding: '5px 8px', color: '#cbd5e1' }}>{def.buffDesc}</td>
                             <td style={{ padding: '5px 8px', color: '#4ade80' }}>{def.bossRewardDesc}</td>
                             <td style={{ padding: '5px 8px', whiteSpace: 'nowrap' }}>
-                              {isSigned ? <span style={{ color: '#10b981', fontWeight: 'bold' }}>[Signed]</span> : <span style={{ color: '#94a3b8' }}>Available</span>}
+                              {isSigned ? <span style={{ color: '#10b981', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="check" size={11} /> [Signed]</span> : <span style={{ color: '#94a3b8' }}>Available</span>}
                             </td>
                           </tr>
                         );
@@ -650,8 +742,9 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         border: isSigned ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', fontSize: 15, color: isSigned ? '#f59e0b' : '#f8fafc' }}>
-                        {def.name}
+                      <div style={{ fontWeight: 'bold', fontSize: 15, color: isSigned ? '#f59e0b' : '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Icon name={(def.icon || 'cards') as IconName} size={16} />
+                        <span>{def.name}</span>
                       </div>
                       <div style={{ fontSize: '0.78em', color: '#94a3b8', marginBottom: 8 }}>{def.sponsor}</div>
                       <div style={{ fontSize: '0.8em', color: '#fcd34d', marginBottom: 4, lineHeight: 1.35 }}>
@@ -664,10 +757,13 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         <b>Boss Payout:</b> {def.bossRewardDesc}
                       </div>
                       {isSigned ? (
-                        <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '0.85em' }}>[Active Covenant]</div>
+                        <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '0.85em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="check" size={13} /> [Active Covenant]
+                        </div>
                       ) : (
-                        <button type="button" className="btn small primary" onClick={() => onUpdateRun(selectPatronContract(run, cid))}>
-                          Sign Covenant
+                        <button type="button" className="btn small primary" onClick={() => onUpdateRun(selectPatronContract(run, cid))} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="check" size={13} />
+                          <span>Sign Covenant</span>
                         </button>
                       )}
                     </div>

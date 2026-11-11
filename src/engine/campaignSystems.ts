@@ -121,35 +121,35 @@ export const TACTICAL_CLOCK_DIRECTIVES: Record<TacticalClockDirectiveId, Tactica
   SHROUD_OF_NIGHT: {
     id: 'SHROUD_OF_NIGHT',
     name: 'Shroud of Night',
-        icon: '',
+    icon: 'stealth',
     desc: 'All units gain Stealth (-1 to be hit). Enemy ranged weapons cannot target beyond 24" this round.',
     recommendedRound: 1,
   },
   BLITZKRIEG_SURGE: {
     id: 'BLITZKRIEG_SURGE',
     name: 'Blitzkrieg Surge',
-        icon: '',
+    icon: 'advance',
     desc: '+3" Movement, re-roll Advance & Charge rolls, and can Shoot and Charge after Advancing.',
     recommendedRound: 2,
   },
   ANNIHILATION_VOLLEY: {
     id: 'ANNIHILATION_VOLLEY',
     name: 'Annihilation Volley',
-        icon: '',
+    icon: 'crosshair',
     desc: 'All ranged and melee attacks gain [SUSTAINED HITS 1] and +1 Armour Penetration (AP).',
     recommendedRound: 3,
   },
   AEGIS_OF_IRON: {
     id: 'AEGIS_OF_IRON',
     name: 'Aegis of Unyielding Iron',
-        icon: '',
+    icon: 'shield',
     desc: 'All incoming attacks have -1 Damage (min 1) and units gain Feel No Pain 5+.',
     recommendedRound: 4,
   },
   WARMASTER_ASCENDANCY: {
     id: 'WARMASTER_ASCENDANCY',
     name: 'Warmaster Ascendancy',
-        icon: '',
+    icon: 'objective',
     desc: 'Objective Control is doubled (x2). Attacks on Objective markers score Critical Hits on 5+.',
     recommendedRound: 5,
   },
@@ -166,25 +166,25 @@ export const APEX_DESIGNATIONS: Record<ApexDesignationId, ApexDesignationDef> = 
   VANGUARD_SPEARHEAD: {
     id: 'VANGUARD_SPEARHEAD',
     name: 'Apex: Vanguard Spearhead',
-        icon: '',
+    icon: 'target',
     desc: 'Always has Infiltrators & Scouts 6". First time this unit hits an enemy, target is Suppressed (-1 to Hit & cannot use Stratagems this turn).',
   },
   IMMOVABLE_ANVIL: {
     id: 'IMMOVABLE_ANVIL',
     name: 'Apex: Immovable Anvil',
-        icon: '',
+    icon: 'shield',
     desc: '+30% Max Wounds, immune to Battle-shock. While on an Objective, grants +1 to Saving Throws to allies within 6".',
   },
   EXECUTIONER: {
     id: 'EXECUTIONER',
     name: "Apex: Warmaster's Executioner",
-        icon: '',
+    icon: 'swords',
     desc: 'Locks onto highest-points enemy unit (Nemesis). Gains full re-rolls to Hit and Wound and +1 Damage vs Nemesis. Slaying Nemesis grants +50 Scrap.',
   },
   GRAND_SPOTTER: {
     id: 'GRAND_SPOTTER',
     name: 'Apex: Grand Battery Spotter',
-        icon: '',
+    icon: 'radar',
     desc: '+6" Range. When this unit hits an enemy, all other friendly units shooting that target gain +1 to Hit and [IGNORES COVER].',
   },
 };
@@ -202,7 +202,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   KRAKEN_BOLTS: {
     id: 'KRAKEN_BOLTS',
     name: 'Kraken Penetrator Bolts',
-        icon: '',
+    icon: 'crosshair',
     cost: 35,
     usableOn: 'RANGED',
     desc: '+6" Range, +1 AP, and [IGNORES COVER] on all ranged weapons for 1 battle.',
@@ -210,7 +210,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   HELLFIRE_ROUNDS: {
     id: 'HELLFIRE_ROUNDS',
     name: 'Hellfire Bio-Acid Shells',
-        icon: '',
+    icon: 'shoot',
     cost: 40,
     usableOn: 'RANGED',
     desc: 'All ranged weapons gain [ANTI-INFANTRY 3+] and [ANTI-MONSTER 4+] for 1 battle.',
@@ -218,7 +218,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   FRENZON_STIMMS: {
     id: 'FRENZON_STIMMS',
     name: 'Frenzon Combat Stimms',
-        icon: '',
+    icon: 'zap',
     cost: 35,
     usableOn: 'INFANTRY_MOUNTED',
     desc: '+2 Melee Attacks per model and Auto-Advance 6" without rolling dice for 1 battle.',
@@ -226,7 +226,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   MACHINE_SPIRIT_OIL: {
     id: 'MACHINE_SPIRIT_OIL',
     name: 'Blessed Machine-Spirit Oil',
-        icon: '',
+    icon: 'gear',
     cost: 45,
     usableOn: 'VEHICLE_WALKER',
     desc: '+1 BS and +1 WS, and repairs 3 Wounds every Command Phase for 1 battle.',
@@ -234,7 +234,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   PSICANNON_WARD: {
     id: 'PSICANNON_WARD',
     name: 'Null-Field Psicannon Ward',
-        icon: '',
+    icon: 'arcane',
     cost: 30,
     usableOn: 'ALL',
     desc: '4+ Invulnerable Save for 1 battle, and reflects 1 Mortal Wound back to attacker on Save roll of 6.',
@@ -254,7 +254,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_ORDNANCE: {
     id: 'ADV_ORDNANCE',
     name: 'Master of Ordnance',
-        icon: '',
+    icon: 'target',
     battleDesc: 'Start of R1, R3, R5: Mortar bombardment on random enemy on an Objective for 1D3+1 Mortal Wounds and -1 to Hit.',
     campaignDesc: 'Orbital Strike upgrades cost -25% Scrap.',
     hireCost: 100,
@@ -262,7 +262,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_APOTHECARY: {
     id: 'ADV_APOTHECARY',
     name: 'Chief Apothecary / Biophagus',
-        icon: '',
+    icon: 'heal',
     battleDesc: 'Every Command Phase: Heals 2 Wounds to all damaged units (or revives 1 slain infantry model).',
     campaignDesc: 'Restores +3 Fleet Integrity HP after every battle.',
     hireCost: 120,
@@ -270,7 +270,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_LOGIS: {
     id: 'ADV_LOGIS',
     name: 'Logis Strategos',
-        icon: '',
+    icon: 'shop',
     battleDesc: 'Start battle with +1 Command Point (CP).',
     campaignDesc: 'Duplicate unit recruitment tax reduced to 0%, Munitorum Ammo costs 50% less Scrap.',
     hireCost: 110,
@@ -278,7 +278,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_ASTROPATH: {
     id: 'ADV_ASTROPATH',
     name: 'Master Astropath',
-        icon: '',
+    icon: 'radar',
     battleDesc: 'Enemy cannot Deep Strike or deploy Reserves within 12" of friendly rear units.',
     campaignDesc: 'Reveals all node types & enemy factions across the Sector. +1 Free Card Reroll each node.',
     hireCost: 90,
@@ -286,7 +286,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_TECHMARINE: {
     id: 'ADV_TECHMARINE',
     name: 'Forge Master / Mek Boss',
-        icon: '',
+    icon: 'gear',
     battleDesc: 'Command Phase: VEHICLES & MONSTERS gain 3 HP Shield and re-roll Hit rolls of 1.',
     campaignDesc: 'Selling VEHICLE units grants 120% Scrap value (profit!).',
     hireCost: 100,
@@ -294,7 +294,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_COMMISSAR: {
     id: 'ADV_COMMISSAR',
     name: 'Lord Commissar / Enforcer',
-        icon: '',
+    icon: 'bullhorn',
     battleDesc: 'Command Phase: Automatically clears Battle-shock from all units and grants +1 OC.',
     campaignDesc: 'Reduces Fleet Integrity damage taken on defeat by 5 HP.',
     hireCost: 110,
@@ -302,7 +302,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_INQUISITOR: {
     id: 'ADV_INQUISITOR',
     name: 'Ordo Representative',
-        icon: '',
+    icon: 'skull',
     battleDesc: 'Nullifies 1 Boss Rule from Elite/Boss enemies during battle.',
     campaignDesc: '+35% Scrap and rewards from Faction Patronage Contracts.',
     hireCost: 130,
@@ -310,7 +310,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_NAVIGATOR: {
     id: 'ADV_NAVIGATOR',
     name: 'Void Navigator',
-        icon: '',
+    icon: 'map',
     battleDesc: 'Start of Round 1: Redeploy up to 2 friendly units after seeing enemy setup.',
     campaignDesc: 'Allows jumping across any map branch to next layer once per Sector.',
     hireCost: 95,
@@ -330,7 +330,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   LANCE_BATTERY: {
     id: 'LANCE_BATTERY',
     name: 'Lance Strike Battery',
-        icon: '',
+    icon: 'zap',
     descLv1: 'Round 1 start: Strikes highest-cost 2 enemy units for 1D3+2 Mortal Wounds and -1 Save in R1.',
     descLv2: 'Round 1 start: Strikes 2 units for 1D3+3 Mortal Wounds and -1 Save & -1 Toughness in R1.',
     descLv3: 'Round 1 start: Strikes top 3 enemy units for 2D3+2 Mortal Wounds, -1 Save and causes Battle-shock.',
@@ -338,7 +338,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   DROP_POD_ASSAULT: {
     id: 'DROP_POD_ASSAULT',
     name: 'Drop Pod / Teleportarium Assault',
-        icon: '',
+    icon: 'transport',
     descLv1: 'Round 1 start: Deploy 1 friendly unit directly onto center Objective with 4+ Invulnerable Save in R1.',
     descLv2: 'Round 1 start: Deploy 1 unit onto center Objective with 4+ Invuln and +1 to Wound in R1.',
     descLv3: 'Round 1 start: Deploy 2 units directly onto center Objectives with 4+ Invuln and [FIGHTS FIRST] in R1.',
@@ -346,7 +346,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   BLIND_CHAFF_SCREEN: {
     id: 'BLIND_CHAFF_SCREEN',
     name: 'Atmospheric Blind-Chaff & Vox-Jammer',
-        icon: '',
+    icon: 'cloud',
     descLv1: 'Round 1 start: Enemy army suffers -1 to Hit (stacks with Cover) and -2" Movement in R1.',
     descLv2: 'Round 1 start: Enemy suffers -1 to Hit, -3" Move, and cannot fire Overwatch in R1.',
     descLv3: 'Round 1 start: Enemy suffers -1 to Hit, -3" Move, cannot use Stratagems in R1, and friendly units have Lone Operative.',
@@ -356,6 +356,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
 export interface PatronContractDef {
   id: PatronContractId;
   name: string;
+  icon: string;
   sponsor: string;
   conditionDesc: string;
   buffDesc: string;
@@ -366,7 +367,8 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_MECHANICUS: {
     id: 'PATRON_MECHANICUS',
     name: 'Mars Forge-Synod Covenant',
-        sponsor: 'Adeptus Mechanicus',
+    icon: 'gear',
+    sponsor: 'Adeptus Mechanicus',
     conditionDesc: 'Deploy at least 2 VEHICLE or WALKER units in your army.',
     buffDesc: 'Vehicles gain Feel No Pain 5+. Purchasing and upgrading Vehicles costs -25% Scrap.',
     bossRewardDesc: 'Free Epic/Legendary Vehicle unit card + 150 Scrap.',
@@ -374,7 +376,8 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_ROGUE_TRADER: {
     id: 'PATRON_ROGUE_TRADER',
     name: 'Warrant of Trade Investment',
-        sponsor: 'Navis Imperialis & Rogue Traders',
+    icon: 'shop',
+    sponsor: 'Navis Imperialis & Rogue Traders',
     conditionDesc: 'Maintain at least 300 Scrap in reserve.',
     buffDesc: 'Expands Munitorum Hoard interest cap to +100 Scrap/node. +1 additional reward option at every node.',
     bossRewardDesc: '+250 Scrap and 1 free random Level 2 Relic.',
@@ -382,7 +385,8 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_INQUISITION: {
     id: 'PATRON_INQUISITION',
     name: "Inquisitorial Mandate / Warmaster's Favor",
-        sponsor: "Ordo Malleus / Warmaster's Inner Circle",
+    icon: 'skull',
+    sponsor: "Ordo Malleus / Warmaster's Inner Circle",
     conditionDesc: 'Deploy at least 2 CHARACTER or Tier II+ Veteran units.',
     buffDesc: '[PSYCHIC] weapons and Warlord melee attacks deal +1 Damage and ignore Invulnerable Saves from Round 3 onwards.',
     bossRewardDesc: '+5 Renown immediately (unlock 5 tree nodes).',
@@ -390,7 +394,8 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_AUXILIA: {
     id: 'PATRON_AUXILIA',
     name: 'Imperial Siege Auxilia Garrison',
-        sponsor: 'Munitorum Siege Auxilia',
+    icon: 'shield',
+    sponsor: 'Munitorum Siege Auxilia',
     conditionDesc: 'Win the battle scoring 35 or more Primary VP.',
     buffDesc: 'Held Objectives fire automated defense turrets at enemies within 9" each turn (3D6 shots, S5 AP-1 D1).',
     bossRewardDesc: '+25 Fleet Integrity HP and +2 Starting CP permanently.',
