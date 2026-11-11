@@ -133,6 +133,10 @@ export function bankSecondary(s: GameState, p: PlayerId, id: string, vp: number)
   if (P.secMode === 'fixed') P.secFixedVp[id] = (P.secFixedVp[id] ?? 0) + gain;
   else P.secActive = P.secActive.filter((x) => x !== id);
   log(s, `${P.name} +${gain} VP (Secondary: ${secondaryById(id).name})`, 'vp', p);
+  if (s.campaign && p === 0 && gain > 0) {
+    s.campaignScrap = (s.campaignScrap ?? 0) + 25;
+    log(s, `🎯 Tactical Secondary Mastery: +25 Scrap payout!`, 'vp', 0);
+  }
   return gain;
 }
 

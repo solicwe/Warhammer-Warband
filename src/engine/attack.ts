@@ -302,7 +302,9 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + cm.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
         pool.woundNote = [`S${strength} vs T${T_T}`, ...(wm ? [`Buff ${wm > 0 ? '+' : ''}${wm}`] : []), ...cm.otherNotes].join(' · ');
-        if (psy) pool.psychic = true;
+        if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
+        if (s.gildedBonus && A.owner === 0 && s.gildedBonus.critThresholdBonus) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
+        if (s.tacticalClockDirective === 'WARMASTER_ASCENDANCY' && A.owner === 0) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name }, pool);
@@ -412,7 +414,9 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
         applyCombatMods(pool, cm);
-        if (psy) pool.psychic = true;
+        if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
+        if (s.gildedBonus && A.owner === 0 && s.gildedBonus.critThresholdBonus) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
+        if (s.tacticalClockDirective === 'WARMASTER_ASCENDANCY' && A.owner === 0) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name }, pool);
@@ -1125,6 +1129,14 @@ export function applyDamage(s: GameState) {
       if (md.damageSet) dmg = md.damageSet;
       if (md.halve) dmg = Math.ceil(dmg / 2);
       if (md.negate) { useNegate(s, T, m, md.negateKey); dmg = 0; p.damageLines.push(`${m.name}: damage reduced to 0 (once per phase)`); }
+      if (s.gildedBonus && A.owner === 0 && s.gildedBonus.damagePercent > 0) {
+        dmg = Math.max(1, Math.round(dmg * (1 + s.gildedBonus.damagePercent / 100)));
+      }
+      if ((A.apexDesignation === 'EXECUTIONER' || A.buffs.some((b) => b.label?.includes('Executioner'))) && A.owner === 0) {
+        const foeUnits = s.units.filter((u) => u.owner === 1 && u.status !== 'destroyed');
+        const nemesis = foeUnits.sort((a, b) => (b.pts ?? 0) - (a.pts ?? 0))[0];
+        if (nemesis && T.id === nemesis.id) dmg += 1;
+      }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
       p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' (slain)' : ''}`);
     }

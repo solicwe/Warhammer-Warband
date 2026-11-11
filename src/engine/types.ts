@@ -1,4 +1,12 @@
 import type { Effect } from '../rules-engine/effects';
+import type {
+  TacticalClockDirectiveId,
+  ApexDesignationId,
+  MunitorumAmmoId,
+  AdvisorId,
+  OrbitalModuleId,
+  PatronContractId,
+} from './campaignSystems';
 // ---------- Data (from public/data/factions/*.json, see scripts/build-data.mjs) ----------
 
 export interface WeaponProfileData {
@@ -144,6 +152,10 @@ export interface ArmyUnitEntry {
   veterancyTraits?: string[];
   isCorrupted?: boolean;
   corruptionModifier?: string;
+  compressionTier?: 1 | 2 | 3;
+  apexDesignation?: ApexDesignationId;
+  tempAmmoLoadout?: MunitorumAmmoId;
+  isOnReserveBench?: boolean;
 }
 
 // 3. ระบบการ์ด Relic แบบสวมใส่ใน Socket (PoE Skill/Support Gems)
@@ -296,6 +308,10 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  compressionTier?: 1 | 2 | 3;
+  apexDesignation?: ApexDesignationId;
+  tempAmmoLoadout?: MunitorumAmmoId;
+  isOnReserveBench?: boolean;
   combatRole?: UnitCombatRole;
   combatState?: UnitCombatState;
   maxSockets?: 1 | 2 | 3;
@@ -887,6 +903,12 @@ export interface GameState {
   warpStormActive?: boolean;
   anomalies?: BattlefieldAnomaly[];
   campaignScrap?: number; // scrap salvaged during campaign battle
+  tacticalClockDirective?: TacticalClockDirectiveId;
+  tacticalClockDirectives?: TacticalClockDirectiveId[];
+  gildedBonus?: { damagePercent: number; shieldBonus: number; critThresholdBonus: boolean };
+  orbitalModuleActive?: { id: OrbitalModuleId; level: 1 | 2 | 3 };
+  patronContract?: PatronContractId | null;
+  advisorsActive?: AdvisorId[];
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

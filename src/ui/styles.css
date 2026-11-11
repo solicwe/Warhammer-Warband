@@ -3469,3 +3469,141 @@ select option {
   .topbar .tb-tools { flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
   .phasebar span { min-width: 0; letter-spacing: 0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
+
+/* ==========================================================================
+   11th Edition Campaign Overhaul & Systems Extensions
+   ========================================================================== */
+
+/* Garrison Outposts & Roads */
+.cmp-roads line.garrison-road {
+  stroke: #f59e0b !important;
+  stroke-width: 3.5 !important;
+  stroke-dasharray: none !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7));
+}
+.cmp-node.fortified {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.8) !important;
+}
+.cmp-node-garrison-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 11px;
+  background: #111418;
+  border: 1.5px solid #d3a04a;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Pre-Battle Strategium Dock */
+.prebattle-dock {
+  margin: 12px 0 8px 0;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  border-radius: 10px;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.5);
+}
+.prebattle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.prebattle-clock-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.prebattle-clock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+.prebattle-clock-card:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+.prebattle-clock-round {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+.prebattle-clock-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fef08a;
+  line-height: 1.15;
+}
+.prebattle-ammo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.prebattle-ammo-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: all 0.12s;
+}
+.prebattle-ammo-btn:hover:not(:disabled) {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+.prebattle-ammo-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Trophy Rack & Patron Modal Extras */
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.trophy-card {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+.trophy-card.ascended {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}

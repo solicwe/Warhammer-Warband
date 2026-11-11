@@ -390,3 +390,95 @@ export interface BattlefieldAnomaly {
 4. **เฟสที่ 4: เพิ่ม Faction Ascendancy UI & Battlefield Anomalies**
    - สร้าง UI Widget เฉพาะเผ่าบนหน้าจอการรบ (Thousand Sons Cabal Matrix, Orks Waaagh! Meter, Necrons Reanimation Grid, World Eaters Blood Tithe)
    - สุ่มวาง Battlefield Anomalies (Warp Breach, Archeotech Shrine, และ Eldritch War-Altar ในรอบที่ 2 และ 4)
+
+---
+
+## 11. สถาปัตยกรรมแยกชั้นบัฟ: "Zero-Collision Rule Engine" & ระบบทั้ง 10 ระบบ (11th Edition Campaign Extension)
+
+เพื่อไม่ให้ฟีเจอร์ใหม่ทั้ง 10 ระบบตีกันเอง หรือไปทับกับ Passive Skill Tree และ Relic Cards ที่มีอยู่เดิม ระบบทั้งหมดจะถูกแยกตาม **จังหวะเวลาที่ทำงาน (Execution Timing)** และ **ถังตัวคูณคนละใบ (Separate Stat Buckets)** อย่างเด็ดขาด:
+
+```mermaid
+flowchart TD
+    subgraph LayerA["Layer 1: Campaign Map & Economy (นอกสนามรบ)"]
+        S8["8. Sector Garrison (โหนดที่ยึดแล้ว)"]
+        S9["9. Faction Patronage (สัญญาสปอนเซอร์)"]
+        S7A["7A. Munitorum Hoard (ดอกเบี้ย Scrap)"]
+    end
+
+    subgraph LayerB["Layer 2: Pre-Battle Loadout (หน้าเตรียมรบก่อนเริ่ม Round 1)"]
+        S2["2. Pre-Battle Tactical Clock (ตั้งบัฟล่วงหน้า 5 รอบ)"]
+        S3["3. Apex Designations (ตราประจำตำแหน่ง 1 เดียว)"]
+        S4["4. Munitorum Ammo & Stimms (กระสุน/สติมม์ชั่วคราว)"]
+    end
+
+    subgraph LayerC["Layer 3: Turn & Phase Triggers (ทำงานตามเฟสอัตโนมัติ)"]
+        S10["10. Orbital Strike Module (ผ่าต้น Round 1)"]
+        S1["1. High Command Advisors (ทำงานทุก Command Phase)"]
+        S6["6. Secondary Mastery (ระเบิดบัฟเมื่อทำภารกิจรองสำเร็จ)"]
+    end
+
+    subgraph LayerD["Layer 4: Combat Formula Buckets (ขณะทอยเต๋าโจมตี/ป้องกัน)"]
+        TreeRelic["Base Stats + Tree + Relics (ค่าหน้าเต๋า Hit/Wound/Save/AP)"]
+        S5["5. Boss Rule Absorption (Aura ระดับกองทัพ)"]
+        S7B["7B. Gilded Arsenal (ตัวคูณ Damage สุดท้ายตามเงิน Scrap)"]
+    end
+
+    LayerA --> LayerB --> LayerC --> LayerD
+```
+
+### ตารางแบ่งขอบเขตหน้าที่ (Non-Overlapping Matrix)
+
+| ชื่อระบบ | ขอบเขตที่ส่งผล (Target Scope) | ประเภทตัวแปรที่แก้ไข (Stat Bucket) | ห้ามก้าวก่ายกับอะไร (Strict Boundary) |
+|---|---|---|---|
+| **Passive Tree & Relics (เดิม)** | ยูนิตตามคีย์เวิร์ด | หน้าเต๋าพื้นฐาน (+1 Hit/Wound/Str, Weapon Keywords) | ไม่ยุ่งกับตารางเวลา 5 รอบและไม่คูณดาเมจตามเงิน |
+| **1. High Command Advisors** | เหตุการณ์ต้นเทิร์น & ราคาของ | สุ่มยิง/ฮีลต้น Command Phase + ลดราคา Scrap | ห้ามบวก Stat ถาวรลงใน Datasheet ของยูนิต |
+| **2. Pre-Battle Tactical Clock** | ทั้งกองทัพ (สลับตามรอบ 1–5) | กฎพิเศษชั่วคราวประจำ Battle Round (1 รอบต่อ 1 อย่าง) | อยู่ได้แค่เทิร์นละ 1 บัฟ ไม่สะสมข้ามรอบ |
+| **3. Apex Designations** | ยูนิตที่ถูกเลือกเพียง 1 กองต่อตรา | กฎการวางตัว/บทบาท (Infiltrators, Taunt/Damage Cap, Nemesis Target) | ห้ามใส่ซ้ำเกิน 1 กองต่อ 1 ตราเด็ดขาด |
+| **4. Munitorum Ammo & Stimms** | ยูนิตที่ซื้อใส่ (อยู่ได้ 1 แมตช์) | เปลี่ยนธาตุกระสุน (Ignores Cover, Anti-X, Auto-Advance 6") | หมดอายุทันทีเมื่อจบแมตช์ (Consumable Scrap Sink) |
+| **5. Boss Rule Absorption** | กองทัพผู้เล่นข้าม Loop | สล็อตพิเศษ AbsorbedBossRules (สูงสุด 3 ช่อง) | ใช้กฎจากตาราง Boss Modifiers เท่านั้น |
+| **6. Secondary Mastery** | เมื่อเคลียร์การ์ดภารกิจรอง | แจก Scrap ทันที + เติมเกจ CP/Shield กลางแมตช์ | ทำงานเฉพาะตอนทำเงื่อนไข VP สำเร็จเท่านั้น |
+| **7. Munitorum Hoard & Gilded** | กระเป๋าเงิน Scrap & ดาเมจรวม | ดอกเบี้ยหลังจบด่าน + Final Damage Multiplier (%) | คำนวณเป็น % ขั้นสุดท้ายหลังทอย Save เสร็จแล้ว |
+| **8. Sector Garrison** | โหนดที่เดินผ่านแล้วบนแผนที่ | บวกทรัพยากรต้นเกม (+Starting CP, +Scrap Drop %, +Fleet Heal) | รีเซ็ตใหม่เมื่อขึ้น Sector (Loop) ถัดไป |
+| **9. Faction Patronage** | เงื่อนไขการจัด Roster | โบนัสเมื่อจัดทัพตรงเงื่อนไขสปอนเซอร์ (Quest Reward) | เช็คเงื่อนไขจากโครงสร้าง Roster เท่านั้น |
+| **10. Orbital Strike Modules** | ต้น Battle Round 1 เท่านั้น | เอฟเฟกต์เปิดฉากจากยานแม่ (ยิงเลเซอร์ / ลง Drop Pod / ม่านควัน) | ทำงานแค่ครั้งเดียวในต้นเทิร์นที่ 1 ของแมตช์ |
+
+---
+
+## 12. ระบบเลือดแม่ทัพ TFT & เศรษฐกิจ Scrap ใหม่
+
+### 12.1 Fleet Integrity (100 HP)
+- ยกเลิกการแพ้ 3 ครั้งแล้วเกมโอเวอร์ เปลี่ยนเป็นหลอด Fleet Integrity 100 HP
+- Fate Points เก็บไว้ใช้สำหรับ reroll ลูกเต๋าในสนามรบ และซื้อของพิเศษ
+- **สูตรดาเมจเมื่อแพ้:**
+  $$\text{Damage} = \text{BaseLayerDmg} + (2 \times \text{SurvivingEnemyUnits}) + \left\lfloor \frac{\max(0, \text{EnemyVP} - \text{PlayerVP})}{10} \right\rfloor$$
+  โดย $\text{BaseLayerDmg} = [3, 4, 5, 6, 8, 10, 15]$ สำหรับ Layer 0 ถึง 6 (เพดานไม่เกิน 25 HP ต่อการแพ้ 1 ครั้ง)
+- **Streak Bonus:**
+  - 2 ตา: +20 Scrap
+  - 3 ตา: +40 Scrap
+  - 4+ ตา: +70 Scrap และ +1 Free Card Reroll
+- **Consolation Salvage:** 100% ของฐาน Scrap ประจำด่าน + $(\text{Damage Taken} \times 3\text{ Scrap})$
+- **Emergency Warmaster Supply Drops:**
+  - ต่ำกว่า 75 HP: +100 Scrap และ Munitorum Loadouts ฟรี 2 กล่อง
+  - ต่ำกว่า 50 HP: การ์ดยูนิต Epic/Legendary 1 ใบ และ +2 Renown
+  - ต่ำกว่า 25 HP (Last Stand): บัฟถาวร "Desperate Crusade" (+1 Attack และ +2 Starting CP ทุกแมตช์)
+
+### 12.2 เศรษฐกิจ Scrap ใหม่ (High-Velocity Scrap Economy)
+- Battle Node: 120 Scrap (+ โบนัสสังหารสูงสุด 40 Scrap)
+- Elite Node: 180 Scrap
+- Boss Node: 300 Scrap
+- Armory / Supply Drop: +75 Scrap
+- ดอกเบี้ย Munitorum Hoard: +10% ของเงินที่มีอยู่ (ทุกๆ 100 Scrap ได้ +10 Scrap, เพดานสูงสุด 50 Scrap, หรือ 100 เมื่อมี Rogue Trader Patron)
+- บัฟคนรวย Gilded Arsenal: ทุกๆ 100 Scrap มอบ +3% Final Damage (สูงสุด +30%), ที่ 500 Scrap ได้ Shield +2 HP, ที่ 1,000 Scrap ติด Critical Hit เร็วขึ้น 1 ขั้น (5+)
+
+---
+
+## 13. ระบบป้องกันอาการแลค (Anti-Lag & Elite Compression Engine)
+
+1. **Tactical Strike Cap:** วางยูนิตบนกระดานได้สูงสุดไม่เกิน 8 กองต่อฝั่ง
+2. **Rank Compression (★ Tier I ➔ ★★ Tier II ➔ ★★★ Tier III):**
+   - ★ Tier I: 1.0x Stats
+   - ★★ Tier II: Wounds x1.8, Attacks x1.6, OC +1, Save +1 (จำนวนโมเดลเท่าเดิม)
+   - ★★★ Tier III: Wounds x2.6, Attacks x2.3, Damage +1, Feel No Pain 5+ (จำนวนโมเดลเท่าเดิม)
+3. **Tactical Reserve Support Bench (3 ช่อง):** ยูนิตเกิน 8 กองสามารถส่งยิงสนับสนุนหรือบัฟจากนอกจอ
+4. **Engine Optimization:** Polygon Footprint LOS Caching & Vectorized Fast-Dice Resolution
+

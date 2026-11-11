@@ -14,6 +14,62 @@ import { MISSIONS, type DispositionId, type PrimaryDef } from './config';
 
 export { getFactionFamily };
 
+import {
+  calculateDefeatDamage,
+  calculateStreakBonus,
+  calculateConsolationScrap,
+  calculateHoardInterest,
+  calculateGildedBonus,
+  getCompressionStatScaling,
+  calculateGarrisonBuffs,
+  checkComebackThresholds,
+  createDefaultCampaignOverhaulState,
+  canCompressSquad,
+  compressSquad,
+  canBuyMunitorumAmmo,
+  buyMunitorumAmmo,
+  setApexDesignation,
+  setTacticalClock,
+  hireAdvisor,
+  unlockAdvisorSlot,
+  upgradeOrbitalModule,
+  selectOrbitalModule,
+  absorbBossRule,
+  fortifyGarrisonNode,
+  selectPatronContract,
+  autoOptimizePreBattle,
+  applyCampaignSystemsBattleSetup,
+  type TacticalClockDirectiveId,
+  type ApexDesignationId,
+  type MunitorumAmmoId,
+  type AdvisorId,
+  type OrbitalModuleId,
+  type PatronContractId,
+} from './campaignSystems';
+
+export {
+  canCompressSquad,
+  compressSquad,
+  canBuyMunitorumAmmo,
+  buyMunitorumAmmo,
+  setApexDesignation,
+  setTacticalClock,
+  hireAdvisor,
+  unlockAdvisorSlot,
+  upgradeOrbitalModule,
+  selectOrbitalModule,
+  absorbBossRule,
+  fortifyGarrisonNode,
+  selectPatronContract,
+  autoOptimizePreBattle,
+  calculateDefeatDamage,
+  calculateStreakBonus,
+  calculateConsolationScrap,
+  calculateHoardInterest,
+  calculateGildedBonus,
+  getCompressionStatScaling,
+};
+
 export type NodeKind = 'battle' | 'elite' | 'supply' | 'armory' | 'medicae' | 'boss';
 
 export interface MapNode {
@@ -82,6 +138,45 @@ export interface Run {
   over?: 'won' | 'lost';
   wins: number;
   started: number;
+  // 11th Edition Campaign Extension State
+  fleetIntegrityHP?: number;
+  maxFleetIntegrityHP?: number;
+  winLossStreak?: number;
+  triggeredComebackThresholds?: {
+    hp75: boolean;
+    hp50: boolean;
+    hp25: boolean;
+  };
+  maxInterestCap?: number;
+  unlockedAdvisorSlots?: 1 | 2 | 3;
+  activeAdvisors?: AdvisorId[];
+  tacticalClock?: [
+    TacticalClockDirectiveId,
+    TacticalClockDirectiveId,
+    TacticalClockDirectiveId,
+    TacticalClockDirectiveId,
+    TacticalClockDirectiveId
+  ];
+  absorbedBossRules?: Array<{
+    ruleId: string;
+    level: 1 | 2;
+  }>;
+  secondaryMasteryRanks?: {
+    takeAndHold: 1 | 2 | 3;
+    purgeTheFoe: 1 | 2 | 3;
+    priorityAssets: 1 | 2 | 3;
+    disruption: 1 | 2 | 3;
+    reconnaissance: 1 | 2 | 3;
+  };
+  garrisonedNodeIds?: string[];
+  fortifiedNodeIds?: string[];
+  activePatronContract?: PatronContractId | null;
+  orbitalModules?: {
+    activeModule: OrbitalModuleId;
+    levels: Record<OrbitalModuleId, 1 | 2 | 3>;
+  };
+  desperateCrusadeActive?: boolean;
+  pendingBossTrophyRules?: string[];
 }
 
 /** Relics: artefacts for the whole army (or units with a keyword), for every battle of the run. They give special
@@ -358,8 +453,9 @@ export function newRun(faction: FactionData, list: ArmyList, enemies: string[], 
   const filtered = pool.filter((e) => e !== faction.id && e !== 'TL');
   return {
     version: 1, seed: seed >>> 0, factionId: faction.id, list, map: makeMap(seed >>> 0, filtered, 1, []),
-    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], treeVersion: 3, freeRerolls: 1, cp: 0, fate: 3, scrap: 120, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
+    path: [], relics: [], relicLevels: {}, renown: RENOWN.start, tree: [], treeVersion: 3, freeRerolls: 1, cp: 0, fate: 3, story: [`${faction.name}: the campaign begins.`], wins: 0, started: Date.now(),
     recentOpponentFactions: [],
+    ...createDefaultCampaignOverhaulState(),
   };
 }
 
@@ -581,48 +677,121 @@ export function takeReward(run: Run, rw: Reward, faction: FactionData): Run {
 /** Walk to a node: peaceful nodes resolve their choices, battles wait to be fought. */
 export function enter(run: Run, nodeId: string, faction: FactionData): Run {
   const node = run.map.find((n) => n.id === nodeId)!;
-  if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], offer: makeOffer(run, faction, 'supply'), story: [...run.story, 'Supply drop'] };
-  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: (run.scrap ?? 0) + 25, offer: makeOffer(run, faction, 'armory'), story: [...run.story, 'Munitorum Depot (+25 Scrap)'] };
-  if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], story: [...run.story, 'Medicae Field Camp reached'] };
+  const interest = calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50);
+  const baseScrap = (run.scrap ?? 0) + interest;
+  const interestStory = interest > 0 ? ` (+${interest} Munitorum Hoard Interest)` : '';
+  if (node.kind === 'supply') return { ...run, path: [...run.path, nodeId], scrap: baseScrap + 75, offer: makeOffer(run, faction, 'supply'), story: [...run.story, `Supply drop (+75 Scrap${interestStory})`] };
+  if (node.kind === 'armory') return { ...run, path: [...run.path, nodeId], scrap: baseScrap + 75, offer: makeOffer(run, faction, 'armory'), story: [...run.story, `Munitorum Depot (+75 Scrap${interestStory})`] };
+  if (node.kind === 'medicae') return { ...run, path: [...run.path, nodeId], scrap: baseScrap, story: [...run.story, `Medicae Field Camp reached${interestStory}`] };
   const enemyFaction = typeof node.enemy?.factionId === 'string' ? node.enemy.factionId : (node.enemy?.factionId as any)?.id;
   const recent = enemyFaction ? [...(run.recentOpponentFactions ?? []), enemyFaction].slice(-10) : run.recentOpponentFactions;
   return { ...run, fighting: nodeId, recentOpponentFactions: recent };
 }
 
 /** The battle's result: a win moves the player on and offers rewards, a loss costs a Fate point (a draw counts as a win). */
-export function afterBattle(run: Run, winner: PlayerId | 'draw' | null, faction: FactionData, enemyName: string, battleScrap = 0): Run {
+export function afterBattle(
+  run: Run,
+  winner: PlayerId | 'draw' | null,
+  faction: FactionData,
+  enemyName: string,
+  battleScrap = 0,
+  battleStats?: { survivingEnemyUnits?: number; enemyVP?: number; playerVP?: number }
+): Run {
   if (!run.fighting) return run;
   const node = run.map.find((n) => n.id === run.fighting)!;
-  if (winner === 1) {
+  const isLoss = winner === 1;
+
+  if (isLoss) {
+    const layer = node.layer ?? 0;
+    const surviving = battleStats?.survivingEnemyUnits ?? 2;
+    const enemyVP = battleStats?.enemyVP ?? 10;
+    const playerVP = battleStats?.playerVP ?? 0;
+    let dmg = calculateDefeatDamage(layer, surviving, enemyVP, playerVP, node.kind === 'boss');
+    if (run.activeAdvisors?.includes('ADV_COMMISSAR')) {
+      dmg = Math.max(1, dmg - 5);
+    }
+    const currentHP = run.fleetIntegrityHP ?? 100;
+    const nextHP = Math.max(0, currentHP - dmg);
+
+    const prevStreak = run.winLossStreak ?? 0;
+    const nextStreak = prevStreak <= 0 ? prevStreak - 1 : -1;
+    const streakBonus = calculateStreakBonus(nextStreak);
+
+    const baseGain = node.kind === 'boss' ? 300 : node.kind === 'elite' ? 180 : 120;
+    const consolation = calculateConsolationScrap(baseGain, dmg);
+    const interest = calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50);
+    const totalSalvage = consolation + (battleScrap || 0) + streakBonus.scrap + interest;
+
+    const comeback = checkComebackThresholds(
+      nextHP,
+      run.triggeredComebackThresholds ?? { hp75: false, hp50: false, hp25: false }
+    );
+
     const fate = run.fate - 1;
-    const salvage = 30 + Math.floor((battleScrap || 0) * 0.75);
+    const isOver = nextHP <= 0 || fate <= 0;
+
+    const updatedUnits = run.list.units.map((u) => {
+      const copy = { ...u, battles: (u.battles ?? 0) + 1 };
+      delete copy.tempAmmoLoadout;
+      return copy;
+    });
+
+    const storyText = `Defeated by ${enemyName} (-${dmg} Integrity HP [${nextHP}/100], +${RENOWN.loss} Renown, +${totalSalvage} Scrap salvaged)${nextHP > 0 ? ` · ${nextHP} HP left` : ' — Fleet Integrity collapsed!'}`;
+
     return {
       ...run,
       fighting: undefined,
-      fate,
-      scrap: (run.scrap ?? 0) + salvage,
-      renown: (run.renown ?? 0) + RENOWN.loss,
-      list: { ...run.list, units: run.list.units.map((u) => ({ ...u, battles: (u.battles ?? 0) + 1 })) },
-      over: fate <= 0 ? 'lost' : undefined,
-      story: [...run.story, `Defeated by ${enemyName} (-1 Fate, +${RENOWN.loss} Renown${salvage > 0 ? `, +${salvage} Scrap salvaged` : ''})${fate > 0 ? ` · ${fate} Fate left` : ''}`],
+      fleetIntegrityHP: nextHP,
+      winLossStreak: nextStreak,
+      triggeredComebackThresholds: comeback.updated,
+      fate: Math.max(0, fate),
+      scrap: (run.scrap ?? 0) + totalSalvage + comeback.scrapReward,
+      renown: (run.renown ?? 0) + RENOWN.loss + comeback.renownReward,
+      desperateCrusadeActive: run.desperateCrusadeActive || comeback.grantDesperateCrusade,
+      list: { ...run.list, units: updatedUnits },
+      over: isOver ? 'lost' : undefined,
+      story: [...run.story, storyText],
     };
   }
-  const baseGain = node.kind === 'boss' ? 160 : node.kind === 'elite' ? 100 : 70;
+
+  // Victory or draw
+  const baseGain = node.kind === 'boss' ? 300 : node.kind === 'elite' ? 180 : 120;
   const scrapTechBonus = treeScrap(run);
-  const scrapGain = Math.max(0, baseGain + (battleScrap || 0) + scrapTechBonus);
+  const prevStreak = run.winLossStreak ?? 0;
+  const nextStreak = prevStreak >= 0 ? prevStreak + 1 : 1;
+  const streakBonus = calculateStreakBonus(nextStreak);
+  const interest = calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50);
+  const scrapGain = Math.max(0, baseGain + (battleScrap || 0) + scrapTechBonus + streakBonus.scrap + interest);
   const renownGain = node.kind === 'boss' ? RENOWN.boss : node.kind === 'elite' ? RENOWN.elite : RENOWN.battle;
-  // every unit counts the battle towards VETERAN
-  const updatedUnits = run.list.units.map((u) => ({ ...u, battles: (u.battles ?? 0) + 1 }));
+
+  let nextHP = run.fleetIntegrityHP ?? 100;
+  if (run.activeAdvisors?.includes('ADV_APOTHECARY')) {
+    nextHP = Math.min(run.maxFleetIntegrityHP ?? 100, nextHP + 3);
+  }
+
+  const garrisons = run.garrisonedNodeIds ? [...run.garrisonedNodeIds] : [];
+  if (!garrisons.includes(node.id)) garrisons.push(node.id);
+
+  const updatedUnits = run.list.units.map((u) => {
+    const copy = { ...u, battles: (u.battles ?? 0) + 1 };
+    delete copy.tempAmmoLoadout;
+    return copy;
+  });
+
   const next: Run = {
     ...run,
     fighting: undefined,
+    fleetIntegrityHP: nextHP,
+    winLossStreak: nextStreak,
+    garrisonedNodeIds: garrisons,
     path: [...run.path, node.id],
     wins: run.wins + 1,
     scrap: (run.scrap ?? 0) + scrapGain,
     renown: (run.renown ?? 0) + renownGain,
-    freeRerolls: 1,
+    freeRerolls: 1 + (streakBonus.freeReroll ? 1 : 0),
     list: { ...run.list, units: updatedUnits },
-    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap${battleScrap > 0 ? `: ${baseGain} victory + ${battleScrap} battle loot` : ''}${scrapTechBonus ? ` ${scrapTechBonus > 0 ? '+' : '-'} ${Math.abs(scrapTechBonus)} army tree` : ''}, +${renownGain} Renown)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
+    pendingBossTrophyRules: node.kind === 'boss' && node.enemy && (node.enemy.rules || []).length > 0 ? (node.enemy.rules || []).map((r: any) => typeof r === 'string' ? r : r.id).filter(Boolean) : undefined,
+    story: [...run.story, `${winner === 'draw' ? 'Held off' : 'Victory over'} ${enemyName} (+${scrapGain} Scrap [base ${baseGain}${interest > 0 ? ` + ${interest} int` : ''}${streakBonus.scrap > 0 ? ` + ${streakBonus.scrap} streak` : ''}], +${renownGain} Renown)${node.kind === 'boss' ? ' — the Warlord is vanquished!' : ''}`],
   };
   next.picksLeft = node.kind === 'boss' ? 2 : 1;
   next.offer = makeOffer(next, faction, node.kind);
@@ -667,6 +836,7 @@ export function applyCampaign(s: GameState, run: Run, rules: (string | { id?: st
     }
   }
   s.players[me].cp += run.cp + treeCp(run);
+  applyCampaignSystemsBattleSetup(s, run);
   s.idleTactic = run.idleTactic ?? 'objectives';
   s.campaign = { node: run.fighting ?? '', relics: [...run.relics.map((r: any) => typeof r === 'string' ? r : String(r?.id || r?.name || ''))], rules: cleanRules, relicLevels: { ...(run.relicLevels ?? {}) } };
   // Campaign battles default to Idle mode (player can toggle it off/on during battle)

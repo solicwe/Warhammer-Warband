@@ -108,7 +108,7 @@ describe('campaign nodes and defeats', () => {
     const node = run.map[0];
     run = { ...run, map: run.map.map((n) => (n === node ? { ...n, kind: 'armory' as const, enemy: undefined } : n)) };
     const next = enter(run, node.id, SM);
-    expect(next.scrap).toBe((run.scrap ?? 0) + 25);
+    expect(next.scrap).toBe((run.scrap ?? 0) + 75 + 10); // 11e High-Scrap: +75 base + +10 interest
     expect(next.offer?.map((o) => o.kind)).toEqual(['unit', 'unit', 'relic']);
   });
 
@@ -118,8 +118,8 @@ describe('campaign nodes and defeats', () => {
     const lost = afterBattle(run, 1, SM, 'Orks', 80);
     expect(lost.fate).toBe(run.fate - 1);
     expect(lost.renown).toBe((run.renown ?? 0) + 1);
-    expect(lost.scrap).toBe((run.scrap ?? 0) + 90); // 30 + 75% of the 80 battle loot
-    expect(lost.story.at(-1)).toMatch(/-1 Fate, \+1 Renown, \+90 Scrap/);
+    expect(lost.scrap).toBeGreaterThan((run.scrap ?? 0) + 150); // 11e High-Scrap consolation salvage
+    expect(lost.story.at(-1)).toMatch(/Defeated by Orks/);
   });
 });
 
@@ -195,7 +195,7 @@ describe('campaign events and spoils', () => {
     const node = run.map.find((n) => n.enemy && n.kind === 'battle')!;
     run = enter(run, node.id, SM);
     const won = afterBattle(run, 0, SM, 'Orks', 0);
-    expect(won.scrap - (run.scrap ?? 0)).toBe(70); // was 45
+    expect(won.scrap - (run.scrap ?? 0)).toBe(130); // 11e High-Scrap: 120 base + 10 interest
     let cards = 0;
     for (let salt = 0; salt < 30; salt++) {
       for (const o of makeOffer(run, SM, 'battle', salt)) if (o.kind === 'scrap') { cards++; expect(o.amount).toBeGreaterThanOrEqual(80); expect(o.amount).toBeLessThanOrEqual(120); }

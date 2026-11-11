@@ -21,6 +21,25 @@ import { getPortrait, hasRealPortrait } from './portraits';
 import { RelicToken } from './Relics';
 import { play } from './sfx';
 import { Em } from './Em';
+import { WarRoomModal } from './WarRoomModal';
+import {
+  calculateHoardInterest,
+  calculateGarrisonBuffs,
+  autoOptimizePreBattle,
+  setTacticalClock,
+  setApexDesignation,
+  buyMunitorumAmmo,
+  fortifyGarrisonNode,
+  selectPatronContract,
+  absorbBossRule,
+  TACTICAL_CLOCK_DIRECTIVES,
+  APEX_DESIGNATIONS,
+  MUNITORUM_AMMO,
+  PATRON_CONTRACTS,
+  type TacticalClockDirectiveId,
+  type MunitorumAmmoId,
+  type PatronContractId,
+} from '../engine/campaignSystems';
 
 interface Props {
   index: FactionIndex | null;
@@ -40,6 +59,13 @@ const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string
   boss: { name: 'The Warlord Boss', icon: 'trophy', note: 'A 5-round climactic battle against the enemy warlord with two special rules.' },
 };
 const LEVEL: Record<string, string> = { easy: 'Easy', normal: 'Normal', hard: 'Hard', expert: 'Expert' };
+const PATRON_ICONS: Record<PatronContractId, string> = {
+  PATRON_MECHANICUS: '⚙️',
+  PATRON_ROGUE_TRADER: '💰',
+  PATRON_INQUISITION: '⚖️',
+  PATRON_AUXILIA: '🏰',
+};
+
 
 export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: Props) {
   const [run, setRunRaw] = useState<Run | null>(loadRun);
@@ -54,6 +80,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
+  const [showWarRoom, setShowWarRoom] = useState(false);
+  const [warRoomTab, setWarRoomTab] = useState<'compression' | 'highCommand' | 'tacticalClock' | 'patron'>('compression');
+  const [dismissPatronModal, setDismissPatronModal] = useState(false);
+  const [ammoShopTarget, setAmmoShopTarget] = useState<MunitorumAmmoId | null>(null);
   const [rosterTab, setRosterTab] = useState<'roster' | 'tech' | 'detachments'>('roster');
   /** the roster section whose + was tapped: its recruit list is open */
   const [recruitSec, setRecruitSec] = useState<string | null>(null);
@@ -582,7 +612,26 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
       <header className="appbar">
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
         <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
-        <span className="cmp-scrap" title="Scrap Currency: spend in Armory & Roster"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span>Scrap</span></span>
+        <span className="cmp-scrap" title="Fleet Integrity: campaign HP">
+          <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold' }}>
+            ❤️ {run.fleetIntegrityHP ?? 100}/100
+          </span>
+          {(run.winLossStreak ?? 0) !== 0 && (
+            <span style={{ marginLeft: 4, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444' }}>
+              {(run.winLossStreak ?? 0) > 0 ? `🔥x${run.winLossStreak}` : `💀x${Math.abs(run.winLossStreak ?? 0)}`}
+            </span>
+          )}
+        </span>
+        <span className="cmp-scrap" title="Scrap Currency: +10% Hoard Interest per node"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span style={{ opacity: 0.8, fontSize: '0.85em' }}>(+{calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50)})</span></span>
+        <button
+          type="button"
+          className="btn small"
+          style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold', marginLeft: 6 }}
+          onClick={() => { setWarRoomTab('compression'); setShowWarRoom(true); }}
+          title="Open War Room & Strategium Council"
+        >
+          🏛️ War Room
+        </button>
         <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
         <span className="cmp-fate" role="img" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
           {[0, 1, 2].map((i) => <i key={i} className={i < run.fate ? 'on' : ''} />)}
@@ -846,6 +895,65 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           {!at && <span className="cmp-start" style={{ top: layers * rowH - 14 }}>Start</span>}
         </section>
 
+        
+        {/* Cleared Garrison Outpost Detail Panel */}
+        {focused && !run.over && run.path.includes(focused.id) && !run.offer && (
+          <section className="cmp-detail slate garrison-outpost"><div className="slate-in">
+            <div className="cmp-kicker">Sector Garrison Outpost</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 24 }}>{run.fortifiedNodeIds?.includes(focused.id) ? '🏰' : '🛡️'}</span>
+                <div>
+                  <b style={{ color: '#fef08a' }}>{KIND[focused.kind].name} Outpost (Layer {focused.layer + 1})</b>
+                  <div className="tiny muted">
+                    {run.fortifiedNodeIds?.includes(focused.id)
+                      ? '★ Fortified Bastion — Yielding 200% persistent sector resources'
+                      : 'Standard Garrison — Securing territorial control and passive sector buffs'}
+                  </div>
+                </div>
+              </div>
+              {!run.fortifiedNodeIds?.includes(focused.id) ? (
+                <button
+                  type="button"
+                  className="btn small primary"
+                  disabled={(run.scrap ?? 0) < 60}
+                  onClick={() => {
+                    setRun(fortifyGarrisonNode(run, focused.id));
+                    setInfo(`🏰 Fortified ${KIND[focused.kind].name} into Bastion (+100% Buffs)!`);
+                    play('good');
+                  }}
+                  style={{ fontWeight: 800 }}
+                >
+                  🏰 Fortify Outpost (60 Scrap)
+                </button>
+              ) : (
+                <span className="chip good small" style={{ fontWeight: 800 }}>★ Bastion Lv.2 Max</span>
+              )}
+            </div>
+
+            {/* Garrison Buffs Overview */}
+            {(() => {
+              const visitedGarrisons = run.map
+                .filter((m) => (run.garrisonedNodeIds ?? []).includes(m.id))
+                .map((m) => ({ id: m.id, kind: m.kind }));
+              const buffs = calculateGarrisonBuffs(visitedGarrisons, run.fortifiedNodeIds ?? []);
+              return (
+                <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 6, fontSize: 12 }}>
+                  <div style={{ fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>Active Sector Garrison Benefits:</div>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', color: '#e2e8f0' }}>
+                    {buffs.scrapDropPercent > 0 && <span>💰 +{buffs.scrapDropPercent}% Scrap Drops</span>}
+                    {buffs.startingShield > 0 && <span>🛡️ +{buffs.startingShield} Starting Shield HP</span>}
+                    {buffs.startingCP > 0 && <span>⭐ +{buffs.startingCP} Starting CP</span>}
+                    {buffs.critDamagePercent > 0 && <span>💥 +{buffs.critDamagePercent}% Crit Damage</span>}
+                    {buffs.earlyRoundsAP > 0 && <span>🎯 +{buffs.earlyRoundsAP} AP in R1–R2</span>}
+                    {buffs.turnStartHeal > 0 && <span>🩺 +{buffs.turnStartHeal} HP Regeneration</span>}
+                  </div>
+                </div>
+              );
+            })()}
+          </div></section>
+        )}
+
         {focused && !run.over && (open.some((n) => n.id === focused.id) || run.fighting === focused.id) && !run.offer && (
           <section className={`cmp-detail slate ${focused.kind}`}><div className="slate-in">
             <div className="cmp-kicker">{KIND[focused.kind].name}</div>
@@ -874,6 +982,192 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
             {focused.enemy && <div className="tiny muted">{KIND[focused.kind].note}</div>}
             {err && <div className="err" role="alert">{err}</div>}
+            
+            {/* Pre-Battle Strategium Dock: 5-Round Clock & Munitorum Consumables */}
+            {focused.enemy && (
+              <div className="prebattle-dock">
+                {/* 1. Pre-Battle Dock Header with Auto-Optimize button */}
+                <div className="prebattle-header">
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    ⚔️ Pre-Battle Strategium Dock
+                  </span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      type="button"
+                      className="btn small"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.45))',
+                        border: '1.5px solid #f59e0b',
+                        color: '#fef08a',
+                        fontWeight: 800,
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)',
+                      }}
+                      onClick={() => {
+                        setRun(autoOptimizePreBattle(run, fac));
+                        setInfo('⚡ Battle tactics & Apex badges auto-optimized!');
+                        play('good');
+                      }}
+                      title="Automatically configures the Tactical Clock to your army's weapon profile and equips available Apex badges"
+                    >
+                      ⚡ Auto-Optimize Tactics
+                    </button>
+                    <button
+                      type="button"
+                      className="btn small ghost"
+                      style={{ fontSize: 11 }}
+                      onClick={() => {
+                        setWarRoomTab('tacticalClock');
+                        setShowWarRoom(true);
+                      }}
+                    >
+                      ⚙️ Configure
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. 5-Round Tactical Clock Strip */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#cbd5e1', marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
+                  <span>5-Round Tactical Clock:</span>
+                  <span className="tiny muted">(Tap round to cycle directive)</span>
+                </div>
+                <div className="prebattle-clock-strip">
+                  {((run.tacticalClock as TacticalClockDirectiveId[] | undefined) ?? [
+                    'SHROUD_OF_NIGHT',
+                    'BLITZKRIEG_SURGE',
+                    'ANNIHILATION_VOLLEY',
+                    'AEGIS_OF_IRON',
+                    'WARMASTER_ASCENDANCY',
+                  ]).map((directiveId, rIdx) => {
+                    const d = TACTICAL_CLOCK_DIRECTIVES[directiveId];
+                    const clockOpts: TacticalClockDirectiveId[] = [
+                      'SHROUD_OF_NIGHT',
+                      'BLITZKRIEG_SURGE',
+                      'ANNIHILATION_VOLLEY',
+                      'AEGIS_OF_IRON',
+                      'WARMASTER_ASCENDANCY',
+                    ];
+                    return (
+                      <div
+                        key={`clock-r${rIdx + 1}`}
+                        className="prebattle-clock-card"
+                        title={`${d?.name ?? directiveId}: ${d?.desc ?? ''}`}
+                        onClick={() => {
+                          const curClock = [...((run.tacticalClock as TacticalClockDirectiveId[]) ?? clockOpts)] as [
+                            TacticalClockDirectiveId,
+                            TacticalClockDirectiveId,
+                            TacticalClockDirectiveId,
+                            TacticalClockDirectiveId,
+                            TacticalClockDirectiveId
+                          ];
+                          const curIdx = clockOpts.indexOf(curClock[rIdx]);
+                          const nextDirective = clockOpts[(curIdx + 1) % clockOpts.length];
+                          curClock[rIdx] = nextDirective;
+                          setRun(setTacticalClock(run, curClock));
+                          play('tick');
+                        }}
+                      >
+                        <span className="prebattle-clock-round">Round {rIdx + 1}</span>
+                        <span style={{ fontSize: 16 }}>{d?.icon ?? '⏳'}</span>
+                        <span className="prebattle-clock-name">{d?.name ?? directiveId}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 3. Munitorum Ammo & Stimms Quick Shop */}
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 8, marginTop: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#f59e0b' }}>
+                      Munitorum Loadout (1-Match Consumables):
+                    </span>
+                    <span className="tiny muted">Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0}⚙️</b></span>
+                  </div>
+
+                  <div className="prebattle-ammo-grid">
+                    {(Object.keys(MUNITORUM_AMMO) as MunitorumAmmoId[]).map((ammoId) => {
+                      const def = MUNITORUM_AMMO[ammoId];
+                      const hasLogis = run.activeAdvisors?.includes('ADV_LOGIS');
+                      const cost = hasLogis ? Math.floor(def.cost * 0.5) : def.cost;
+                      const canAfford = (run.scrap ?? 0) >= cost;
+                      const equippedSquads = (run.list?.units ?? []).filter((u) => u.tempAmmoLoadout === ammoId);
+
+                      return (
+                        <button
+                          key={ammoId}
+                          type="button"
+                          className="prebattle-ammo-btn"
+                          disabled={!canAfford && equippedSquads.length === 0}
+                          onClick={() => setAmmoShopTarget(ammoShopTarget === ammoId ? null : ammoId)}
+                          style={{
+                            borderColor: equippedSquads.length > 0 ? '#38bdf8' : ammoShopTarget === ammoId ? '#f59e0b' : undefined,
+                            background: equippedSquads.length > 0 ? 'rgba(56, 189, 248, 0.15)' : ammoShopTarget === ammoId ? 'rgba(245, 158, 11, 0.15)' : undefined,
+                          }}
+                          title={def.desc}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>{def.icon} <b>{def.name.split(' ')[0]}</b></span>
+                            <span style={{ color: '#fef08a', fontWeight: 700 }}>{cost}⚙️</span>
+                          </div>
+                          <span className="tiny muted" style={{ fontSize: 9.5, lineHeight: 1.2 }}>
+                            {equippedSquads.length > 0 ? `✓ On ${equippedSquads.length} squad(s)` : def.name.split(' ').slice(1, 3).join(' ')}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* If an ammo type is selected, show target squad selector */}
+                  {ammoShopTarget && (
+                    <div style={{ marginTop: 8, padding: 8, background: 'rgba(0, 0, 0, 0.4)', borderRadius: 6, border: '1px solid #38bdf8' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8' }}>
+                          Select Squad for {MUNITORUM_AMMO[ammoShopTarget].name}:
+                        </span>
+                        <button type="button" className="btn small ghost" onClick={() => setAmmoShopTarget(null)} style={{ padding: '0 4px', fontSize: 11 }}>✕</button>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {(run.list?.units ?? []).map((u) => {
+                          const isEquipped = u.tempAmmoLoadout === ammoShopTarget;
+                          const hasOther = u.tempAmmoLoadout && !isEquipped;
+                          return (
+                            <button
+                              key={u.uid}
+                              type="button"
+                              className="btn small"
+                              style={{
+                                background: isEquipped ? '#38bdf8' : 'rgba(255, 255, 255, 0.05)',
+                                color: isEquipped ? '#000' : '#f1f5f9',
+                                fontWeight: isEquipped ? 800 : 500,
+                                fontSize: 11,
+                                padding: '3px 8px',
+                              }}
+                              onClick={() => {
+                                if (isEquipped) {
+                                  // Unequip
+                                  const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, tempAmmoLoadout: undefined } : x));
+                                  setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                  play('tick');
+                                } else {
+                                  // Equip
+                                  setRun(buyMunitorumAmmo(run, u.uid, ammoShopTarget));
+                                  play('good');
+                                  setInfo(`Equipped ${MUNITORUM_AMMO[ammoShopTarget].name} on ${u.datasheet}!`);
+                                }
+                              }}
+                            >
+                              {u.datasheet} {isEquipped ? '✓' : hasOther ? `[${u.tempAmmoLoadout?.split('_')[0]}]` : '+'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <button className="btn primary big wide" style={{ marginTop: 10 }} disabled={busy || !fac} onClick={() => go(focused)}>
               {busy ? 'Deploying…' : focused.kind === 'supply' ? 'Open Supply Drop' : focused.kind === 'armory' ? 'Enter Armory Depot' : focused.kind === 'medicae' ? 'Enter Medicae Camp' : run.fighting === focused.id ? 'Fight Again' : 'Engage Battle'}
             </button>
@@ -888,6 +1182,197 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           </button>
         )}
       </main>
+
+      
+      {/* Warlord Trophy Claim Modal (Post-Boss Victory) */}
+      {run.pendingBossTrophyRules && run.pendingBossTrophyRules.length > 0 && (
+        <div className="cmp-modal-backdrop" style={{ zIndex: 140 }}>
+          <div className="cmp-armory-modal" style={{ maxHeight: '90vh', maxWidth: 640 }}>
+            <div className="cmp-armory-header">
+              <div className="cmp-armory-header-center">
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>🏆 Warlord Trophy Claim</div>
+                <div className="cmp-armory-sub">The Enemy Warlord has fallen! Absorb a Boss Rule into your Trophy Rack (max 3 slots).</div>
+              </div>
+            </div>
+            <div className="cmp-armory-body" style={{ padding: 16 }}>
+              {/* Current Trophy Rack */}
+              <div style={{ marginBottom: 14, padding: 10, background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', marginBottom: 6 }}>
+                  Active Trophy Rack ({run.absorbedBossRules?.length ?? 0}/3 Slots Filled):
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[0, 1, 2].map((slotIdx) => {
+                    const r = run.absorbedBossRules?.[slotIdx];
+                    const b = r ? bossRuleById(r.ruleId) : null;
+                    return (
+                      <div key={slotIdx} style={{ flex: 1, minWidth: 140, padding: 8, background: r ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.02)', border: r ? '1.5px solid #f59e0b' : '1px dashed rgba(255,255,255,0.15)', borderRadius: 6, textAlign: 'center' }}>
+                        {r && b ? (
+                          <>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#fef08a' }}>{b.name}</div>
+                            <span className="chip warn small" style={{ fontSize: 10, marginTop: 2 }}>{r.level === 2 ? '★ Apex Lv.2' : 'Lv.1 Active'}</span>
+                          </>
+                        ) : (
+                          <span className="tiny muted">Slot {slotIdx + 1} Open</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Boss Rules Available */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>
+                Select a Warlord Rule to Absorb:
+              </div>
+              <div className="trophy-grid">
+                {run.pendingBossTrophyRules.map((rId) => {
+                  const b = bossRuleById(rId);
+                  if (!b) return null;
+                  const alreadyHeld = run.absorbedBossRules?.find((x) => x.ruleId === b.id);
+                  const isLv1 = alreadyHeld?.level === 1;
+                  const isLv2 = alreadyHeld?.level === 2;
+                  const rackFull = (run.absorbedBossRules?.length ?? 0) >= 3 && !alreadyHeld;
+
+                  return (
+                    <div key={b.id} className={`trophy-card ${alreadyHeld ? 'ascended' : ''}`}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <b style={{ color: '#fef08a', fontSize: 14 }}>{b.name}</b>
+                          {isLv2 ? (
+                            <span className="chip good small">Maxed Lv.2</span>
+                          ) : isLv1 ? (
+                            <span className="chip warn small">Upgrade to Lv.2</span>
+                          ) : (
+                            <span className="chip small">New Trophy</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.4 }}>{b.text}</div>
+                        {isLv1 && (
+                          <div className="tiny" style={{ color: '#f59e0b', marginTop: 4 }}>
+                            ★ Ascending to Lv.2 doubles rule potency across your army!
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn primary small wide"
+                        disabled={isLv2 || rackFull}
+                        onClick={() => {
+                          const nextRun = absorbBossRule(run, b.id);
+                          setRun({ ...nextRun, pendingBossTrophyRules: undefined });
+                          setInfo(isLv1 ? `★ Ascended ${b.name} to Apex Lv.2!` : `🏆 Absorbed ${b.name} into Trophy Rack!`);
+                          play('good');
+                        }}
+                      >
+                        {isLv2 ? 'Already at Max Lv.2' : rackFull ? 'Trophy Rack Full' : isLv1 ? '⭐ Ascend to Apex Lv.2' : '📥 Absorb Boss Rule'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Salvage Alternative Button */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+                <button
+                  type="button"
+                  className="btn ghost small"
+                  onClick={() => {
+                    setRun({ ...run, scrap: (run.scrap ?? 0) + 100, pendingBossTrophyRules: undefined });
+                    setInfo('💰 Scavenged +100 Scrap from the defeated Warlord!');
+                    play('gem');
+                  }}
+                >
+                  💰 Salvage Remains for +100 Scrap instead
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sector Start Patron Contract Selection Modal */}
+      {run.activePatronContract === null && run.path.length === 0 && !dismissPatronModal && !run.offer && (
+        <div className="cmp-modal-backdrop" style={{ zIndex: 135 }}>
+          <div className="cmp-armory-modal" style={{ maxHeight: '92vh', maxWidth: 680 }}>
+            <div className="cmp-armory-header">
+              <div className="cmp-armory-header-center">
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>🏛️ High Lords of Terra: Faction Patronage</div>
+                <div className="cmp-armory-sub">Select your sponsor covenant for this Sector campaign to receive permanent buffs & rewards.</div>
+              </div>
+              <button type="button" className="cmp-close-btn" onClick={() => setDismissPatronModal(true)} title="Decide Later">
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <div className="cmp-armory-body" style={{ padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+                {(Object.keys(PATRON_CONTRACTS) as PatronContractId[]).map((cid) => {
+                  const p = PATRON_CONTRACTS[cid];
+                  return (
+                    <div
+                      key={cid}
+                      style={{
+                        padding: 12,
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1.5px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 22 }}>{PATRON_ICONS[cid] ?? '📜'}</span>
+                          <div>
+                            <b style={{ color: '#fef08a', fontSize: 14 }}>{p.name}</b>
+                            <div className="tiny muted">{p.sponsor}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.4, margin: '6px 0' }}>
+                          <b>Buff:</b> {p.buffDesc}
+                        </div>
+                        <div className="tiny" style={{ color: '#f59e0b' }}>
+                          <b>Climax Reward:</b> {p.bossRewardDesc}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn primary small wide"
+                        onClick={() => {
+                          setRun(selectPatronContract(run, cid));
+                          setDismissPatronModal(true);
+                          setInfo(`Signed covenant with ${p.sponsor}!`);
+                          play('good');
+                        }}
+                      >
+                        📜 Sign Covenant
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+                <button
+                  type="button"
+                  className="btn ghost small"
+                  onClick={() => setDismissPatronModal(true)}
+                >
+                  Decide Later in War Room
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* War Room & Strategium Council Modal */}
+      {showWarRoom && fac && (
+        <WarRoomModal run={run} faction={fac} onUpdateRun={setRun} onClose={() => setShowWarRoom(false)} initialTab={warRoomTab} />
+      )}
 
       {/* Roster & Armory Customization Modal */}
       {showRoster && fac && (

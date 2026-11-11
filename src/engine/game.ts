@@ -5,6 +5,7 @@ import { triggerRelicEvent } from './relicEngine';
 import { hasActiveKeystone, processKeystoneTurnStart } from './keystones';
 import { checkAnomalyTriggers, spawnBattlefieldAnomalies } from './anomalies';
 import { addWaaaghMomentum, processAscendancyTurnStart } from './ascendancy';
+import { processCampaignSystemsRoundStart, processCampaignSystemsCommandPhase } from './campaignSystems';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
@@ -1189,6 +1190,7 @@ export function startTurn(s: GameState, p: PlayerId) {
   if (s.turn === 0) { initSagas(s); emit(s, 'battleStart', {}); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) {
     emit(s, 'roundStart', {});
+    processCampaignSystemsRoundStart(s);
     if (s.campaign && !s.campaign.battleEventTriggered) {
       if (s.round >= 3) {
         const reinf = triggerCampaignReinforcements(s);
@@ -1218,6 +1220,7 @@ function startCommand(s: GameState) {
   processCommandPhaseAilments(s, s.active);
   processKeystoneTurnStart(s, s.active);
   processAscendancyTurnStart(s, s.active);
+  processCampaignSystemsCommandPhase(s, s.active);
   s.ordersUsed = {};
   expireTimed(s, 'commandStart', s.active);
   // Instant of Grace / Birth of a Saga end
