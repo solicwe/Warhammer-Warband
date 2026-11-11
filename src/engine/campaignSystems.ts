@@ -112,7 +112,6 @@ export interface CampaignOverhaulState {
 export interface TacticalClockDef {
   id: TacticalClockDirectiveId;
   name: string;
-  nameTh: string;
   icon: string;
   desc: string;
   recommendedRound: number;
@@ -122,40 +121,35 @@ export const TACTICAL_CLOCK_DIRECTIVES: Record<TacticalClockDirectiveId, Tactica
   SHROUD_OF_NIGHT: {
     id: 'SHROUD_OF_NIGHT',
     name: 'Shroud of Night',
-    nameTh: 'ม่านพรางตา',
-    icon: '🌑',
+        icon: '',
     desc: 'All units gain Stealth (-1 to be hit). Enemy ranged weapons cannot target beyond 24" this round.',
     recommendedRound: 1,
   },
   BLITZKRIEG_SURGE: {
     id: 'BLITZKRIEG_SURGE',
     name: 'Blitzkrieg Surge',
-    nameTh: 'คลื่นบุกสายฟ้าแลบ',
-    icon: '⚡',
+        icon: '',
     desc: '+3" Movement, re-roll Advance & Charge rolls, and can Shoot and Charge after Advancing.',
     recommendedRound: 2,
   },
   ANNIHILATION_VOLLEY: {
     id: 'ANNIHILATION_VOLLEY',
     name: 'Annihilation Volley',
-    nameTh: 'ระดมยิงล้างผลาญ',
-    icon: '💥',
+        icon: '',
     desc: 'All ranged and melee attacks gain [SUSTAINED HITS 1] and +1 Armour Penetration (AP).',
     recommendedRound: 3,
   },
   AEGIS_OF_IRON: {
     id: 'AEGIS_OF_IRON',
     name: 'Aegis of Unyielding Iron',
-    nameTh: 'ปราการเหล็กไหล',
-    icon: '🛡️',
+        icon: '',
     desc: 'All incoming attacks have -1 Damage (min 1) and units gain Feel No Pain 5+.',
     recommendedRound: 4,
   },
   WARMASTER_ASCENDANCY: {
     id: 'WARMASTER_ASCENDANCY',
     name: 'Warmaster Ascendancy',
-    nameTh: 'ยึดครองเบ็ดเสร็จ',
-    icon: '👑',
+        icon: '',
     desc: 'Objective Control is doubled (x2). Attacks on Objective markers score Critical Hits on 5+.',
     recommendedRound: 5,
   },
@@ -164,7 +158,6 @@ export const TACTICAL_CLOCK_DIRECTIVES: Record<TacticalClockDirectiveId, Tactica
 export interface ApexDesignationDef {
   id: ApexDesignationId;
   name: string;
-  nameTh: string;
   icon: string;
   desc: string;
 }
@@ -173,29 +166,25 @@ export const APEX_DESIGNATIONS: Record<ApexDesignationId, ApexDesignationDef> = 
   VANGUARD_SPEARHEAD: {
     id: 'VANGUARD_SPEARHEAD',
     name: 'Apex: Vanguard Spearhead',
-    nameTh: 'หน่วยทะลวงฟันแนวหน้า',
-    icon: '🗡️',
+        icon: '',
     desc: 'Always has Infiltrators & Scouts 6". First time this unit hits an enemy, target is Suppressed (-1 to Hit & cannot use Stratagems this turn).',
   },
   IMMOVABLE_ANVIL: {
     id: 'IMMOVABLE_ANVIL',
     name: 'Apex: Immovable Anvil',
-    nameTh: 'สมอเหล็กพิทักษ์จุด',
-    icon: '⚓',
+        icon: '',
     desc: '+30% Max Wounds, immune to Battle-shock. While on an Objective, grants +1 to Saving Throws to allies within 6".',
   },
   EXECUTIONER: {
     id: 'EXECUTIONER',
     name: "Apex: Warmaster's Executioner",
-    nameTh: 'เพชฌฆาตล่าหัวบอส',
-    icon: '☠️',
+        icon: '',
     desc: 'Locks onto highest-points enemy unit (Nemesis). Gains full re-rolls to Hit and Wound and +1 Damage vs Nemesis. Slaying Nemesis grants +50 Scrap.',
   },
   GRAND_SPOTTER: {
     id: 'GRAND_SPOTTER',
     name: 'Apex: Grand Battery Spotter',
-    nameTh: 'ผู้ชี้เป้าปืนใหญ่',
-    icon: '🎯',
+        icon: '',
     desc: '+6" Range. When this unit hits an enemy, all other friendly units shooting that target gain +1 to Hit and [IGNORES COVER].',
   },
 };
@@ -203,7 +192,6 @@ export const APEX_DESIGNATIONS: Record<ApexDesignationId, ApexDesignationDef> = 
 export interface MunitorumAmmoDef {
   id: MunitorumAmmoId;
   name: string;
-  nameTh: string;
   icon: string;
   cost: number;
   usableOn: 'RANGED' | 'INFANTRY_MOUNTED' | 'VEHICLE_WALKER' | 'ALL';
@@ -214,8 +202,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   KRAKEN_BOLTS: {
     id: 'KRAKEN_BOLTS',
     name: 'Kraken Penetrator Bolts',
-    nameTh: 'กระสุนคราเคนเจาะเกราะ',
-    icon: '🐚',
+        icon: '',
     cost: 35,
     usableOn: 'RANGED',
     desc: '+6" Range, +1 AP, and [IGNORES COVER] on all ranged weapons for 1 battle.',
@@ -223,8 +210,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   HELLFIRE_ROUNDS: {
     id: 'HELLFIRE_ROUNDS',
     name: 'Hellfire Bio-Acid Shells',
-    nameTh: 'กระสุนกรดชีวภาพเฮลไฟร์',
-    icon: '🧪',
+        icon: '',
     cost: 40,
     usableOn: 'RANGED',
     desc: 'All ranged weapons gain [ANTI-INFANTRY 3+] and [ANTI-MONSTER 4+] for 1 battle.',
@@ -232,8 +218,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   FRENZON_STIMMS: {
     id: 'FRENZON_STIMMS',
     name: 'Frenzon Combat Stimms',
-    nameTh: 'สติมม์กระตุ้นความคลั่ง',
-    icon: '💉',
+        icon: '',
     cost: 35,
     usableOn: 'INFANTRY_MOUNTED',
     desc: '+2 Melee Attacks per model and Auto-Advance 6" without rolling dice for 1 battle.',
@@ -241,8 +226,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   MACHINE_SPIRIT_OIL: {
     id: 'MACHINE_SPIRIT_OIL',
     name: 'Blessed Machine-Spirit Oil',
-    nameTh: 'น้ำมันอวยพรจิตวิญญาณเครื่องจักร',
-    icon: '🛢️',
+        icon: '',
     cost: 45,
     usableOn: 'VEHICLE_WALKER',
     desc: '+1 BS and +1 WS, and repairs 3 Wounds every Command Phase for 1 battle.',
@@ -250,8 +234,7 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
   PSICANNON_WARD: {
     id: 'PSICANNON_WARD',
     name: 'Null-Field Psicannon Ward',
-    nameTh: 'วอร์ดต้านพลังจิตนูลิฟาย',
-    icon: '🔮',
+        icon: '',
     cost: 30,
     usableOn: 'ALL',
     desc: '4+ Invulnerable Save for 1 battle, and reflects 1 Mortal Wound back to attacker on Save roll of 6.',
@@ -261,7 +244,6 @@ export const MUNITORUM_AMMO: Record<MunitorumAmmoId, MunitorumAmmoDef> = {
 export interface AdvisorDef {
   id: AdvisorId;
   name: string;
-  nameTh: string;
   icon: string;
   battleDesc: string;
   campaignDesc: string;
@@ -272,8 +254,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_ORDNANCE: {
     id: 'ADV_ORDNANCE',
     name: 'Master of Ordnance',
-    nameTh: 'นายพลปืนใหญ่',
-    icon: '💣',
+        icon: '',
     battleDesc: 'Start of R1, R3, R5: Mortar bombardment on random enemy on an Objective for 1D3+1 Mortal Wounds and -1 to Hit.',
     campaignDesc: 'Orbital Strike upgrades cost -25% Scrap.',
     hireCost: 100,
@@ -281,8 +262,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_APOTHECARY: {
     id: 'ADV_APOTHECARY',
     name: 'Chief Apothecary / Biophagus',
-    nameTh: 'หัวหน้าแพทย์สนาม',
-    icon: '🩺',
+        icon: '',
     battleDesc: 'Every Command Phase: Heals 2 Wounds to all damaged units (or revives 1 slain infantry model).',
     campaignDesc: 'Restores +3 Fleet Integrity HP after every battle.',
     hireCost: 120,
@@ -290,8 +270,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_LOGIS: {
     id: 'ADV_LOGIS',
     name: 'Logis Strategos',
-    nameTh: 'เสนาธิการคลังแสง',
-    icon: '📐',
+        icon: '',
     battleDesc: 'Start battle with +1 Command Point (CP).',
     campaignDesc: 'Duplicate unit recruitment tax reduced to 0%, Munitorum Ammo costs 50% less Scrap.',
     hireCost: 110,
@@ -299,8 +278,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_ASTROPATH: {
     id: 'ADV_ASTROPATH',
     name: 'Master Astropath',
-    nameTh: 'ผู้หยั่งรู้กระแสวาร์ป',
-    icon: '👁️',
+        icon: '',
     battleDesc: 'Enemy cannot Deep Strike or deploy Reserves within 12" of friendly rear units.',
     campaignDesc: 'Reveals all node types & enemy factions across the Sector. +1 Free Card Reroll each node.',
     hireCost: 90,
@@ -308,8 +286,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_TECHMARINE: {
     id: 'ADV_TECHMARINE',
     name: 'Forge Master / Mek Boss',
-    nameTh: 'หัวหน้าวิศวกร',
-    icon: '🔧',
+        icon: '',
     battleDesc: 'Command Phase: VEHICLES & MONSTERS gain 3 HP Shield and re-roll Hit rolls of 1.',
     campaignDesc: 'Selling VEHICLE units grants 120% Scrap value (profit!).',
     hireCost: 100,
@@ -317,8 +294,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_COMMISSAR: {
     id: 'ADV_COMMISSAR',
     name: 'Lord Commissar / Enforcer',
-    nameTh: 'ผู้ตรวจการสูงสุด',
-    icon: '⭐',
+        icon: '',
     battleDesc: 'Command Phase: Automatically clears Battle-shock from all units and grants +1 OC.',
     campaignDesc: 'Reduces Fleet Integrity damage taken on defeat by 5 HP.',
     hireCost: 110,
@@ -326,8 +302,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_INQUISITOR: {
     id: 'ADV_INQUISITOR',
     name: 'Ordo Representative',
-    nameTh: 'ผู้แทนสภาไต่สวน',
-    icon: '⚖️',
+        icon: '',
     battleDesc: 'Nullifies 1 Boss Rule from Elite/Boss enemies during battle.',
     campaignDesc: '+35% Scrap and rewards from Faction Patronage Contracts.',
     hireCost: 130,
@@ -335,8 +310,7 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
   ADV_NAVIGATOR: {
     id: 'ADV_NAVIGATOR',
     name: 'Void Navigator',
-    nameTh: 'ต้นหนเดินอวกาศ',
-    icon: '🧭',
+        icon: '',
     battleDesc: 'Start of Round 1: Redeploy up to 2 friendly units after seeing enemy setup.',
     campaignDesc: 'Allows jumping across any map branch to next layer once per Sector.',
     hireCost: 95,
@@ -346,7 +320,6 @@ export const HIGH_COMMAND_ADVISORS: Record<AdvisorId, AdvisorDef> = {
 export interface OrbitalModuleDef {
   id: OrbitalModuleId;
   name: string;
-  nameTh: string;
   icon: string;
   descLv1: string;
   descLv2: string;
@@ -357,8 +330,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   LANCE_BATTERY: {
     id: 'LANCE_BATTERY',
     name: 'Lance Strike Battery',
-    nameTh: 'เลเซอร์ผ่าพิกัดวงโคจร',
-    icon: '🛰️',
+        icon: '',
     descLv1: 'Round 1 start: Strikes highest-cost 2 enemy units for 1D3+2 Mortal Wounds and -1 Save in R1.',
     descLv2: 'Round 1 start: Strikes 2 units for 1D3+3 Mortal Wounds and -1 Save & -1 Toughness in R1.',
     descLv3: 'Round 1 start: Strikes top 3 enemy units for 2D3+2 Mortal Wounds, -1 Save and causes Battle-shock.',
@@ -366,8 +338,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   DROP_POD_ASSAULT: {
     id: 'DROP_POD_ASSAULT',
     name: 'Drop Pod / Teleportarium Assault',
-    nameTh: 'ส่งหน่วยจู่โจมลงกลางสมรภูมิ',
-    icon: '🚀',
+        icon: '',
     descLv1: 'Round 1 start: Deploy 1 friendly unit directly onto center Objective with 4+ Invulnerable Save in R1.',
     descLv2: 'Round 1 start: Deploy 1 unit onto center Objective with 4+ Invuln and +1 to Wound in R1.',
     descLv3: 'Round 1 start: Deploy 2 units directly onto center Objectives with 4+ Invuln and [FIGHTS FIRST] in R1.',
@@ -375,8 +346,7 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
   BLIND_CHAFF_SCREEN: {
     id: 'BLIND_CHAFF_SCREEN',
     name: 'Atmospheric Blind-Chaff & Vox-Jammer',
-    nameTh: 'ม่านควันพรางตาและรบกวนสัญญาณ',
-    icon: '🌫️',
+        icon: '',
     descLv1: 'Round 1 start: Enemy army suffers -1 to Hit (stacks with Cover) and -2" Movement in R1.',
     descLv2: 'Round 1 start: Enemy suffers -1 to Hit, -3" Move, and cannot fire Overwatch in R1.',
     descLv3: 'Round 1 start: Enemy suffers -1 to Hit, -3" Move, cannot use Stratagems in R1, and friendly units have Lone Operative.',
@@ -386,7 +356,6 @@ export const ORBITAL_MODULES: Record<OrbitalModuleId, OrbitalModuleDef> = {
 export interface PatronContractDef {
   id: PatronContractId;
   name: string;
-  nameTh: string;
   sponsor: string;
   conditionDesc: string;
   buffDesc: string;
@@ -397,8 +366,7 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_MECHANICUS: {
     id: 'PATRON_MECHANICUS',
     name: 'Mars Forge-Synod Covenant',
-    nameTh: 'สัญญาพันธมิตรดาวอังคาร',
-    sponsor: 'Adeptus Mechanicus',
+        sponsor: 'Adeptus Mechanicus',
     conditionDesc: 'Deploy at least 2 VEHICLE or WALKER units in your army.',
     buffDesc: 'Vehicles gain Feel No Pain 5+. Purchasing and upgrading Vehicles costs -25% Scrap.',
     bossRewardDesc: 'Free Epic/Legendary Vehicle unit card + 150 Scrap.',
@@ -406,8 +374,7 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_ROGUE_TRADER: {
     id: 'PATRON_ROGUE_TRADER',
     name: 'Warrant of Trade Investment',
-    nameTh: 'สัญญาสิทธิบัตรการค้าเสรี',
-    sponsor: 'Navis Imperialis & Rogue Traders',
+        sponsor: 'Navis Imperialis & Rogue Traders',
     conditionDesc: 'Maintain at least 300 Scrap in reserve.',
     buffDesc: 'Expands Munitorum Hoard interest cap to +100 Scrap/node. +1 additional reward option at every node.',
     bossRewardDesc: '+250 Scrap and 1 free random Level 2 Relic.',
@@ -415,8 +382,7 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_INQUISITION: {
     id: 'PATRON_INQUISITION',
     name: "Inquisitorial Mandate / Warmaster's Favor",
-    nameTh: 'โองการสภาไต่สวนศรัทธา',
-    sponsor: "Ordo Malleus / Warmaster's Inner Circle",
+        sponsor: "Ordo Malleus / Warmaster's Inner Circle",
     conditionDesc: 'Deploy at least 2 CHARACTER or Tier II+ Veteran units.',
     buffDesc: '[PSYCHIC] weapons and Warlord melee attacks deal +1 Damage and ignore Invulnerable Saves from Round 3 onwards.',
     bossRewardDesc: '+5 Renown immediately (unlock 5 tree nodes).',
@@ -424,8 +390,7 @@ export const PATRON_CONTRACTS: Record<PatronContractId, PatronContractDef> = {
   PATRON_AUXILIA: {
     id: 'PATRON_AUXILIA',
     name: 'Imperial Siege Auxilia Garrison',
-    nameTh: 'สัญญาพันธสัญญาป้อมปราการ',
-    sponsor: 'Munitorum Siege Auxilia',
+        sponsor: 'Munitorum Siege Auxilia',
     conditionDesc: 'Win the battle scoring 35 or more Primary VP.',
     buffDesc: 'Held Objectives fire automated defense turrets at enemies within 9" each turn (3D6 shots, S5 AP-1 D1).',
     bossRewardDesc: '+25 Fleet Integrity HP and +2 Starting CP permanently.',
@@ -718,8 +683,8 @@ export function compressSquad(run: any, targetUid: string, donorUid?: string): a
     .map((u: ArmyUnitEntry, idx: number) => (idx === targetIndex ? updatedTarget : u))
     .filter((_: any, idx: number) => idx !== donorIndex);
 
-  const star = nextTier === 2 ? '★★' : '★★★';
-  const storyEntry = `[${star} Rank Compression] Merged 2 squads into ${target.datasheet} (${star} Tier ${nextTier})!`;
+  const rankLabel = nextTier === 2 ? 'Tier II' : 'Tier III';
+  const storyEntry = `[Rank Compression] Merged 2 squads into ${target.datasheet} (${rankLabel})!`;
 
   return {
     ...run,
@@ -1075,7 +1040,7 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
   // 3. Gilded Arsenal (Wealth-to-Power)
   s.gildedBonus = calculateGildedBonus(run.scrap ?? 0);
   if (s.gildedBonus.damagePercent > 0) {
-    log(s, `💰 Gilded Arsenal active: +${s.gildedBonus.damagePercent}% Final Damage (holding ${run.scrap ?? 0} Scrap)`, 'info', me);
+    log(s, `[Gilded Arsenal] Active: +${s.gildedBonus.damagePercent}% Final Damage (holding ${run.scrap ?? 0} Scrap)`, 'info', me);
   }
   if (s.gildedBonus.shieldBonus > 0) {
     for (const u of s.units.filter((x) => x.owner === me)) {
@@ -1129,7 +1094,7 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
       if (scaling.damageBonus) {
         addTimed(s, u, { e: { damage: scaling.damageBonus }, label: `Tier ${tier} Annihilation (+${scaling.damageBonus} Damage)`, until: 'battle', by: me });
       }
-      log(s, `★ ${u.name} compressed to Tier ${tier} (Wounds x${scaling.woundsMult}, Attacks x${scaling.attacksMult})`, 'info', me);
+      log(s, `[Compression] ${u.name} Tier ${tier} (Wounds x${scaling.woundsMult}, Attacks x${scaling.attacksMult})`, 'info', me);
     }
 
     // Apex Designations
@@ -1188,7 +1153,7 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
           addTimed(s, u, { e: {}, label: `Absorbed: ${absorbed.ruleId} Lv.${absorbed.level}`, until: 'battle', by: me });
         }
       }
-      log(s, `🛡️ Trophy Rack: Active Absorbed Boss Rule [${absorbed.ruleId} Lv.${absorbed.level}]!`, 'info', me);
+      log(s, `[Trophy Rack] Active Rule: [${absorbed.ruleId} Lv.${absorbed.level}]!`, 'info', me);
     }
   }
 
@@ -1226,7 +1191,7 @@ export function processCampaignSystemsRoundStart(s: GameState): void {
     const dir = s.tacticalClockDirectives[idx];
     s.tacticalClockDirective = dir;
     const def = TACTICAL_CLOCK_DIRECTIVES[dir];
-    log(s, `🕒 Tactical Clock [R${s.round}]: ${def?.name || dir} is now active!`, 'info', me);
+    log(s, `[Tactical Clock] Round ${s.round}: ${def?.name || dir} is now active!`, 'info', me);
 
     for (const u of s.units.filter((x) => x.owner === me && x.status !== 'destroyed')) {
       if (dir === 'SHROUD_OF_NIGHT') {
@@ -1257,7 +1222,7 @@ export function processCampaignSystemsRoundStart(s: GameState): void {
         const mw = mod.level >= 3 ? Math.floor(Math.random() * 6) + 3 : Math.floor(Math.random() * 3) + 3;
         applyMortalWounds(s, target, mw, `Orbital Lance Battery Lv.${mod.level}`);
         addTimed(s, target, { e: { defend: { ap: 1 } }, label: 'Orbital Sunder (-1 Save)', until: 'turn', by: me });
-        log(s, `🛰️ Orbital Lance Battery blasts ${target.name} for ${mw} Mortal Wounds (-1 Save in R1)!`, 'info', me);
+        log(s, `[Orbital Strike] Lance Battery blasts ${target.name} for ${mw} Mortal Wounds (-1 Save in R1)!`, 'info', me);
       }
     } else if (mod.id === 'DROP_POD_ASSAULT') {
       const centerObj = s.objectives[0];
@@ -1272,12 +1237,12 @@ export function processCampaignSystemsRoundStart(s: GameState): void {
           });
         }
         addTimed(s, u, { e: { defend: { inv: 4 } }, label: 'Drop Pod Kinetic Shield (4++)', until: 'turn', by: me });
-        log(s, `🚀 Drop Pod Assault deploys ${u.name} directly onto center Objective with 4++!`, 'info', me);
+        log(s, `[Orbital Strike] Drop Pod Assault deploys ${u.name} directly onto center Objective with 4++!`, 'info', me);
       }
     } else if (mod.id === 'BLIND_CHAFF_SCREEN') {
       for (const u of s.units.filter((x) => x.owner === foe && x.status !== 'destroyed')) {
         addTimed(s, u, { e: { hit: -1 }, label: 'Blind-Chaff Jammed (-1 to Hit)', until: 'turn', by: me });
-        log(s, `🌫️ Blind-Chaff Screen impairs ${u.name} (-1 to Hit, -2" Move in R1)`, 'info', me);
+        log(s, `[Orbital Strike] Blind-Chaff Screen impairs ${u.name} (-1 to Hit, -2" Move in R1)`, 'info', me);
       }
     }
   }
@@ -1300,7 +1265,7 @@ export function processCampaignSystemsCommandPhase(s: GameState, activePlayer: P
         const mw = Math.floor(Math.random() * 3) + 2; // 1D3+1
         applyMortalWounds(s, target, mw, 'Master of Ordnance Mortar');
         addTimed(s, target, { e: { hit: -1 }, label: 'Ordnance Suppressed (-1 to Hit)', until: 'turn', by: me });
-        log(s, `💣 Master of Ordnance mortar bombards ${target.name} (${mw} MW, -1 to Hit)!`, 'info', me);
+        log(s, `[High Command] Master of Ordnance bombards ${target.name} (${mw} MW, -1 to Hit)!`, 'info', me);
       }
     } else if (adv === 'ADV_APOTHECARY') {
       for (const u of s.units.filter((x) => x.owner === me && x.status !== 'destroyed')) {
@@ -1311,13 +1276,13 @@ export function processCampaignSystemsCommandPhase(s: GameState, activePlayer: P
             healed = true;
           }
         }
-        if (healed) log(s, `🩺 Chief Apothecary restores 2 Wounds to ${u.name}`, 'info', me);
+        if (healed) log(s, `[High Command] Chief Apothecary restores 2 Wounds to ${u.name}`, 'info', me);
       }
     } else if (adv === 'ADV_COMMISSAR') {
       for (const u of s.units.filter((x) => x.owner === me && x.status !== 'destroyed')) {
         if (u.battleShocked) {
           u.battleShocked = false;
-          log(s, `⭐ Lord Commissar summarily restores morale of ${u.name} (Battle-shock cleared)!`, 'info', me);
+          log(s, `[High Command] Lord Commissar summarily restores morale of ${u.name} (Battle-shock cleared)!`, 'info', me);
         }
       }
     } else if (adv === 'ADV_TECHMARINE') {
@@ -1330,7 +1295,7 @@ export function processCampaignSystemsCommandPhase(s: GameState, activePlayer: P
           };
         }
         u.combatState.warpWardHP = Math.max(u.combatState.warpWardHP ?? 0, 3);
-        log(s, `🔧 Forge Master blesses ${u.name} with 3 HP Machine Shield!`, 'info', me);
+        log(s, `[High Command] Forge Master blesses ${u.name} with 3 HP Machine Shield!`, 'info', me);
       }
     }
   }

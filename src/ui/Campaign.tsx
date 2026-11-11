@@ -60,10 +60,10 @@ const KIND: Record<MapNode['kind'], { name: string; icon: IconName; note: string
 };
 const LEVEL: Record<string, string> = { easy: 'Easy', normal: 'Normal', hard: 'Hard', expert: 'Expert' };
 const PATRON_ICONS: Record<PatronContractId, string> = {
-  PATRON_MECHANICUS: '⚙️',
-  PATRON_ROGUE_TRADER: '💰',
-  PATRON_INQUISITION: '⚖️',
-  PATRON_AUXILIA: '🏰',
+  PATRON_MECHANICUS: '[Mechanicus]',
+  PATRON_ROGUE_TRADER: '[Rogue Trader]',
+  PATRON_INQUISITION: '[Inquisition]',
+  PATRON_AUXILIA: '[Auxilia]',
 };
 
 
@@ -614,11 +614,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <span className="cmp-scrap" title="Fleet Integrity: campaign HP">
           <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold' }}>
-            ❤️ {run.fleetIntegrityHP ?? 100}/100
+            Fleet HP: {run.fleetIntegrityHP ?? 100}/100
           </span>
           {(run.winLossStreak ?? 0) !== 0 && (
             <span style={{ marginLeft: 4, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444' }}>
-              {(run.winLossStreak ?? 0) > 0 ? `🔥x${run.winLossStreak}` : `💀x${Math.abs(run.winLossStreak ?? 0)}`}
+              {(run.winLossStreak ?? 0) > 0 ? `Streak: +${run.winLossStreak}` : `Losses: ${Math.abs(run.winLossStreak ?? 0)}`}
             </span>
           )}
         </span>
@@ -630,7 +630,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           onClick={() => { setWarRoomTab('compression'); setShowWarRoom(true); }}
           title="Open War Room & Strategium Council"
         >
-          🏛️ War Room
+          War Room
         </button>
         <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
         <span className="cmp-fate" role="img" aria-label={`${run.fate} Fate left`} title="Fate: each defeat costs one">
@@ -902,12 +902,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <div className="cmp-kicker">Sector Garrison Outpost</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 24 }}>{run.fortifiedNodeIds?.includes(focused.id) ? '🏰' : '🛡️'}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, padding: '4px 8px', borderRadius: 4, background: run.fortifiedNodeIds?.includes(focused.id) ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)', color: run.fortifiedNodeIds?.includes(focused.id) ? '#f59e0b' : '#38bdf8', border: '1px solid currentColor' }}>{run.fortifiedNodeIds?.includes(focused.id) ? 'BASTION' : 'GARRISON'}</span>
                 <div>
                   <b style={{ color: '#fef08a' }}>{KIND[focused.kind].name} Outpost (Layer {focused.layer + 1})</b>
                   <div className="tiny muted">
                     {run.fortifiedNodeIds?.includes(focused.id)
-                      ? '★ Fortified Bastion — Yielding 200% persistent sector resources'
+                      ? 'Fortified Bastion — Yielding 200% persistent sector resources'
                       : 'Standard Garrison — Securing territorial control and passive sector buffs'}
                   </div>
                 </div>
@@ -919,15 +919,15 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   disabled={(run.scrap ?? 0) < 60}
                   onClick={() => {
                     setRun(fortifyGarrisonNode(run, focused.id));
-                    setInfo(`🏰 Fortified ${KIND[focused.kind].name} into Bastion (+100% Buffs)!`);
+                    setInfo(`Fortified ${KIND[focused.kind].name} into Bastion (+100% Buffs)!`);
                     play('good');
                   }}
                   style={{ fontWeight: 800 }}
                 >
-                  🏰 Fortify Outpost (60 Scrap)
+                  Fortify Outpost (60 Scrap)
                 </button>
               ) : (
-                <span className="chip good small" style={{ fontWeight: 800 }}>★ Bastion Lv.2 Max</span>
+                <span className="chip good small" style={{ fontWeight: 800 }}>Bastion Lv.2 (Max Level)</span>
               )}
             </div>
 
@@ -941,12 +941,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 6, fontSize: 12 }}>
                   <div style={{ fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>Active Sector Garrison Benefits:</div>
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', color: '#e2e8f0' }}>
-                    {buffs.scrapDropPercent > 0 && <span>💰 +{buffs.scrapDropPercent}% Scrap Drops</span>}
-                    {buffs.startingShield > 0 && <span>🛡️ +{buffs.startingShield} Starting Shield HP</span>}
-                    {buffs.startingCP > 0 && <span>⭐ +{buffs.startingCP} Starting CP</span>}
-                    {buffs.critDamagePercent > 0 && <span>💥 +{buffs.critDamagePercent}% Crit Damage</span>}
-                    {buffs.earlyRoundsAP > 0 && <span>🎯 +{buffs.earlyRoundsAP} AP in R1–R2</span>}
-                    {buffs.turnStartHeal > 0 && <span>🩺 +{buffs.turnStartHeal} HP Regeneration</span>}
+                    {buffs.scrapDropPercent > 0 && <span>+{buffs.scrapDropPercent}% Scrap Drops</span>}
+                    {buffs.startingShield > 0 && <span>+{buffs.startingShield} Starting Shield HP</span>}
+                    {buffs.startingCP > 0 && <span>+{buffs.startingCP} Starting CP</span>}
+                    {buffs.critDamagePercent > 0 && <span>+{buffs.critDamagePercent}% Crit Damage</span>}
+                    {buffs.earlyRoundsAP > 0 && <span>+{buffs.earlyRoundsAP} AP in R1-R2</span>}
+                    {buffs.turnStartHeal > 0 && <span>+{buffs.turnStartHeal} HP Regeneration</span>}
                   </div>
                 </div>
               );
@@ -989,7 +989,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                 {/* 1. Pre-Battle Dock Header with Auto-Optimize button */}
                 <div className="prebattle-header">
                   <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    ⚔️ Pre-Battle Strategium Dock
+                    Pre-Battle Strategium Dock
                   </span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
@@ -1006,12 +1006,12 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       }}
                       onClick={() => {
                         setRun(autoOptimizePreBattle(run, fac));
-                        setInfo('⚡ Battle tactics & Apex badges auto-optimized!');
+                        setInfo('Battle tactics & Apex badges auto-optimized!');
                         play('good');
                       }}
                       title="Automatically configures the Tactical Clock to your army's weapon profile and equips available Apex badges"
                     >
-                      ⚡ Auto-Optimize Tactics
+                      Auto-Optimize Tactics
                     </button>
                     <button
                       type="button"
@@ -1022,7 +1022,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         setShowWarRoom(true);
                       }}
                     >
-                      ⚙️ Configure
+                      Configure
                     </button>
                   </div>
                 </div>
@@ -1069,7 +1069,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         }}
                       >
                         <span className="prebattle-clock-round">Round {rIdx + 1}</span>
-                        <span style={{ fontSize: 16 }}>{d?.icon ?? '⏳'}</span>
+                        
                         <span className="prebattle-clock-name">{d?.name ?? directiveId}</span>
                       </div>
                     );
@@ -1082,7 +1082,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: '#f59e0b' }}>
                       Munitorum Loadout (1-Match Consumables):
                     </span>
-                    <span className="tiny muted">Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0}⚙️</b></span>
+                    <span className="tiny muted">Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0} Scrap</b></span>
                   </div>
 
                   <div className="prebattle-ammo-grid">
@@ -1107,11 +1107,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           title={def.desc}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>{def.icon} <b>{def.name.split(' ')[0]}</b></span>
-                            <span style={{ color: '#fef08a', fontWeight: 700 }}>{cost}⚙️</span>
+                            <b>{def.name}</b>
+                            <span style={{ color: '#fef08a', fontWeight: 700 }}>{cost} Scrap</span>
                           </div>
                           <span className="tiny muted" style={{ fontSize: 9.5, lineHeight: 1.2 }}>
-                            {equippedSquads.length > 0 ? `✓ On ${equippedSquads.length} squad(s)` : def.name.split(' ').slice(1, 3).join(' ')}
+                            {equippedSquads.length > 0 ? `Equipped on ${equippedSquads.length} squad(s)` : def.desc.slice(0, 45) + '...'}
                           </span>
                         </button>
                       );
@@ -1120,45 +1120,82 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
                   {/* If an ammo type is selected, show target squad selector */}
                   {ammoShopTarget && (
-                    <div style={{ marginTop: 8, padding: 8, background: 'rgba(0, 0, 0, 0.4)', borderRadius: 6, border: '1px solid #38bdf8' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8' }}>
-                          Select Squad for {MUNITORUM_AMMO[ammoShopTarget].name}:
-                        </span>
-                        <button type="button" className="btn small ghost" onClick={() => setAmmoShopTarget(null)} style={{ padding: '0 4px', fontSize: 11 }}>✕</button>
+                    <div style={{ marginTop: 10, padding: 12, background: '#111418', borderRadius: 8, border: '1.5px solid #38bdf8' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <div>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8' }}>
+                            Select Squad to Equip {MUNITORUM_AMMO[ammoShopTarget].name}:
+                          </span>
+                          <div className="tiny muted" style={{ marginTop: 2 }}>{MUNITORUM_AMMO[ammoShopTarget].desc}</div>
+                        </div>
+                        <button type="button" className="btn small ghost" onClick={() => setAmmoShopTarget(null)} style={{ padding: '2px 8px', fontSize: 12 }}>Close</button>
                       </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8 }}>
                         {(run.list?.units ?? []).map((u) => {
+                          const sheet = fac?.datasheets?.find((d) => d.name === u.datasheet);
+                          const sameUnits = (run.list?.units ?? []).filter((x) => x.datasheet === u.datasheet);
+                          const isDup = sameUnits.length > 1;
+                          const squadIdx = sameUnits.findIndex((x) => x.uid === u.uid) + 1;
+                          const squadLabel = isDup ? `${u.datasheet} #${squadIdx}` : u.datasheet;
                           const isEquipped = u.tempAmmoLoadout === ammoShopTarget;
                           const hasOther = u.tempAmmoLoadout && !isEquipped;
+                          const tier = u.compressionTier ?? 1;
+                          const attachedTo = u.attachTo ? run.list.units.find((x) => x.uid === u.attachTo) : null;
+                          const ledByUnits = run.list.units.filter((x) => x.attachTo === u.uid);
+                          const enhList = (u.enhancements && u.enhancements.length > 0) ? u.enhancements.map((e) => e.name) : (u.enhancement ? [u.enhancement] : []);
+
                           return (
-                            <button
+                            <div
                               key={u.uid}
-                              type="button"
-                              className="btn small"
                               style={{
-                                background: isEquipped ? '#38bdf8' : 'rgba(255, 255, 255, 0.05)',
-                                color: isEquipped ? '#000' : '#f1f5f9',
-                                fontWeight: isEquipped ? 800 : 500,
-                                fontSize: 11,
-                                padding: '3px 8px',
-                              }}
-                              onClick={() => {
-                                if (isEquipped) {
-                                  // Unequip
-                                  const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, tempAmmoLoadout: undefined } : x));
-                                  setRun({ ...run, list: { ...run.list, units: updatedUnits } });
-                                  play('tick');
-                                } else {
-                                  // Equip
-                                  setRun(buyMunitorumAmmo(run, u.uid, ammoShopTarget));
-                                  play('good');
-                                  setInfo(`Equipped ${MUNITORUM_AMMO[ammoShopTarget].name} on ${u.datasheet}!`);
-                                }
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '8px 10px',
+                                borderRadius: 6,
+                                background: isEquipped ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                                border: isEquipped ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                                gap: 8,
                               }}
                             >
-                              {u.datasheet} {isEquipped ? '✓' : hasOther ? `[${u.tempAmmoLoadout?.split('_')[0]}]` : '+'}
-                            </button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                                <div style={{ width: 34, height: 34, borderRadius: 4, overflow: 'hidden', background: '#1e293b', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <UnitArt sheet={sheet} />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {squadLabel}
+                                  </div>
+                                  <div className="tiny muted" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                                    <span>{u.pts + (u.wargearPts ?? 0)} pts</span>
+                                    {tier > 1 && <span style={{ color: '#f59e0b', fontWeight: 800 }}>Tier {tier}</span>}
+                                    {attachedTo && <span style={{ color: '#f59e0b' }}>[With {attachedTo.datasheet}]</span>}
+                                    {ledByUnits.length > 0 && <span style={{ color: '#38bdf8' }}>[Led by {ledByUnits.map((l) => l.datasheet).join(', ')}]</span>}
+                                    {enhList.length > 0 && <span style={{ color: '#c084fc' }}>[{enhList[0]}]</span>}
+                                    {hasOther && <span style={{ color: '#94a3b8' }}>[{u.tempAmmoLoadout?.split('_')[0]}]</span>}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                className={`btn small ${isEquipped ? 'ghost' : 'primary'}`}
+                                style={{ padding: '4px 10px', fontSize: 11, flexShrink: 0, fontWeight: 700 }}
+                                onClick={() => {
+                                  if (isEquipped) {
+                                    const updatedUnits = run.list.units.map((x) => (x.uid === u.uid ? { ...x, tempAmmoLoadout: undefined } : x));
+                                    setRun({ ...run, list: { ...run.list, units: updatedUnits } });
+                                    play('tick');
+                                  } else {
+                                    setRun(buyMunitorumAmmo(run, u.uid, ammoShopTarget));
+                                    play('good');
+                                    setInfo(`Equipped ${MUNITORUM_AMMO[ammoShopTarget].name} on ${squadLabel}!`);
+                                  }
+                                }}
+                              >
+                                {isEquipped ? 'Remove' : 'Equip'}
+                              </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -1190,7 +1227,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <div className="cmp-armory-modal" style={{ maxHeight: '90vh', maxWidth: 640 }}>
             <div className="cmp-armory-header">
               <div className="cmp-armory-header-center">
-                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>🏆 Warlord Trophy Claim</div>
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>Warlord Trophy Claim</div>
                 <div className="cmp-armory-sub">The Enemy Warlord has fallen! Absorb a Boss Rule into your Trophy Rack (max 3 slots).</div>
               </div>
             </div>
@@ -1209,7 +1246,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         {r && b ? (
                           <>
                             <div style={{ fontSize: 11, fontWeight: 800, color: '#fef08a' }}>{b.name}</div>
-                            <span className="chip warn small" style={{ fontSize: 10, marginTop: 2 }}>{r.level === 2 ? '★ Apex Lv.2' : 'Lv.1 Active'}</span>
+                            <span className="chip warn small" style={{ fontSize: 10, marginTop: 2 }}>{r.level === 2 ? 'Apex Lv.2' : 'Lv.1 Active'}</span>
                           </>
                         ) : (
                           <span className="tiny muted">Slot {slotIdx + 1} Open</span>
@@ -1249,7 +1286,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.4 }}>{b.text}</div>
                         {isLv1 && (
                           <div className="tiny" style={{ color: '#f59e0b', marginTop: 4 }}>
-                            ★ Ascending to Lv.2 doubles rule potency across your army!
+                            Ascending to Lv.2 doubles rule potency across your army!
                           </div>
                         )}
                       </div>
@@ -1261,11 +1298,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                         onClick={() => {
                           const nextRun = absorbBossRule(run, b.id);
                           setRun({ ...nextRun, pendingBossTrophyRules: undefined });
-                          setInfo(isLv1 ? `★ Ascended ${b.name} to Apex Lv.2!` : `🏆 Absorbed ${b.name} into Trophy Rack!`);
+                          setInfo(isLv1 ? `Ascended ${b.name} to Apex Lv.2!` : `Absorbed ${b.name} into Trophy Rack!`);
                           play('good');
                         }}
                       >
-                        {isLv2 ? 'Already at Max Lv.2' : rackFull ? 'Trophy Rack Full' : isLv1 ? '⭐ Ascend to Apex Lv.2' : '📥 Absorb Boss Rule'}
+                        {isLv2 ? 'Already at Max Lv.2' : rackFull ? 'Trophy Rack Full' : isLv1 ? 'Ascend to Apex Lv.2' : 'Absorb Boss Rule'}
                       </button>
                     </div>
                   );
@@ -1279,11 +1316,11 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   className="btn ghost small"
                   onClick={() => {
                     setRun({ ...run, scrap: (run.scrap ?? 0) + 100, pendingBossTrophyRules: undefined });
-                    setInfo('💰 Scavenged +100 Scrap from the defeated Warlord!');
+                    setInfo('Scavenged +100 Scrap from the defeated Warlord!');
                     play('gem');
                   }}
                 >
-                  💰 Salvage Remains for +100 Scrap instead
+                  Salvage Remains for +100 Scrap instead
                 </button>
               </div>
             </div>
@@ -1297,7 +1334,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
           <div className="cmp-armory-modal" style={{ maxHeight: '92vh', maxWidth: 680 }}>
             <div className="cmp-armory-header">
               <div className="cmp-armory-header-center">
-                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>🏛️ High Lords of Terra: Faction Patronage</div>
+                <div className="cmp-armory-title" style={{ color: '#f59e0b', fontSize: 18 }}>High Lords of Terra: Faction Patronage</div>
                 <div className="cmp-armory-sub">Select your sponsor covenant for this Sector campaign to receive permanent buffs & rewards.</div>
               </div>
               <button type="button" className="cmp-close-btn" onClick={() => setDismissPatronModal(true)} title="Decide Later">
@@ -1324,7 +1361,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     >
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 22 }}>{PATRON_ICONS[cid] ?? '📜'}</span>
+                          
                           <div>
                             <b style={{ color: '#fef08a', fontSize: 14 }}>{p.name}</b>
                             <div className="tiny muted">{p.sponsor}</div>
@@ -1348,7 +1385,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                           play('good');
                         }}
                       >
-                        📜 Sign Covenant
+                        Sign Covenant
                       </button>
                     </div>
                   );

@@ -73,7 +73,7 @@ describe('11th Edition Campaign Overhaul Systems', () => {
     expect(lost.scrap).toBeGreaterThan(200); // awarded +100 bonus scrap
   });
 
-  it('supports Rank Compression (★ Tier I -> ★★ Tier II -> ★★★ Tier III)', () => {
+  it('supports Rank Compression (Tier I -> Tier II -> Tier III)', () => {
     let run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
     // Add 2 duplicate units to test compression
     run.list.units = [
@@ -87,7 +87,7 @@ describe('11th Edition Campaign Overhaul Systems', () => {
     expect(compressed.list.units).toHaveLength(1);
     expect(compressed.list.units[0].compressionTier).toBe(2);
     expect(compressed.list.units[0].pts).toBe(160);
-    expect(compressed.story.at(-1)).toMatch(/★★ Rank Compression/);
+    expect(compressed.story.at(-1)).toMatch(/Rank Compression/);
   });
 
   it('manages Munitorum Ammo loadout purchase and single-battle consumption', () => {
