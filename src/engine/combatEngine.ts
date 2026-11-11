@@ -140,7 +140,7 @@ function triggerAilmentOverload(s: GameState, target: UnitState, ailment: keyof 
   switch (ailment) {
     case 'soulfire': {
       // Conflagration: 3 Mortal Wounds and spread to all enemies within 4"
-      log(s, `🔥 CONFLAGRATION! ${target.name} soulfire overloaded! Dealing 3 Mortal Wounds and spreading flame.`, 'info');
+      log(s, `[CONFLAGRATION] ${target.name} soulfire overloaded! Dealing 3 Mortal Wounds and spreading flame.`, 'info');
       pushFx(s, { kind: 'explosion', at: pos, range: 4, radius: 4, hits: 3, title: 'CONFLAGRATION' });
       applyMortalWounds(s, target, 3, 'Conflagration');
       cs.ailments.soulfire = 0; // consumed on explosion
@@ -163,12 +163,12 @@ function triggerAilmentOverload(s: GameState, target: UnitState, ailment: keyof 
     }
     case 'corroded': {
       // Armor Shatter: Invulnerable save disabled for 1 turn
-      log(s, `⚡ ARMOR SHATTER! ${target.name} defenses shattered: Invulnerable saves disabled!`, 'info');
+      log(s, `[ARMOR SHATTER] ${target.name} defenses shattered: Invulnerable saves disabled!`, 'info');
       break;
     }
     case 'pinned': {
       // Staggered: forced Fights Last, cannot fire Overwatch
-      log(s, `💥 STAGGERED! ${target.name} pinned down: Overwatch disabled, Fights Last!`, 'info');
+      log(s, `[STAGGERED] ${target.name} pinned down: Overwatch disabled, Fights Last!`, 'info');
       break;
     }
   }
@@ -203,7 +203,7 @@ export function processCommandPhaseAilments(s: GameState, player: 0 | 1) {
     // Soulfire ticks: 1 MW per stack at start of owner's command phase
     if (cs.ailments.soulfire > 0) {
       const dmg = cs.ailments.soulfire;
-      log(s, `🔥 [SOULFIRE] burns ${u.name} for ${dmg} Mortal Wound(s)`, 'info');
+      log(s, `[SOULFIRE] burns ${u.name} for ${dmg} Mortal Wound(s)`, 'info');
       applyMortalWounds(s, u, dmg, 'Soulfire');
     }
     // Clean up temporary exposed mark at the start of new turn
@@ -240,7 +240,7 @@ export function onVanguardHit(s: GameState, attacker: UnitState, target: UnitSta
     const tCs = ensureCombatState(target);
     if (!tCs.isExposed) {
       tCs.isExposed = true;
-      log(s, `🎯 [TACTICAL SPOTTER] ${attacker.name} marks ${target.name} as [EXPOSED]!`, 'info');
+      log(s, `[TACTICAL SPOTTER] ${attacker.name} marks ${target.name} as [EXPOSED]!`, 'info');
       pushFx(s, { kind: 'skill', unitId: attacker.id, owner: attacker.owner, at: centreOf(target), name: 'EXPOSED', who: attacker.name, style: 'command', epic: false });
     }
   }
@@ -259,7 +259,7 @@ export function onBreacherSavePassed(s: GameState, u: UnitState) {
       cs.savesPassedCount = 0;
       const gained = addCombatToken(u, 'bastion', 1);
       if (gained > 0) {
-        log(s, `🛡️ [KINETIC ABSORPTION] ${u.name} absorbs impact: +1 Bastion Token (${cs.tokens.bastion}/${cs.maxTokenCaps.bastion})`, 'info');
+        log(s, `[KINETIC ABSORPTION] ${u.name} absorbs impact: +1 Bastion Token (${cs.tokens.bastion}/${cs.maxTokenCaps.bastion})`, 'info');
       }
     }
   }
@@ -269,7 +269,7 @@ export function onBreacherChargeComplete(s: GameState, u: UnitState, target: Uni
   const cs = ensureCombatState(u);
   if (u.combatRole === 'BREACHER' && cs.tokens.bastion > 0) {
     const mw = cs.tokens.bastion;
-    log(s, `💥 [KINETIC DISCHARGE] ${u.name} rams ${target.name} for ${mw} Mortal Wound(s) from Bastion charge!`, 'info');
+    log(s, `[KINETIC DISCHARGE] ${u.name} rams ${target.name} for ${mw} Mortal Wound(s) from Bastion charge!`, 'info');
     applyMortalWounds(s, target, mw, 'Kinetic Discharge');
   }
 }
@@ -295,11 +295,11 @@ export function triggerGunshipOverclock(s: GameState, u: UnitState): { success: 
   if (u.combatRole !== 'GUNSHIP' || cs.overheated) return { success: false, bonusAttacksPercent: 0, overheated: false };
 
   const heatRoll = d6(s);
-  log(s, `⚙️ [OVERCLOCK REACTOR] ${u.name} overclocks weapons (Heat roll: ${heatRoll})`, 'info');
+  log(s, `[OVERCLOCK REACTOR] ${u.name} overclocks weapons (Heat roll: ${heatRoll})`, 'info');
   if (heatRoll <= 2) {
     cs.overheated = true;
     const mw = rollExpr(s, '1d3').total;
-    log(s, `⚠️ REACTOR OVERHEAT! ${u.name} takes ${mw} Mortal Wound(s) and systems lock down!`, 'info');
+    log(s, `[REACTOR OVERHEAT] ${u.name} takes ${mw} Mortal Wound(s) and systems lock down!`, 'info');
     applyMortalWounds(s, u, mw, 'Reactor Overheat');
     return { success: true, bonusAttacksPercent: 0.5, overheated: true };
   }
@@ -319,7 +319,7 @@ export function checkBehemothRampage(s: GameState, u: UnitState) {
 
   if (currentW <= totalMaxW * 0.5 && currentW > 0) {
     cs.enraged = true;
-    log(s, `🔥 [APEX RAMPAGE] ${u.name} is ENRAGED! Unleashing devastating shockwave!`, 'info');
+    log(s, `[APEX RAMPAGE] ${u.name} is ENRAGED! Unleashing devastating shockwave!`, 'info');
     pushFx(s, { kind: 'explosion', at: centreOf(u), range: 3, radius: 3, hits: 1, title: 'APEX RAMPAGE' });
 
     // 3" shockwave of 1d3 MW to all nearby enemies

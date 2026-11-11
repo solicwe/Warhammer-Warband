@@ -57,7 +57,7 @@ export function spawnBattlefieldAnomalies(s: GameState) {
     },
   });
 
-  log(s, `⚡ [ANOMALIES DETECTED] ${type1} and ${type2} detected on the battlefield!`, 'info');
+  log(s, `[ANOMALIES DETECTED] ${type1} and ${type2} detected on the battlefield!`, 'info');
 }
 
 /**
@@ -89,7 +89,7 @@ export function triggerAnomaly(s: GameState, anomaly: BattlefieldAnomaly, trigge
     case 'ARCHEOTECH_SHRINE': {
       const buff = anomaly.effectPayload?.shrineBuff ?? 'LIGHTNING';
       if (buff === 'LIGHTNING') {
-        log(s, `⚡ [ARCHEOTECH SHRINE] ${triggeringUnit.name} touches Lightning Shrine! Arc coils supercharged for 2 turns!`, 'info');
+        log(s, `[ARCHEOTECH SHRINE] ${triggeringUnit.name} touches Lightning Shrine! Arc coils supercharged for 2 turns!`, 'info');
         pushFx(s, { kind: 'skill', unitId: triggeringUnit.id, owner: triggeringUnit.owner, at: pos, name: 'LIGHTNING SHRINE', who: triggeringUnit.name, style: 'tech', epic: true });
         addTimed(s, triggeringUnit, {
           e: { attacks: 1, strength: 1 },
@@ -98,7 +98,7 @@ export function triggerAnomaly(s: GameState, anomaly: BattlefieldAnomaly, trigge
           by: triggeringUnit.owner,
         });
       } else {
-        log(s, `🗿 [ARCHEOTECH SHRINE] ${triggeringUnit.name} touches Goliath Shrine! +1 Toughness and +2 Wounds!`, 'info');
+        log(s, `[ARCHEOTECH SHRINE] ${triggeringUnit.name} touches Goliath Shrine! +1 Toughness and +2 Wounds!`, 'info');
         pushFx(s, { kind: 'skill', unitId: triggeringUnit.id, owner: triggeringUnit.owner, at: pos, name: 'GOLIATH SHRINE', who: triggeringUnit.name, style: 'shield', epic: true });
         for (const m of alive(triggeringUnit)) {
           m.profile.T += 1;
@@ -110,7 +110,7 @@ export function triggerAnomaly(s: GameState, anomaly: BattlefieldAnomaly, trigge
     }
 
     case 'WARP_BREACH': {
-      log(s, `🌌 [WARP RIFT BREACH] Reality shatters! Warp Breach opens, yielding Warp Shards! (+60 Scrap)`, 'info');
+      log(s, `[WARP RIFT BREACH] Reality shatters! Warp Breach opens, yielding Warp Shards! (+60 Scrap)`, 'info');
       pushFx(s, { kind: 'explosion', at: pos, range: 6, radius: 6, hits: 2, title: 'WARP BREACH' });
       s.campaignScrap = (s.campaignScrap ?? 0) + 60;
       s.screenShake = 1;
@@ -125,14 +125,14 @@ export function triggerAnomaly(s: GameState, anomaly: BattlefieldAnomaly, trigge
     }
 
     case 'ELDRITCH_ALTAR': {
-      log(s, `🩸 [ELDRITCH WAR-ALTAR] Dark pact sealed: enemies enraged, but +120 Salvage Scrap harvested!`, 'info');
+      log(s, `[ELDRITCH WAR-ALTAR] Dark pact sealed: enemies enraged, but +120 Salvage Scrap harvested!`, 'info');
       pushFx(s, { kind: 'skill', unitId: triggeringUnit.id, owner: triggeringUnit.owner, at: pos, name: 'ELDRITCH ALTAR', who: triggeringUnit.name, style: 'chaos', epic: true });
       s.campaignScrap = (s.campaignScrap ?? 0) + 120;
       break;
     }
 
     case 'PROMETHIUM_HAZARD': {
-      log(s, `🔥 [PROMETHIUM LEAK] Promethium line ruptured! Spreading [Soulfire] across the sector!`, 'info');
+      log(s, `[PROMETHIUM LEAK] Promethium line ruptured! Spreading [Soulfire] across the sector!`, 'info');
       pushFx(s, { kind: 'explosion', at: pos, range: 5, radius: 5, hits: 1, title: 'PROMETHIUM FIRE' });
       for (const target of boardUnits(s)) {
         if (Math.hypot(pos.x - centreOf(target).x, pos.y - centreOf(target).y) <= 5.0) {

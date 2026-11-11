@@ -293,7 +293,7 @@ export function triggerRelicEvent(
         );
         const arcTarget = nearbyFoes.length > 0 ? nearbyFoes[0] : targetUnit;
 
-        log(s, `⚡ [TESLA ARC COIL] Critical Hit arcs lightning into ${arcTarget.name}! (${hits} hits S4 AP-1 D1)`, 'info');
+        log(s, `[TESLA ARC COIL] Critical Hit arcs lightning into ${arcTarget.name}! (${hits} hits S4 AP-1 D1)`, 'info');
         pushFx(s, {
           kind: 'skill',
           unitId: sourceUnit.id,
@@ -312,7 +312,7 @@ export function triggerRelicEvent(
       case 'gem_lethal': {
         if (targetUnit) {
           const stacks = lvl;
-          log(s, `🧪 [BIO-ACID INJECTOR] Acid seeps into wounds: +${stacks} [Corroded]!`, 'info');
+          log(s, `[BIO-ACID INJECTOR] Acid seeps into wounds: +${stacks} [Corroded]!`, 'info');
           applyAilment(s, targetUnit, 'corroded', stacks);
         }
         break;
@@ -331,7 +331,7 @@ export function triggerRelicEvent(
         }
 
         if (bloomMortal > 0) {
-          log(s, `💥 [VOLATILE DETONATOR] Enemy corpses detonate for ${bloomMortal} Mortal Wound(s)!`, 'info');
+          log(s, `[VOLATILE DETONATOR] Enemy corpses detonate for ${bloomMortal} Mortal Wound(s)!`, 'info');
           pushFx(s, { kind: 'explosion', at: centreOf(targetUnit), range: 3, radius: 3, hits: bloomMortal, title: 'CORPSE BLOOM' });
           applyMortalWounds(s, targetUnit, bloomMortal, 'Volatile Detonator');
         }
@@ -375,7 +375,7 @@ export function triggerRelicEvent(
       case 'proc_nova_shield': {
         if (data?.tokenKind === 'bastion') {
           const mw = lvl;
-          log(s, `🛡️ [REACTIVE AEGIS] Bastion discharge triggers 4" kinetic shockwave (${mw} MW)!`, 'info');
+          log(s, `[REACTIVE AEGIS] Bastion discharge triggers 4" kinetic shockwave (${mw} MW)!`, 'info');
           pushFx(s, { kind: 'explosion', at: pos, range: 4, radius: 4, hits: mw, title: 'REACTIVE AEGIS' });
           for (const foe of boardUnits(s, other(sourceUnit.owner))) {
             const fPos = centreOf(foe);
@@ -411,7 +411,7 @@ export function triggerRelicEvent(
               m.x = dest.x + (Math.random() - 0.5) * 1.5;
               m.y = dest.y + (Math.random() - 0.5) * 1.5;
             }
-            log(s, `🌀 [FLICKERJUMP MODULE] ${sourceUnit.name} flickers across reality to engage ${nearestFoe.name} (${nearestDist.toFixed(1)}")!`, 'info');
+            log(s, `[FLICKERJUMP MODULE] ${sourceUnit.name} flickers across reality to engage ${nearestFoe.name} (${nearestDist.toFixed(1)}")!`, 'info');
             pushFx(s, {
               kind: 'place',
               unitId: sourceUnit.id,

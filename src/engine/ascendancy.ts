@@ -83,7 +83,7 @@ export function addWaaaghMomentum(s: GameState, p: PlayerId, amount: number) {
 
   if (newTier > oldTier) {
     const info = WAAAGH_TIERS[newTier];
-    log(s, `⚡ [WAAAGH! ASCENDANCY] ${P.name}'s momentum surged to Tier ${newTier} (${info.name})! ${info.description}`, 'info', p);
+    log(s, `[WAAAGH! ASCENDANCY] ${P.name}'s momentum surged to Tier ${newTier} (${info.name})! ${info.description}`, 'info', p);
     const repUnit = boardUnits(s, p)[0];
     if (repUnit && repUnit.models[0]) {
       pushFx(s, {
@@ -123,7 +123,7 @@ export function castDoomboltCascade(s: GameState, p: PlayerId, targetUnitId: str
 
   P.cabalFlux = flux - 6;
   const dmg = rollExpr(s, '1d3+3').total;
-  log(s, `🔮 [DOOMBOLT CASCADE] ${P.name} expends 6 Arcane Flux to unleash Doombolt Cascade on ${target.name} for ${dmg} Mortal Wounds!`, 'info', p);
+  log(s, `[DOOMBOLT CASCADE] ${P.name} expends 6 Arcane Flux to unleash Doombolt Cascade on ${target.name} for ${dmg} Mortal Wounds!`, 'info', p);
 
   pushFx(s, {
     kind: 'explosion',
@@ -184,7 +184,7 @@ export function toggleDynasticGrid(s: GameState, p: PlayerId): 'resurrection' | 
   const desc = mode === 'resurrection'
     ? 'Reanimation Protocols heal +1 extra wound.'
     : 'Gauss weapons score Critical Hits on 5+ and gain +1 AP.';
-  log(s, `⚙️ [DYNASTIC GRID] ${P.name} reconfigures Dynastic Grid to [${mode.toUpperCase()}]! (${desc})`, 'info', p);
+  log(s, `[DYNASTIC GRID] ${P.name} reconfigures Dynastic Grid to [${mode.toUpperCase()}]! (${desc})`, 'info', p);
   return mode;
 }
 
@@ -204,7 +204,7 @@ export function spendBloodTithe(s: GameState, p: PlayerId, cost: number, blessin
   const P = s.players[p];
   if ((P.tithe ?? 0) < cost) return false;
   P.tithe = (P.tithe ?? 0) - cost;
-  log(s, `⚔️ [KHORNE'S BLESSING] ${P.name} claims ${blessingName} for ${cost} Tithe points!`, 'info', p);
+  log(s, `[KHORNE'S BLESSING] ${P.name} claims ${blessingName} for ${cost} Tithe points!`, 'info', p);
   const repUnit = boardUnits(s, p)[0];
   if (repUnit && repUnit.models[0]) {
     pushFx(s, {

@@ -27,6 +27,7 @@ import {
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
+  levelOfControl,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
@@ -40,7 +41,7 @@ import { autoActions, botAct, botShouldAct, botStep } from '../ai/bot';
 import { advantage, applyStyle, lookBudget, setLookahead, styleChosen, type Intent } from '../ai/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { castDoomboltCascade, castTemporalTwist, toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
@@ -59,12 +60,17 @@ import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, ModelState, MoveKind, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
+import type { BattlefieldAnomaly, BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
-import { Board, placementRings, type Paths, type Ring } from './Board';
+import { Board, getObjectiveEffects, placementRings, type Paths, type Ring } from './Board';
+import {
+  TACTICAL_CLOCK_DIRECTIVES,
+  PATRON_CONTRACTS,
+  HIGH_COMMAND_ADVISORS,
+} from '../engine/campaignSystems';
 import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
@@ -521,6 +527,68 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const [freeAdvRR, setFreeAdvRR] = useState<string | null>(null);
   const [actPick, setActPick] = useState<string | null>(null);
   const [focusUnit, setFocusUnit] = useState<string | null>(null);
+
+  const [inspectedElement, setInspectedElement] = useState<{
+    type: 'anomaly' | 'objective' | 'directive' | 'patron' | 'advisor';
+    title: string;
+    badge?: string;
+    icon: IconName;
+    subtitle?: string;
+    desc: string;
+    tacticalTip?: string;
+  } | null>(null);
+
+  const handleInspectAnomaly = (a: BattlefieldAnomaly) => {
+    const isAwake = s.round >= a.activeRound;
+    const isTriggered = a.triggered;
+    const typeNames: Record<string, string> = {
+      WARP_BREACH: 'Warp Breach Rift',
+      ARCHEOTECH_SHRINE: 'Archeotech Conduit Shrine',
+      ELDRITCH_ALTAR: 'Eldritch War-Altar',
+      PROMETHIUM_HAZARD: 'Volatile Promethium Hazard',
+    };
+    const descText = a.type === 'WARP_BREACH'
+      ? `A dimensional tear pulsing with warp turbulence. Moving any unit within ${a.radius}" collapses the breach, dealing 1D3 Mortal Wounds to nearby enemy combatants and harvesting +60 Salvage Scrap!`
+      : a.type === 'ARCHEOTECH_SHRINE'
+      ? `An ancient golden tech shrine from the Dark Age of Technology. Move within ${a.radius}" to claim Archeotech blessings (${a.effectPayload?.shrineBuff === 'GOLIATH' ? '+1 Toughness & +2 Wounds' : '+1 Attack & +1 Strength'}) for the rest of the battle!`
+      : a.type === 'ELDRITCH_ALTAR'
+      ? `A dark forbidden sacrificial altar. Move within ${a.radius}" to seal the altar and scavenge +120 Salvage Scrap!`
+      : `Pressurized volatile fuel lines. Ruptures when units move within ${a.radius}", spraying all combatants in 2 stacks of burning Soulfire!`;
+
+    setInspectedElement({
+      type: 'anomaly',
+      title: typeNames[a.type] ?? a.type,
+      badge: isTriggered ? 'Triggered / Depleted' : !isAwake ? `Awakens in Round ${a.activeRound}` : 'Active on Field',
+      icon: (a.type === 'WARP_BREACH' ? 'radar' : a.type === 'ARCHEOTECH_SHRINE' ? 'zap' : a.type === 'ELDRITCH_ALTAR' ? 'skull' : 'crosshair') as IconName,
+      subtitle: `Coordinates: (${a.position.x.toFixed(1)}", ${a.position.y.toFixed(1)}") · Proximity Trigger Radius: ${a.radius}"`,
+      desc: descText,
+      tacticalTip: isTriggered
+        ? 'This anomaly has already been triggered and depleted for this battle.'
+        : !isAwake
+        ? `This anomaly will awaken and become active at the start of Battle Round ${a.activeRound}. Position units nearby to seize it early!`
+        : `Active now! Order any friendly unit to move within ${a.radius}" to trigger its effects and reap the rewards.`,
+    });
+  };
+
+  const handleInspectObjective = (o: ObjectiveState) => {
+    const ctrl = o.controller;
+    const [a, b] = levelOfControl(s, o);
+    const effects = getObjectiveEffects(s, o);
+    const label = o.type === 'home' ? 'Home Objective' : o.type === 'central' ? 'Central Objective' : `Objective Marker #${s.objectives.indexOf(o) + 1}`;
+    const ctrlText = ctrl === null ? 'Uncontested (No controller)' : `Controlled by ${s.players[ctrl]?.name ?? `Player ${ctrl + 1}`}`;
+
+    setInspectedElement({
+      type: 'objective',
+      title: label,
+      badge: ctrlText,
+      icon: 'objective',
+      subtitle: `Objective Control (OC): Player 1: ${a} OC · Player 2: ${b} OC · Position: (${o.x.toFixed(1)}", ${o.y.toFixed(1)}")`,
+      desc: `Control this objective by having greater total Objective Control (OC) within 3" at the end of each Command phase to score Primary Victory Points (VP).`,
+      tacticalTip: effects.length > 0
+        ? `Active Special Rules: ${effects.map((e) => `${e.title}: ${e.desc}`).join(' | ')}`
+        : 'Sticky Objectives stay secured even if you move away, until an enemy unit contests and takes control.',
+    });
+  };
 
   interface UnitGroup {
     key: string;
@@ -1177,7 +1245,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       }
       if (selUnit.combatRole === 'GUNSHIP' && !selUnit.combatState?.overheated) {
         actions.push({
-          label: '⚡ Overclock Reactor (+50% Atks)',
+          label: 'Overclock Reactor (+50% Atks)',
           onClick: () => {
             act((g) => {
               const res = triggerGunshipOverclock(g, unitById(g, selUnit.id));
@@ -2556,7 +2624,10 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           return (
             <div className="card" style={{ padding: 10, background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8))', border: '1px solid rgba(129, 140, 248, 0.4)' }}>
               <div className="row" style={{ alignItems: 'center', marginBottom: 6 }}>
-                <b style={{ color: '#818cf8', fontSize: '0.85rem' }}>⚡ FACTION ASCENDANCY DOCK</b>
+                <b style={{ color: '#818cf8', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="zap" size={14} />
+                  <span>FACTION ASCENDANCY DOCK</span>
+                </b>
                 <span className="tiny muted" style={{ marginLeft: 'auto' }}>Turn {s.turn} · Round {s.round}</span>
               </div>
 
@@ -2581,7 +2652,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         flash(`Doombolt Cascade unleashed on ${selUnit.name}!`);
                       }}
                     >
-                      🔮 Doombolt (6 Flux) {selUnit && selUnit.owner !== s.active ? `-> ${selUnit.name}` : ''}
+                      <Icon name="arcane" size={13} /> <span>Doombolt</span> (6 Flux) {selUnit && selUnit.owner !== s.active ? `-> ${selUnit.name}` : ''}
                     </button>
 
                     <button
@@ -2597,7 +2668,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         flash(`Temporal Twist applied to ${selUnit.name} (+3" Move)!`);
                       }}
                     >
-                      ⏳ Temporal Twist (4 Flux) {selUnit && selUnit.owner === s.active ? `-> ${selUnit.name}` : ''}
+                      <Icon name="history" size={13} /> <span>Temporal Twist</span> (4 Flux) {selUnit && selUnit.owner === s.active ? `-> ${selUnit.name}` : ''}
                     </button>
                   </div>
                 </div>
@@ -2641,7 +2712,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         flash('Dynastic Grid Mode Reconfigured!');
                       }}
                     >
-                      Toggle Mode ⚙️
+                      <Icon name="gear" size={13} /> <span>Toggle Mode</span>
                     </button>
                   </div>
                   <div className="tiny muted" style={{ marginTop: 4 }}>
@@ -2669,7 +2740,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         flash('Total Carnage invoked for 3 Tithe Points!');
                       }}
                     >
-                      ⚔️ Total Carnage (3 Tithe)
+                      <Icon name="swords" size={13} /> <span>Total Carnage</span> (3 Tithe)
                     </button>
                     <button
                       className="btn small"
@@ -2679,7 +2750,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         flash('Spiteful Demise invoked for 4 Tithe Points!');
                       }}
                     >
-                      🩸 Spiteful Demise (4 Tithe)
+                      <Icon name="skull" size={13} /> <span>Spiteful Demise</span> (4 Tithe)
                     </button>
                   </div>
                 </div>
@@ -4107,6 +4178,179 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         )}
       </header>
+
+      {/* Battlefield Edge Bar: Anomalies, Tactical Clock Directives, Patron Bounties, and High Command */}
+      <div className="battlefield-edge-bar" style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '5px 12px',
+        background: '#090d16',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        overflowX: 'auto',
+        whiteSpace: 'nowrap',
+        zIndex: 15,
+        flexShrink: 0,
+      }}>
+        {/* Active Anomalies on the board */}
+        {(s.anomalies ?? []).map((a) => {
+          const isAwake = s.round >= a.activeRound;
+          const isTriggered = a.triggered;
+          const label = isTriggered
+            ? `${a.type === 'WARP_BREACH' ? 'Collapsed Breach' : a.type === 'ARCHEOTECH_SHRINE' ? 'Claimed Shrine' : a.type === 'ELDRITCH_ALTAR' ? 'Sealed Altar' : 'Burnt Hazard'}`
+            : !isAwake
+            ? `Awakens Rnd ${a.activeRound}: ${a.type === 'WARP_BREACH' ? 'Warp Breach' : a.type === 'ARCHEOTECH_SHRINE' ? 'Shrine' : a.type === 'ELDRITCH_ALTAR' ? 'Altar' : 'Hazard'}`
+            : `ACTIVE: ${a.type === 'WARP_BREACH' ? 'Warp Breach' : a.type === 'ARCHEOTECH_SHRINE' ? 'Shrine' : a.type === 'ELDRITCH_ALTAR' ? 'Altar' : 'Hazard'}`;
+          const color = a.type === 'WARP_BREACH' ? '#c084fc' : a.type === 'ARCHEOTECH_SHRINE' ? '#fbbf24' : a.type === 'ELDRITCH_ALTAR' ? '#ef4444' : '#f97316';
+          return (
+            <button
+              key={a.id}
+              type="button"
+              className="edge-chip"
+              style={{
+                color,
+                borderColor: color,
+                background: isTriggered ? 'rgba(255,255,255,0.03)' : isAwake ? `${color}22` : 'rgba(255,255,255,0.05)',
+                opacity: isTriggered ? 0.6 : 1,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 8px',
+                borderRadius: 4,
+                fontSize: 11.5,
+                fontWeight: 700,
+                border: '1px solid currentColor',
+              }}
+              onClick={() => handleInspectAnomaly(a)}
+            >
+              <Icon name={isTriggered ? 'check' : isAwake ? 'zap' : 'radar'} size={12} />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+
+        {/* Tactical Clock Directive for this Round */}
+        {s.tacticalClockDirectives && s.tacticalClockDirectives[s.round - 1] && (() => {
+          const dirId = s.tacticalClockDirectives[s.round - 1];
+          const dir = TACTICAL_CLOCK_DIRECTIVES[dirId];
+          if (!dir) return null;
+          return (
+            <button
+              type="button"
+              className="edge-chip"
+              style={{
+                color: '#38bdf8',
+                borderColor: '#38bdf8',
+                background: 'rgba(56, 189, 248, 0.12)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 8px',
+                borderRadius: 4,
+                fontSize: 11.5,
+                fontWeight: 700,
+                border: '1px solid currentColor',
+              }}
+              onClick={() => {
+                setInspectedElement({
+                  type: 'directive',
+                  title: `Round ${s.round} Directive: ${dir.name}`,
+                  badge: `Battle Round ${s.round}`,
+                  icon: (dir.icon || 'history') as IconName,
+                  desc: dir.desc,
+                  tacticalTip: 'Tactical Clock Directives automatically rotate each Battle Round to grant whole-army operational advantages.',
+                });
+              }}
+            >
+              <Icon name={(dir.icon || 'history') as IconName} size={12} />
+              <span>R{s.round}: {dir.name}</span>
+            </button>
+          );
+        })()}
+
+        {/* Active Patron Covenant Bounty */}
+        {s.patronContract && (() => {
+          const p = PATRON_CONTRACTS[s.patronContract];
+          if (!p) return null;
+          return (
+            <button
+              type="button"
+              className="edge-chip"
+              style={{
+                color: '#f59e0b',
+                borderColor: '#f59e0b',
+                background: 'rgba(245, 158, 11, 0.12)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 8px',
+                borderRadius: 4,
+                fontSize: 11.5,
+                fontWeight: 700,
+                border: '1px solid currentColor',
+              }}
+              onClick={() => {
+                setInspectedElement({
+                  type: 'patron',
+                  title: `Patron Bounty: ${p.name}`,
+                  badge: p.sponsor,
+                  icon: (p.icon || 'cards') as IconName,
+                  subtitle: p.conditionDesc,
+                  desc: `Sector Buff: ${p.buffDesc}\n\nBoss Payout: ${p.bossRewardDesc}`,
+                  tacticalTip: 'Fulfill the Patron bounty against enemy forces during the battle to claim massive scrap bounties and permanent campaign boons.',
+                });
+              }}
+            >
+              <Icon name={(p.icon || 'cards') as IconName} size={12} />
+              <span>Bounty: {p.name}</span>
+            </button>
+          );
+        })()}
+
+        {/* High Command Advisor */}
+        {s.advisorsActive && s.advisorsActive.length > 0 && (() => {
+          const firstAdvId = s.advisorsActive[0];
+          const adv = HIGH_COMMAND_ADVISORS[firstAdvId];
+          if (!adv) return null;
+          return (
+            <button
+              type="button"
+              className="edge-chip"
+              style={{
+                color: '#10b981',
+                borderColor: '#10b981',
+                background: 'rgba(16, 185, 129, 0.12)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 8px',
+                borderRadius: 4,
+                fontSize: 11.5,
+                fontWeight: 700,
+                border: '1px solid currentColor',
+              }}
+              onClick={() => {
+                setInspectedElement({
+                  type: 'advisor',
+                  title: `High Command: ${adv.name}`,
+                  badge: 'High Command Advisor',
+                  icon: (adv.icon || 'leader') as IconName,
+                  desc: adv.battleDesc,
+                  tacticalTip: 'High Command Advisors trigger automated strategic support at the start of every Command phase.',
+                });
+              }}
+            >
+              <Icon name={(adv.icon || 'leader') as IconName} size={12} />
+              <span>Council: {adv.name}</span>
+            </button>
+          );
+        })()}
+      </div>
+
       <div className={`board-wrap ${s.screenShake && Date.now() - s.screenShake < 850 ? 'shake-expand' : shake ? `shake-${shake}` : ''}`}>
         <InlineErrorBoundary name="Battlefield Board" onRecover={() => { setSel(null); setMode(null); setDraft(null); }}>
           <Board
@@ -4114,6 +4358,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             viewer={actor}
             selected={sel}
             focusUnit={focusUnit}
+            onSelectAnomaly={handleInspectAnomaly}
+            onSelectObjective={handleInspectObjective}
             movable={
               s.phase === 'movement' && !mode ? s.units.filter((u) => u.owner === s.active && onBoard(u) && !u.move).map((u) => u.id)
               : (!mode && s.window?.kind === 'fireOverwatch' && s.window.player === actor) ? owNow.map((u) => u.id)
@@ -4261,7 +4507,12 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         <div className="tray-backdrop" onClick={() => setSheet(null)}>
           <div className="tray" onClick={(e) => e.stopPropagation()}>
             <div className="tray-head"><span className="grow" /><button className="icon-btn" aria-label="Close" onClick={() => setSheet(null)}><Icon name="close" /></button></div>
-            <UnitView u={U(sheet)} model={sheetModel} />
+            {(() => {
+              const targetU = U(sheet);
+              const sameNameUnits = targetU ? s.units.filter((x) => x.owner === targetU.owner && x.name === targetU.name) : [];
+              const squadNum = sameNameUnits.length > 1 && targetU ? sameNameUnits.findIndex((x) => x.id === targetU.id) + 1 : undefined;
+              return <UnitView u={targetU} model={sheetModel} squadNum={squadNum} />;
+            })()}
             {abilityBar(U(sheet).owner, { unitId: sheet })}
           </div>
         </div>
@@ -4703,6 +4954,59 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         // a Titan lands: the same red screen edge, held longer; nothing to tap
         <div className="reinf-edge titan" key={`titan-${s.titanAlert.unitName}-${s.titanAlert.round}`}>
           <span className="reinf-edge-label"><Icon name="skull" size={14} /> Titan landfall: {s.titanAlert.unitName}</span>
+        </div>
+      )}
+
+      {/* Battlefield & Element Inspector Modal */}
+      {inspectedElement && (
+        <div className="cmp-modal-backdrop" style={{ zIndex: 120 }} onClick={() => setInspectedElement(null)}>
+          <div className="card" onClick={(e) => e.stopPropagation()} style={{
+            maxWidth: 480,
+            width: '92%',
+            padding: 16,
+            background: '#0f172a',
+            border: '1.5px solid #d97706',
+            borderRadius: 10,
+            boxShadow: '0 12px 32px rgba(0,0,0,0.85)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name={inspectedElement.icon} size={20} style={{ color: '#f59e0b' }} />
+                <b style={{ color: '#fef08a', fontSize: 16 }}>{inspectedElement.title}</b>
+              </div>
+              {inspectedElement.badge && (
+                <span className="chip warn small" style={{ fontWeight: 800 }}>{inspectedElement.badge}</span>
+              )}
+            </div>
+
+            {inspectedElement.subtitle && (
+              <div className="tiny muted" style={{ marginBottom: 10, color: '#94a3b8' }}>
+                {inspectedElement.subtitle}
+              </div>
+            )}
+
+            <div style={{ fontSize: 13, color: '#f8fafc', lineHeight: 1.5, marginBottom: 12, whiteSpace: 'pre-line' }}>
+              {inspectedElement.desc}
+            </div>
+
+            {inspectedElement.tacticalTip && (
+              <div style={{ padding: 8, background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 6, fontSize: 12, color: '#fcd34d', marginBottom: 14 }}>
+                <b>Tactical Note:</b> {inspectedElement.tacticalTip}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn primary small"
+                onClick={() => setInspectedElement(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                <Icon name="check" size={13} />
+                <span>Understood</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

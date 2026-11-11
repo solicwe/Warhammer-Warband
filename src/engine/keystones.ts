@@ -123,7 +123,7 @@ export function applyKeystoneBattleSetup(s: GameState, player: PlayerId) {
 
   // 1. Warp Inoculation
   if (hasActiveKeystone(s, player, 'warp_inoculation') || hasActiveKeystone(s, player, 'Warp Inoculation')) {
-    log(s, `⚡ [WARP INOCULATION] All units convert biological life to Warp Energy Shield!`, 'info');
+    log(s, `[WARP INOCULATION] All units convert biological life to Warp Energy Shield!`, 'info');
     for (const u of units) {
       const cs = ensureCombatState(u);
       let totalOriginalWounds = 0;
@@ -140,7 +140,7 @@ export function applyKeystoneBattleSetup(s: GameState, player: PlayerId) {
   // 2. Lone Wolf Protocol
   if (hasActiveKeystone(s, player, 'lone_wolf') || hasActiveKeystone(s, player, 'Lone Wolf Protocol')) {
     if (units.length <= 4) {
-      log(s, `🐺 [LONE WOLF PROTOCOL] Small strike force empowered as APEX BOSSES!`, 'info');
+      log(s, `[LONE WOLF PROTOCOL] Small strike force empowered as APEX BOSSES!`, 'info');
       for (const u of units) {
         for (const m of u.models) {
           m.profile.W *= 2;
@@ -159,7 +159,7 @@ export function applyKeystoneBattleSetup(s: GameState, player: PlayerId) {
 
   // 4. Glass Cannon Overdrive
   if (hasActiveKeystone(s, player, 'glass_cannon') || hasActiveKeystone(s, player, 'Glass Cannon Overdrive')) {
-    log(s, `💥 [GLASS CANNON OVERDRIVE] Armor cracked (+2 Sv penalty) for lethal 4+ Critical Strike!`, 'info');
+    log(s, `[GLASS CANNON OVERDRIVE] Armor cracked (+2 Sv penalty) for lethal 4+ Critical Strike!`, 'info');
     for (const u of units) {
       for (const m of u.models) {
         m.profile.Sv = Math.min(6, m.profile.Sv + 2);
@@ -169,7 +169,7 @@ export function applyKeystoneBattleSetup(s: GameState, player: PlayerId) {
 
   // 5. Unwavering Stance
   if (hasActiveKeystone(s, player, 'unwavering_stance') || hasActiveKeystone(s, player, 'Unwavering Stance')) {
-    log(s, `🗿 [UNWAVERING STANCE] Solid as granite: Invulnerable saves converted into +2 Toughness!`, 'info');
+    log(s, `[UNWAVERING STANCE] Solid as granite: Invulnerable saves converted into +2 Toughness!`, 'info');
     for (const u of units) {
       for (const m of u.models) {
         m.profile.T += 2;
@@ -252,7 +252,7 @@ export function checkMachineInstability(s: GameState, u: UnitState) {
 
   if (currentW > 0 && currentW / totalMaxW <= 0.25) {
     cs.overheated = true;
-    log(s, `💥 [MACHINE INSTABILITY] ${u.name} core breached at <= 25% HP! CATACLYSMIC EXPLOSION!`, 'info');
+    log(s, `[MACHINE INSTABILITY] ${u.name} core breached at <= 25% HP! CATACLYSMIC EXPLOSION!`, 'info');
     const uPos = centreOf(u);
     pushFx(s, { kind: 'explosion', at: uPos, range: 6, radius: 6, hits: 5, title: 'REACTOR OVERLOAD' });
 
@@ -299,7 +299,7 @@ export function processKeystoneTurnStart(s: GameState, player: PlayerId) {
     // Warp Inoculation recharge
     if ((cs.maxWarpWardHP ?? 0) > 0 && (cs.warpWardHP ?? 0) < (cs.maxWarpWardHP ?? 0)) {
       cs.warpWardHP = cs.maxWarpWardHP ?? 0;
-      log(s, `🛡️ [WARP INOCULATION] ${u.name} Warp Ward fully recharged (${cs.warpWardHP}/${cs.maxWarpWardHP})`, 'info');
+      log(s, `[WARP INOCULATION] ${u.name} Warp Ward fully recharged (${cs.warpWardHP}/${cs.maxWarpWardHP})`, 'info');
       pushFx(s, { kind: 'heal', unitId: u.id, owner: u.owner, at: centreOf(u), n: cs.warpWardHP ?? 0 });
     }
 

@@ -15,7 +15,7 @@ import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { BattlefieldAnomaly, FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
 
 export type Paths = Map<string, Pt[]>;
@@ -78,6 +78,8 @@ export interface BoardProps {
   quickActions?: { unitId: string; actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] };
   onMoveDeathstrikeMarker?: (unitId: string, pt: Pt) => void;
   onTapDeathstrikeMarker?: (unitId: string) => void;
+  onSelectAnomaly?: (a: BattlefieldAnomaly) => void;
+  onSelectObjective?: (o: ObjectiveState) => void;
 }
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
@@ -295,6 +297,7 @@ interface ModelTokenProps {
   u: UnitState;
   m: ModelState;
   p: Pt;
+  squadNum?: number | null;
   isDraft: boolean;
   isSel: boolean;
   isTarget: boolean;
@@ -324,6 +327,7 @@ const ModelToken = memo(function ModelToken({
   u,
   m,
   p,
+  squadNum,
   isDraft,
   isSel,
   isTarget,
@@ -408,27 +412,37 @@ const ModelToken = memo(function ModelToken({
         ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
         : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
       {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-      {u.combatState && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
-        const cs = u.combatState!;
-        const badges: { text: string; bg: string }[] = [];
-        if (cs.tokens.auspex > 0) badges.push({ text: `⚡${cs.tokens.auspex}`, bg: '#0284c7' });
-        if (cs.tokens.fervour > 0) badges.push({ text: `🔥${cs.tokens.fervour}`, bg: '#dc2626' });
-        if (cs.tokens.bastion > 0) badges.push({ text: `🛡️${cs.tokens.bastion}`, bg: '#d97706' });
-        if (cs.isExposed) badges.push({ text: '🎯', bg: '#b45309' });
-        if (cs.ailments.soulfire > 0) badges.push({ text: `🔥${cs.ailments.soulfire}`, bg: '#7c2d12' });
-        if (cs.ailments.bleeding > 0) badges.push({ text: `🩸${cs.ailments.bleeding}`, bg: '#881337' });
-        if (cs.ailments.corroded > 0) badges.push({ text: `🧪${cs.ailments.corroded}`, bg: '#581c87' });
-        if (cs.ailments.pinned > 0) badges.push({ text: `⚓${cs.ailments.pinned}`, bg: '#334155' });
+      {(u.combatState || squadNum || (u.compressionTier ?? 1) > 1 || u.apexDesignation) && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
+        const cs = u.combatState;
+        const badges: { text: string; bg: string; w: number }[] = [];
+        if (squadNum) badges.push({ text: `#${squadNum}`, bg: '#334155', w: 0.65 });
+        if ((u.compressionTier ?? 1) > 1) badges.push({ text: `T${u.compressionTier}`, bg: '#d97706', w: 0.62 });
+        if (u.apexDesignation) badges.push({ text: 'APEX', bg: '#7c3aed', w: 0.78 });
+        if (cs) {
+          if (cs.tokens.auspex > 0) badges.push({ text: `AUS ${cs.tokens.auspex}`, bg: '#0284c7', w: 0.94 });
+          if (cs.tokens.fervour > 0) badges.push({ text: `FRV ${cs.tokens.fervour}`, bg: '#dc2626', w: 0.92 });
+          if (cs.tokens.bastion > 0) badges.push({ text: `BST ${cs.tokens.bastion}`, bg: '#d97706', w: 0.92 });
+          if (cs.isExposed) badges.push({ text: 'EXP', bg: '#b45309', w: 0.72 });
+          if (cs.ailments.soulfire > 0) badges.push({ text: `SOUL ${cs.ailments.soulfire}`, bg: '#7c2d12', w: 1.05 });
+          if (cs.ailments.bleeding > 0) badges.push({ text: `BLD ${cs.ailments.bleeding}`, bg: '#881337', w: 0.92 });
+          if (cs.ailments.corroded > 0) badges.push({ text: `COR ${cs.ailments.corroded}`, bg: '#581c87', w: 0.92 });
+          if (cs.ailments.pinned > 0) badges.push({ text: `PIN ${cs.ailments.pinned}`, bg: '#334155', w: 0.9 });
+        }
         if (!badges.length) return null;
-        const totalW = badges.length * 0.7;
+        let runningX = 0;
+        const totalW = badges.reduce((acc, b) => acc + b.w + 0.08, 0) - 0.08;
         return (
-          <g pointerEvents="none" transform={`translate(${p.x - totalW / 2} ${p.y - m.r * 1.1})`}>
-            {badges.map((b, bi) => (
-              <g key={bi} transform={`translate(${bi * 0.72} 0)`}>
-                <rect x={0} y={-0.3} width={0.68} height={0.42} rx={0.21} fill={b.bg} stroke="#ffffff" strokeWidth={0.04} />
-                <text x={0.34} y={-0.02} fontSize={0.24} textAnchor="middle" fill="#ffffff" fontWeight={900}>{b.text}</text>
-              </g>
-            ))}
+          <g pointerEvents="none" transform={`translate(${p.x - totalW / 2} ${p.y - m.r * 1.15})`}>
+            {badges.map((b, bi) => {
+              const xPos = runningX;
+              runningX += b.w + 0.08;
+              return (
+                <g key={bi} transform={`translate(${xPos} 0)`}>
+                  <rect x={0} y={-0.3} width={b.w} height={0.42} rx={0.21} fill={b.bg} stroke="#ffffff" strokeWidth={0.04} />
+                  <text x={b.w / 2} y={-0.02} fontSize={0.21} textAnchor="middle" fill="#ffffff" fontWeight={900}>{b.text}</text>
+                </g>
+              );
+            })}
           </g>
         );
       })()}
@@ -1631,7 +1645,15 @@ function BoardImpl(props: BoardProps) {
         const isTemptingTarget = s.players.some((p) => p.secActive?.includes('a-tempting-target') && p.sec?.temptingTarget === o.id);
 
         return (
-          <g key={o.id} pointerEvents="none">
+          <g
+            key={o.id}
+            pointerEvents="all"
+            style={{ cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onSelectObjective?.(o);
+            }}
+          >
             {/* the objective: all plates under the marker as one shape. Held: tinted in the holder's army colour;
                 the edge is one thin line round the outside (a mask keeps only what lies outside every plate). */}
             <defs>
@@ -1787,34 +1809,44 @@ function BoardImpl(props: BoardProps) {
           : (a.type === 'WARP_BREACH' ? 'WARP BREACH' : a.type === 'ARCHEOTECH_SHRINE' ? `SHRINE (${a.effectPayload?.shrineBuff ?? 'BUFF'})` : a.type === 'ELDRITCH_ALTAR' ? 'ELDRITCH ALTAR' : 'PROMETHIUM');
 
         return (
-          <g key={a.id} transform={`translate(${a.position.x} ${a.position.y})`} pointerEvents="none" opacity={isTriggered ? 0.35 : isAwake ? 1 : 0.6}>
+          <g
+            key={a.id}
+            transform={`translate(${a.position.x} ${a.position.y})`}
+            pointerEvents="all"
+            style={{ cursor: 'pointer' }}
+            opacity={isTriggered ? 0.35 : isAwake ? 1 : 0.65}
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onSelectAnomaly?.(a);
+            }}
+          >
             <title>{titleText}</title>
             <circle r={a.radius} fill={bgFill} stroke={color} strokeWidth={isTriggered ? 0.05 : 0.12} strokeDasharray={isTriggered ? '0.3 0.3' : '0.8 0.4'} />
             {a.type === 'WARP_BREACH' && (
               <g>
                 <circle r={0.9} fill="rgba(59, 7, 100, 0.85)" stroke="#c084fc" strokeWidth={0.12} />
                 <circle r={0.5} fill="#9333ea" opacity={0.6} />
-                <text y={0.25} fontSize={0.7} textAnchor="middle" fill="#fff" fontWeight={900}>🌀</text>
+                <path d="M -0.35 -0.35 C -0.1 -0.65 0.45 -0.4 0.35 0.05 C 0.25 0.45 -0.35 0.35 -0.1 0.1" fill="none" stroke="#ffffff" strokeWidth={0.1} strokeLinecap="round" />
               </g>
             )}
             {a.type === 'ARCHEOTECH_SHRINE' && (
               <g>
                 <polygon points="0,-0.9 0.8,0 0,0.9 -0.8,0" fill="rgba(69, 26, 3, 0.9)" stroke="#fbbf24" strokeWidth={0.12} />
-                <text y={0.22} fontSize={0.65} textAnchor="middle" fill="#fbbf24" fontWeight={900}>⚡</text>
+                <polygon points="0.05,-0.55 -0.3,0.05 0.02,0.05 -0.05,0.55 0.3,-0.05 -0.02,-0.05" fill="#fbbf24" />
               </g>
             )}
             {a.type === 'ELDRITCH_ALTAR' && (
               <g>
                 <circle r={0.85} fill="rgba(69, 10, 10, 0.9)" stroke="#ef4444" strokeWidth={0.14} />
-                <polygon points="0,-0.75 0.65,0.4 -0.65,0.4" fill="none" stroke="#ef4444" strokeWidth={0.06} />
-                <polygon points="0,0.75 0.65,-0.4 -0.65,-0.4" fill="none" stroke="#ef4444" strokeWidth={0.06} />
-                <text y={0.22} fontSize={0.65} textAnchor="middle" fill="#ef4444" fontWeight={900}>🩸</text>
+                <polygon points="0,-0.65 0.55,0.35 -0.55,0.35" fill="none" stroke="#ef4444" strokeWidth={0.08} />
+                <polygon points="0,0.65 0.55,-0.35 -0.55,-0.35" fill="none" stroke="#ef4444" strokeWidth={0.08} />
+                <circle r={0.18} fill="#ef4444" />
               </g>
             )}
             {a.type === 'PROMETHIUM_HAZARD' && (
               <g>
-                <circle r={0.85} fill="rgba(67, 20, 7, 0.9)" stroke="#f97316" strokeWidth={0.12} />
-                <text y={0.24} fontSize={0.65} textAnchor="middle" fill="#f97316" fontWeight={900}>🔥</text>
+                <polygon points="0,-0.85 0.85,0 0,0.85 -0.85,0" fill="rgba(67, 20, 7, 0.9)" stroke="#f97316" strokeWidth={0.12} />
+                <path d="M 0 0.45 C 0.35 0.45 0.4 0.1 0.2 -0.1 C 0.3 -0.3 0.1 -0.5 0 -0.55 C -0.1 -0.5 -0.3 -0.3 -0.2 -0.1 C -0.4 0.1 -0.35 0.45 0 0.45 Z" fill="#f97316" />
               </g>
             )}
             <g transform={`translate(0 ${a.radius > 3 ? a.radius + 0.6 : 3.6})`}>
@@ -1904,6 +1936,8 @@ function BoardImpl(props: BoardProps) {
       ))}
       {units.map((u) => {
         const isDraft = !!(localDraft ?? draft) && draftUnit === u.id;
+        const sameNameSquads = s.units.filter((x) => x.owner === u.owner && x.name === u.name);
+        const squadNum = sameNameSquads.length > 1 ? sameNameSquads.findIndex((x) => x.id === u.id) + 1 : null;
         const isSel = props.selected === u.id;
         const isTarget = props.targets?.includes(u.id) || props.marked?.includes(u.id);
         const isPicked = props.picked?.includes(u.id);
@@ -1985,6 +2019,7 @@ function BoardImpl(props: BoardProps) {
                   m={m}
                   p={p}
                   isDraft={isDraft}
+                  squadNum={squadNum}
                   isSel={isSel}
                   isTarget={!!isTarget}
                   isPicked={!!isPicked}
@@ -2010,11 +2045,17 @@ function BoardImpl(props: BoardProps) {
                 />
               );
             })}
-            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (
-              <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                {u.name.length > 20 ? u.name.slice(0, 19) + '…' : u.name}{u.battleShocked ? ' !' : ''}
-              </text>
-            )}
+            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (() => {
+              const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
+              const tierSuffix = (u.compressionTier ?? 1) > 1 ? ` [T${u.compressionTier}]` : '';
+              const apexSuffix = u.apexDesignation ? ' [APEX]' : '';
+              const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
+              return (
+                <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
+                  {baseName}{squadSuffix}{tierSuffix}{apexSuffix}{u.battleShocked ? ' !' : ''}
+                </text>
+              );
+            })()}
             {props.badges?.[u.id]?.length && pts.length > 0 ? (() => {
               const uBadges = props.badges![u.id]!;
               const bCount = Math.min(uBadges.length, 3);
