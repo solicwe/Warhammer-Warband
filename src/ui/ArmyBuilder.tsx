@@ -942,23 +942,6 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const bodySupport = body && bodySheet && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
       && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
     const squadsFor = sheet?.leads.length && !body ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
-    const transportDatasheets = faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && parseTransport(d.transport));
-    const checkFitForSheet = (d: DatasheetData) => {
-      const info = parseTransport(d.transport);
-      if (!info) return { ok: false, why: 'Not a transport', need: 0, capacity: 0 };
-      let need = 0;
-      for (const g of [rider, ...list.units.filter((c) => c.attachTo === rider.uid)]) {
-        const sh = sheetOf(g.datasheet);
-        if (!sh) continue;
-        const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
-        if (fit.why) return { ok: false, why: `${g.datasheet}: ${fit.why}`, need: 0, capacity: info.capacity };
-        need += g.models * fit.space;
-      }
-      if (need > info.capacity) return { ok: false, why: `Needs ${need} slots (capacity ${info.capacity})`, need, capacity: info.capacity };
-      return { ok: true, why: null, need, capacity: info.capacity };
-    };
-    const compatibleTransports = transportDatasheets.filter((d) => checkFitForSheet(d).ok);
-    const incompatibleTransports = transportDatasheets.map((d) => ({ d, check: checkFitForSheet(d) })).filter(({ check }) => !check.ok);
     const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));
@@ -1097,42 +1080,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               })}
             </>
           )}
-          {compatibleTransports.length > 0 && (
-            <>
-              <div className="ab-pop-sub" style={{ padding: '8px 12px 2px', fontWeight: 700, color: 'var(--text-3)' }}>Add Transport:</div>
-              {compatibleTransports.map((d) => {
-                const fit = checkFitForSheet(d);
-                return newCard(d, (models) => {
-                  const t = newEntry(d, models);
-                  if (!t) return;
-                  set({ units: [...list.units.map((x) => (x.uid === rider.uid ? { ...x, embarkIn: t.uid } : x)), t] });
-                  setNote(`Added ${d.name}; ${rider.datasheet} starts embarked in it`);
-                  close();
-                }, `Capacity ${fit.capacity} · Needs ${fit.need} slots`);
-              })}
-            </>
+          {rides.length === 0 && (
+            <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No compatible transports in your army.</div>
           )}
-          {incompatibleTransports.length > 0 && (
-            <>
-              <div className="ab-pop-sub" style={{ padding: '8px 12px 2px', fontWeight: 700, color: 'var(--text-3)' }}>Cannot embark in:</div>
-              {incompatibleTransports.map(({ d, check }) => (
-                <div key={`incompat-${d.name}`} className="ab-pop-card" style={{ opacity: 0.65 }}>
-                  <div className="ab-pop-card-head">
-                    {peekArt(d.name)}
-                    <div className="ab-pop-card-text">
-                      <div className="ab-pop-name">{d.name}</div>
-                      <div className="ab-pop-sub" style={{ color: 'var(--warn, #e06c75)', marginTop: 2 }}>{check.why}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-          {rides.length === 0 && compatibleTransports.length === 0 && incompatibleTransports.length === 0 && (
-            <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No transports available for this faction.</div>
-          )}
-
-
         </>
       );
     } else if (pop.mode === 'size') {
@@ -1158,21 +1108,27 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <Icon name="leave" size={22} />Leave Squad
             </button>
           )}
-          {myLoad && (
-            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
-          )}
-          {!isTransport && !sheet?.keywords.includes('TITANIC') && (
-            <>
-              {rideIn && (
-            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
-              <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
+          {myLoad && cargo.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
+              <Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span>
             </button>
-              )}
-              <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
-                <Icon name="embark" size={22} />{rideIn ? 'Change Transport' : 'Embark'}{rideIn ? <span className="ab-pop-val">{rideIn.datasheet}</span> : null}
-              </button>
-            </>
           )}
+          {!isTransport && (rideIn ? (
+            <>
+              <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
+                <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
+              </button>
+              {rides.length > 1 && (
+                <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
+                  <Icon name="embark" size={22} />Change Transport
+                </button>
+              )}
+            </>
+          ) : rides.length > 0 && (
+            <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
+              <Icon name="embark" size={22} />Embark
+            </button>
+          ))}
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
           {isChar && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>

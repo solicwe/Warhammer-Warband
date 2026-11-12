@@ -599,9 +599,16 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></button>
           )}
           {!isTransport && (rideIn ? (
-            <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setInfo(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
-              <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
-            </button>
+            <>
+              <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setInfo(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
+                <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
+              </button>
+              {rides.length > 1 && (
+                <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
+                  <Icon name="embark" size={22} />Change Transport
+                </button>
+              )}
+            </>
           ) : rides.length > 0 && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}><Icon name="embark" size={22} />Embark</button>
           ))}
