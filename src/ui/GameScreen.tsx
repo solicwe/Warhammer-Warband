@@ -29,7 +29,7 @@ import {
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   levelOfControl,
   pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
-  endBattle, checkTabling } from '../engine/game';
+  endBattle } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';

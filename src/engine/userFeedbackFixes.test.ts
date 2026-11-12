@@ -319,4 +319,37 @@ describe('User Feedback Fixes Verification', () => {
     // Let's verify what broken has
     expect(broken).toEqual([]);
   });
+
+  it('Game does not prematurely end when an army is wiped out in round 4, and winner is decided strictly by VP', async () => {
+    const { endPhase, endBattle } = await import('./game');
+    const s = {
+      round: 4,
+      phase: 'shooting',
+      firstPlayer: 0,
+      active: 0,
+      players: [
+        { id: 0, name: 'Thousand Sons', vp: 21, secVp: 0, detachments: [] },
+        { id: 1, name: 'Chaos Knights', vp: 34, secVp: 0, detachments: [] },
+      ],
+      units: [
+        // Player 0 has alive units
+        { id: 'u0', owner: 0, status: 'board', buffs: [], abilities: [], keywords: [], factionKeywords: [], weaponsFired: [], models: [{ id: 'm0', dead: false, wounds: 3, profile: { M: 6 } }] },
+        // Player 1 has all units destroyed (tabled)
+        { id: 'u1', owner: 1, status: 'destroyed', buffs: [], abilities: [], keywords: [], factionKeywords: [], weaponsFired: [], models: [{ id: 'm1', dead: true, wounds: 0 }] },
+      ],
+      log: [],
+      ordersUsed: {},
+      objectives: [],
+    } as unknown as any;
+
+    // Ending the shooting phase in round 4 should NOT call endBattle / should NOT set phase to gameover
+    endPhase(s);
+    expect(s.phase).not.toBe('gameover');
+
+    // When the battle actually finishes, endBattle compares VP:
+    endBattle(s);
+    expect(s.phase).toBe('gameover');
+    // Player 1 had 34 VP, Player 0 had 21 VP -> Player 1 (Chaos Knights) wins based on VP, not who survived!
+    expect(s.winner).toBe(1);
+  });
 });
