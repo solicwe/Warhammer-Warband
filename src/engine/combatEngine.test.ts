@@ -263,7 +263,7 @@ describe('Tactical Ailments Engine', () => {
     expect(target.models[0].wounds).toBe(8); // 10 - 2 MW
   });
 
-  it('triggers Conflagration explosion at 5 Soulfire stacks and spreads to nearby foes', () => {
+  it('triggers Conflagration explosion at 5 Soulfire stacks without cascading spread', () => {
     const target = makeMockUnit('t1', 'Boyz', 1, ['INFANTRY'], undefined, { W: 10 });
     target.models[0].x = 10;
     target.models[0].y = 10;
@@ -280,8 +280,8 @@ describe('Tactical Ailments Engine', () => {
     expect(target.models[0].wounds).toBe(7); // 10 - 3 MW
     expect(target.combatState?.ailments.soulfire).toBe(0);
 
-    // Nearby ally within 4" catches 1 Soulfire stack
-    expect(nearbyAlly.combatState?.ailments.soulfire).toBe(1);
+    // Conflagration does NOT spread to nearby units (prevents infinite recursive chain-wipes)
+    expect(nearbyAlly.combatState?.ailments.soulfire).toBe(0);
   });
 
   it('applies Bleeding and deals damage on movement (doubled on fast move)', () => {

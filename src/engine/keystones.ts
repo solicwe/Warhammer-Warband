@@ -3,7 +3,7 @@
 // Path of Exile-inspired rule-bending keystones and extreme game-changers
 // ============================================================================
 
-import { addCombatMods, type AttackContext, type CombatMods } from './combatMods';
+import { addCombatMods, addPoolFinisher, type AttackContext, type CombatMods } from './combatMods';
 import { addCombatToken, applyAilment, applyMortalWounds, ensureCombatState } from './combatEngine';
 import { d6, rollExpr } from './dice';
 import { alive, boardUnits, centreOf, log, onBoard, other, pushFx } from './state';
@@ -154,7 +154,7 @@ export function applyKeystoneBattleSetup(s: GameState, player: PlayerId) {
   // 3. Temporal Distortion
   if (hasActiveKeystone(s, player, 'temporal_distortion') || hasActiveKeystone(s, player, 'Temporal Distortion')) {
     s.maxRounds = 7;
-    log(s, `⏳ [TEMPORAL DISTORTION] Space-time warped: Battle extended to 7 Battle Rounds!`, 'info');
+    log(s, `[TEMPORAL DISTORTION] Space-time warped: Battle extended to 7 Battle Rounds!`, 'info');
   }
 
   // 4. Glass Cannon Overdrive
@@ -206,16 +206,19 @@ export function registerKeystoneModifiers() {
       }
     }
 
-    // 3. Avatar of the Warp: Soulfire on 6s
+    // 3. Avatar of the Warp: Soulfire on attacks
     if (hasActiveKeystone(s, A.owner, 'avatar_of_warp') || hasActiveKeystone(s, A.owner, 'Avatar of the Warp')) {
-      const cs = ensureCombatState(T);
-      cs.maxTokenCaps = { ...cs.maxTokenCaps };
-      // Cap raised to 10
-      applyAilment(s, T, 'soulfire', 1);
-      mods.notes!.push('Avatar of the Warp (+1 Soulfire on attack)');
+      mods.notes!.push('Avatar of the Warp (+1 Soulfire)');
     }
 
     return Object.keys(mods).length > 1 ? mods : null;
+  });
+
+  addPoolFinisher((ctx: AttackContext) => {
+    const { s, A, T } = ctx;
+    if (hasActiveKeystone(s, A.owner, 'avatar_of_warp') || hasActiveKeystone(s, A.owner, 'Avatar of the Warp')) {
+      applyAilment(s, T, 'soulfire', 1);
+    }
   });
 }
 

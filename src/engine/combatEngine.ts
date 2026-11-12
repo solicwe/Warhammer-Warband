@@ -119,6 +119,7 @@ export function clearCombatTokens(u: UnitState) {
 
 /** Apply an ailment to a target unit, triggering overloads at 5 stacks */
 export function applyAilment(s: GameState, target: UnitState, ailment: keyof TacticalAilments, stacks = 1) {
+  if (target.status === 'destroyed' || !alive(target).length) return;
   const cs = ensureCombatState(target);
   const oldVal = cs.ailments[ailment];
   const newVal = Math.min(5, oldVal + stacks);
@@ -134,39 +135,33 @@ export function applyAilment(s: GameState, target: UnitState, ailment: keyof Tac
 
 /** Trigger the 5-stack maximum overload effect for an ailment */
 function triggerAilmentOverload(s: GameState, target: UnitState, ailment: keyof TacticalAilments) {
+  if (target.status === 'destroyed' || !alive(target).length) return;
   const cs = ensureCombatState(target);
   const pos = centreOf(target);
 
   switch (ailment) {
     case 'soulfire': {
-      // Conflagration: 3 Mortal Wounds and spread to all enemies within 4"
-      log(s, `[CONFLAGRATION] ${target.name} soulfire overloaded! Dealing 3 Mortal Wounds and spreading flame.`, 'info');
+      // Conflagration: 3 Mortal Wounds to the target only (consumed on explosion, NO cascading spread)
+      cs.ailments.soulfire = 0;
+      log(s, `[CONFLAGRATION] ${target.name} soulfire overloaded! Dealing 3 Mortal Wounds.`, 'info');
       pushFx(s, { kind: 'explosion', at: pos, range: 4, radius: 4, hits: 3, title: 'CONFLAGRATION' });
       applyMortalWounds(s, target, 3, 'Conflagration');
-      cs.ailments.soulfire = 0; // consumed on explosion
-
-      // Spread 1 stack to all other units of target's owner within 4"
-      for (const otherUnit of boardUnits(s, target.owner)) {
-        if (otherUnit.id === target.id) continue;
-        const oPos = centreOf(otherUnit);
-        const dist = Math.hypot(pos.x - oPos.x, pos.y - oPos.y);
-        if (dist <= 4.0) {
-          applyAilment(s, otherUnit, 'soulfire', 1);
-        }
-      }
       break;
     }
     case 'bleeding': {
+      cs.ailments.bleeding = 0;
       // Exsanguinate: cannot advance, taking +1 to wound
       log(s, `EXSANGUINATE! ${target.name} is hemorrhaging: unable to Advance and takes +1 to Wound!`, 'info');
       break;
     }
     case 'corroded': {
+      cs.ailments.corroded = 0;
       // Armor Shatter: Invulnerable save disabled for 1 turn
       log(s, `[ARMOR SHATTER] ${target.name} defenses shattered: Invulnerable saves disabled!`, 'info');
       break;
     }
     case 'pinned': {
+      cs.ailments.pinned = 0;
       // Staggered: forced Fights Last, cannot fire Overwatch
       log(s, `[STAGGERED] ${target.name} pinned down: Overwatch disabled, Fights Last!`, 'info');
       break;

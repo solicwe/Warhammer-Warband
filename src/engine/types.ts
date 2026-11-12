@@ -231,7 +231,7 @@ export interface CombatTokens {
 }
 
 export interface TacticalAilments {
-  soulfire: number; // Command phase DoT, max 5 explodes 3 MW & spreads 4"
+  soulfire: number; // Command phase DoT, max 5 explodes 3 MW to target
   bleeding: number; // 1 MW per move/charge (>6" double), max 5 disables advance & +1 to wound
   corroded: number; // Every 2 stacks worsens armor save by 1, max 5 shuts down Invuln
   pinned: number;   // -1" Move per stack, max 5 disables Overwatch & forces Fights Last
