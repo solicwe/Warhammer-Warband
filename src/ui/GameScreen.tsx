@@ -4022,7 +4022,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     ...(s.players[p].painTokens !== undefined
       ? [<div key={`drukhari${p}`} className={`buffcard p${p}`}><b>Power from Pain ({s.players[p].painTokens} Tokens)</b><span>Spend 1 Pain token to Empower a unit{s.players[p].drukhariWagerWinning ? ` · Reaper's Wager: ${s.players[p].drukhariWagerWinning} winning` : ''}</span></div>]
       : []),
-    // Campaign Army-Wide Buffs (Relics, Apex Protocol, Advisors, Gilded Arsenal, Round Surge, Patron Bounty)
+    // Campaign Army-Wide Buffs (Relics, Round Surge, Advisors, Gilded Arsenal, Patron Bounty)
     ...(p === 0 && s.campaign?.relics
       ? s.campaign.relics.map((rid) => {
           const r = relicById(rid);

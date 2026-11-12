@@ -117,7 +117,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
 
         {/* Tab Content */}
         <div className="cmp-armory-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: 16 }}>
-          {/* TAB 1: ARMY COMPRESSION & APEX */}
+          {/* TAB 1: ARMY COMPRESSION & RANKING */}
           {tab === 'compression' && (
             <div>
               {/* Compression Engine Rules Table */}
@@ -330,16 +330,16 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                   </h4>
                   <div style={{ fontSize: '0.85em', color: '#94a3b8', marginTop: 2 }}>Advisors trigger powerful effects in every Command Phase and grant passive campaign bonuses.</div>
                 </div>
-                {maxSlots < 3 && (
+                {maxSlots < 4 && (
                   <button
                     type="button"
                     className="btn small"
-                    disabled={scrap < (maxSlots === 1 ? 100 : 200)}
+                    disabled={scrap < (maxSlots === 1 ? 100 : maxSlots === 2 ? 200 : 300)}
                     onClick={() => onUpdateRun(unlockAdvisorSlot(run))}
                     style={{ background: '#3b82f6', color: '#fff', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
                     <Icon name="plus" size={12} />
-                    <span>Unlock Slot {maxSlots + 1} ({maxSlots === 1 ? '100' : '200'} Scrap)</span>
+                    <span>Unlock Slot {maxSlots + 1} ({maxSlots === 1 ? '100' : maxSlots === 2 ? '200' : '300'} Scrap)</span>
                   </button>
                 )}
               </div>
@@ -388,7 +388,8 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 {(Object.keys(HIGH_COMMAND_ADVISORS) as AdvisorId[]).map((advId) => {
                   const def = HIGH_COMMAND_ADVISORS[advId];
                   const isHired = activeAdvisors.includes(advId);
-                  const canHire = !isHired && scrap >= def.hireCost;
+                  const isFull = activeAdvisors.length >= maxSlots;
+                  const canHire = !isHired && !isFull && scrap >= def.hireCost;
 
                   return (
                     <div
@@ -426,7 +427,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                           style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
                         >
                           <Icon name="plus" size={12} />
-                          <span>Hire ({def.hireCost} Scrap)</span>
+                          <span>{isFull ? `Slots Full (${activeAdvisors.length}/${maxSlots})` : `Hire (${def.hireCost} Scrap)`}</span>
                         </button>
                       )}
                     </div>

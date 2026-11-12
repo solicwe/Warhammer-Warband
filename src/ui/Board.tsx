@@ -78,8 +78,6 @@ export interface BoardProps {
   quickActions?: { unitId: string; actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] };
   onMoveDeathstrikeMarker?: (unitId: string, pt: Pt) => void;
   onTapDeathstrikeMarker?: (unitId: string) => void;
-  onSelectAnomaly?: (a: BattlefieldAnomaly) => void;
-  onSelectObjective?: (o: ObjectiveState) => void;
 }
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
@@ -1804,12 +1802,7 @@ function BoardImpl(props: BoardProps) {
             key={a.id}
             transform={`translate(${a.position.x} ${a.position.y})`}
             pointerEvents="all"
-            style={{ cursor: 'pointer' }}
             opacity={isTriggered ? 0.35 : isAwake ? 1 : 0.65}
-            onClick={(e) => {
-              e.stopPropagation();
-              props.onSelectAnomaly?.(a);
-            }}
           >
             <title>{titleText}</title>
             <circle r={a.radius} fill={bgFill} stroke={color} strokeWidth={isTriggered ? 0.05 : 0.12} strokeDasharray={isTriggered ? '0.3 0.3' : '0.8 0.4'} />

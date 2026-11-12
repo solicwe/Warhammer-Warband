@@ -937,17 +937,17 @@ export function setTacticalClock(
   };
 }
 
-/** Unlocks an additional Advisor Slot */
+/** Unlocks an additional Advisor Slot (up to all 4 Council seats) */
 export function unlockAdvisorSlot(run: any): any {
   const current = run.unlockedAdvisorSlots ?? 1;
-  if (current >= 3) return run;
-  const cost = current === 1 ? 100 : 200;
+  if (current >= 4) return run;
+  const cost = current === 1 ? 100 : current === 2 ? 200 : 300;
   if ((run.scrap ?? 0) < cost) return run;
 
   return {
     ...run,
     scrap: (run.scrap ?? 0) - cost,
-    unlockedAdvisorSlots: (current + 1) as 2 | 3,
+    unlockedAdvisorSlots: (current + 1) as 2 | 3 | 4,
     story: [...(run.story ?? []), `High Command: Unlocked Advisor Slot ${current + 1} (-${cost} Scrap)`],
   };
 }
@@ -958,6 +958,8 @@ export function hireAdvisor(run: any, advisorId: AdvisorId): any {
   if (!def) return run;
   const currentAdvisors: AdvisorId[] = run.activeAdvisors ?? [];
   if (currentAdvisors.includes(advisorId)) return run;
+  const maxSlots = run.unlockedAdvisorSlots ?? 1;
+  if (currentAdvisors.length >= maxSlots) return run;
   if ((run.scrap ?? 0) < def.hireCost) return run;
 
   return {
@@ -1058,8 +1060,7 @@ export function fortifyGarrisonNode(run: any, nodeId: string): any {
 /** Signs a Sector Patronage Contract */
 
 /**
- * Automatically tunes the 5-Round Tactical Clock to army playstyle and equips
- * available Apex badges to suitable units.
+ * Automatically tunes the 5-Round Tactical Clock to army playstyle.
  */
 export function autoOptimizePreBattle(run: any, faction?: FactionData | null): any {
   if (!run?.list?.units) return run;
@@ -1187,11 +1188,10 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
   // 5. High Command Advisors & Patron Contract
   s.advisorsActive = run.activeAdvisors ?? [];
   s.patronContract = run.activePatronContract ?? null;
-  (s as any).activeApexDoctrine = run.activeApexDoctrine ?? null;
   (s as any).purchasedRoundDoctrines = run.purchasedRoundDoctrines ?? [];
   (s as any).roundDoctrineLevels = run.roundDoctrineLevels ?? {};
 
-  // 6. Apply Unit Extensions (Apex, Ammo, Compression Tier)
+  // 6. Apply Unit Extensions (Ammo, Compression Tier)
   const rosterMap = new Map<string, ArmyUnitEntry>();
   if (run.list?.units) {
     for (const u of run.list.units) rosterMap.set(u.uid, u);

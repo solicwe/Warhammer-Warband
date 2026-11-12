@@ -1133,7 +1133,7 @@ export function applyDamage(s: GameState) {
       if (s.gildedBonus && A.owner === 0 && s.gildedBonus.damagePercent > 0) {
         dmg = Math.max(1, Math.round(dmg * (1 + s.gildedBonus.damagePercent / 100)));
       }
-      if ((A.apexDesignation === 'EXECUTIONER' || A.buffs.some((b) => b.label?.includes('Executioner'))) && A.owner === 0) {
+      if (A.buffs.some((b) => b.label?.includes('Executioner')) && A.owner === 0) {
         const foeUnits = s.units.filter((u) => u.owner === 1 && u.status !== 'destroyed');
         const nemesis = foeUnits.sort((a, b) => (b.pts ?? 0) - (a.pts ?? 0))[0];
         if (nemesis && T.id === nemesis.id) dmg += 1;

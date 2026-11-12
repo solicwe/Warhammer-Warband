@@ -40,7 +40,6 @@ import {
   autoOptimizePreBattle,
   applyCampaignSystemsBattleSetup,
   type TacticalClockDirectiveId,
-  type ApexDesignationId,
   type MunitorumAmmoId,
   type AdvisorId,
   type OrbitalModuleId,
@@ -171,7 +170,6 @@ export interface Run {
   garrisonedNodeIds?: string[];
   fortifiedNodeIds?: string[];
   activePatronContract?: PatronContractId | null;
-  activeApexDoctrine?: ApexDesignationId;
   purchasedRoundDoctrines?: number[];
   roundDoctrineLevels?: Record<number, number>;
   orbitalModules?: {
