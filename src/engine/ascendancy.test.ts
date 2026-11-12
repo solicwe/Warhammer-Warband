@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addBloodTithe,
-  addCabalFlux,
   addWaaaghMomentum,
-  castDoomboltCascade,
-  castTemporalTwist,
   getWaaaghTier,
   processAscendancyTurnStart,
   spendBloodTithe,
@@ -130,58 +127,6 @@ describe('Faction Ascendancy Engine (v2.0)', () => {
     });
   });
 
-  describe('Thousand Sons Arcane Flux', () => {
-    it('addCabalFlux clamps flux between 0 and 12', () => {
-      const s = createMockState();
-      addCabalFlux(s, 0, 5);
-      expect(s.players[0].cabalFlux).toBe(9); // 4 baseline + 5
-
-      addCabalFlux(s, 0, 10);
-      expect(s.players[0].cabalFlux).toBe(12);
-    });
-
-    it('castDoomboltCascade: expends 6 flux and deals 1d3+3 mortal wounds to enemy', () => {
-      const s = createMockState();
-      s.players[0].cabalFlux = 8;
-
-      const target = createMockUnit('Guardsmen', 1);
-      s.units = [target];
-
-      const initialHP = target.models[0].wounds;
-      const res = castDoomboltCascade(s, 0, target.id);
-
-      expect(res.success).toBe(true);
-      expect(res.damage).toBeGreaterThanOrEqual(4);
-      expect(s.players[0].cabalFlux).toBe(2);
-      expect(target.models[0].wounds).toBeLessThan(initialHP);
-    });
-
-    it('castDoomboltCascade: fails if insufficient flux', () => {
-      const s = createMockState();
-      s.players[0].cabalFlux = 3;
-
-      const target = createMockUnit('Guardsmen', 1);
-      s.units = [target];
-
-      const res = castDoomboltCascade(s, 0, target.id);
-      expect(res.success).toBe(false);
-      expect(res.error).toContain('Not enough Arcane Flux');
-    });
-
-    it('castTemporalTwist: expends 4 flux and grants movement boost', () => {
-      const s = createMockState();
-      s.players[0].cabalFlux = 5;
-
-      const ally = createMockUnit('Rubric Marines', 0);
-      s.units = [ally];
-
-      const res = castTemporalTwist(s, 0, ally.id);
-      expect(res.success).toBe(true);
-      expect(s.players[0].cabalFlux).toBe(1);
-      expect(ally.timed?.some((t) => t.label.includes('Temporal Twist'))).toBe(true);
-    });
-  });
-
   describe('Necrons Dynastic Grid', () => {
     it('toggleDynasticGrid toggles between resurrection and detonation', () => {
       const s = createMockState();
@@ -247,13 +192,13 @@ describe('Faction Ascendancy Engine (v2.0)', () => {
   });
 
   describe('Turn start ascendancy upkeep', () => {
-    it('processAscendancyTurnStart replenishes flux for Thousand Sons and sets defaults', () => {
+    it('processAscendancyTurnStart sets defaults for Orks and Necrons', () => {
       const s = createMockState();
-      const tsonsUnit = createMockUnit('Sorcerer', 0, ['INFANTRY', 'PSYKER', 'THOUSAND SONS']);
-      s.units = [tsonsUnit];
+      const orkUnit = createMockUnit('Boyz', 0, ['INFANTRY', 'ORK']);
+      s.units = [orkUnit];
 
       processAscendancyTurnStart(s, 0);
-      expect(s.players[0].cabalFlux).toBeGreaterThanOrEqual(6); // 4 + 2
+      expect(s.players[0].waaaghMomentum).toBe(20);
     });
   });
 });

@@ -4,7 +4,7 @@ import { combatMods, runPoolFinishers, type CombinedMods } from './combatMods';
 import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { checkBehemothRampage, onBreacherSavePassed, onVanguardHit } from './combatEngine';
 import { triggerRelicEvent } from './relicEngine';
-import { addBloodTithe, addCabalFlux, addWaaaghMomentum } from './ascendancy';
+import { addBloodTithe, addWaaaghMomentum } from './ascendancy';
 import { absorbWarpWardDamage, checkMachineInstability, hasActiveKeystone } from './keystones';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
@@ -932,9 +932,6 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
       triggerRelicEvent(s, s.attack.kind === 'fight' ? 'ON_MELEE_KILL' : 'ON_MODEL_KILL', killerUnit, u, { killedModelsCount: 1 });
       if (hasKw(killerUnit, 'ORK') || hasKw(killerUnit, 'ORKS')) {
         addWaaaghMomentum(s, killerUnit.owner, 10);
-      }
-      if (hasKw(killerUnit, 'THOUSAND SONS') || (killerUnit.sources ?? []).some((src) => src.includes('Rubric') || src.includes('Scarab'))) {
-        addCabalFlux(s, killerUnit.owner, 1);
       }
     }
   }

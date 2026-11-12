@@ -45,7 +45,7 @@ import { actionOptions, startAction } from '../engine/missions';
 import { Icon, type IconName } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
-import { castDoomboltCascade, castTemporalTwist, toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
+import { toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
 import { triggerGunshipOverclock } from '../engine/combatEngine';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
@@ -2561,12 +2561,11 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         {/* Faction Ascendancy Controls (PoE League Specialization) */}
         {(() => {
           const P = s.players[s.active];
-          const hasTsons = P.cabalFlux !== undefined;
           const hasOrk = P.waaaghMomentum !== undefined;
           const hasNecron = P.dynasticGridMode !== undefined;
           const hasTithe = P.tithe !== undefined;
 
-          if (!hasTsons && !hasOrk && !hasNecron && !hasTithe) return null;
+          if (!hasOrk && !hasNecron && !hasTithe) return null;
 
           return (
             <div className="card" style={{ padding: 10, background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8))', border: '1px solid rgba(129, 140, 248, 0.4)' }}>
@@ -2577,49 +2576,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                 </b>
                 <span className="tiny muted" style={{ marginLeft: 'auto' }}>Turn {s.turn} · Round {s.round}</span>
               </div>
-
-              {/* Thousand Sons: Cabalistic Arcane Flux */}
-              {hasTsons && (
-                <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(129, 140, 248, 0.2)' }}>
-                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span className="small"><b>Cabalistic Arcane Flux:</b> <span style={{ color: '#818cf8', fontWeight: 800 }}>{P.cabalFlux} / 12</span></span>
-                    <div className="tiny muted">Recharges +2 every Command Phase</div>
-                  </div>
-                  <div className="row" style={{ gap: 6, marginTop: 4 }}>
-                    <button
-                      className="btn small"
-                      style={{ background: P.cabalFlux! >= 6 ? 'rgba(99, 102, 241, 0.3)' : undefined, borderColor: '#818cf8' }}
-                      disabled={P.cabalFlux! < 6 || !selUnit || selUnit.owner === s.active}
-                      onClick={() => {
-                        if (!selUnit || selUnit.owner === s.active) {
-                          flash('Select an enemy target unit to strike with Doombolt Cascade!');
-                          return;
-                        }
-                        act((g) => { castDoomboltCascade(g, g.active, selUnit.id); });
-                        flash(`Doombolt Cascade unleashed on ${selUnit.name}!`);
-                      }}
-                    >
-                      <Icon name="arcane" size={13} /> <span>Doombolt</span> (6 Flux) {selUnit && selUnit.owner !== s.active ? `-> ${selUnit.name}` : ''}
-                    </button>
-
-                    <button
-                      className="btn small"
-                      style={{ background: P.cabalFlux! >= 4 ? 'rgba(129, 140, 248, 0.25)' : undefined }}
-                      disabled={P.cabalFlux! < 4 || !selUnit || selUnit.owner !== s.active}
-                      onClick={() => {
-                        if (!selUnit || selUnit.owner !== s.active) {
-                          flash('Select a friendly unit to empower with Temporal Twist!');
-                          return;
-                        }
-                        act((g) => { castTemporalTwist(g, g.active, selUnit.id); });
-                        flash(`Temporal Twist applied to ${selUnit.name} (+3" Move)!`);
-                      }}
-                    >
-                      <Icon name="history" size={13} /> <span>Temporal Twist</span> (4 Flux) {selUnit && selUnit.owner === s.active ? `-> ${selUnit.name}` : ''}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Orks: WAAAGH! Momentum */}
               {hasOrk && (() => {

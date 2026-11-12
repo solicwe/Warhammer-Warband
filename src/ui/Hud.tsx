@@ -111,12 +111,6 @@ export const SideScore = memo(function SideScore({ s, p, label, onOpen }: { s: G
           </span>
         );
       })()}
-      {P.cabalFlux !== undefined && (
-        <span className="miracle-pool" title={`Cabalistic Arcane Flux: ${P.cabalFlux} / 12 Flux (fuels Doombolt Cascade & Temporal Twist)`}>
-          <Icon name="sparkles" size={11} />
-          <b className="miracle-more" style={{ color: '#818cf8' }}>{P.cabalFlux} Flux</b>
-        </span>
-      )}
       {P.waaaghMomentum !== undefined && (
         <span className="miracle-pool" title={`WAAAGH! Momentum: ${P.waaaghMomentum}% (Tier ${P.waaaghMomentum >= 67 ? '3: Da Biggest' : P.waaaghMomentum >= 34 ? '2: Proper Killy' : '1: Rowdy'})`}>
           <Icon name="skull" size={11} />

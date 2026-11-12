@@ -458,7 +458,6 @@ export interface PlayerState {
   bloodshed?: number;
   /** Khorne Daemonkin: Blood Tithe points */
   tithe?: number;
-  cabalFlux?: number; // Thousand Sons Arcane Flux gauge (0 - 12)
   waaaghMomentum?: number; // Orks WAAAGH! Momentum (0 - 100)
   dynasticGridMode?: 'resurrection' | 'detonation'; // Necrons Dynastic Grid
   engramMarkers?: { x: number; y: number; id: string }[];

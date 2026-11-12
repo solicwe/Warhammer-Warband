@@ -1,6 +1,6 @@
 // ============================================================================
 // WARHAMMER WARBAND v2.0 — FACTION ASCENDANCY ENGINE (ARPG League Specializations)
-// Thousand Sons Arcane Flux, Orks WAAAGH! Momentum, Necrons Dynastic Grid, World Eaters Blood Tithe
+// Orks WAAAGH! Momentum, Necrons Dynastic Grid, World Eaters Blood Tithe
 // ============================================================================
 
 import { addTimed } from '../rules-engine/effects';
@@ -100,79 +100,7 @@ export function addWaaaghMomentum(s: GameState, p: PlayerId, amount: number) {
   }
 }
 
-/**
- * Thousand Sons: Add or reduce Cabalistic Arcane Flux (clamped 0 - 12)
- */
-export function addCabalFlux(s: GameState, p: PlayerId, amount: number) {
-  const P = s.players[p];
-  if (P.cabalFlux === undefined) P.cabalFlux = 4;
-  P.cabalFlux = Math.max(0, Math.min(12, P.cabalFlux + amount));
-}
 
-/**
- * Thousand Sons Ascendancy Spell: Doombolt Cascade (Cost: 6 Flux)
- * Blasts an enemy unit for 1d3+3 Mortal Wounds.
- */
-export function castDoomboltCascade(s: GameState, p: PlayerId, targetUnitId: string): { success: boolean; damage?: number; error?: string } {
-  const P = s.players[p];
-  const flux = P.cabalFlux ?? 0;
-  if (flux < 6) return { success: false, error: 'Not enough Arcane Flux (needs 6).' };
-
-  const target = s.units.find((u) => u.id === targetUnitId && onBoard(u) && u.owner !== p);
-  if (!target) return { success: false, error: 'Invalid enemy target.' };
-
-  P.cabalFlux = flux - 6;
-  const dmg = rollExpr(s, '1d3+3').total;
-  log(s, `[DOOMBOLT CASCADE] ${P.name} expends 6 Arcane Flux to unleash Doombolt Cascade on ${target.name} for ${dmg} Mortal Wounds!`, 'info', p);
-
-  pushFx(s, {
-    kind: 'explosion',
-    at: target.models[0] ? { x: target.models[0].x, y: target.models[0].y } : { x: 0, y: 0 },
-    range: 3,
-    radius: 3,
-    hits: dmg,
-    title: 'DOOMBOLT CASCADE',
-  });
-
-  applyMortalWounds(s, target, dmg, 'Doombolt Cascade');
-  return { success: true, damage: dmg };
-}
-
-/**
- * Thousand Sons Ascendancy Spell: Temporal Twist (Cost: 4 Flux)
- * Grants an allied unit +3" Move and Advance re-rolls for 1 turn.
- */
-export function castTemporalTwist(s: GameState, p: PlayerId, allyUnitId: string): { success: boolean; error?: string } {
-  const P = s.players[p];
-  const flux = P.cabalFlux ?? 0;
-  if (flux < 4) return { success: false, error: 'Not enough Arcane Flux (needs 4).' };
-
-  const ally = s.units.find((u) => u.id === allyUnitId && onBoard(u) && u.owner === p);
-  if (!ally) return { success: false, error: 'Invalid allied target.' };
-
-  P.cabalFlux = flux - 4;
-  log(s, `⏳ [TEMPORAL TWIST] ${P.name} channels 4 Arcane Flux into ${ally.name}! (+3" Move & Temporal Acceleration)`, 'info', p);
-
-  pushFx(s, {
-    kind: 'skill',
-    unitId: ally.id,
-    at: ally.models[0] ? { x: ally.models[0].x, y: ally.models[0].y } : { x: 0, y: 0 },
-    owner: p,
-    name: 'TEMPORAL TWIST',
-    who: ally.name,
-    style: 'psychic',
-    epic: true,
-  });
-
-  addTimed(s, ally, {
-    e: { move: 3 },
-    label: 'Temporal Twist (+3" Move)',
-    until: 'turn',
-    by: p,
-  });
-
-  return { success: true };
-}
 
 /**
  * Necrons: Toggle Dynastic Grid mode between 'resurrection' and 'detonation'
@@ -226,15 +154,6 @@ export function spendBloodTithe(s: GameState, p: PlayerId, cost: number, blessin
  */
 export function processAscendancyTurnStart(s: GameState, activePlayer: PlayerId) {
   const P = s.players[activePlayer];
-
-  // Thousand Sons Arcane Flux replenishment
-  const hasPsyker = boardUnits(s, activePlayer).some((u) => hasKw(u, 'PSYKER') || alive(u).some((m) => m.keywords.includes('PSYKER')));
-  const isTsons = P.armyRules?.some((r) => r.name.toLowerCase().includes('cabal') || r.name.toLowerCase().includes('magic'))
-    || boardUnits(s, activePlayer).some((u) => hasKw(u, 'THOUSAND SONS') || (u.sources ?? []).some((src) => src.includes('Rubric') || src.includes('Scarab')));
-
-  if (isTsons || hasPsyker) {
-    addCabalFlux(s, activePlayer, 2);
-  }
 
   // Orks WAAAGH! Momentum natural decay/baseline
   const isOrk = boardUnits(s, activePlayer).some((u) => hasKw(u, 'ORK') || hasKw(u, 'ORKS') || (u.sources ?? []).some((src) => src.toLowerCase().includes('boyz')));
