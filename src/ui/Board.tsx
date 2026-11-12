@@ -2327,16 +2327,27 @@ function BoardImpl(props: BoardProps) {
       )}
       <rect x={0} y={0} width={W} height={H} fill="none" stroke="#000" strokeWidth={0.15} pointerEvents="none" />
       {sides.map(({ p, at, cards }) => {
-        const x = at === 'right' ? W + 1 : -SIDE - 0.5, y = at === 'bottom' ? H / 2 + 0.5 : 0, h = at === 'top' || at === 'bottom' ? H / 2 - 0.5 : H;
+        const hasBothTopBottom = sides.some((x) => x.at === 'top') && sides.some((x) => x.at === 'bottom');
+        const isHalf = (at === 'top' || at === 'bottom') && hasBothTopBottom;
+        const x = at === 'right' ? W + 1 : -SIDE - 0.5;
+        const y = isHalf && at === 'bottom' ? H / 2 + 0.5 : 0;
+        const h = isHalf ? H / 2 - 0.5 : H;
         return (
           // scaled on the SVG side, not with a CSS transform inside the foreignObject: Chrome clips and repaints that
           // wrongly, leaving ghost copies of the cards while the map zooms
           <g key={p} transform={`translate(${x} ${y}) scale(${1 / PX})`}>
             {/* a painted strip under the cards: it moves with every pan, so Chrome repaints where the cards were
                 (with nothing under them, old copies of the cards stayed on screen beside the board) */}
-            <rect x={-PX} y={0} width={(SIDE + 1.5) * PX} height={h * PX} fill="var(--board)" />
-            <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX}>
-              <div className={`table-cards ${at}`}>
+            <rect x={-PX} y={0} width={(SIDE + 1.5) * PX} height={h * PX} fill="var(--board)" pointerEvents="none" />
+            <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX} style={{ pointerEvents: 'auto' }}>
+              <div
+                className={`table-cards ${at}`}
+                onWheel={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerMove={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
                 <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>
                 {cards}
               </div>
