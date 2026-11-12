@@ -17,6 +17,7 @@ import {
   HIGH_COMMAND_ADVISORS,
   TACTICAL_CLOCK_DIRECTIVES,
   ROUND_DOCTRINES,
+  getRoundDoctrineCost,
   buyRoundDoctrine,
   MUNITORUM_AMMO,
   ORBITAL_MODULES,
@@ -50,29 +51,6 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
   const scrap = run.scrap ?? 0;
   const activeAdvisors = run.activeAdvisors ?? [];
   const maxSlots = run.unlockedAdvisorSlots ?? 1;
-  const currentClock = run.tacticalClock ?? [
-    'SHROUD_OF_NIGHT',
-    'BLITZKRIEG_SURGE',
-    'ANNIHILATION_VOLLEY',
-    'AEGIS_OF_IRON',
-    'WARMASTER_ASCENDANCY',
-  ];
-
-  // Tactical Clock Swap Helper
-  const swapClockRound = (idx1: number, idx2: number) => {
-    const nextClock = [...currentClock] as [
-      TacticalClockDirectiveId,
-      TacticalClockDirectiveId,
-      TacticalClockDirectiveId,
-      TacticalClockDirectiveId,
-      TacticalClockDirectiveId
-    ];
-    const temp = nextClock[idx1];
-    nextClock[idx1] = nextClock[idx2];
-    nextClock[idx2] = temp;
-    onUpdateRun(setTacticalClock(run, nextClock));
-  };
-
   return (
     <div className="cmp-modal-backdrop" onClick={onClose}>
       <div className="cmp-armory-modal war-room-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 880 }}>
@@ -515,134 +493,106 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: ROUND TACTICAL DOCTRINES & SURGES */}
+          {/* TAB 3: ROUND TACTICAL DOCTRINES & STACKABLE SURGES */}
           {tab === 'tacticalClock' && (
             <div>
-              {/* Purchasable Round Doctrines */}
               <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #d97706' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <b style={{ color: '#f59e0b', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="zap" size={16} />
-                    <span>Round Tactical Doctrines (Purchasable Surges):</span>
+                  <b style={{ color: '#f59e0b', fontSize: '0.98em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name="zap" size={17} />
+                    <span>Round Tactical Doctrines (Stackable Surge Shop)</span>
                   </b>
                   <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                    Active for Battle Rounds 1 - 5
+                    Battle Rounds 1 - 5 · Stackable up to Lv.3
                   </span>
                 </div>
-                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 12 }}>
-                  Purchase high-impact battle surges with Scrap. When that battle round begins, the surge triggers automatically across your whole army!
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
-                  {[1, 2, 3, 4, 5].map((roundNum) => {
-                    const def = ROUND_DOCTRINES[roundNum];
-                    if (!def) return null;
-                    const purchased = (run.purchasedRoundDoctrines ?? []).includes(roundNum);
-                    const canBuy = !purchased && scrap >= def.cost;
-
-                    return (
-                      <div
-                        key={roundNum}
-                        style={{
-                          padding: 12,
-                          borderRadius: 8,
-                          background: purchased ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                          border: purchased ? '1.5px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          gap: 8,
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ background: purchased ? '#10b981' : '#f59e0b', color: '#000', fontWeight: 'bold', fontSize: 11, padding: '2px 6px', borderRadius: 4 }}>
-                              Round {roundNum}
-                            </span>
-                            <span style={{ fontSize: '0.8em', color: '#fcd34d', fontWeight: 'bold' }}>{def.cost} Scrap</span>
-                          </div>
-                          <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: 13.5, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Icon name={(def.icon || 'zap') as IconName} size={14} />
-                            <span>{def.name}</span>
-                          </div>
-                          <div style={{ fontSize: '0.8em', color: '#cbd5e1', marginTop: 4, lineHeight: 1.35 }}>
-                            {def.desc}
-                          </div>
-                        </div>
-                        <div>
-                          {purchased ? (
-                            <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <Icon name="check" size={12} /> [Surge Ready for Round {roundNum}]
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn small primary"
-                              disabled={!canBuy}
-                              onClick={() => onUpdateRun(buyRoundDoctrine(run, roundNum))}
-                              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
-                            >
-                              <Icon name="plus" size={12} />
-                              <span>Purchase Surge ({def.cost} Scrap)</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ fontSize: '0.82em', color: '#94a3b8' }}>
+                  Purchase high-impact battle surges for each round with Scrap. Surges can be stacked up to Level 3 for exponential combat boosts (costs increase per stack)!
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                <b style={{ color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="history" size={16} />
-                  <span>Pre-Battle Tactical Clock Sequence:</span>
-                </b>
-                <div style={{ fontSize: '0.85em', color: '#d1d5db', marginTop: 4, lineHeight: 1.4 }}>
-                  Arrange 5 distinct Battleplan Directives across Battle Rounds 1 to 5. Click Up/Down to reorder.
-                </div>
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {[1, 2, 3, 4, 5].map((roundNum) => {
+                  const def = ROUND_DOCTRINES[roundNum];
+                  if (!def) return null;
+                  const currentLvl = run.roundDoctrineLevels?.[roundNum] ?? (run.purchasedRoundDoctrines?.includes(roundNum) ? 1 : 0);
+                  const nextLvl = currentLvl + 1;
+                  const isMaxLvl = currentLvl >= 3;
+                  const nextCost = getRoundDoctrineCost(roundNum, nextLvl);
+                  const canBuy = !isMaxLvl && scrap >= nextCost;
 
-              {/* 5 Rounds Timeline */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {currentClock.map((dirId, idx) => {
-                  const def = TACTICAL_CLOCK_DIRECTIVES[dirId];
+                  const currentDesc = currentLvl === 1 ? def.descLv1 : currentLvl === 2 ? def.descLv2 : currentLvl === 3 ? def.descLv3 : null;
+                  const nextDesc = currentLvl === 0 ? def.descLv1 : currentLvl === 1 ? def.descLv2 : def.descLv3;
+
                   return (
                     <div
-                      key={idx}
+                      key={roundNum}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: 12,
+                        padding: 14,
                         borderRadius: 8,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: currentLvl > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                        border: currentLvl === 3 ? '2px solid #10b981' : currentLvl > 0 ? '1.5px solid #059669' : '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: 10,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ background: '#f59e0b', color: '#000', borderRadius: 6, padding: '4px 8px', fontSize: 12, fontWeight: 'bold' }}>
-                          Round {idx + 1}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ background: currentLvl > 0 ? '#10b981' : '#f59e0b', color: '#000', fontWeight: 'bold', fontSize: 11, padding: '2px 8px', borderRadius: 4 }}>
+                              Round {roundNum}
+                            </span>
+                            {currentLvl > 0 && (
+                              <span style={{ fontSize: 10.5, fontWeight: 'bold', color: currentLvl === 3 ? '#34d399' : '#a7f3d0', background: 'rgba(16, 185, 129, 0.2)', padding: '2px 6px', borderRadius: 4 }}>
+                                {currentLvl === 3 ? 'MAX STACK (Lv.3)' : `Stack ×${currentLvl} (Lv.${currentLvl})`}
+                              </span>
+                            )}
+                          </div>
+                          {!isMaxLvl && (
+                            <span style={{ fontSize: '0.82em', color: '#fcd34d', fontWeight: 'bold' }}>
+                              {currentLvl === 0 ? `${nextCost} Scrap` : `Next Stack: ${nextCost} Scrap`}
+                            </span>
+                          )}
                         </div>
-                        <div>
-                          <b style={{ color: '#f8fafc', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Icon name={(def?.icon || 'history') as IconName} size={15} />
-                            <span>{def?.name || dirId}</span>
-                          </b>
-                          <div style={{ fontSize: '0.8em', color: '#94a3b8', marginTop: 2 }}>{def?.desc}</div>
+
+                        <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Icon name={(def.icon || 'zap') as IconName} size={15} />
+                          <span>{def.name}</span>
                         </div>
+
+                        {/* Current Active Effects */}
+                        {currentDesc && (
+                          <div style={{ fontSize: '0.82em', color: '#86efac', marginTop: 8, lineHeight: 1.4, padding: '6px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                            <b>Active (Stack Lv.{currentLvl}):</b> {currentDesc}
+                          </div>
+                        )}
+
+                        {/* Next Upgrade Preview */}
+                        {!isMaxLvl && (
+                          <div style={{ fontSize: '0.8em', color: currentLvl === 0 ? '#cbd5e1' : '#94a3b8', marginTop: 8, lineHeight: 1.35 }}>
+                            <b>{currentLvl === 0 ? 'Surge Effect:' : `Next Stack Upgrade (Lv.${nextLvl}):`}</b> {nextDesc}
+                          </div>
+                        )}
                       </div>
 
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {idx > 0 && (
-                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx - 1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <Icon name="back" size={11} style={{ transform: 'rotate(90deg)' }} />
-                            <span>Up</span>
-                          </button>
-                        )}
-                        {idx < 4 && (
-                          <button type="button" className="btn small" onClick={() => swapClockRound(idx, idx + 1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <Icon name="down" size={11} />
-                            <span>Down</span>
+                      <div style={{ marginTop: 6 }}>
+                        {isMaxLvl ? (
+                          <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: 'rgba(16, 185, 129, 0.15)', borderRadius: 4, width: '100%', justifyContent: 'center' }}>
+                            <Icon name="check" size={13} />
+                            <span>Fully Stacked (Max Level 3)</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn small primary"
+                            disabled={!canBuy}
+                            onClick={() => onUpdateRun(buyRoundDoctrine(run, roundNum))}
+                            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                          >
+                            <Icon name="plus" size={12} />
+                            <span>{currentLvl === 0 ? `Purchase Surge (${nextCost} Scrap)` : `Add Stack to Lv.${nextLvl} (+${nextCost} Scrap)`}</span>
                           </button>
                         )}
                       </div>

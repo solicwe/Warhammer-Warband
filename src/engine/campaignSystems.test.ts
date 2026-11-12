@@ -16,6 +16,9 @@ import {
   ORBITAL_MODULES,
   PATRON_CONTRACTS,
   applyCampaignSystemsBattleSetup,
+  buyRoundDoctrine,
+  getRoundDoctrineCost,
+  ROUND_DOCTRINES,
 } from './campaignSystems';
 
 describe('Campaign Systems: Zero-Collision Rule Engine & 10 Features', () => {
@@ -189,5 +192,40 @@ describe('Campaign Systems: Zero-Collision Rule Engine & 10 Features', () => {
     applyCampaignSystemsBattleSetup(s, run);
     expect(s.units[0].models[0].wounds).toBe(3); // Must NOT balloon to 5, 8, or 440!
     expect(s.units[0].models[0].profile.W).toBe(3);
+  });
+
+  it('allows buying and stacking Round Doctrines with escalating Scrap costs up to Level 3', () => {
+    let run: any = {
+      scrap: 500,
+      roundDoctrineLevels: {},
+      purchasedRoundDoctrines: [],
+      story: [],
+    };
+
+    // Round 1 Surge (Base: 40 Scrap)
+    expect(getRoundDoctrineCost(1, 1)).toBe(40);
+    expect(getRoundDoctrineCost(1, 2)).toBe(60); // 40 * 1.5
+    expect(getRoundDoctrineCost(1, 3)).toBe(84); // 40 * 2.1
+
+    // Purchase Stack 1
+    run = buyRoundDoctrine(run, 1);
+    expect(run.roundDoctrineLevels[1]).toBe(1);
+    expect(run.scrap).toBe(460); // 500 - 40
+
+    // Purchase Stack 2 (Escalated: 60)
+    run = buyRoundDoctrine(run, 1);
+    expect(run.roundDoctrineLevels[1]).toBe(2);
+    expect(run.scrap).toBe(400); // 460 - 60
+
+    // Purchase Stack 3 (Escalated: 84)
+    run = buyRoundDoctrine(run, 1);
+    expect(run.roundDoctrineLevels[1]).toBe(3);
+    expect(run.scrap).toBe(316); // 400 - 84
+
+    // Attempt Stack 4 (Capped at Lv.3)
+    const runBefore = { ...run };
+    run = buyRoundDoctrine(run, 1);
+    expect(run.roundDoctrineLevels[1]).toBe(3);
+    expect(run.scrap).toBe(runBefore.scrap); // No scrap deducted
   });
 });

@@ -173,6 +173,7 @@ export interface Run {
   activePatronContract?: PatronContractId | null;
   activeApexDoctrine?: ApexDesignationId;
   purchasedRoundDoctrines?: number[];
+  roundDoctrineLevels?: Record<number, number>;
   orbitalModules?: {
     activeModule: OrbitalModuleId;
     levels: Record<OrbitalModuleId, 1 | 2 | 3>;

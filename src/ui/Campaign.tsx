@@ -27,13 +27,11 @@ import {
   calculateGarrisonBuffs,
   autoOptimizePreBattle,
   setTacticalClock,
-  setApexDesignation,
   buyMunitorumAmmo,
   fortifyGarrisonNode,
   selectPatronContract,
   absorbBossRule,
   TACTICAL_CLOCK_DIRECTIVES,
-  APEX_DESIGNATIONS,
   MUNITORUM_AMMO,
   PATRON_CONTRACTS,
   type TacticalClockDirectiveId,
@@ -741,11 +739,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                     {tier > 1 && (
                       <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', borderColor: '#f59e0b' }}>
                         <Icon name="star" size={10} /> Tier {tier}
-                      </span>
-                    )}
-                    {u.apexDesignation && (
-                      <span className="cmp-honor-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#34d399', borderColor: '#10b981' }}>
-                        <Icon name="trophy" size={10} /> {APEX_DESIGNATIONS[u.apexDesignation]?.name}
                       </span>
                     )}
                     {u.tempAmmoLoadout && (

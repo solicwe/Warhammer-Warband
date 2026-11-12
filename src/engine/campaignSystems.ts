@@ -253,9 +253,11 @@ export interface RoundDoctrineDef {
   round: number;
   id: string;
   name: string;
-  cost: number;
+  baseCost: number;
   icon: string;
-  desc: string;
+  descLv1: string;
+  descLv2: string;
+  descLv3: string;
 }
 
 export const ROUND_DOCTRINES: Record<number, RoundDoctrineDef> = {
@@ -263,55 +265,83 @@ export const ROUND_DOCTRINES: Record<number, RoundDoctrineDef> = {
     round: 1,
     id: 'R1_SHROUD',
     name: 'Round 1 Surge: Shroud of Night',
-    cost: 40,
+    baseCost: 40,
     icon: 'stealth',
-    desc: 'All friendly units gain [Stealth] (-1 to be hit) and Benefit of Cover for Battle Round 1.',
+    descLv1: 'All friendly units gain [Stealth] (-1 to be hit) and Benefit of Cover for Battle Round 1.',
+    descLv2: 'Stealth, Benefit of Cover, and enemy ranged weapons cannot target your units beyond 24" in Round 1.',
+    descLv3: 'Stealth, Benefit of Cover, 24" range cap, and all friendly units gain 5+ Invulnerable Save against ranged attacks in Round 1.',
   },
   2: {
     round: 2,
     id: 'R2_BLITZ',
     name: 'Round 2 Surge: Blitzkrieg Thrust',
-    cost: 50,
+    baseCost: 50,
     icon: 'advance',
-    desc: 'All friendly units gain +2" Movement and +1 to Charge rolls for Battle Round 2.',
+    descLv1: 'All friendly units gain +2" Movement and +1 to Charge rolls for Battle Round 2.',
+    descLv2: 'All friendly units gain +3" Movement, +2 to Charge rolls, and can Shoot after Advancing in Round 2.',
+    descLv3: 'All friendly units gain +4" Movement, +2 to Charge rolls, and can Shoot and Charge after Advancing in Round 2!',
   },
   3: {
     round: 3,
     id: 'R3_ANNIHILATION',
     name: 'Round 3 Surge: Annihilation Volley',
-    cost: 60,
+    baseCost: 60,
     icon: 'shoot',
-    desc: 'All ranged weapons gain [Sustained Hits 1] (Critical Hits generate 1 extra hit) for Battle Round 3.',
+    descLv1: 'All friendly weapons gain [Sustained Hits 1] for Battle Round 3.',
+    descLv2: 'All friendly weapons gain [Sustained Hits 1] and +1 Armour Penetration (AP) for Battle Round 3.',
+    descLv3: 'All friendly weapons gain [Sustained Hits 2], +1 AP, and score Critical Hits on 5+ in Round 3!',
   },
   4: {
     round: 4,
     id: 'R4_IRON_AEGIS',
     name: 'Round 4 Surge: Aegis of Iron',
-    cost: 70,
+    baseCost: 70,
     icon: 'shield',
-    desc: 'All friendly units gain +1 Toughness and improve Armour Save by 1 for Battle Round 4.',
+    descLv1: 'All friendly units gain +1 Toughness and improve Armour Save by 1 for Battle Round 4.',
+    descLv2: 'All friendly units gain +1 Toughness, improve Armour Save by 1, and incoming attacks suffer -1 Damage (min 1) in Round 4.',
+    descLv3: 'All friendly units gain +2 Toughness, improve Armour Save by 1, -1 Damage taken, and Feel No Pain 5+ in Round 4!',
   },
   5: {
     round: 5,
     id: 'R5_WARMASTER',
     name: 'Round 5 Surge: Warmaster Decapitation',
-    cost: 80,
+    baseCost: 80,
     icon: 'swords',
-    desc: 'All friendly weapons gain [Lethal Hits] and score Critical Hits on 5+ for Battle Round 5.',
+    descLv1: 'All friendly weapons gain [Lethal Hits] and score Critical Hits on 5+ for Battle Round 5.',
+    descLv2: 'All friendly weapons gain [Lethal Hits], Critical Hits on 5+, and +1 Damage on all weapons in Round 5.',
+    descLv3: 'All friendly weapons gain [Lethal Hits], Critical Hits on 5+, +1 Damage, and melee attacks ignore all Invulnerable Saves in Round 5!',
   },
 };
+
+export function getRoundDoctrineCost(round: number, targetLevel: number): number {
+  const def = ROUND_DOCTRINES[round];
+  if (!def) return 999;
+  if (targetLevel <= 1) return def.baseCost;
+  if (targetLevel === 2) return Math.round(def.baseCost * 1.5);
+  if (targetLevel === 3) return Math.round(def.baseCost * 2.1);
+  return Math.round(def.baseCost * (1 + targetLevel * 0.6));
+}
 
 export function buyRoundDoctrine(run: any, round: number): any {
   const def = ROUND_DOCTRINES[round];
   if (!def) return run;
-  const purchased: number[] = run.purchasedRoundDoctrines ?? [];
-  if (purchased.includes(round)) return run;
-  if ((run.scrap ?? 0) < def.cost) return run;
+  const currentLevels: Record<number, number> = run.roundDoctrineLevels ?? {};
+  const currentLvl = currentLevels[round] ?? (run.purchasedRoundDoctrines?.includes(round) ? 1 : 0);
+  if (currentLvl >= 3) return run;
+
+  const cost = getRoundDoctrineCost(round, currentLvl + 1);
+  if ((run.scrap ?? 0) < cost) return run;
+
+  const nextLvl = currentLvl + 1;
+  const nextLevels = { ...currentLevels, [round]: nextLvl };
+  const purchased = Object.keys(nextLevels).map(Number).filter((r) => nextLevels[r] > 0);
+
   return {
     ...run,
-    scrap: (run.scrap ?? 0) - def.cost,
-    purchasedRoundDoctrines: [...purchased, round],
-    story: [...(run.story ?? []), `Tactical Doctrines: Purchased ${def.name} (-${def.cost} Scrap)`],
+    scrap: (run.scrap ?? 0) - cost,
+    roundDoctrineLevels: nextLevels,
+    purchasedRoundDoctrines: purchased,
+    story: [...(run.story ?? []), `Round Tactical Doctrines: Upgraded ${def.name} to Stack Lv.${nextLvl} (-${cost} Scrap)`],
   };
 }
 
@@ -1083,50 +1113,10 @@ export function autoOptimizePreBattle(run: any, faction?: FactionData | null): a
     ];
   }
 
-  // 3. Assign Apex Designations to best units
-  const sortedByPts = [...run.list.units].sort((a, b) => (b.pts ?? 0) - (a.pts ?? 0));
-
-  const execUnit = sortedByPts[0];
-  const vanguardUnit = sortedByPts.find((u) => {
-    if (u.uid === execUnit?.uid) return false;
-    const sheet = faction?.datasheets?.find((d) => d.name === u.datasheet);
-    return sheet?.abilities?.some((a) =>
-      a.name.toLowerCase().includes('infiltrat') || a.name.toLowerCase().includes('scout')
-    );
-  }) || sortedByPts.find((u) => u.uid !== execUnit?.uid);
-
-  const anvilUnit = sortedByPts.find((u) => {
-    if (u.uid === execUnit?.uid || u.uid === vanguardUnit?.uid) return false;
-    const sheet = faction?.datasheets?.find((d) => d.name === u.datasheet);
-    return !sheet?.keywords?.includes('CHARACTER') && !sheet?.keywords?.includes('VEHICLE');
-  }) || sortedByPts.find((u) => u.uid !== execUnit?.uid && u.uid !== vanguardUnit?.uid);
-
-  const spotterUnit = sortedByPts.find((u) => {
-    if (u.uid === execUnit?.uid || u.uid === vanguardUnit?.uid || u.uid === anvilUnit?.uid) return false;
-    const sheet = faction?.datasheets?.find((d) => d.name === u.datasheet);
-    return sheet?.weapons?.some((w) => w.profiles?.some((p) => p.range !== 'Melee'));
-  });
-
-  const nextUnits = run.list.units.map((u: ArmyUnitEntry) => {
-    let designation: ApexDesignationId | undefined = undefined;
-    if (u.uid === execUnit?.uid) designation = 'EXECUTIONER';
-    else if (u.uid === vanguardUnit?.uid) designation = 'VANGUARD_SPEARHEAD';
-    else if (u.uid === anvilUnit?.uid) designation = 'IMMOVABLE_ANVIL';
-    else if (u.uid === spotterUnit?.uid) designation = 'GRAND_SPOTTER';
-    return {
-      ...u,
-      apexDesignation: designation,
-    };
-  });
-
   return {
     ...run,
     tacticalClock: clock,
-    list: {
-      ...run.list,
-      units: nextUnits,
-    },
-    story: [...(run.story ?? []), 'Strategium: Auto-optimized 5-Round Tactical Clock and Apex Designations for battle!'],
+    story: [...(run.story ?? []), 'Strategium: Auto-optimized 5-Round Battleplan for battle!'],
   };
 }
 
@@ -1199,6 +1189,7 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
   s.patronContract = run.activePatronContract ?? null;
   (s as any).activeApexDoctrine = run.activeApexDoctrine ?? null;
   (s as any).purchasedRoundDoctrines = run.purchasedRoundDoctrines ?? [];
+  (s as any).roundDoctrineLevels = run.roundDoctrineLevels ?? {};
 
   // 6. Apply Unit Extensions (Apex, Ammo, Compression Tier)
   const rosterMap = new Map<string, ArmyUnitEntry>();
@@ -1241,24 +1232,6 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
       }
     }
 
-    // Apex Designations
-    const apex = rosterEntry?.apexDesignation ?? u.apexDesignation;
-    if (apex === 'VANGUARD_SPEARHEAD') {
-      u.core.infiltrators = true;
-      u.core.scouts = 6;
-      addTimed(s, u, { e: {}, label: 'Apex: Vanguard Spearhead', until: 'battle', by: me });
-    } else if (apex === 'IMMOVABLE_ANVIL') {
-      for (const m of u.models) {
-        m.wounds = Math.round(m.wounds * 1.3);
-        if (m.profile) m.profile.W = Math.round(m.profile.W * 1.3);
-      }
-      addTimed(s, u, { e: {}, label: 'Apex: Immovable Anvil (+30% Wounds)', until: 'battle', by: me });
-    } else if (apex === 'EXECUTIONER') {
-      addTimed(s, u, { e: {}, label: "Apex: Warmaster's Executioner", until: 'battle', by: me });
-    } else if (apex === 'GRAND_SPOTTER') {
-      addTimed(s, u, { e: {}, label: 'Apex: Grand Battery Spotter', until: 'battle', by: me });
-    }
-
     // Munitorum Ammo Loadouts
     const ammo = rosterEntry?.tempAmmoLoadout ?? u.tempAmmoLoadout;
     if (ammo === 'KRAKEN_BOLTS') {
@@ -1279,55 +1252,6 @@ export function applyCampaignSystemsBattleSetup(s: GameState, run: any): void {
     }
   }
 
-  // 5.5 Apply Active Apex Category Protocol to entire unit category
-  const activeApex = run.activeApexDoctrine;
-  if (activeApex) {
-    const def = APEX_DESIGNATIONS[activeApex as ApexDesignationId];
-    if (def) {
-      for (const u of s.units.filter((x) => x.owner === me)) {
-        const kw = (u.keywords || []).map((k: string) => k.toUpperCase());
-        const isInf = kw.includes('INFANTRY');
-        const isVeh = kw.includes('VEHICLE') || kw.includes('WALKER') || kw.includes('MONSTER');
-        const isMounted = kw.includes('MOUNTED') || kw.includes('BEAST');
-        const isChar = kw.includes('CHARACTER');
-        const isHeavy = kw.includes('HEAVY') || kw.includes('ARTILLERY') || isVeh;
-        const isFly = kw.includes('FLY');
-        const isAssault = kw.includes('MELEE') || kw.includes('JUMP PACK') || kw.some((k: string) => k.includes('ASSAULT'));
-
-        if (activeApex === 'APEX_INFANTRY' && isInf) {
-          for (const m of u.models) {
-            if (m.profile) {
-              m.profile.M = (m.profile.M ?? 6) + 1;
-              if (m.profile.OC !== null) m.profile.OC = (m.profile.OC ?? 1) + 1;
-            }
-          }
-          addTimed(s, u, { e: { stealth: true }, label: `${def.name} (+1" M, +1 OC, Stealth)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_VEHICLE' && isVeh) {
-          for (const m of u.models) {
-            if (m.profile) m.profile.T = (m.profile.T ?? 9) + 2;
-          }
-          addTimed(s, u, { e: { damage: 1 }, label: `${def.name} (+2 T, +1 Dmg)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_MOUNTED' && isMounted) {
-          for (const m of u.models) {
-            if (m.profile) m.profile.M = (m.profile.M ?? 10) + 3;
-          }
-          addTimed(s, u, { e: { abilities: ['lance'] }, label: `${def.name} (+3" M, Lance)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_CHARACTER' && isChar) {
-          addTimed(s, u, { e: { attacks: 1, defend: { inv: 4 }, abilities: ['precision'] }, label: `${def.name} (4++, +1 Atk, Precision)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_HEAVY' && isHeavy) {
-          addTimed(s, u, { e: { hit: 1, critWoundAp: 1 }, label: `${def.name} (+1 Hit, +1 AP)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_FLY' && isFly) {
-          for (const m of u.models) {
-            if (m.profile) m.profile.M = (m.profile.M ?? 12) + 2;
-          }
-          addTimed(s, u, { e: { stealth: true }, label: `${def.name} (+2" M, Hard to Hit)`, until: 'battle', by: me });
-        } else if (activeApex === 'APEX_ASSAULT' && isAssault) {
-          addTimed(s, u, { e: { abilities: ['sustained hits 1'] }, label: `${def.name} (+1 Charge, Sustained Hits 1)`, until: 'battle', by: me });
-        }
-      }
-      log(s, `[Apex Protocol] Army Protocol Activated: ${def.name}!`, 'info', me);
-    }
-  }
 
   // 6.5 Enemy Unit Scaling (Scales enemy forces alongside player progression)
   const enemyPlayer = (1 - me) as PlayerId;
@@ -1440,6 +1364,53 @@ export function processCampaignSystemsRoundStart(s: GameState): void {
       } else if (dir === 'WARMASTER_ASCENDANCY') {
         addTimed(s, u, { e: { shockedOc: 2 }, label: 'Warmaster Ascendancy (2x OC)', until: 'turn', by: me });
       }
+    }
+  }
+
+  // 1.5 Apply Stackable Round Tactical Doctrines (Purchased Surges for this Round)
+  const roundLvl = (s as any).roundDoctrineLevels?.[s.round]
+    ?? (((s as any).purchasedRoundDoctrines || []).includes(s.round) ? 1 : 0);
+
+  if (roundLvl > 0) {
+    const def = ROUND_DOCTRINES[s.round];
+    if (def) {
+      for (const u of s.units.filter((x) => x.owner === me && x.status !== 'destroyed')) {
+        if (s.round === 1) {
+          addTimed(s, u, { e: { defend: { hit: -1, cover: true } }, label: `Surge Lv.${roundLvl}: Shroud of Night`, until: 'turn', by: me });
+          if (roundLvl >= 3) {
+            addTimed(s, u, { e: { defend: { inv: 5 } }, label: 'Surge Lv.3: Shroud Ward (5++)', until: 'turn', by: me });
+          }
+        } else if (s.round === 2) {
+          const moveBonus = roundLvl >= 3 ? 4 : roundLvl >= 2 ? 3 : 2;
+          for (const m of u.models) {
+            if (m.profile) m.profile.M = (m.profile.M ?? 6) + moveBonus;
+          }
+          if (roundLvl >= 3) {
+            addTimed(s, u, { e: { eligible: ['shootAfterAdvance', 'chargeAfterAdvance'] }, label: `Surge Lv.${roundLvl}: Blitzkrieg Advance & Charge`, until: 'turn', by: me });
+          } else if (roundLvl >= 2) {
+            addTimed(s, u, { e: { eligible: ['shootAfterAdvance'] }, label: `Surge Lv.${roundLvl}: Blitzkrieg Shoot After Advance`, until: 'turn', by: me });
+          }
+        } else if (s.round === 3) {
+          const susHits = roundLvl >= 3 ? 'sustained hits 2' : 'sustained hits 1';
+          const apBonus = roundLvl >= 2 ? 1 : 0;
+          addTimed(s, u, { e: { abilities: [susHits], critWoundAp: apBonus }, label: `Surge Lv.${roundLvl}: Annihilation Volley`, until: 'turn', by: me });
+        } else if (s.round === 4) {
+          const tBonus = roundLvl >= 3 ? 2 : 1;
+          for (const m of u.models) {
+            if (m.profile) {
+              m.profile.T = (m.profile.T ?? 4) + tBonus;
+              m.profile.Sv = Math.max(2, m.profile.Sv - 1);
+            }
+          }
+          const dmgMod = roundLvl >= 2 ? -1 : 0;
+          const fnpMod = roundLvl >= 3 ? 5 : undefined;
+          addTimed(s, u, { e: { defend: { damage: dmgMod, fnp: fnpMod } }, label: `Surge Lv.${roundLvl}: Aegis of Iron`, until: 'turn', by: me });
+        } else if (s.round === 5) {
+          const dmgBonus = roundLvl >= 2 ? 1 : 0;
+          addTimed(s, u, { e: { abilities: ['lethal hits'], critHitOn: 5, damage: dmgBonus }, label: `Surge Lv.${roundLvl}: Warmaster Decapitation`, until: 'turn', by: me });
+        }
+      }
+      log(s, `[Tactical Surge] Battle Round ${s.round} Surge Lv.${roundLvl} Active: ${def.name}!`, 'info', me);
     }
   }
 

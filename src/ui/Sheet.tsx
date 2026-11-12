@@ -7,7 +7,7 @@ import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { PHOTO_EDIT, modelPortraitKey, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon } from './Icon';
-import { APEX_DESIGNATIONS, MUNITORUM_AMMO } from '../engine/campaignSystems';
+import { MUNITORUM_AMMO } from '../engine/campaignSystems';
 import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
 
@@ -459,7 +459,7 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
           )}
         </div>
       )}
-      {((u.compressionTier && u.compressionTier > 1) || u.apexDesignation || u.tempAmmoLoadout || (u.enhancements && u.enhancements.length > 0) || (u.socketedRelics && u.socketedRelics.length > 0) || squadNum) && (
+      {((u.compressionTier && u.compressionTier > 1) || u.tempAmmoLoadout || (u.enhancements && u.enhancements.length > 0) || (u.socketedRelics && u.socketedRelics.length > 0) || squadNum) && (
         <div style={{ background: 'var(--surface-2, #1e293b)', border: '1px solid #d97706', borderRadius: 8, padding: '10px 12px', fontSize: '0.82em', display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--text, #f8fafc)' }}>
           <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(217, 119, 6, 0.3)', paddingBottom: 4 }}>
             <Icon name="sparkles" size={14} />

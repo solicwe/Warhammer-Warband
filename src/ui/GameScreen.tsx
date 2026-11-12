@@ -4057,13 +4057,18 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>,
         ]
       : []),
-    ...(p === 0 && ROUND_DOCTRINES[s.round] && ((s as any).purchasedRoundDoctrines || []).includes(s.round)
-      ? [
-          <div key={`round-surge-${s.round}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #ec4899' }}>
-            <b style={{ color: '#f472b6' }}>Tactical Surge: {ROUND_DOCTRINES[s.round].name}</b>
-            <span>{ROUND_DOCTRINES[s.round].desc}</span>
-          </div>,
-        ]
+    ...(p === 0 && ROUND_DOCTRINES[s.round] && (((s as any).roundDoctrineLevels?.[s.round] ?? 0) > 0 || ((s as any).purchasedRoundDoctrines || []).includes(s.round))
+      ? [(() => {
+          const rLvl = (s as any).roundDoctrineLevels?.[s.round] ?? 1;
+          const def = ROUND_DOCTRINES[s.round];
+          const desc = rLvl === 1 ? def.descLv1 : rLvl === 2 ? def.descLv2 : def.descLv3;
+          return (
+            <div key={`round-surge-${s.round}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #ec4899' }}>
+              <b style={{ color: '#f472b6' }}>Tactical Surge: {def.name} (Stack Lv.{rLvl})</b>
+              <span>{desc}</span>
+            </div>
+          );
+        })()]
       : []),
     ...(p === 0 && (s as any).patronContract
       ? (() => {

@@ -208,15 +208,12 @@ describe('11th Edition Campaign Overhaul Systems', () => {
     // Base Sv was 3, save bonus +1 -> Sv 2+
     expect(unit?.models[0].profile.Sv).toBe(2);
   });
-  it('auto-optimizes Tactical Clock and Apex Designations based on army profile', () => {
+  it('auto-optimizes Tactical Clock battle directives based on army profile', () => {
     let run = newRun(SM, autoList(SM, 500, 1), ['ORK'], 1);
     const optimized = autoOptimizePreBattle(run, SM);
 
     expect(optimized.tacticalClock).toBeDefined();
     expect(optimized.tacticalClock).toHaveLength(5);
-    // At least one unit receives an Apex designation
-    const hasApex = optimized.list.units.some((u: any) => u.apexDesignation);
-    expect(hasApex).toBe(true);
   });
 
   it('populates pendingBossTrophyRules on boss victory and absorbs into Trophy Rack', () => {

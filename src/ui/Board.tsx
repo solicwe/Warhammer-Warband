@@ -2039,11 +2039,10 @@ function BoardImpl(props: BoardProps) {
             {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (() => {
               const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
               const tierSuffix = (u.compressionTier ?? 1) > 1 ? ` [T${u.compressionTier}]` : '';
-              const apexSuffix = '';
               const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
               return (
                 <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                  {baseName}{squadSuffix}{tierSuffix}{apexSuffix}{u.battleShocked ? ' !' : ''}
+                  {baseName}{squadSuffix}{tierSuffix}{u.battleShocked ? ' !' : ''}
                 </text>
               );
             })()}
