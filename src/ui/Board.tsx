@@ -412,12 +412,11 @@ const ModelToken = memo(function ModelToken({
         ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
         : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
       {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-      {(u.combatState || squadNum || (u.compressionTier ?? 1) > 1 || u.apexDesignation) && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
+      {(u.combatState || squadNum || (u.compressionTier ?? 1) > 1) && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
         const cs = u.combatState;
         const badges: { text: string; bg: string; w: number }[] = [];
         if (squadNum) badges.push({ text: `#${squadNum}`, bg: '#334155', w: 0.65 });
         if ((u.compressionTier ?? 1) > 1) badges.push({ text: `T${u.compressionTier}`, bg: '#d97706', w: 0.62 });
-        if (u.apexDesignation) badges.push({ text: 'APEX', bg: '#7c3aed', w: 0.78 });
         if (cs) {
           if (cs.tokens.auspex > 0) badges.push({ text: `AUS ${cs.tokens.auspex}`, bg: '#0284c7', w: 0.94 });
           if (cs.tokens.fervour > 0) badges.push({ text: `FRV ${cs.tokens.fervour}`, bg: '#dc2626', w: 0.92 });
@@ -2040,7 +2039,7 @@ function BoardImpl(props: BoardProps) {
             {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (() => {
               const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
               const tierSuffix = (u.compressionTier ?? 1) > 1 ? ` [T${u.compressionTier}]` : '';
-              const apexSuffix = u.apexDesignation ? ' [APEX]' : '';
+              const apexSuffix = '';
               const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
               return (
                 <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>

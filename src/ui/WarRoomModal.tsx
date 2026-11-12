@@ -6,7 +6,6 @@ import {
   compressSquad,
   canBuyMunitorumAmmo,
   buyMunitorumAmmo,
-  setApexDesignation,
   setTacticalClock,
   hireAdvisor,
   unlockAdvisorSlot,
@@ -17,15 +16,12 @@ import {
 import {
   HIGH_COMMAND_ADVISORS,
   TACTICAL_CLOCK_DIRECTIVES,
-  APEX_DESIGNATIONS,
   ROUND_DOCTRINES,
   buyRoundDoctrine,
-  setActiveApexDoctrine,
   MUNITORUM_AMMO,
   ORBITAL_MODULES,
   PATRON_CONTRACTS,
   type AdvisorId,
-  type ApexDesignationId,
   type OrbitalModuleId,
   type PatronContractId,
   type TacticalClockDirectiveId,
@@ -213,90 +209,6 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 </div>
               </div>
 
-              {/* Category-Wide Apex Protocols */}
-              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #0284c7' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <b style={{ color: '#38bdf8', fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="crosshair" size={16} />
-                    <span>Category-Wide Apex Protocols (Whole-Army Specialization)</span>
-                  </b>
-                  <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                    Select 1 Active Army Protocol
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.82em', color: '#94a3b8', marginBottom: 12 }}>
-                  Instead of micro-managing single models, activate an Apex Protocol that buffs an entire unit category across your whole army:
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
-                  {[
-                    'APEX_INFANTRY',
-                    'APEX_VEHICLE',
-                    'APEX_MOUNTED',
-                    'APEX_CHARACTER',
-                    'APEX_HEAVY',
-                    'APEX_FLY',
-                    'APEX_ASSAULT',
-                  ].map((apexKey) => {
-                    const apexId = apexKey as ApexDesignationId;
-                    const def = APEX_DESIGNATIONS[apexId];
-                    if (!def) return null;
-                    const isActive = run.activeApexDoctrine === apexId;
-
-                    return (
-                      <div
-                        key={apexId}
-                        style={{
-                          padding: 12,
-                          borderRadius: 8,
-                          background: isActive ? 'rgba(56, 189, 248, 0.14)' : 'rgba(255, 255, 255, 0.04)',
-                          border: isActive ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          gap: 8,
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <b style={{ color: isActive ? '#7dd3fc' : '#f8fafc', fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Icon name={(def.icon || 'star') as IconName} size={15} />
-                              <span>{def.name}</span>
-                            </b>
-                            {isActive && (
-                              <span style={{ background: '#38bdf8', color: '#000', fontSize: 10, fontWeight: 'bold', padding: '1px 6px', borderRadius: 4 }}>
-                                ACTIVE
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: '0.8em', color: '#cbd5e1', marginTop: 6, lineHeight: 1.35 }}>
-                            {def.desc}
-                          </div>
-                        </div>
-
-                        <div>
-                          {isActive ? (
-                            <span style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <Icon name="check" size={12} /> [Current Army Protocol]
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn small"
-                              onClick={() => onUpdateRun(setActiveApexDoctrine(run, apexId))}
-                              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
-                            >
-                              <Icon name="check" size={12} />
-                              <span>Activate Protocol</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Squad List with Portraits, Distinct Numbering, Upgrades & Compress Buttons */}
               <h4 style={{ margin: '16px 0 8px 0', color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Icon name="fight" size={16} />
@@ -404,38 +316,12 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                                 <span>Ammo: {MUNITORUM_AMMO[u.tempAmmoLoadout]?.name}</span>
                               </span>
                             )}
-                            {u.apexDesignation && (
-                              <span style={{ fontSize: 10.5, padding: '1px 6px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                <Icon name={(APEX_DESIGNATIONS[u.apexDesignation]?.icon || 'trophy') as IconName} size={11} />
-                                <span>{APEX_DESIGNATIONS[u.apexDesignation]?.name}</span>
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
 
                       {/* Action buttons */}
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <select
-                          value={u.apexDesignation || ''}
-                          onChange={(e) => onUpdateRun(setApexDesignation(run, u.uid, (e.target.value as ApexDesignationId) || null))}
-                          style={{
-                            background: '#1e293b',
-                            color: '#f8fafc',
-                            border: '1px solid #475569',
-                            borderRadius: 4,
-                            padding: '5px 8px',
-                            fontSize: '0.82em',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <option value="">No Apex Badge</option>
-                          <option value="VANGUARD_SPEARHEAD">Vanguard Spearhead</option>
-                          <option value="IMMOVABLE_ANVIL">Immovable Anvil</option>
-                          <option value="EXECUTIONER">Warmaster Executioner</option>
-                          <option value="GRAND_SPOTTER">Grand Battery Spotter</option>
-                        </select>
-
                         {canRankUp && (
                           <button
                             type="button"

@@ -70,10 +70,8 @@ import {
   TACTICAL_CLOCK_DIRECTIVES,
   PATRON_CONTRACTS,
   HIGH_COMMAND_ADVISORS,
-  APEX_DESIGNATIONS,
   ROUND_DOCTRINES,
   type AdvisorId,
-  type ApexDesignationId,
   type PatronContractId,
 } from '../engine/campaignSystems';
 import { relicById } from '../engine/campaign';
@@ -4038,18 +4036,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             </div>
           );
         }).filter(Boolean)
-      : []),
-    ...(p === 0 && (s as any).activeApexDoctrine
-      ? (() => {
-          const def = APEX_DESIGNATIONS[(s as any).activeApexDoctrine as ApexDesignationId];
-          if (!def) return [];
-          return [
-            <div key="apex-protocol" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #38bdf8' }}>
-              <b style={{ color: '#7dd3fc' }}>Apex Protocol: {def.name}</b>
-              <span>{def.desc}</span>
-            </div>,
-          ];
-        })()
       : []),
     ...(p === 0 && (s as any).advisorsActive?.length
       ? (s as any).advisorsActive.map((advId: AdvisorId) => {

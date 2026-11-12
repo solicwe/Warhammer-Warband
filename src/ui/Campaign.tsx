@@ -1128,10 +1128,10 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                       }}
                       onClick={() => {
                         setRun(autoOptimizePreBattle(run, fac));
-                        setInfo('Battle tactics & Apex badges auto-optimized!');
+                        setInfo('Battle tactics auto-optimized!');
                         play('good');
                       }}
-                      title="Automatically configures the Tactical Clock to your army's weapon profile and equips available Apex badges"
+                      title="Automatically configures the Tactical Clock to your army's weapon profile"
                     >
                       <Icon name="sparkles" size={13} />
                       <span>Auto-Optimize Tactics</span>
@@ -1849,7 +1849,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   const dupeIdx = dupes.length > 1 ? dupes.findIndex((x) => x.uid === u.uid) + 1 : null;
                   const squadLabel = dupeIdx ? `${u.datasheet} #${dupeIdx}` : u.datasheet;
                   const rank = u.compressionTier ?? 1;
-                  const apex = u.apexDesignation ? APEX_DESIGNATIONS[u.apexDesignation] : null;
                   const ammo = u.tempAmmoLoadout ? MUNITORUM_AMMO[u.tempAmmoLoadout] : null;
                   const enhList = (u.enhancements && u.enhancements.length > 0)
                     ? u.enhancements
@@ -1875,11 +1874,6 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                             {rank > 1 && (
                               <span className="chip warn small" style={{ fontSize: 10, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                 <Icon name="star" size={10} /> Tier {rank === 3 ? 'III' : 'II'}
-                              </span>
-                            )}
-                            {apex && (
-                              <span className="chip good small" style={{ fontSize: 10, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                <Icon name="trophy" size={10} /> {apex.name}
                               </span>
                             )}
                             {ammo && (

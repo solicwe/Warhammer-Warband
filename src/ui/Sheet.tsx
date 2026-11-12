@@ -474,15 +474,7 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
             <div>
               <span style={{ color: '#fcd34d', fontWeight: 700 }}>Compression Rank: {u.compressionTier === 3 ? 'Tier III Apex Elite (Merged 3+ Squads)' : 'Tier II Veteran Squad (Merged 2 Squads)'}</span>
               <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {u.compressionTier === 3 ? 'Stats boosted: Wounds x2.6 (+160%), Attacks x2.3 (+130%), +1 Weapon Damage, Feel No Pain 5+' : 'Stats boosted: Wounds x1.8 (+80%), Attacks x1.6 (+60%)'}
-              </div>
-            </div>
-          )}
-          {u.apexDesignation && APEX_DESIGNATIONS[u.apexDesignation] && (
-            <div>
-              <span style={{ color: '#a78bfa', fontWeight: 700 }}>Apex Title: {APEX_DESIGNATIONS[u.apexDesignation].name}</span>
-              <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {APEX_DESIGNATIONS[u.apexDesignation].desc}
+                {u.compressionTier === 3 ? 'Stats boosted: +2 Wounds, +1 Attack, +1 Strength, Feel No Pain 6+, +1 OC' : 'Stats boosted: +1 Wound, +1 Attack, +1 Save, +1 OC'}
               </div>
             </div>
           )}
