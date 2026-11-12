@@ -1314,6 +1314,7 @@ let phaseEndHook: ((s: GameState, phase: Phase) => void) | null = null;
 export const setPhaseEndHook = (h: (s: GameState, phase: Phase) => void) => { phaseEndHook = h; };
 
 export function endPhase(s: GameState) {
+  if (checkTabling(s)) return;
   // "end of any phase" stratagems (HEXWROUGHT REPRISAL): offered once, before the phase's own end
   if (s.phase !== 'deploy' && s.phase !== 'scouts' && s.phase !== 'gameover' && phaseEndReactions(s, 'anyPhaseEnd', [other(s.active), s.active])) return;
   updateControl(s);
@@ -1433,23 +1434,44 @@ function endTurn(s: GameState) {
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
   emit(s, 'roundEnd', {});
-  if (s.round === RULES.reserves.destroyedAfterRound) {
+  if (s.round >= RULES.reserves.destroyedAfterRound) {
     for (const u of s.units) if (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT') && !u.cultAmbush) {
       u.status = 'destroyed';
       log(s, `${u.name} did not arrive from Reserves by battle round ${s.round} → destroyed`, 'kill', u.owner);
     }
   }
+  if (checkTabling(s)) return;
   if (s.round >= lastRound(s)) { endBattle(s); return; }
   s.round += 1;
   startTurn(s, s.firstPlayer);
 }
 
-function endBattle(s: GameState) {
+export function endBattle(s: GameState) {
   for (const p of [s.firstPlayer, other(s.firstPlayer)] as PlayerId[]) scoreTiming(s, 'endOfBattle', p);
   s.phase = 'gameover';
-  const [a, b] = [s.players[0].vp + s.players[0].secVp, s.players[1].vp + s.players[1].secVp];
-  s.winner = a === b ? 'draw' : a > b ? 0 : 1;
+  const p0Alive = s.units.some((u) => u.owner === 0 && u.status !== 'destroyed' && alive(u).length > 0);
+  const p1Alive = s.units.some((u) => u.owner === 1 && u.status !== 'destroyed' && alive(u).length > 0);
+  if (!p1Alive && p0Alive) {
+    s.winner = 0;
+  } else if (!p0Alive && p1Alive) {
+    s.winner = 1;
+  } else {
+    const [a, b] = [s.players[0].vp + (s.players[0].secVp ?? 0), s.players[1].vp + (s.players[1].secVp ?? 0)];
+    s.winner = a === b ? 'draw' : a > b ? 0 : 1;
+  }
+  const [a, b] = [s.players[0].vp + (s.players[0].secVp ?? 0), s.players[1].vp + (s.players[1].secVp ?? 0)];
   log(s, `Battle over: ${s.players[0].name} ${a} VP – ${s.players[1].name} ${b} VP → ${s.winner === 'draw' ? 'draw' : s.players[s.winner].name + ' wins!'}`, 'vp', null);
+}
+
+export function checkTabling(s: GameState): boolean {
+  if (s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'gameover') return false;
+  const p0Alive = s.units.some((u) => u.owner === 0 && u.status !== 'destroyed' && alive(u).length > 0);
+  const p1Alive = s.units.some((u) => u.owner === 1 && u.status !== 'destroyed' && alive(u).length > 0);
+  if (!p0Alive || !p1Alive) {
+    endBattle(s);
+    return true;
+  }
+  return false;
 }
 
 // ---------- movement phase actions ----------

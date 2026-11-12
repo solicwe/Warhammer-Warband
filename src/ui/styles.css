@@ -2057,6 +2057,98 @@ b.em { font-weight: 700; color: var(--text); }
 .cmp-scrap { display: inline-flex; align-items: center; gap: 6px; background: #171b22 !important; border: 1.5px solid #d3a04a !important; color: #fef08a !important; padding: 4px 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; }
 .cmp-scrap .num, .cmp-scrap b { color: #fef08a; font-weight: 800; }
 .cmp-scrap svg { color: #fef08a; }
+
+/* Responsive Campaign Appbar & Header Controls */
+.cmp-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 52px;
+  padding: 6px 12px;
+  background: #0d0f12;
+  border-bottom: 1px solid rgba(211, 160, 74, 0.25);
+  flex: none;
+}
+.cmp-appbar-title {
+  font: 700 clamp(14px, 4.5vw, 17px)/1.2 var(--font-cond);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f1e3c4;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmp-war-room-btn {
+  background: #f59e0b !important;
+  color: #000000 !important;
+  border: 1px solid #d97706 !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px !important;
+  min-height: 38px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.cmp-war-room-btn:hover {
+  background: #fbbf24 !important;
+}
+
+/* Dedicated responsive sub-bar for fleet integrity & currencies */
+.cmp-stats-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #111418;
+  border-bottom: 1.5px solid rgba(211, 160, 74, 0.35);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex: none;
+}
+.cmp-stats-strip::-webkit-scrollbar {
+  display: none;
+}
+.cmp-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #171b22;
+  border: 1.5px solid rgba(211, 160, 74, 0.45);
+  color: #fef08a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.cmp-stat-chip .num {
+  font-weight: 800;
+  color: #ffffff;
+}
+.cmp-stat-chip.scrap {
+  border-color: #f59e0b;
+}
+.cmp-stat-chip.renown {
+  border-color: #38bdf8;
+  color: #7dd3fc;
+}
+.cmp-stat-chip.renown .num {
+  color: #38bdf8;
+}
+
 .cmp-roster-btn {
   display: inline-flex;
   align-items: center;
@@ -2433,6 +2525,7 @@ select option {
     inset: 0 !important;
     width: 100% !important;
     width: 100vw !important;
+    max-width: 100% !important;
     height: 100% !important;
     height: 100dvh !important;
     max-height: 100% !important;
@@ -2481,10 +2574,34 @@ select option {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
     flex: 0 0 auto !important;
   }
+  .cmp-armory-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+  }
+  .cmp-armory-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
   .cmp-armory-tab {
-    font-size: 11px !important;
-    padding: 7px 4px !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
     letter-spacing: 0.02em !important;
+  }
+  .cmp-army-top {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  .cmp-roster-btn {
+    width: 100% !important;
+    margin-left: 0 !important;
+    justify-content: center !important;
+    min-height: 40px !important;
   }
 
   /* Disable heavy continuous SVG animations on mobile to eliminate GPU lag and stutter */

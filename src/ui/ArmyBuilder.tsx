@@ -922,9 +922,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const cargo = !myLoad ? [] : list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
       .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !list.units.some((t) => t.uid === r.embarkIn))
       .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
-    // once units are aboard, only they and what still fits show; an empty transport lists everything it can carry
-    const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
-    const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
+    // all eligible units that can embark in this transport (even if capacity exceeded, shown as full)
+    const cargoShown = cargo;
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER')
       || (list.detachments.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'))

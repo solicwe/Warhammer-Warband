@@ -280,7 +280,7 @@ export function handleBloodPactSpend(s: GameState, u: UnitState, cpNeeded: numbe
   if (!hasActiveKeystone(s, u.owner, 'blood_pact') && !hasActiveKeystone(s, u.owner, 'Blood Pact Munitions')) return false;
 
   const totalWoundsBurned = rollExpr(s, `${cpNeeded}d3`).total;
-  log(s, `🩸 [BLOOD PACT MUNITIONS] ${u.name} sacrifices ${totalWoundsBurned} Wounds to fuel stratagems for 0 CP!`, 'info');
+  log(s, `[BLOOD PACT MUNITIONS] ${u.name} sacrifices ${totalWoundsBurned} Wounds to fuel stratagems for 0 CP!`, 'info');
 
   applyMortalWounds(s, u, totalWoundsBurned, 'Blood Pact Munitions');
   addCombatToken(u, 'fervour', 3);

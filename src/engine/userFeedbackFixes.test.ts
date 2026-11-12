@@ -5,7 +5,8 @@ import { weaponFx } from './weaponFx';
 import { stratagemBlock } from '../rules-engine/stratagems';
 import { discardSecondary } from './game';
 import { secondaryDead } from './secondaries';
-import type { GameState, ModelState, StratagemData, WeaponProfileData } from './types';
+import { embarkCheck, parseTransport } from './army';
+import type { GameState, ModelState, StratagemData, WeaponProfileData, FactionData, ArmyList } from './types';
 
 describe('User Feedback Fixes Verification', () => {
   it('Beast keyword allows passing through dense walls', () => {
@@ -259,5 +260,63 @@ describe('User Feedback Fixes Verification', () => {
 
     // Shooting weapon selection label uses readable theme color
     expect(gameScreenTsx).toContain("color: 'var(--text-2)'");
+  });
+
+  it('Thousand Sons embarkation restrictions: Terminators and Monsters cannot embark in Rhino', () => {
+    const ts = JSON.parse(fs.readFileSync('public/data/factions/TS.json', 'utf8')) as FactionData;
+    const testList: ArmyList = {
+      name: 'TS Test',
+      factionId: 'TS',
+      battleSize: 'incursion',
+      detachments: [],
+      units: [
+        { uid: 'u_rhino', datasheet: 'Chaos Rhino', models: 1, pts: 75 },
+        { uid: 'u_lr', datasheet: 'Chaos Land Raider', models: 1, pts: 240 },
+        { uid: 'u_rubric', datasheet: 'Rubric Marines', models: 5, pts: 105 },
+        { uid: 'u_sorc', datasheet: 'Sorcerer In Terminator Armour', models: 1, pts: 110 },
+        { uid: 'u_terms', datasheet: 'Scarab Occult Terminators', models: 5, pts: 200 },
+        { uid: 'u_magnus', datasheet: 'Magnus The Red', models: 1, pts: 455 },
+        { uid: 'u_defiler', datasheet: 'Defiler', models: 1, pts: 330 },
+      ],
+    };
+
+    const rubricCheck = embarkCheck(testList, ts, 'u_rubric', 'u_rhino');
+    expect(rubricCheck.why).toBeNull();
+
+    const sorcCheck = embarkCheck(testList, ts, 'u_sorc', 'u_rhino');
+    expect(sorcCheck.why).toContain('TERMINATOR');
+
+    const termsCheck = embarkCheck(testList, ts, 'u_terms', 'u_rhino');
+    expect(termsCheck.why).toContain('TERMINATOR');
+
+    const magnusCheck = embarkCheck(testList, ts, 'u_magnus', 'u_rhino');
+    expect(magnusCheck.why).not.toBeNull();
+
+    const defilerCheck = embarkCheck(testList, ts, 'u_defiler', 'u_rhino');
+    expect(defilerCheck.why).not.toBeNull();
+
+    // Land Raider can carry Terminators (Sorc and Scarab Occult)
+    expect(embarkCheck(testList, ts, 'u_sorc', 'u_lr').why).toBeNull();
+    expect(embarkCheck(testList, ts, 'u_terms', 'u_lr').why).toBeNull();
+    // But Land Raider cannot carry Magnus (Monster) or Defiler (Vehicle/Walker)
+    expect(embarkCheck(testList, ts, 'u_magnus', 'u_lr').why).not.toBeNull();
+    expect(embarkCheck(testList, ts, 'u_defiler', 'u_lr').why).not.toBeNull();
+
+    // Check all transports across all factions for edge cases
+    const dir = 'public/data/factions';
+    const broken: string[] = [];
+    fs.readdirSync(dir).filter(f => f.endsWith('.json')).forEach(f => {
+      const fac = JSON.parse(fs.readFileSync(dir + '/' + f, 'utf8')) as FactionData;
+      (fac.datasheets || []).forEach(d => {
+        if (d.transport) {
+          const info = parseTransport(d.transport);
+          if (info && !info.infantryOnly && (!info.kinds || !info.kinds.length)) {
+            broken.push(`${fac.id} ${d.name}: ${d.transport}`);
+          }
+        }
+      });
+    });
+    // Let's verify what broken has
+    expect(broken).toEqual([]);
   });
 });

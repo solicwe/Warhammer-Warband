@@ -158,7 +158,7 @@ function triggerAilmentOverload(s: GameState, target: UnitState, ailment: keyof 
     }
     case 'bleeding': {
       // Exsanguinate: cannot advance, taking +1 to wound
-      log(s, `🩸 EXSANGUINATE! ${target.name} is hemorrhaging: unable to Advance and takes +1 to Wound!`, 'info');
+      log(s, `EXSANGUINATE! ${target.name} is hemorrhaging: unable to Advance and takes +1 to Wound!`, 'info');
       break;
     }
     case 'corroded': {
@@ -220,7 +220,7 @@ export function processMovementAilments(s: GameState, u: UnitState, distanceInch
   if (cs.ailments.bleeding > 0 && distanceInches > 0) {
     let mw = cs.ailments.bleeding;
     if (distanceInches > 6) mw *= 2; // Double damage for fast movement!
-    log(s, `🩸 [BLEEDING] ${u.name} moves ${distanceInches.toFixed(1)}" and suffers ${mw} Mortal Wound(s)!`, 'info');
+    log(s, `[BLEEDING] ${u.name} moves ${distanceInches.toFixed(1)}" and suffers ${mw} Mortal Wound(s)!`, 'info');
     applyMortalWounds(s, u, mw, 'Bleeding');
   }
 }

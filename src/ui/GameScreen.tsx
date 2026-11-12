@@ -28,7 +28,8 @@ import {
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
   beginMove, hasDeepStrike, setOathBackup, arrivalRound,
   levelOfControl,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl } from '../engine/game';
+  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+  endBattle, checkTabling } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
@@ -170,13 +171,14 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 };
 
 export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, replayStates, onReplaySeek }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; replayStates?: GameState[]; onReplaySeek?: (index: number) => void }) {
-  const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
+  const isCampaign = Boolean(initial.campaign);
+  const replayFrames = useRef(replay || isCampaign ? [] : [structuredClone(initial)]);
   const recordReplayCommit = useCallback((next: GameState, undone: boolean) => {
-    if (replay) return;
+    if (replay || isCampaign) return;
     if (undone) {
       if (replayFrames.current.length > 1) replayFrames.current.pop();
     } else replayFrames.current.push(structuredClone(next));
-  }, [replay]);
+  }, [replay, isCampaign]);
   const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const replayEvents = useMemo(() => {
@@ -431,35 +433,38 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
     if (!loggedRef.current) {
       loggedRef.current = true;
-      const record: BattleRecord = {
-        id: 'battle-' + Date.now(),
-        timestamp: Date.now(),
-        mode: s.campaign ? 'campaign' : 'simulator',
-        players: ([0, 1] as const).map((p) => ({
-          name: pName(s, p),
-          faction: s.players[p].factionId ?? s.players[p].name,
-          score: s.players[p].vp + (s.players[p].secVp ?? 0),
-          cp: s.players[p].cp,
-          isWinner: s.winner === p,
-        })),
-        turn: s.turn,
-        maxTurns: s.maxRounds ?? 5,
-        layoutName: s.deploymentId ? ('Layout ' + s.deploymentId) : 'Standard Layout',
-        summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
-        replayState: {
-          seed: s.rng,
-        },
-      };
-      saveBattleLog(record);
-      const timeline = [...replayFrames.current];
-      if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
-      void compressReplayTimeline(timeline).then((encoded) => {
-        saveBattleLog({ ...record, replayState: { seed: s.rng, timeline: encoded } });
-        window.dispatchEvent(new CustomEvent('battle-logs-updated'));
-      }).catch((error: unknown) => {
-        console.error('Could not save replay timeline', error);
-        window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
-      });
+      // Campaign battles do NOT record or persist replay timelines / battle logs
+      if (!s.campaign) {
+        const record: BattleRecord = {
+          id: 'battle-' + Date.now(),
+          timestamp: Date.now(),
+          mode: 'simulator',
+          players: ([0, 1] as const).map((p) => ({
+            name: pName(s, p),
+            faction: s.players[p].factionId ?? s.players[p].name,
+            score: s.players[p].vp + (s.players[p].secVp ?? 0),
+            cp: s.players[p].cp,
+            isWinner: s.winner === p,
+          })),
+          turn: s.turn,
+          maxTurns: s.maxRounds ?? 5,
+          layoutName: s.deploymentId ? ('Layout ' + s.deploymentId) : 'Standard Layout',
+          summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
+          replayState: {
+            seed: s.rng,
+          },
+        };
+        saveBattleLog(record);
+        const timeline = [...replayFrames.current];
+        if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
+        void compressReplayTimeline(timeline).then((encoded) => {
+          saveBattleLog({ ...record, replayState: { seed: s.rng, timeline: encoded } });
+          window.dispatchEvent(new CustomEvent('battle-logs-updated'));
+        }).catch((error: unknown) => {
+          console.error('Could not save replay timeline', error);
+          window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
+        });
+      }
     }
   }, [s.phase, replay]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -4698,6 +4703,42 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                 <button role="radio" aria-checked={!sound} className={!sound ? 'on' : ''} onClick={() => { setSoundOn(false); setSound(false); }}>Off</button>
               </div>
             </div>
+
+            {s.campaign && s.phase !== 'gameover' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0', padding: 8, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 6, border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                <span className="tiny" style={{ color: '#f59e0b', fontWeight: 700 }}>Campaign Battle Controls</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    className="btn primary small grow"
+                    onClick={() => {
+                      act((g) => {
+                        endBattle(g);
+                        g.winner = 0;
+                      });
+                      onExit();
+                    }}
+                  >
+                    Claim Victory
+                  </button>
+                  <button
+                    type="button"
+                    className="btn danger small grow"
+                    onClick={() => {
+                      if (window.confirm('Surrender this campaign battle and retreat?')) {
+                        act((g) => {
+                          endBattle(g);
+                          g.winner = 1;
+                        });
+                        onExit();
+                      }
+                    }}
+                  >
+                    Surrender
+                  </button>
+                </div>
+              </div>
+            )}
 
             <button className="btn danger" onClick={onExit}>Exit to home <span className="muted small">· the battle is saved</span></button>
           </div>

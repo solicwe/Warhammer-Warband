@@ -194,7 +194,7 @@ export function toggleDynasticGrid(s: GameState, p: PlayerId): 'resurrection' | 
 export function addBloodTithe(s: GameState, p: PlayerId, amount = 1) {
   const P = s.players[p];
   P.tithe = Math.min(8, (P.tithe ?? 0) + amount);
-  log(s, `🩸 [BLOOD TITHE] Bloodshed fuels Khorne's altar! (${P.tithe}/8 Tithe points)`, 'info', p);
+  log(s, `[BLOOD TITHE] Bloodshed fuels Khorne's altar! (${P.tithe}/8 Tithe points)`, 'info', p);
 }
 
 /**

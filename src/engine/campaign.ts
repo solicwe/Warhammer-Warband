@@ -696,10 +696,13 @@ export function afterBattle(
   faction: FactionData,
   enemyName: string,
   battleScrap = 0,
-  battleStats?: { survivingEnemyUnits?: number; enemyVP?: number; playerVP?: number }
+  battleStats?: { survivingEnemyUnits?: number; enemyVP?: number; playerVP?: number },
+  overrideNodeId?: string
 ): Run {
-  if (!run.fighting) return run;
-  const node = run.map.find((n) => n.id === run.fighting)!;
+  const fightingNodeId = run.fighting || overrideNodeId;
+  if (!fightingNodeId) return run;
+  const node = run.map.find((n) => n.id === fightingNodeId);
+  if (!node) return run;
   const isLoss = winner === 1;
 
   if (isLoss) {

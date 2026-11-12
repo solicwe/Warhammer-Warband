@@ -359,13 +359,13 @@ export function triggerRelicEvent(
             revived.dead = false;
             revived.wounds = Math.min(revived.profile.W, healAmt - healed);
             healed += revived.wounds;
-            log(s, `🩸 [HAEMOVORE FANG] Vampiric essence revives fallen warrior ${revived.name}!`, 'info');
+            log(s, `[HAEMOVORE FANG] Vampiric essence revives fallen warrior ${revived.name}!`, 'info');
             pushFx(s, { kind: 'heal', unitId: sourceUnit.id, owner: sourceUnit.owner, at: pos, n: revived.wounds, revive: true });
           }
         }
 
         if (healed > 0) {
-          log(s, `🩸 [HAEMOVORE FANG] ${sourceUnit.name} siphons life: +${healed} Wound(s) restored`, 'info');
+          log(s, `[HAEMOVORE FANG] ${sourceUnit.name} siphons life: +${healed} Wound(s) restored`, 'info');
           pushFx(s, { kind: 'heal', unitId: sourceUnit.id, owner: sourceUnit.owner, at: pos, n: healed });
         }
         break;

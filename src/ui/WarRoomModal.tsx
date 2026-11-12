@@ -35,7 +35,7 @@ interface WarRoomModalProps {
   faction: FactionData;
   onUpdateRun: (next: Run) => void;
   onClose: () => void;
-  initialTab?: 'compression' | 'highCommand' | 'tacticalClock' | 'patron';
+  initialTab?: 'compression' | 'highCommand' | 'patron';
 }
 
 export const WarRoomModal: React.FC<WarRoomModalProps> = ({
@@ -45,7 +45,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
   onClose,
   initialTab = 'compression',
 }) => {
-  const [tab, setTab] = useState<'compression' | 'highCommand' | 'tacticalClock' | 'patron'>(initialTab);
+  const [tab, setTab] = useState<'compression' | 'highCommand' | 'patron'>(initialTab);
 
   const units = run.list?.units ?? [];
   const scrap = run.scrap ?? 0;
@@ -60,28 +60,38 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
           <div className="cmp-armory-header-center">
             <div className="cmp-armory-title" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <Icon name="tabletop" size={18} />
-              <span>War Room & Strategium Council</span>
+              <span>War Room</span>
             </div>
             <div className="cmp-armory-sub" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span>Zero-Collision Rule Engine</span>
+              <span>Strategium Council</span>
               <span>·</span>
-              <Icon name="heal" size={13} style={{ color: '#10b981' }} />
-              <span>Fleet Integrity: {run.fleetIntegrityHP ?? 100}/100 HP</span>
+              <Icon name="heal" size={12} style={{ color: '#10b981' }} />
+              <span>Fleet: {run.fleetIntegrityHP ?? 100}/100 HP</span>
             </div>
           </div>
           <div className="cmp-armory-header-right">
-            <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{scrap}</b> Scrap</span>
+            <span className="cmp-scrap"><Icon name="shop" size={14} /> <b>{scrap}</b></span>
             <button type="button" className="cmp-close-btn" onClick={onClose} aria-label="Close"><Icon name="close" size={18} /></button>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="cmp-armory-tabs" style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '0 16px' }}>
+        <div className="cmp-armory-tabs" style={{
+          display: 'flex',
+          gap: 6,
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          padding: '6px 12px',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          flexWrap: 'nowrap',
+          flexShrink: 0
+        }}>
           <button
             type="button"
             className={`cmp-armory-tab ${tab === 'compression' ? 'active' : ''}`}
             onClick={() => setTab('compression')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'compression' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'compression' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'compression' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '8px 12px', fontWeight: tab === 'compression' ? 'bold' : 'normal', background: tab === 'compression' ? '#d3a04a' : 'none', border: 'none', color: tab === 'compression' ? '#17120a' : '#9ca3af', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             <Icon name="shield" size={14} />
             <span>Army & Compression ({units.length}/8)</span>
@@ -90,25 +100,16 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             type="button"
             className={`cmp-armory-tab ${tab === 'highCommand' ? 'active' : ''}`}
             onClick={() => setTab('highCommand')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'highCommand' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'highCommand' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'highCommand' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '8px 12px', fontWeight: tab === 'highCommand' ? 'bold' : 'normal', background: tab === 'highCommand' ? '#d3a04a' : 'none', border: 'none', color: tab === 'highCommand' ? '#17120a' : '#9ca3af', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             <Icon name="leader" size={14} />
-            <span>High Command ({activeAdvisors.length}/4)</span>
-          </button>
-          <button
-            type="button"
-            className={`cmp-armory-tab ${tab === 'tacticalClock' ? 'active' : ''}`}
-            onClick={() => setTab('tacticalClock')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'tacticalClock' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'tacticalClock' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'tacticalClock' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <Icon name="history" size={14} />
-            <span>Round Doctrines</span>
+            <span>High Command ({activeAdvisors.length}/{maxSlots})</span>
           </button>
           <button
             type="button"
             className={`cmp-armory-tab ${tab === 'patron' ? 'active' : ''}`}
             onClick={() => setTab('patron')}
-            style={{ padding: '10px 16px', fontWeight: tab === 'patron' ? 'bold' : 'normal', background: 'none', border: 'none', color: tab === 'patron' ? '#f59e0b' : '#9ca3af', borderBottom: tab === 'patron' ? '2px solid #f59e0b' : 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '8px 12px', fontWeight: tab === 'patron' ? 'bold' : 'normal', background: tab === 'patron' ? '#d3a04a' : 'none', border: 'none', color: tab === 'patron' ? '#17120a' : '#9ca3af', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             <Icon name="cards" size={14} />
             <span>Patron Contracts</span>
@@ -116,7 +117,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
         </div>
 
         {/* Tab Content */}
-        <div className="cmp-armory-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: 16 }}>
+        <div className="cmp-armory-body" style={{ flex: '1 1 auto', overflowY: 'auto', padding: 14 }}>
           {/* TAB 1: ARMY COMPRESSION & RANKING */}
           {tab === 'compression' && (
             <div>
@@ -229,7 +230,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                         flexWrap: 'wrap',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 240, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
                         {/* Squad portrait */}
                         <div style={{
                           width: 44,
@@ -384,7 +385,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
               </div>
 
               {/* Advisors Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginBottom: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: 12, marginBottom: 24 }}>
                 {(Object.keys(HIGH_COMMAND_ADVISORS) as AdvisorId[]).map((advId) => {
                   const def = HIGH_COMMAND_ADVISORS[advId];
                   const isHired = activeAdvisors.includes(advId);
@@ -440,7 +441,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 <Icon name="zap" size={16} />
                 <span>Flagship Orbital Bay (Fires in Round 1):</span>
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 12 }}>
                 {(Object.keys(ORBITAL_MODULES) as OrbitalModuleId[]).map((modId) => {
                   const def = ORBITAL_MODULES[modId];
                   const currentLvl = run.orbitalModules?.levels?.[modId] ?? 1;
@@ -494,115 +495,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: ROUND TACTICAL DOCTRINES & STACKABLE SURGES */}
-          {tab === 'tacticalClock' && (
-            <div>
-              <div style={{ background: '#0f172a', padding: 14, borderRadius: 8, marginBottom: 16, border: '1px solid #d97706' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                  <b style={{ color: '#f59e0b', fontSize: '0.98em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="zap" size={17} />
-                    <span>Round Tactical Doctrines (Stackable Surge Shop)</span>
-                  </b>
-                  <span style={{ fontSize: '0.78em', color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                    Battle Rounds 1 - 5 · Stackable up to Lv.3
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.82em', color: '#94a3b8' }}>
-                  Purchase high-impact battle surges for each round with Scrap. Surges can be stacked up to Level 3 for exponential combat boosts (costs increase per stack)!
-                </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-                {[1, 2, 3, 4, 5].map((roundNum) => {
-                  const def = ROUND_DOCTRINES[roundNum];
-                  if (!def) return null;
-                  const currentLvl = run.roundDoctrineLevels?.[roundNum] ?? (run.purchasedRoundDoctrines?.includes(roundNum) ? 1 : 0);
-                  const nextLvl = currentLvl + 1;
-                  const isMaxLvl = currentLvl >= 3;
-                  const nextCost = getRoundDoctrineCost(roundNum, nextLvl);
-                  const canBuy = !isMaxLvl && scrap >= nextCost;
-
-                  const currentDesc = currentLvl === 1 ? def.descLv1 : currentLvl === 2 ? def.descLv2 : currentLvl === 3 ? def.descLv3 : null;
-                  const nextDesc = currentLvl === 0 ? def.descLv1 : currentLvl === 1 ? def.descLv2 : def.descLv3;
-
-                  return (
-                    <div
-                      key={roundNum}
-                      style={{
-                        padding: 14,
-                        borderRadius: 8,
-                        background: currentLvl > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                        border: currentLvl === 3 ? '2px solid #10b981' : currentLvl > 0 ? '1.5px solid #059669' : '1px solid rgba(255, 255, 255, 0.1)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ background: currentLvl > 0 ? '#10b981' : '#f59e0b', color: '#000', fontWeight: 'bold', fontSize: 11, padding: '2px 8px', borderRadius: 4 }}>
-                              Round {roundNum}
-                            </span>
-                            {currentLvl > 0 && (
-                              <span style={{ fontSize: 10.5, fontWeight: 'bold', color: currentLvl === 3 ? '#34d399' : '#a7f3d0', background: 'rgba(16, 185, 129, 0.2)', padding: '2px 6px', borderRadius: 4 }}>
-                                {currentLvl === 3 ? 'MAX STACK (Lv.3)' : `Stack ×${currentLvl} (Lv.${currentLvl})`}
-                              </span>
-                            )}
-                          </div>
-                          {!isMaxLvl && (
-                            <span style={{ fontSize: '0.82em', color: '#fcd34d', fontWeight: 'bold' }}>
-                              {currentLvl === 0 ? `${nextCost} Scrap` : `Next Stack: ${nextCost} Scrap`}
-                            </span>
-                          )}
-                        </div>
-
-                        <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Icon name={(def.icon || 'zap') as IconName} size={15} />
-                          <span>{def.name}</span>
-                        </div>
-
-                        {/* Current Active Effects */}
-                        {currentDesc && (
-                          <div style={{ fontSize: '0.82em', color: '#86efac', marginTop: 8, lineHeight: 1.4, padding: '6px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                            <b>Active (Stack Lv.{currentLvl}):</b> {currentDesc}
-                          </div>
-                        )}
-
-                        {/* Next Upgrade Preview */}
-                        {!isMaxLvl && (
-                          <div style={{ fontSize: '0.8em', color: currentLvl === 0 ? '#cbd5e1' : '#94a3b8', marginTop: 8, lineHeight: 1.35 }}>
-                            <b>{currentLvl === 0 ? 'Surge Effect:' : `Next Stack Upgrade (Lv.${nextLvl}):`}</b> {nextDesc}
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ marginTop: 6 }}>
-                        {isMaxLvl ? (
-                          <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.82em', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: 'rgba(16, 185, 129, 0.15)', borderRadius: 4, width: '100%', justifyContent: 'center' }}>
-                            <Icon name="check" size={13} />
-                            <span>Fully Stacked (Max Level 3)</span>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn small primary"
-                            disabled={!canBuy}
-                            onClick={() => onUpdateRun(buyRoundDoctrine(run, roundNum))}
-                            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
-                          >
-                            <Icon name="plus" size={12} />
-                            <span>{currentLvl === 0 ? `Purchase Surge (${nextCost} Scrap)` : `Add Stack to Lv.${nextLvl} (+${nextCost} Scrap)`}</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* TAB 4: FACTION PATRONAGE */}
           {tab === 'patron' && (
@@ -660,7 +553,7 @@ export const WarRoomModal: React.FC<WarRoomModalProps> = ({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: 12 }}>
                 {(Object.keys(PATRON_CONTRACTS) as PatronContractId[]).map((cid) => {
                   const def = PATRON_CONTRACTS[cid];
                   const isSigned = run.activePatronContract === cid;

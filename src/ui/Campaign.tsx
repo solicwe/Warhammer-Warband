@@ -73,7 +73,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   // Roguelike Roster & Armory state
   const [showRoster, setShowRoster] = useState(false);
   const [showWarRoom, setShowWarRoom] = useState(false);
-  const [warRoomTab, setWarRoomTab] = useState<'compression' | 'highCommand' | 'tacticalClock' | 'patron'>('compression');
+  const [warRoomTab, setWarRoomTab] = useState<'compression' | 'highCommand' | 'patron'>('compression');
   const [dismissPatronModal, setDismissPatronModal] = useState(false);
   const [ammoShopTarget, setAmmoShopTarget] = useState<MunitorumAmmoId | null>(null);
   const [rosterTab, setRosterTab] = useState<'roster' | 'tech' | 'detachments'>('roster');
@@ -126,15 +126,18 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
   }, [run?.factionId]);
 
   // a campaign battle just finished: its result moves the run on
-  const battle = saved?.campaign && run?.fighting && saved.campaign.node === run.fighting ? saved : null;
+  const battle = saved?.campaign && (run?.fighting ? (saved.campaign.node === run.fighting ? saved : null) : saved);
   useEffect(() => {
     if (!run || !fac || !battle || battle.phase !== 'gameover') return;
-    const next = afterBattle(run, battle.winner, fac, battle.players[1].name, battle.campaignScrap ?? 0);
+    const targetNodeId = run.fighting || battle.campaign?.node;
+    if (!targetNodeId) return;
+    const next = afterBattle(run, battle.winner, fac, battle.players[1].name, battle.campaignScrap ?? 0, undefined, targetNodeId);
     if (battle.idleTactic) next.idleTactic = battle.idleTactic;
     play(battle.winner === 1 ? 'bad' : 'vp');
     setRun(next);
+    saveRun(next);
     onClearSaved();
-  }, [fac, battle?.phase]);
+  }, [fac, battle?.phase, battle?.winner]);
 
   const begin = async () => {
     setBusy(true); setErr(null);
@@ -319,9 +322,8 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
     const cargo = !myLoad ? [] : run.list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
       .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !run.list.units.some((t) => t.uid === r.embarkIn))
       .map((r) => ({ r, c: embarkCheck(run.list, fac, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
-    // once units are aboard, only they and what still fits show; an empty transport lists everything it can carry
-    const aboard = cargo.some(({ r }) => r.embarkIn === u.uid);
-    const cargoShown = aboard ? cargo.filter(({ r, c }) => r.embarkIn === u.uid || !c.full) : cargo;
+    // all eligible units that can embark in this transport (even if capacity exceeded, shown as full)
+    const cargoShown = cargo;
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER')
       || (run.list.detachments?.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'))
@@ -679,43 +681,54 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
 
   return (
     <div className="app campaign">
-      <header className="appbar">
+      <header className="appbar cmp-appbar">
         <button className="appbar-back-btn" aria-label="Back" onClick={onBack}>&lt;</button>
-        <span className="appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
-        <span className="cmp-scrap" title="Fleet Integrity: campaign HP">
-          <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Icon name="heal" size={13} />
-            <span>Fleet HP: {run.fleetIntegrityHP ?? 100}/100</span>
-          </span>
-          {(run.winLossStreak ?? 0) !== 0 && (
-            <span style={{ marginLeft: 4, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-              {(run.winLossStreak ?? 0) > 0 ? (
-                <>
-                  <Icon name="zap" size={12} />
-                  <span>Streak: +{run.winLossStreak}</span>
-                </>
-              ) : (
-                <>
-                  <Icon name="skull" size={12} />
-                  <span>Losses: {Math.abs(run.winLossStreak ?? 0)}</span>
-                </>
-              )}
-            </span>
-          )}
-        </span>
-        <span className="cmp-scrap" title="Scrap Currency: +10% Hoard Interest per node"><Icon name="shop" size={14} /> <span className="num">{run.scrap ?? 0}</span> <span style={{ opacity: 0.8, fontSize: '0.85em' }}>(+{calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50)})</span></span>
+        <span className="appbar-title cmp-appbar-title">Campaign · Sector {run.sector || run.loop || 1}</span>
         <button
           type="button"
-          className="btn small"
-          style={{ background: '#f59e0b', color: '#000', fontWeight: 'bold', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          className="btn small cmp-war-room-btn"
           onClick={() => { setWarRoomTab('compression'); setShowWarRoom(true); }}
           title="Open War Room & Strategium Council"
         >
           <Icon name="tabletop" size={14} />
           <span>War Room</span>
         </button>
-        <span className="cmp-scrap" title="Renown: allocate army tree nodes"><Icon name="trophy" size={14} /> <span className="num">{run.renown ?? 0}</span> <span>Renown</span></span>
       </header>
+
+      {/* Dedicated responsive sub-bar for Campaign resources & fleet health */}
+      <div className="cmp-stats-strip">
+        <div className="cmp-stat-chip fleet" title="Fleet Integrity: campaign HP">
+          <span style={{ color: (run.fleetIntegrityHP ?? 100) > 50 ? '#10b981' : (run.fleetIntegrityHP ?? 100) > 25 ? '#f59e0b' : '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Icon name="heal" size={13} />
+            <span>Fleet: {run.fleetIntegrityHP ?? 100}/100</span>
+          </span>
+          {(run.winLossStreak ?? 0) !== 0 && (
+            <span style={{ marginLeft: 3, fontSize: '0.85em', color: (run.winLossStreak ?? 0) > 0 ? '#f59e0b' : '#ef4444', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+              {(run.winLossStreak ?? 0) > 0 ? (
+                <>
+                  <Icon name="zap" size={11} />
+                  <span>+{run.winLossStreak}</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="skull" size={11} />
+                  <span>{Math.abs(run.winLossStreak ?? 0)}</span>
+                </>
+              )}
+            </span>
+          )}
+        </div>
+        <div className="cmp-stat-chip scrap" title="Scrap Currency: +10% Hoard Interest per node">
+          <Icon name="shop" size={14} />
+          <span className="num">{run.scrap ?? 0}</span>
+          <span className="interest" style={{ opacity: 0.8, fontSize: '0.85em' }}>(+{calculateHoardInterest(run.scrap ?? 0, run.maxInterestCap ?? 50)})</span>
+        </div>
+        <div className="cmp-stat-chip renown" title="Renown: allocate army tree nodes">
+          <Icon name="trophy" size={14} />
+          <span className="num">{run.renown ?? 0}</span>
+          <span>Renown</span>
+        </div>
+      </div>
 
       <main className="screen">
 
@@ -958,7 +971,26 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
         )}
 
         {battle && battle.phase !== 'gameover' && (
-          <button className="btn primary big wide" onClick={() => onPlay(withAutoRules(battle))}><Icon name="fight" size={20} />Continue the battle</button>
+          <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
+            <button className="btn primary big grow" onClick={() => onPlay(withAutoRules(battle))}><Icon name="fight" size={20} />Continue the battle</button>
+            <button
+              type="button"
+              className="btn danger big"
+              onClick={() => {
+                if (!fac) return;
+                if (window.confirm('Forfeit this battle and retreat?')) {
+                  const targetNodeId = run.fighting || battle.campaign?.node;
+                  const next = afterBattle(run, 1, fac, battle.players[1].name, 0, undefined, targetNodeId);
+                  setRun(next);
+                  saveRun(next);
+                  onClearSaved();
+                }
+              }}
+              title="Concede this battle and resolve retreat"
+            >
+              Forfeit
+            </button>
+          </div>
         )}
 
         <section className="cmp-map" aria-label="Campaign map" style={{ height: layers * rowH }}>
@@ -1101,115 +1133,17 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             {focused.enemy && <div className="tiny muted">{KIND[focused.kind].note}</div>}
             {err && <div className="err" role="alert">{err}</div>}
             
-            {/* Pre-Battle Strategium Dock: 5-Round Clock & Munitorum Consumables */}
+            {/* Pre-Battle Strategium Dock: Munitorum Consumables */}
             {focused.enemy && (
               <div className="prebattle-dock">
-                {/* 1. Pre-Battle Dock Header with Auto-Optimize button */}
-                <div className="prebattle-header">
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Icon name="radar" size={15} />
-                    <span>Pre-Battle Strategium Dock</span>
-                  </span>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      type="button"
-                      className="btn small"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.45))',
-                        border: '1.5px solid #f59e0b',
-                        color: '#fef08a',
-                        fontWeight: 800,
-                        padding: '4px 10px',
-                        borderRadius: 6,
-                        boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                      }}
-                      onClick={() => {
-                        setRun(autoOptimizePreBattle(run, fac));
-                        setInfo('Battle tactics auto-optimized!');
-                        play('good');
-                      }}
-                      title="Automatically configures the Tactical Clock to your army's weapon profile"
-                    >
-                      <Icon name="sparkles" size={13} />
-                      <span>Auto-Optimize Tactics</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn small ghost"
-                      style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                      onClick={() => {
-                        setWarRoomTab('tacticalClock');
-                        setShowWarRoom(true);
-                      }}
-                    >
-                      <Icon name="gear" size={12} />
-                      <span>Configure</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. 5-Round Tactical Clock Strip */}
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#cbd5e1', marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
-                  <span>5-Round Tactical Clock:</span>
-                  <span className="tiny muted">(Tap round to cycle directive)</span>
-                </div>
-                <div className="prebattle-clock-strip">
-                  {((run.tacticalClock as TacticalClockDirectiveId[] | undefined) ?? [
-                    'SHROUD_OF_NIGHT',
-                    'BLITZKRIEG_SURGE',
-                    'ANNIHILATION_VOLLEY',
-                    'AEGIS_OF_IRON',
-                    'WARMASTER_ASCENDANCY',
-                  ]).map((directiveId, rIdx) => {
-                    const d = TACTICAL_CLOCK_DIRECTIVES[directiveId];
-                    const clockOpts: TacticalClockDirectiveId[] = [
-                      'SHROUD_OF_NIGHT',
-                      'BLITZKRIEG_SURGE',
-                      'ANNIHILATION_VOLLEY',
-                      'AEGIS_OF_IRON',
-                      'WARMASTER_ASCENDANCY',
-                    ];
-                    return (
-                      <div
-                        key={`clock-r${rIdx + 1}`}
-                        className="prebattle-clock-card"
-                        title={`${d?.name ?? directiveId}: ${d?.desc ?? ''}`}
-                        onClick={() => {
-                          const curClock = [...((run.tacticalClock as TacticalClockDirectiveId[]) ?? clockOpts)] as [
-                            TacticalClockDirectiveId,
-                            TacticalClockDirectiveId,
-                            TacticalClockDirectiveId,
-                            TacticalClockDirectiveId,
-                            TacticalClockDirectiveId
-                          ];
-                          const curIdx = clockOpts.indexOf(curClock[rIdx]);
-                          const nextDirective = clockOpts[(curIdx + 1) % clockOpts.length];
-                          curClock[rIdx] = nextDirective;
-                          setRun(setTacticalClock(run, curClock));
-                          play('tick');
-                        }}
-                      >
-                        <span className="prebattle-clock-round">Round {rIdx + 1}</span>
-                        <span className="prebattle-clock-name" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          <Icon name={(d?.icon || 'history') as IconName} size={13} />
-                          <span>{d?.name ?? directiveId}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* 3. Munitorum Ammo & Stimms Quick Shop */}
-                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 8, marginTop: 4 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Icon name="wargear" size={14} />
+                {/* Munitorum Ammo & Stimms Quick Shop */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Icon name="wargear" size={15} />
                       <span>Munitorum Loadout (1-Match Consumables):</span>
                     </span>
-                    <span className="tiny muted">Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0} Scrap</b></span>
+                    <span style={{ fontSize: 11.5, color: '#cbd5e1' }}>Scrap: <b style={{ color: '#fef08a' }}>{run.scrap ?? 0} Scrap</b></span>
                   </div>
 
                   <div className="prebattle-ammo-grid">
@@ -1597,12 +1531,21 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
             </div>
 
             <div className="cmp-armory-body">
-              <div className="cmp-armory-tabs" style={{ display: 'flex', gap: 4 }}>
+              <div className="cmp-armory-tabs" style={{
+                display: 'flex',
+                gap: 6,
+                padding: '4px 6px',
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                flexWrap: 'nowrap',
+                flexShrink: 0,
+              }}>
                 <button
                   type="button"
                   className={`cmp-armory-tab ${rosterTab === 'roster' ? 'active' : ''}`}
                   onClick={() => setRosterTab('roster')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  style={{ whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <Icon name="shield" size={14} />
                   <span>Active Roster ({run.list.units.length})</span>
@@ -1611,7 +1554,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   type="button"
                   className={`cmp-armory-tab ${rosterTab === 'tech' ? 'active' : ''}`}
                   onClick={() => setRosterTab('tech')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  style={{ whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <Icon name="trophy" size={14} />
                   <span>Army Tree{run.renown ? ` (${run.renown})` : ''}</span>
@@ -1620,7 +1563,7 @@ export function CampaignScreen({ index, saved, onBack, onPlay, onClearSaved }: P
                   type="button"
                   className={`cmp-armory-tab ${rosterTab === 'detachments' ? 'active' : ''}`}
                   onClick={() => setRosterTab('detachments')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  style={{ whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <Icon name="swords" size={14} />
                   <span>Detachments ({run.list.detachments?.length ?? 1})</span>

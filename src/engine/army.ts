@@ -50,9 +50,24 @@ export function chapterRules<T extends { name: string }>(rules: T[], subfaction?
 /** "This model has a transport capacity of 12 Adeptus Astartes Infantry models. Each Jump Pack ... takes up the space of 2 models ... It cannot transport ..." */
 export function parseTransport(text?: string): TransportInfo | null {
   if (!text) return null;
+  const words = (x: string) => x.split(/,\s*|\/|\s+or\s+|\s+and\s+/i).map((y) => y.replace(/\bmodels?\b/gi, '').replace(/[’]/g, "'").trim().toUpperCase()).filter(Boolean);
+  const fromFollowing = /transport capacity of (\d+)\s*models?\s*from the following units?:\s*([^.]+)/i.exec(text);
+  if (fromFollowing) {
+    const allowedUnits = words(fromFollowing[2]);
+    return {
+      capacity: +fromFollowing[1],
+      double: [],
+      forbid: [],
+      except: [],
+      only: allowedUnits,
+      infantryOnly: false,
+      kinds: allowedUnits,
+      spaces: [],
+      text,
+    };
+  }
   const cap = /transport capacity of (\d+)\s+([^.(]*?)\s*models?\b/i.exec(text);
   if (!cap) return null;
-  const words = (x: string) => x.split(/,\s*|\/|\s+or\s+|\s+and\s+/i).map((y) => y.replace(/\bmodels?\b/gi, '').replace(/[’]/g, "'").trim().toUpperCase()).filter(Boolean);
   const list = (re: RegExp) => {
     const m = re.exec(text);
     return m ? words(m[1]) : [];
@@ -112,6 +127,11 @@ export function kwPhrase(phrase: string, kws: string[]): boolean {
 /** Can this model ride in the transport, and how many places does it take? */
 export function transportFit(t: TransportInfo, kws: string[]): { why: string | null; space: number } {
   if (kws.some((k) => normKw(k) === 'TRANSPORT')) return { why: 'A TRANSPORT cannot embark', space: 0 };
+  const isHeavy = kws.some((k) => ['VEHICLE', 'MONSTER', 'WALKER', 'AIRCRAFT', 'FORTIFICATION', 'TITANIC'].includes(normKw(k)));
+  if (isHeavy) {
+    const allowsHeavy = (t.kinds ?? []).some((k) => /MONSTER|VEHICLE|WALKER|AIRCRAFT/i.test(k)) || /monster|vehicle|walker|aircraft/i.test(t.text);
+    if (!allowsHeavy) return { why: 'VEHICLE and MONSTER models cannot embark in this transport', space: 0 };
+  }
   // Logan Grimnar: rides transports that can carry Terminators, taking the space of 4 models
   if (kws.some((k) => normKw(k) === 'LOGAN GRIMNAR')) return /terminator/i.test(t.text) ? { why: null, space: 4 } : { why: 'Only transports that carry TERMINATOR models', space: 0 };
   const no = t.forbid.filter((f) => kwPhrase(f, kws));
