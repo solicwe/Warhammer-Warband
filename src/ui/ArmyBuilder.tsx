@@ -33,29 +33,114 @@ export const SECTIONS: { id: Section; title: string }[] = [
   { id: 'allies', title: 'Allied Units' },
 ];
 
-/** Units listed under Others although they carry the CHARACTER keyword (bodyguard-style Epic Heroes). */
-const OTHERS = new Set(['Victrix Honour Guard']);
+/** Units listed under Others although they carry the CHARACTER keyword or similar tags (e.g. bodyguard units). */
+const NON_CHARACTERS = new Set(['Victrix Honour Guard', 'Company Heroes']);
 
 export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
-  if (!d || OTHERS.has(d.name)) return 'others';
-  if (d.keywords.includes('CHARACTER') || d.keywords.includes('EPIC HERO') || /Character|Epic Hero/.test(d.role)) return 'characters';
+  if (!d || NON_CHARACTERS.has(d.name)) return 'others';
+  if (d.keywords.includes('CHARACTER') || d.keywords.includes('EPIC HERO')) return 'characters';
   if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
   return 'others';
 }
 
 /** Groups of the add-unit list, in the order they show. */
-export const KINDS = ['Character', 'Infantry', 'Fast Infantry', 'Heavy Infantry', 'Mounted', 'Walker', 'Vehicle', 'Aircraft', 'Other'] as const;
-export function unitKind(d: DatasheetData): (typeof KINDS)[number] {
+export const KINDS = [
+  'Epic Hero',
+  'Character',
+  'Battleline',
+  'Infantry',
+  'Heavy Infantry',
+  'Fast Infantry',
+  'Mounted',
+  'Walker',
+  'Vehicle',
+  'Aircraft',
+  'Other',
+] as const;
+
+export function unitKind(d: DatasheetData | undefined): (typeof KINDS)[number] {
+  if (!d) return 'Other';
   const k = (w: string) => d.keywords.includes(w);
-  if (k('CHARACTER') || k('EPIC HERO')) return 'Character';
+  if (k('EPIC HERO')) return 'Epic Hero';
+  if (k('CHARACTER')) return 'Character';
   if (k('AIRCRAFT')) return 'Aircraft';
   if (k('WALKER')) return 'Walker';
   if (k('VEHICLE')) return 'Vehicle';
   if (k('MOUNTED')) return 'Mounted';
+  if (k('BATTLELINE') || d.role === 'Battleline') return 'Battleline';
   if (k('INFANTRY')) return k('GRAVIS') || k('TERMINATOR') ? 'Heavy Infantry' : k('JUMP PACK') || k('FLY') ? 'Fast Infantry' : 'Infantry';
   return 'Other';
+}
+
+/** Tactical and detachment-specific keywords curated per faction. */
+export const FACTION_TACTICAL_KEYWORDS: Record<string, string[]> = {
+  SM: ['PHOBOS', 'GRAVIS', 'TACTICUS', 'TERMINATOR', 'JUMP PACK', 'DEATHWING', 'RAVENWING', 'WULFEN', 'DEATH COMPANY', 'SWORD BRETHREN', 'KILL TEAM', 'DREADNOUGHT', 'CHAPTER MASTER'],
+  CSM: ['DAEMONKIN', 'LEGIONARIES', 'TERMINATOR', 'CULTIST MOB', 'DAMNED', 'HAVOCS', 'POSSESSED', 'WARP TALONS', 'OBLITERATORS', 'CHOSEN', 'WARPSMITH', 'DARK APOSTLE', 'JUMP PACK', 'KHORNE', 'NURGLE', 'TZEENTCH', 'SLAANESH'],
+  AM: ['REGIMENT', 'SQUADRON', 'OFFICER', 'COMMISSAR', 'MILITARUM TEMPESTUS', 'ARTILLERY', 'OGRYN', 'PLATOON', 'KASRKIN', 'RATLINGS'],
+  TS: ['RUBRICAE', 'RUBRIC MARINES', 'SORCERER', 'TZAANGOR', 'TZAANGORS', 'PSYKER', 'SCARAB OCCULT', 'INFERNAL MASTER', 'MUTANT'],
+  DG: ['PLAGUE MARINES', 'BUBONIC ASTARTES', 'TERMINATOR', 'FOETID VIRION', 'PLAGUE SURGEON', 'BIOLOGUS PUTRIFIER', 'POXWALKERS', 'FOETID BLOAT-DRONE', 'DAEMON ENGINE'],
+  WE: ['BERZERKERS', 'EIGHTBOUND', 'EXALTED EIGHTBOUND', 'JAKHALS', 'TERMINATOR', 'LORD ON JUGGERNAUT', 'SLAUGHTERBOUND', 'GOREMONGERS', 'DAEMON'],
+  NEC: ['CANOPTEK', 'CRYPTEK', 'NOBLE', 'OVERLORD', 'DESTROYER CULT', 'TRIARCH', 'FLAYED ONES', 'LYCHGUARD', 'IMMORTALS', 'C’TAN SHARD'],
+  TAU: ['BATTLESUIT', 'KROOT', 'VESPID', 'STEALTH', 'GHOSTKEEL', 'MARKERLIGHT', 'DRONE', 'SHAPER'],
+  TYR: ['SYNAPSE', 'VANGUARD INVADER', 'ENDLESS MULTITUDE', 'HARVESTER', 'MONSTER', 'BURROWER', 'SWARM', 'LICTOR', 'PSYKER'],
+  AE: ['ASPECT WARRIOR', 'WRAITH CONSTRUCT', 'GUARDIANS', 'FARSEER', 'WARLOCK', 'AUTARCH', 'SPIRITSEER', 'WINDRIDERS', 'RANGERS', 'HARLEQUIN', 'TROUPE', 'ANHRATHE'],
+  DRU: ['KABAL', 'WYCH CULT', 'HAEMONCULUS COVENS', 'BLADES FOR HIRE', 'SCOURGES', 'INCUBI', 'MANDRAKES', 'BEAST'],
+  AS: ['PENITENT', 'CELESTIAN', 'SERAPHIM', 'ZEPHYRIM', 'REPENTIA', 'RETRIBUTOR', 'DOMINION', 'PARAGON WARSUITS', 'MINISTORUM PRIEST', 'JUMP PACK'],
+  AdM: ['SKITARII', 'CULT MECHANICUS', 'KATAPHRON', 'ELECTRO-PRIESTS', 'LEGIO CYBERNETICA', 'TECH-PRIEST', 'SICARIAN', 'SYDONIAN', 'PTERAXII', 'SERBERYS'],
+  AC: ['ALLARUS', 'VERTUS', 'ANATHEMA PSYKANA', 'SHIELD-CAPTAIN', 'TERMINATOR', 'CUSTODIAN WARDENS', 'DREADNOUGHT'],
+  GK: ['TERMINATOR', 'PURIFIER SQUAD', 'PALADIN SQUAD', 'INTERCEPTOR SQUAD', 'PURGATION SQUAD', 'DREADKNIGHT', 'PSYKER'],
+  ORK: ['SPEED FREEKS', 'BEAST SNAGGA', 'BIG MEK', 'WARBOSS', 'MEGA ARMOUR', 'MOB', 'WAGON', 'GROT', 'NOB'],
+  GC: ['CROSSFIRE', 'BROOD BROTHERS', 'ABERRANT', 'HYBRID', 'NEOPHYTE', 'ACOLYTE', 'ATALAN JACKALS', 'PATRIARCH', 'MAGUS', 'PRIMUS'],
+  LoV: ['HERKOR', 'EINHYR', 'HEARTHKYN', 'BRÔKHYR', 'PIONEERS', 'BESERKS', 'CTHONIAN', 'YAEGIRS', 'IRONKIN'],
+  QI: ['ARMIGER', 'QUESTORIS', 'DOMINUS', 'CERASTUS', 'TITANIC'],
+  QT: ['WAR DOG', 'ABHORRENT', 'KNIGHT TYRANT', 'KNIGHT DESECRATOR', 'KNIGHT ABOMINANT', 'TITANIC'],
+  CD: ['KHORNE', 'NURGLE', 'TZEENTCH', 'SLAANESH', 'DAEMON', 'MONSTER', 'SHADOW LEGION'],
+  AoI: ['OFFICIO ASSASSINORUM', 'INQUISITOR', 'ADEPTUS ARBITES', 'VOIDFARERS', 'ORDO HERETICUS', 'ORDO MALLEUS', 'ORDO XENOS', 'NAVIGATOR', 'ROGUE TRADER'],
+};
+
+const GENERIC_EXCLUDE = new Set([
+  'INFANTRY', 'VEHICLE', 'CHARACTER', 'EPIC HERO', 'BATTLELINE', 'FLY', 'TRANSPORT', 'DEDICATED TRANSPORT',
+  'IMPERIUM', 'CHAOS', 'AELDARI', 'GRENADES', 'SMOKE', 'WALKER', 'MOUNTED', 'AIRCRAFT'
+]);
+
+/** Extract tactical/detachment-specific keywords present in a faction. */
+export function getTacticalKeywordsForFaction(faction: FactionData | null | undefined): string[] {
+  if (!faction) return [];
+  const dsNames = new Set(faction.datasheets.map((d) => d.name.toUpperCase()));
+  const kwCounts = new Map<string, number>();
+  faction.datasheets.forEach((d) => d.keywords.forEach((k) => {
+    kwCounts.set(k, (kwCounts.get(k) ?? 0) + 1);
+  }));
+
+  const detText = [
+    ...(faction.detachments || []).flatMap((d) => [
+      d.name,
+      ...(d.rules || []).map((r) => r.name + ' ' + r.text),
+      ...(d.stratagems || []).map((s) => s.name + ' ' + (s.short_summary || s.text || '')),
+      ...(d.enhancements || []).map((e) => e.name + ' ' + e.text),
+    ]),
+    ...(faction.armyRules || []).map((r) => r.name + ' ' + r.text),
+  ].join(' ').toUpperCase();
+
+  const curated = FACTION_TACTICAL_KEYWORDS[faction.id] || [];
+  const set = new Set<string>();
+
+  for (const kw of curated) {
+    if ((kwCounts.get(kw) ?? 0) > 0) set.add(kw);
+  }
+
+  for (const [kw, count] of kwCounts.entries()) {
+    if (GENERIC_EXCLUDE.has(kw) || kw.length < 3) continue;
+    // if it's the exact name of a single datasheet, skip unless it's curated or applies to multiple
+    if (dsNames.has(kw) && count < 2 && !set.has(kw)) continue;
+    if (detText.includes(kw)) {
+      set.add(kw);
+    }
+  }
+
+  return Array.from(set);
 }
 
 /** Original faction emblems (not official marks). */
@@ -170,7 +255,7 @@ function scopeLabel(o: WargearOption, max: number) {
 }
 
 /** Wargear choices of one list entry: swaps, extra weapons, "pick two from the list", add-on models. */
-export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void; scrapMode?: boolean }) {
+export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
   const opts = sheet.wargearOptions ?? [];
   const addons = addonLines(sheet);
   const lines = loadoutLines(sheet);
@@ -181,7 +266,7 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
   const costTag = (items: string[], instead: string[] = []) => {
     const c = cost(items) - cost(instead);
     if (!c) return null;
-    const tag = scrapMode ? (c > 0 ? `+${c} Scrap` : `−${-c} Scrap`) : (c > 0 ? `+${c}` : `−${-c}`);
+    const tag = c > 0 ? `+${c}` : `−${-c}`;
     return <span className={`wg-cost ${c < 0 ? 'less' : ''}`}>{tag}/model</span>;
   };
   const put = (opt: number, next: WargearPick[]) => onChange({ wargear: [...picks.filter((p) => p.opt !== opt), ...next] });
@@ -189,7 +274,7 @@ export function WargearEditor({ sheet, u, onChange, scrapMode = false }: { sheet
   return (
     <div className="field">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· {scrapMode ? 'some weapons cost Scrap (shown as +Scrap each)' : 'some weapons cost points (shown as +pts each)'}</span> : null}</span>
+        <span>Wargear {sheet.wargearCosts?.some((c) => !addons.some((a) => a.name === c.name)) ? <span className="tiny muted">· some weapons cost points (shown as +pts each)</span> : null}</span>
       </div>
       {lines.length > 0 && (() => {
         // each model takes one loadout line: adding one moves a model over from the biggest other line
@@ -379,7 +464,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [peek, setPeek] = useState<string | null>(null); // a datasheet opened from the ⋮ pickers (its abilities)
   const [resetArmed, setResetArmed] = useState(false);
   const [panelCollapse, setPanelCollapse] = useState<{ [uid: string]: { sheet?: boolean; enh?: boolean; wargear?: boolean } }>({});
-  useEffect(() => setView(null), [adding]); // the datasheet opened under a row of the add list
+  const [filterMode, setFilterMode] = useState<'kind' | 'keyword'>('kind');
+  const [selectedKind, setSelectedKind] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  useEffect(() => {
+    setView(null);
+    setSelectedKind(null);
+    setSelectedTag(null);
+  }, [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => { loadIndex().then(setIndex).catch(() => setNote('Could not load the faction list')); }, []);
@@ -499,12 +591,18 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
+    const isEpic = !!sheet?.keywords.includes('EPIC HERO');
+    const isAircraft = !!sheet?.keywords.includes('AIRCRAFT');
     const row = (
       <div key={u.uid} className={`ab-row ${inGroup ? 'in-group' : ''} ${menu === u.uid ? 'open' : ''}`}>
         <button type="button" className="ab-row-main" onClick={() => setMenu(menu === u.uid ? null : u.uid)}>
           <span className="ab-art-wrap"><UnitArt sheet={sheet} /></span>
           <span className="ab-row-text">
-            <span className="ab-name">{u.datasheet} <span className="ab-count">({u.models})</span></span>
+            <span className="ab-name">
+              {u.datasheet} <span className="ab-count">({u.models})</span>
+              {isEpic && <span className="ab-badge-epic">Epic Hero</span>}
+              {isAircraft && <span className="ab-badge-aircraft">Aircraft</span>}
+            </span>
             <span className="ab-pts">{ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (duplicate +{taxes.get(u.uid)})</span> : null}{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">Not in 11th edition</span>}</span>
             {line && <span className="ab-sub">{line}</span>}
             {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
@@ -536,23 +634,51 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         const bySupport = (a: ArmyUnitEntry, b: ArmyUnitEntry) => Number(!!supportIn(list, sheetOf(a.datasheet))) - Number(!!supportIn(list, sheetOf(b.datasheet)));
         // a squad with its characters: Leader, Support, then the squad
         const squadRows = (u: ArmyUnitEntry, inGroup: boolean) => [...joined(u).sort(bySupport).map((c) => unitRow(c, true)), unitRow(u, inGroup || joined(u).length > 0)];
+
+        const renderSquad = (u: ArmyUnitEntry) => {
+          // a transport shows the units that start the battle inside it in its own card
+          const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
+          if (!joined(u).length && !riders.length) return unitRow(u);
+          return (
+            <div key={u.uid} className="ab-group">
+              {squadRows(u, true)}
+              {riders.map((r) => <div key={`ride-${r.uid}`} className="ab-ride">{squadRows(r, true)}</div>)}
+            </div>
+          );
+        };
+
+        const renderSectionContent = () => {
+          if (sec.id === 'characters') {
+            const isEpic = (u: ArmyUnitEntry) => !!sheetOf(u.datasheet)?.keywords.includes('EPIC HERO');
+            const epics = us.filter(isEpic);
+            const chars = us.filter((u) => !isEpic(u));
+            if (epics.length > 0 && chars.length > 0) {
+              return (
+                <>
+                  <div className="ab-subgroup-title">
+                    <span>Epic Heroes</span>
+                    <span className="ab-subgroup-count">{epics.length}</span>
+                  </div>
+                  {epics.map(renderSquad)}
+                  <div className="ab-subgroup-title">
+                    <span>Characters</span>
+                    <span className="ab-subgroup-count">{chars.length}</span>
+                  </div>
+                  {chars.map(renderSquad)}
+                </>
+              );
+            }
+          }
+          return us.map(renderSquad);
+        };
+
         return (
           <section key={sec.id} className="ab-section">
             <div className="ab-section-head">
               <span>{sec.title}</span>
               <button type="button" className="ab-add" aria-label={`Add ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
             </div>
-            {us.map((u) => {
-              // a transport shows the units that start the battle inside it in its own card
-              const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
-              if (!joined(u).length && !riders.length) return unitRow(u);
-              return (
-                <div key={u.uid} className="ab-group">
-                  {squadRows(u, true)}
-                  {riders.map((r) => <div key={`ride-${r.uid}`} className="ab-ride">{squadRows(r, true)}</div>)}
-                </div>
-              );
-            })}
+            {renderSectionContent()}
           </section>
         );
       })}
@@ -696,12 +822,32 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const addSheet = () => {
     if (!adding || !faction) return null;
     const title = SECTIONS.find((x) => x.id === adding)!.title;
+    const factionTags = getTacticalKeywordsForFaction(faction);
+
     const sheets = faction.datasheets
       .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
       .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
-    const visibleSheets = sheets;
+
+    const availableKinds = Array.from(new Set(sheets.map((d) => unitKind(d)))).sort((a, b) => KINDS.indexOf(a) - KINDS.indexOf(b));
+    const availableTags = factionTags.filter((tag) => sheets.some((d) => d.keywords.includes(tag)));
+
+    const visibleSheets = sheets.filter((d) => {
+      if (filterMode === 'kind' && selectedKind) return unitKind(d) === selectedKind;
+      if (filterMode === 'keyword' && selectedTag) return d.keywords.includes(selectedTag);
+      return true;
+    });
+
     // the allied list is grouped by the book each unit comes from
-    const groupOf = (d: DatasheetData) => (d.ally ? `${d.allyName} · ${unitKind(d)}` : detAlly(d) ? `${detAlly(d)!.rule} · ${unitKind(d)}` : unitKind(d));
+    const groupOf = (d: DatasheetData) => (
+      d.ally
+        ? `${d.allyName} · ${unitKind(d)}`
+        : detAlly(d)
+          ? `${detAlly(d)!.rule} · ${unitKind(d)}`
+          : filterMode === 'keyword' && selectedTag
+            ? `${selectedTag} · ${unitKind(d)}`
+            : unitKind(d)
+    );
+
     return (
       <div className="tray-backdrop" onClick={() => setAdding(null)}>
         <div className="tray" onClick={(e) => e.stopPropagation()}>
@@ -709,7 +855,84 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             <div className="sheet-title grow">Add {title}</div>
             <button className="btn small ghost" onClick={() => setAdding(null)}>Close</button>
           </div>
+
+          <div className="ab-section-tabs">
+            {SECTIONS.filter((s) => s.id !== 'allies' || faction.datasheets.some((d) => d.ally || (detAlly(d) && offered(d)))).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`ab-sec-tab ${adding === s.id ? 'active' : ''}`}
+                onClick={() => {
+                  setAdding(s.id);
+                  setSelectedKind(null);
+                  setSelectedTag(null);
+                }}
+              >
+                {s.title}
+              </button>
+            ))}
+          </div>
+
           <input placeholder="Search datasheets…" value={q} onChange={(e) => setQ(e.target.value)} />
+
+          <div className="ab-filter-bar">
+            <div className="ab-filter-mode-toggle" role="group" aria-label="Filter Mode">
+              <button
+                type="button"
+                className={`ab-filter-mode-btn ${filterMode === 'kind' ? 'active' : ''}`}
+                onClick={() => { setFilterMode('kind'); setSelectedTag(null); }}
+              >
+                Categories
+              </button>
+              <button
+                type="button"
+                className={`ab-filter-mode-btn ${filterMode === 'keyword' ? 'active' : ''}`}
+                onClick={() => { setFilterMode('keyword'); setSelectedKind(null); }}
+              >
+                Tactical Keywords {availableTags.length ? `(${availableTags.length})` : ''}
+              </button>
+            </div>
+
+            <div className="ab-chips-scroll">
+              <button
+                type="button"
+                className={`ab-chip-btn ${(!selectedKind && !selectedTag) ? 'active' : ''}`}
+                onClick={() => { setSelectedKind(null); setSelectedTag(null); }}
+              >
+                All ({sheets.length})
+              </button>
+              {filterMode === 'kind' ? (
+                availableKinds.map((k) => {
+                  const count = sheets.filter((d) => unitKind(d) === k).length;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      className={`ab-chip-btn ${selectedKind === k ? 'active' : ''}`}
+                      onClick={() => setSelectedKind(selectedKind === k ? null : k)}
+                    >
+                      {k} ({count})
+                    </button>
+                  );
+                })
+              ) : (
+                availableTags.map((tag) => {
+                  const count = sheets.filter((d) => d.keywords.includes(tag)).length;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={`ab-chip-btn keyword ${selectedTag === tag ? 'active' : ''}`}
+                      onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                    >
+                      {tag} ({count})
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
           {adding === 'allies' && (
             <div className="tiny muted">
               Allowed for this army: {[...[...new Map(faction.datasheets.filter((d) => d.ally).map((d) => [d.ally!, d])).values()].map((d) => `${d.allyName} (${ALLIES.find((a) => a.id === d.ally)?.rule})`),
@@ -729,7 +952,12 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                     <span className="ab-row-text">
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
                       <span className="ab-pts">{pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts</span>
-                      <span className="ab-sub">{d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}{d.keywords.includes('EPIC HERO') ? 'Epic Hero · ' : ''}{d.role}</span>
+                      <span className="ab-sub">
+                        {d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}
+                        {d.keywords.includes('EPIC HERO') && <span className="ab-chip gold">Epic Hero</span>}
+                        {d.keywords.includes('AIRCRAFT') && <span className="ab-chip aircraft">Aircraft</span>}
+                        {d.role}
+                      </span>
                       {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> Transport capacity {t.capacity}</span> : null; })()}
                     </span>
                   </button>
@@ -758,7 +986,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 ),
               ];
             })}
-            {!sheets.length && <div className="ab-empty">No datasheets found</div>}
+            {!visibleSheets.length && <div className="ab-empty">No datasheets found matching criteria</div>}
           </div>
         </div>
       </div>

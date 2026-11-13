@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RULES } from '../engine/config';
 import { listPoints } from '../engine/army';
-import { loadRun } from '../services/storage';
 import { lastRound } from '../engine/state';
 import type { GameState } from '../engine/types';
 import { Emblem, titleCase } from './ArmyBuilder';
@@ -21,10 +20,8 @@ interface Props {
   onDelete: (id: string) => void;
   onImportArmies?: (armies: Army[]) => void;
   onBattle: () => void;
-  onArcane: () => void;
   onTabletop: () => void;
   onLogs: () => void;
-  onCampaign: () => void;
   onContinue: () => void;
   onAbandon: () => void;
 }
@@ -38,15 +35,11 @@ export function Home({
   onDuplicate,
   onDelete,
   onBattle,
-  onArcane,
   onTabletop,
   onLogs,
   onContinue,
   onAbandon,
 }: Props) {
-  const run = loadRun();
-  const runLayer = run ? Math.max(0, ...run.path.map((id) => (run.map.find((n) => n.id === id)?.layer ?? -1) + 1)) : 0;
-  const runLayers = run ? Math.max(...run.map.map((n) => n.layer)) + 1 : 0;
   const [pop, setPop] = useState<{ id: string; x: number; y: number } | null>(null);
   const facs = useFactions(armies.map((a) => a.factionId)); // points with the duplicate tax, as in the army builder
   const [armed, setArmed] = useState<string | null>(null); // a delete that needs a second tap (dialogs are blocked here)
@@ -61,7 +54,7 @@ export function Home({
         <span className="brand"><Logo size={30} />Warhammer Warband</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <ThemeToggle />
-          <span className="appbar-note">11th edition</span>
+          <span className="appbar-note">Tournament Edition</span>
         </div>
       </header>
       <main className="screen">
@@ -69,7 +62,7 @@ export function Home({
           <section className="resume slate" aria-label="Battle in progress">
            <div className="slate-in">
             <div className="resume-head">
-              <span className="label">{live.campaign ? 'Campaign battle' : 'Battle in progress'}</span>
+              <span className="label">Battle in progress</span>
               <span className="resume-round">{live.phase === 'deploy' || live.phase === 'scouts' ? 'Deployment' : `Round ${live.round} of ${Math.max(live.round, lastRound(live))}`}</span>
             </div>
             <div className="resume-score">
@@ -87,31 +80,25 @@ export function Home({
           </section>
         )}
 
-        {/* Play modes: START BATTLE on top, Arcade, Tabletop, and History smaller underneath */}
+        {/* Play modes: START BATTLE hero button, Tabletop Companion and Match History */}
         <div className="home-modes" aria-label="Play modes">
-          <button className="mode-btn-sub mode-btn-hero" onClick={onBattle} title="Play standard simulator battle against bot or local player">
-            <Icon name="fight" size={20} />
+          <button className="mode-btn-sub mode-btn-hero" onClick={onBattle} title="Play competitive tournament battle against AI or local opponent">
+            <Icon name="fight" size={24} />
             <div className="mode-sub-info">
               <span className="mode-sub-label">START BATTLE</span>
+              <small className="mode-sub-badge" style={{ opacity: 0.85, marginTop: 2 }}>Incursion (1,000 pts) · Strike Force (2,000 pts)</small>
             </div>
           </button>
 
           <nav className="modes-sub-grid" aria-label="Secondary play modes">
-            <button className="mode-btn-sub" onClick={onArcane} title="Demo Roguelike campaign and arcade game modes">
-              <Icon name="arcane" size={17} />
-              <div className="mode-sub-info">
-                <span className="mode-sub-label">ARCADE</span>
-                {run && !run.over ? <small className="mode-sub-badge">Stage {Math.min(runLayer + 1, runLayers)}/{runLayers}</small> : null}
-              </div>
-            </button>
             <button className="mode-btn-sub" onClick={onTabletop} title="Physical 40k match scorekeeper, tactical deck, and 45 terrain maps">
-              <Icon name="tabletop" size={17} />
+              <Icon name="tabletop" size={18} />
               <div className="mode-sub-info">
                 <span className="mode-sub-label">TABLETOP</span>
               </div>
             </button>
             <button className="mode-btn-sub" onClick={onLogs} title="Past battle history and replays">
-              <Icon name="history" size={17} />
+              <Icon name="history" size={18} />
               <div className="mode-sub-info">
                 <span className="mode-sub-label">HISTORY</span>
               </div>

@@ -1,7 +1,6 @@
-// Everything the app keeps on the device goes through here: army lists, the battle in progress, the campaign run,
+// Everything the app keeps on the device goes through here: army lists, the battle in progress,
 // preferences and custom photos. Reads and writes never throw (a private window or a full / blocked storage just
 // means this session only), so callers do not need their own try/catch. A cloud sync hooks in at this one place.
-import { migrateRun, type Run } from '../engine/campaign';
 import type { GameState } from '../engine/types';
 
 /** The storage keys in use. */
@@ -12,7 +11,6 @@ export const KEYS = {
   battlePrefs: 'w40k11-battle',
   game: 'w40k11-save',
   portraits: 'w40k11-portraits',
-  campaignRun: 'campaign-run',
   coach: 'coach',
   sound: 'sfx-on',
   fx: 'fx-level',
@@ -20,6 +18,16 @@ export const KEYS = {
   fastShooting: 'fast-shooting',
   battleLogs: 'w40k11-battle-logs',
 } as const;
+
+// Ensure any legacy campaign keys are permanently purged from device storage
+try {
+  localStorage.removeItem('campaign-run');
+  localStorage.removeItem('campaign-presets');
+  localStorage.removeItem('campaign-state');
+  localStorage.removeItem('w40k-campaign');
+} catch {
+  // ignore in private/restricted browsing
+}
 
 export function readText(key: string): string | null {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -46,23 +54,12 @@ export function removeKey(key: string) {
   try { localStorage.removeItem(key); } catch { /* nothing stored */ }
 }
 
-// ---------- campaign ----------
-
-export function loadRun(): Run | null {
-  const v = readJSON<Run>(KEYS.campaignRun);
-  return v && v.version === 1 && Array.isArray(v.map) ? migrateRun(v) : null;
-}
-
-export function saveRun(run: Run | null) {
-  if (run) writeJSON(KEYS.campaignRun, run); else removeKey(KEYS.campaignRun);
-}
-
 // ---------- battle logs & match history ----------
 
 export interface BattleRecord {
   id: string;
   timestamp: number;
-  mode: 'simulator' | 'tabletop' | 'campaign';
+  mode: 'simulator' | 'tabletop';
   title?: string;
   players: {
     name: string;

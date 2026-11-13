@@ -185,23 +185,4 @@ describe('getObjectiveEffects', () => {
     expect(sab).toBeDefined();
     expect(sab?.radius).toBe(3.0);
   });
-
-  it('detects Roguelike Supply Cache when campaign and uncaptured', () => {
-    const s = mockGameState();
-    (s as any).campaign = { node: 'battle-1', relics: [], rules: [] };
-    const o: ObjectiveState = {
-      id: 'obj-8',
-      x: 30,
-      y: 30,
-      terrainId: 't-8',
-      controller: null,
-      type: 'central',
-    };
-
-    const effects = getObjectiveEffects(s, o);
-    const supply = effects.find((e) => e.id === 'supply-cache');
-    expect(supply).toBeDefined();
-    expect(supply?.radius).toBe(3.0);
-    expect(supply?.title).toContain('SUPPLY CACHE');
-  });
 });

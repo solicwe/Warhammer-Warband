@@ -45,8 +45,6 @@ import { actionOptions, startAction } from '../engine/missions';
 import { Icon, type IconName } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
-import { toggleDynasticGrid, spendBloodTithe, getWaaaghTier } from '../engine/ascendancy';
-import { triggerGunshipOverclock } from '../engine/combatEngine';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
 import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, ritualsPending, ritualTargets } from '../factions/rituals';
@@ -61,21 +59,12 @@ import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BattlefieldAnomaly, BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
+import type { BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
 import { Board, getObjectiveEffects, placementRings, type Paths, type Ring } from './Board';
-import {
-  TACTICAL_CLOCK_DIRECTIVES,
-  PATRON_CONTRACTS,
-  HIGH_COMMAND_ADVISORS,
-  ROUND_DOCTRINES,
-  type AdvisorId,
-  type PatronContractId,
-} from '../engine/campaignSystems';
-import { relicById } from '../engine/campaign';
 import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
@@ -171,14 +160,13 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
 };
 
 export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, replayStates, onReplaySeek }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; replayStates?: GameState[]; onReplaySeek?: (index: number) => void }) {
-  const isCampaign = Boolean(initial.campaign);
-  const replayFrames = useRef(replay || isCampaign ? [] : [structuredClone(initial)]);
+  const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
   const recordReplayCommit = useCallback((next: GameState, undone: boolean) => {
-    if (replay || isCampaign) return;
+    if (replay) return;
     if (undone) {
       if (replayFrames.current.length > 1) replayFrames.current.pop();
     } else replayFrames.current.push(structuredClone(next));
-  }, [replay, isCampaign]);
+  }, [replay]);
   const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const replayEvents = useMemo(() => {
@@ -310,9 +298,9 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         if (worker) worker.onmessage = null;
         done('steady');
       };
-      const effectiveBudget = rush || s.campaign || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 250);
+      const effectiveBudget = rush || isMobileScreen ? 0 : Math.min(lookBudget(s, who), 250);
       if (effectiveBudget <= 0) {
-        done(s.campaign ? (s.idleTactic === 'assault' ? 'assault' : 'rogue') : 'steady');
+        done('steady');
         return;
       }
       if (!worker) { done('steady'); return; }
@@ -342,7 +330,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const quick = s.phase === 'deploy' || s.phase === 'scouts' || s.phase === 'command' || s.window != null;
     // Asynchronous Staggered Queue: maintain smooth cadence, scaled by autoSpeed multiplier
     const autoMult = (s as any).autoSpeed === 4 ? 3.2 : (s as any).autoSpeed === 2 ? 1.8 : 1;
-    const delay = (quick ? 40 : Math.max(80, Math.min(250, (s.campaign ? 180 : 220) / (spectate && speed === 2 ? 1.5 : 1) / (rush ? 1.6 : 1)))) / autoMult;
+    const delay = (quick ? 40 : Math.max(80, Math.min(250, 220 / (spectate && speed === 2 ? 1.5 : 1) / (rush ? 1.6 : 1)))) / autoMult;
     const onMain = () => {
       act((g) => {
         if (who === null) {
@@ -433,38 +421,35 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
     if (!loggedRef.current) {
       loggedRef.current = true;
-      // Campaign battles do NOT record or persist replay timelines / battle logs
-      if (!s.campaign) {
-        const record: BattleRecord = {
-          id: 'battle-' + Date.now(),
-          timestamp: Date.now(),
-          mode: 'simulator',
-          players: ([0, 1] as const).map((p) => ({
-            name: pName(s, p),
-            faction: s.players[p].factionId ?? s.players[p].name,
-            score: s.players[p].vp + (s.players[p].secVp ?? 0),
-            cp: s.players[p].cp,
-            isWinner: s.winner === p,
-          })),
-          turn: s.turn,
-          maxTurns: s.maxRounds ?? 5,
-          layoutName: s.deploymentId ? ('Layout ' + s.deploymentId) : 'Standard Layout',
-          summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
-          replayState: {
-            seed: s.rng,
-          },
-        };
-        saveBattleLog(record);
-        const timeline = [...replayFrames.current];
-        if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
-        void compressReplayTimeline(timeline).then((encoded) => {
-          saveBattleLog({ ...record, replayState: { seed: s.rng, timeline: encoded } });
-          window.dispatchEvent(new CustomEvent('battle-logs-updated'));
-        }).catch((error: unknown) => {
-          console.error('Could not save replay timeline', error);
-          window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
-        });
-      }
+      const record: BattleRecord = {
+        id: 'battle-' + Date.now(),
+        timestamp: Date.now(),
+        mode: 'simulator',
+        players: ([0, 1] as const).map((p) => ({
+          name: pName(s, p),
+          faction: s.players[p].factionId ?? s.players[p].name,
+          score: s.players[p].vp + (s.players[p].secVp ?? 0),
+          cp: s.players[p].cp,
+          isWinner: s.winner === p,
+        })),
+        turn: s.turn,
+        maxTurns: s.maxRounds ?? 5,
+        layoutName: s.deploymentId ? ('Layout ' + s.deploymentId) : 'Standard Layout',
+        summary: 'Final VP: ' + (s.players[0].vp + (s.players[0].secVp ?? 0)) + ' - ' + (s.players[1].vp + (s.players[1].secVp ?? 0)),
+        replayState: {
+          seed: s.rng,
+        },
+      };
+      saveBattleLog(record);
+      const timeline = [...replayFrames.current];
+      if (timeline.at(-1)?.phase !== 'gameover') timeline.push(structuredClone(s));
+      void compressReplayTimeline(timeline).then((encoded) => {
+        saveBattleLog({ ...record, replayState: { seed: s.rng, timeline: encoded } });
+        window.dispatchEvent(new CustomEvent('battle-logs-updated'));
+      }).catch((error: unknown) => {
+        console.error('Could not save replay timeline', error);
+        window.dispatchEvent(new CustomEvent('game-error', { detail: error instanceof Error ? error.message : String(error) }));
+      });
     }
   }, [s.phase, replay]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -570,18 +555,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   // ending a phase where nothing was done needs a second tap (protects against mis-taps)
   const [armed, setArmed] = useState<string | null>(null);
   useEffect(() => { if (!armed) return; const tm = window.setTimeout(() => setArmed(null), 3500); return () => window.clearTimeout(tm); }, [armed]);
-  useEffect(() => { if (s.reinforcementAlert || s.titanAlert) play('bad'); }, [s.reinforcementAlert, s.titanAlert]);
-  // the reinforcements flash clears itself
-  useEffect(() => {
-    if (!s.reinforcementAlert) return;
-    const t = window.setTimeout(() => act((g) => { g.reinforcementAlert = null; }), 1800);
-    return () => window.clearTimeout(t);
-  }, [s.reinforcementAlert]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!s.titanAlert) return;
-    const t = window.setTimeout(() => act((g) => { g.titanAlert = null; }), 3600);
-    return () => window.clearTimeout(t);
-  }, [s.titanAlert]); // eslint-disable-line react-hooks/exhaustive-deps
   /** The phase's way out: what is left undone shows under it, and ending with nothing done asks once more. */
   const endButton = (key: string, label: string, idle: boolean, why: string, note?: string) => {
     return (
@@ -1187,18 +1160,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           onClick: () => {
             act((g) => autoSelectToShoot(g, unitById(g, selUnit.id)));
             setMode({ k: 'shoot', unitId: selUnit.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
-          },
-        });
-      }
-      if (selUnit.combatRole === 'GUNSHIP' && !selUnit.combatState?.overheated) {
-        actions.push({
-          label: 'Overclock Reactor (+50% Atks)',
-          onClick: () => {
-            act((g) => {
-              const res = triggerGunshipOverclock(g, unitById(g, selUnit.id));
-              if (res.overheated) flash(`${selUnit.name} reactor overheated! Suffered heat damage.`);
-              else flash(`${selUnit.name} reactor overclocked! +50% Attacks unlocked!`);
-            });
           },
         });
       }
@@ -2558,109 +2519,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         ))}
         {selUnit && selUnit.owner === s.active && abilityBar(selUnit.owner, { unitId: selUnit.id, whens: ['command', 'anyCommand', 'battleStart', 'opponentTurnEnd', 'anyPhase'] })}
-        {/* Faction Ascendancy Controls (PoE League Specialization) */}
-        {(() => {
-          const P = s.players[s.active];
-          const hasOrk = P.waaaghMomentum !== undefined;
-          const hasNecron = P.dynasticGridMode !== undefined;
-          const hasTithe = P.tithe !== undefined;
-
-          if (!hasOrk && !hasNecron && !hasTithe) return null;
-
-          return (
-            <div className="card" style={{ padding: 10, background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8))', border: '1px solid rgba(129, 140, 248, 0.4)' }}>
-              <div className="row" style={{ alignItems: 'center', marginBottom: 6 }}>
-                <b style={{ color: '#818cf8', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon name="zap" size={14} />
-                  <span>FACTION ASCENDANCY DOCK</span>
-                </b>
-                <span className="tiny muted" style={{ marginLeft: 'auto' }}>Turn {s.turn} · Round {s.round}</span>
-              </div>
-
-              {/* Orks: WAAAGH! Momentum */}
-              {hasOrk && (() => {
-                const tierInfo = getWaaaghTier(P.waaaghMomentum!);
-                return (
-                  <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(132, 204, 22, 0.3)' }}>
-                    <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span className="small">
-                        <b>WAAAGH! Momentum:</b> <span style={{ color: '#84cc16', fontWeight: 800 }}>{P.waaaghMomentum}%</span>
-                        <span className="chip" style={{ marginLeft: 6, background: 'rgba(132, 204, 22, 0.2)', color: '#84cc16' }}>
-                          Tier {tierInfo.tier}: {tierInfo.name}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="tiny" style={{ marginTop: 4, color: '#bef264' }}>
-                      Active Bonuses: {tierInfo.description} (Surges on Charge, Kills, & taking damage)
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Necrons: Dynastic Grid Mode Toggle */}
-              {hasNecron && (
-                <div style={{ marginTop: 4, marginBottom: 8, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className="small">
-                      <b>Dynastic Awakening Grid:</b>{' '}
-                      <span style={{ color: '#22c55e', fontWeight: 800 }}>
-                        [{P.dynasticGridMode === 'resurrection' ? 'REANIMATION OVERDRIVE' : 'GAUSS DETONATION'}]
-                      </span>
-                    </span>
-                    <button
-                      className="btn small"
-                      style={{ borderColor: '#22c55e', color: '#86efac' }}
-                      onClick={() => {
-                        act((g) => { toggleDynasticGrid(g, g.active); });
-                        flash('Dynastic Grid Mode Reconfigured!');
-                      }}
-                    >
-                      <Icon name="gear" size={13} /> <span>Toggle Mode</span>
-                    </button>
-                  </div>
-                  <div className="tiny muted" style={{ marginTop: 4 }}>
-                    {P.dynasticGridMode === 'resurrection'
-                      ? 'Reanimation Protocols heal +1 extra wound. Excellent for attrition and board hold.'
-                      : 'Gauss weapons score Critical Hits on 5+ and gain +1 AP! Lethal armor piercing.'}
-                  </div>
-                </div>
-              )}
-
-              {/* World Eaters: Blood Tithe Altar */}
-              {hasTithe && (
-                <div style={{ marginTop: 4, padding: 8, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(244, 63, 94, 0.3)' }}>
-                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span className="small">
-                      <b>Blood Tithe Altar:</b> <span style={{ color: '#f43f5e', fontWeight: 800 }}>{P.tithe} / 8 Skulls</span>
-                    </span>
-                  </div>
-                  <div className="row" style={{ gap: 6, marginTop: 4 }}>
-                    <button
-                      className="btn small"
-                      disabled={P.tithe! < 3}
-                      onClick={() => {
-                        act((g) => { spendBloodTithe(g, g.active, 3, 'Total Carnage'); });
-                        flash('Total Carnage invoked for 3 Tithe Points!');
-                      }}
-                    >
-                      <Icon name="swords" size={13} /> <span>Total Carnage</span> (3 Tithe)
-                    </button>
-                    <button
-                      className="btn small"
-                      disabled={P.tithe! < 4}
-                      onClick={() => {
-                        act((g) => { spendBloodTithe(g, g.active, 4, 'Spiteful Demise'); });
-                        flash('Spiteful Demise invoked for 4 Tithe Points!');
-                      }}
-                    >
-                      <Icon name="skull" size={13} /> <span>Spiteful Demise</span> (4 Tithe)
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })()}
         {hasArmyRule(s, s.active, 'Waaagh!') && (
           <div className="card row" style={{ padding: 8 }}>
             <div className="grow small"><b>WAAAGH!</b> (once per battle) — Orks are riled up: 5+ invulnerable save, ranged weapons have [ASSAULT], can charge after advancing, until the end of the next turn</div>
@@ -3855,7 +3713,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       <div className="row">
         <div className="handoff grow">{s.winner === 'draw' ? 'The battle ends in a draw' : `${pName(s, s.winner as PlayerId)} wins`}</div>
         <button className="btn" onClick={() => setFinalSeen(false)}>Result</button>
-        <button className="btn primary" onClick={onExit}>{s.campaign ? 'Campaign' : 'Home'}</button>
+        <button className="btn primary" onClick={onExit}>Home</button>
       </div>
     );
     if (spectate) return (
@@ -3982,66 +3840,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       : []),
     ...(s.players[p].painTokens !== undefined
       ? [<div key={`drukhari${p}`} className={`buffcard p${p}`}><b>Power from Pain ({s.players[p].painTokens} Tokens)</b><span>Spend 1 Pain token to Empower a unit{s.players[p].drukhariWagerWinning ? ` · Reaper's Wager: ${s.players[p].drukhariWagerWinning} winning` : ''}</span></div>]
-      : []),
-    // Campaign Army-Wide Buffs (Relics, Round Surge, Advisors, Gilded Arsenal, Patron Bounty)
-    ...(p === 0 && s.campaign?.relics
-      ? s.campaign.relics.map((rid) => {
-          const r = relicById(rid);
-          if (!r) return null;
-          const lvl = s.campaign?.relicLevels?.[rid] ?? 1;
-          const desc = (r as any).levels && (r as any).levels[lvl - 1] ? (r as any).levels[lvl - 1] : r.text;
-          return (
-            <div key={`relic-${rid}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #f59e0b' }}>
-              <b style={{ color: '#fef08a' }}>Relic: {r.name}{lvl > 1 ? ` (Lv.${lvl})` : ''}</b>
-              <span>{desc}</span>
-            </div>
-          );
-        }).filter(Boolean)
-      : []),
-    ...(p === 0 && (s as any).advisorsActive?.length
-      ? (s as any).advisorsActive.map((advId: AdvisorId) => {
-          const def = HIGH_COMMAND_ADVISORS[advId];
-          if (!def) return null;
-          return (
-            <div key={`adv-${advId}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #10b981' }}>
-              <b style={{ color: '#86efac' }}>Council: {def.name}</b>
-              <span>{def.battleDesc}</span>
-            </div>
-          );
-        }).filter(Boolean)
-      : []),
-    ...(p === 0 && (s as any).gildedBonus?.damagePercent > 0
-      ? [
-          <div key="gilded-bonus" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #fbbf24' }}>
-            <b style={{ color: '#fde047' }}>Gilded Arsenal (+{(s as any).gildedBonus.damagePercent}%)</b>
-            <span>Salvaged wealth converts into raw weapon energy: +{(s as any).gildedBonus.damagePercent}% final damage multiplier.</span>
-          </div>,
-        ]
-      : []),
-    ...(p === 0 && ROUND_DOCTRINES[s.round] && (((s as any).roundDoctrineLevels?.[s.round] ?? 0) > 0 || ((s as any).purchasedRoundDoctrines || []).includes(s.round))
-      ? [(() => {
-          const rLvl = (s as any).roundDoctrineLevels?.[s.round] ?? 1;
-          const def = ROUND_DOCTRINES[s.round];
-          const desc = rLvl === 1 ? def.descLv1 : rLvl === 2 ? def.descLv2 : def.descLv3;
-          return (
-            <div key={`round-surge-${s.round}`} className={`buffcard p${p}`} style={{ borderLeft: '3px solid #ec4899' }}>
-              <b style={{ color: '#f472b6' }}>Tactical Surge: {def.name} (Stack Lv.{rLvl})</b>
-              <span>{desc}</span>
-            </div>
-          );
-        })()]
-      : []),
-    ...(p === 0 && (s as any).patronContract
-      ? (() => {
-          const def = PATRON_CONTRACTS[(s as any).patronContract as PatronContractId];
-          if (!def) return [];
-          return [
-            <div key="patron-bounty" className={`buffcard p${p}`} style={{ borderLeft: '3px solid #a855f7' }}>
-              <b style={{ color: '#d8b4fe' }}>Patron Bounty: {def.name}</b>
-              <span><b>Target:</b> {def.conditionDesc} · <b>Sector Buff:</b> {def.buffDesc}</span>
-            </div>,
-          ];
-        })()
       : []),
   ];
   // where an army's buff column goes: beside its own deployment zone (left / right, or top / bottom of the left side)
@@ -4222,6 +4020,49 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           <div className="tape-bar" style={{ background: '#1c1917', borderColor: '#ea580c' }}>
             <span style={{ color: '#fdba74', fontWeight: 700 }}>Tap anywhere on battlefield to place Deathstrike target marker (6" blast)</span>
             <button className="btn small" onClick={() => setMode(null)}>Cancel</button>
+          </div>
+        )}
+
+        {/* Floating Reset Camera / Fit Board */}
+        <button
+          className="btn-fit-board"
+          onClick={() => {
+            const el = document.querySelector('.board-svg');
+            if (el) el.dispatchEvent(new CustomEvent('reset-camera'));
+          }}
+          title="Reset Camera / Fit Board"
+          aria-label="Reset Camera / Fit Board"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+        </button>
+
+        {/* Mobile Confirm Move / Cancel Floating Pill */}
+        {mode && draft && (
+          <div className="move-confirm-pill" style={{ bottom: 16, left: '50%' }}>
+            <button
+              className="btn-confirm"
+              onClick={() => {
+                if (mode.k === 'move') confirmMove(mode.kind);
+                else if (mode.k === 'charge') confirmMove('charge', () => { setSel(null); setMode(null); });
+                else if (mode.k === 'pile') confirmMove(mode.kind);
+              }}
+            >
+              ✓ Confirm Move
+            </button>
+            <button
+              className="btn-cancel"
+              onClick={() => {
+                setMode(null);
+                setDraft(null);
+              }}
+            >
+              ✕ Cancel
+            </button>
           </div>
         )}
       </div>
@@ -4660,42 +4501,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </div>
             </div>
 
-            {s.campaign && s.phase !== 'gameover' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0', padding: 8, background: 'rgba(245, 158, 11, 0.08)', borderRadius: 6, border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-                <span className="tiny" style={{ color: '#f59e0b', fontWeight: 700 }}>Campaign Battle Controls</span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    type="button"
-                    className="btn primary small grow"
-                    onClick={() => {
-                      act((g) => {
-                        endBattle(g);
-                        g.winner = 0;
-                      });
-                      onExit();
-                    }}
-                  >
-                    Claim Victory
-                  </button>
-                  <button
-                    type="button"
-                    className="btn danger small grow"
-                    onClick={() => {
-                      if (window.confirm('Surrender this campaign battle and retreat?')) {
-                        act((g) => {
-                          endBattle(g);
-                          g.winner = 1;
-                        });
-                        onExit();
-                      }
-                    }}
-                  >
-                    Surrender
-                  </button>
-                </div>
-              </div>
-            )}
-
             <button className="btn danger" onClick={onExit}>Exit to home <span className="muted small">· the battle is saved</span></button>
           </div>
         </div>
@@ -4765,21 +4570,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         <RoundSummary s={s} t={tally(s, null)} final onClose={() => setFinalSeen(true)}
           actions={<>
             <button className="btn" onClick={(e) => { e.stopPropagation(); setFinalSeen(true); }}>See the board</button>
-            <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>{s.campaign ? 'Back to the campaign' : 'Back to home'}</button>
+            <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>Back to home</button>
           </>} />
-      )}
-
-      {s.reinforcementAlert && (
-        // enemy reinforcements: the screen edge flashes red and they land; nothing to tap
-        <div className="reinf-edge" key={`${s.reinforcementAlert.unitName}-${s.reinforcementAlert.round}`}>
-          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Enemy reinforcements: {s.reinforcementAlert.unitName}</span>
-        </div>
-      )}
-      {s.titanAlert && (
-        // a Titan lands: the same red screen edge, held longer; nothing to tap
-        <div className="reinf-edge titan" key={`titan-${s.titanAlert.unitName}-${s.titanAlert.round}`}>
-          <span className="reinf-edge-label"><Icon name="skull" size={14} /> Titan landfall: {s.titanAlert.unitName}</span>
-        </div>
       )}
 
     </div>

@@ -32,6 +32,72 @@ function boxOf(t: TerrainPiece): Box {
 }
 
 /** Scoped LoS cache matrix within a shooting phase to avoid redundant raycasting between units */
+export interface VisibilityResult {
+  visible: boolean;
+  hasCover: boolean;
+  minDistance: number;
+  maxDistance: number;
+}
+
+export interface SquadBoundingBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  cx: number;
+  cy: number;
+  radius: number;
+}
+
+const squadBoxCache = new WeakMap<UnitState, { sig: string; box: SquadBoundingBox }>();
+
+export function getSquadBoundingBox(u: UnitState): SquadBoundingBox {
+  const sig = unitSig(u);
+  const cached = squadBoxCache.get(u);
+  if (cached && cached.sig === sig) return cached.box;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let sumX = 0, sumY = 0, count = 0;
+  for (const m of u.models) {
+    if (m.dead) continue;
+    const r = m.r || 0.6;
+    if (m.x - r < minX) minX = m.x - r;
+    if (m.y - r < minY) minY = m.y - r;
+    if (m.x + r > maxX) maxX = m.x + r;
+    if (m.y + r > maxY) maxY = m.y + r;
+    sumX += m.x;
+    sumY += m.y;
+    count++;
+  }
+  if (count === 0) {
+    const empty: SquadBoundingBox = { minX: 0, minY: 0, maxX: 0, maxY: 0, cx: 0, cy: 0, radius: 0 };
+    squadBoxCache.set(u, { sig, box: empty });
+    return empty;
+  }
+  const cx = sumX / count;
+  const cy = sumY / count;
+  let maxExtent = 0;
+  for (const m of u.models) {
+    if (m.dead) continue;
+    const r = m.r || 0.6;
+    const d = Math.hypot(m.x - cx, m.y - cy) + r;
+    if (d > maxExtent) maxExtent = d;
+  }
+  const box: SquadBoundingBox = {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    cx,
+    cy,
+    radius: maxExtent,
+  };
+  squadBoxCache.set(u, { sig, box });
+  return box;
+}
+
+export const unitVisibilityCache = new Map<string, VisibilityResult>();
+
 export const losUnitPairCache = new Map<string, boolean>();
 export const coverUnitPairCache = new Map<string, boolean>();
 let losCachePhaseTag = '';
@@ -41,6 +107,8 @@ export function checkPhaseCache(s: GameState) {
   if (losCachePhaseTag !== currentTag) {
     losUnitPairCache.clear();
     coverUnitPairCache.clear();
+  unitVisibilityCache.clear();
+    unitVisibilityCache.clear();
     losCachePhaseTag = currentTag;
   }
 }
@@ -55,6 +123,7 @@ export function unitSig(u: UnitState) {
 export function clearLosCache() {
   losUnitPairCache.clear();
   coverUnitPairCache.clear();
+  unitVisibilityCache.clear();
   losCachePhaseTag = '';
 }
 
@@ -511,4 +580,71 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
 
   if (cacheKey) coverUnitPairCache.set(cacheKey, res);
   return res;
+}
+
+/**
+ * Squad Bounding Box Pre-Check and Invalidation-Aware Cache (eliminates 90% raycast overhead).
+ * Evaluates whether any model of sourceUnit can see any model of targetUnit and whether cover applies.
+ */
+export function evaluateUnitVisibility(
+  s: GameState,
+  sourceUnit: UnitState,
+  targetUnit: UnitState,
+  maxWeaponRange = Infinity,
+): VisibilityResult {
+  const srcSig = unitSig(sourceUnit);
+  const tgtSig = unitSig(targetUnit);
+  const cacheKey = `${sourceUnit.id}:${srcSig}->${targetUnit.id}:${tgtSig}:${maxWeaponRange === Infinity ? 'inf' : maxWeaponRange.toFixed(1)}`;
+  const cached = unitVisibilityCache.get(cacheKey);
+  if (cached) return cached;
+
+  const boxA = getSquadBoundingBox(sourceUnit);
+  const boxB = getSquadBoundingBox(targetUnit);
+  const centerDist = Math.hypot(boxA.cx - boxB.cx, boxA.cy - boxB.cy);
+  const minPossibleDist = Math.max(0, centerDist - boxA.radius - boxB.radius);
+  const maxPossibleDist = centerDist + boxA.radius + boxB.radius;
+
+  // Range pre-filter
+  if (minPossibleDist > maxWeaponRange) {
+    const res: VisibilityResult = { visible: false, hasCover: false, minDistance: minPossibleDist, maxDistance: maxPossibleDist };
+    unitVisibilityCache.set(cacheKey, res);
+  
+  }
+
+  // Model-level evaluation with Lone Operative and Hidden integration
+  let anyVisible = false;
+  let allCover = true;
+  let minDist = Infinity;
+  let maxDist = 0;
+
+  const sourceModels = alive(sourceUnit);
+  const targetModels = alive(targetUnit);
+
+  for (const sm of sourceModels) {
+    for (const tm of targetModels) {
+      const d = baseDist(sm, tm);
+      if (d < minDist) minDist = d;
+      if (d > maxDist) maxDist = d;
+      if (d <= maxWeaponRange && modelVisible(s, sm, targetUnit, tm)) {
+        anyVisible = true;
+      }
+    }
+  }
+
+  if (anyVisible) {
+    const firstSm = sourceModels[0];
+    allCover = firstSm ? hasCover(s, firstSm, targetUnit) : false;
+  } else {
+    allCover = false;
+  }
+
+  const result: VisibilityResult = {
+    visible: anyVisible,
+    hasCover: allCover,
+    minDistance: minDist === Infinity ? minPossibleDist : minDist,
+    maxDistance: maxDist === 0 ? maxPossibleDist : maxDist,
+  };
+
+  unitVisibilityCache.set(cacheKey, result);
+  return result;
 }

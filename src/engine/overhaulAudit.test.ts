@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createGame, placeUnit, formationAt, triggerDynamicDramaEngine, expandRoguelikeMap, polygonArea, fightingArmyPoints, isFightEvenlyMatched } from './game';
+import { createGame, placeUnit, formationAt, polygonArea, fightingArmyPoints, isFightEvenlyMatched } from './game';
 import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLoneOpActive, getUnitLoneOpRange } from './visibility';
 import { stratagemShortSummary, type StratRule } from '../rules-engine/stratagems';
 import { cpWorth } from '../ai/botStrats';
@@ -141,110 +141,8 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
     });
   });
 
-  describe('Part 4: Rogue-like Catch-up Mechanics & Dynamic Drama Engine', () => {
-    it('forces High-Threat Event when VP Delta >= 30', () => {
-      const s = createGame({
-        lists: [PRESETS.SM, PRESETS.ORK],
-        factions: [SM, ORK],
-        names: ['Player', 'Bot'],
-        seed: 42,
-      });
-      s.campaign = { node: 'battle-1', relics: [], rules: [], reinforcementsTriggered: [] };
-      s.round = 2;
-      s.turn = 2;
-      s.players[0].vp = 35;
-      s.players[1].vp = 2; // Delta = 33 >= 30
-
-      putOnBoard(s, s.units[0], { x: 20, y: 20 });
-
-      const triggered = triggerDynamicDramaEngine(s);
-      expect(triggered).toBe(true);
-      // Either Warp Storm is active or an elite strike squad was added
-      const hasWarpStorm = s.warpStormActive === true;
-      const hasElite = s.units.some((u) => u.id.includes('elite-drama'));
-      expect(hasWarpStorm || hasElite).toBe(true);
-    });
-
-    it('triggers Titan Boss spawn when round >= 3, Player VP >= 50, and node is high level or player has large lead', () => {
-      const s = createGame({
-        lists: [PRESETS.SM, PRESETS.ORK],
-        factions: [SM, ORK],
-        names: ['Player', 'Bot'],
-        seed: 42,
-      });
-      s.campaign = { node: 'boss-1', relics: [], rules: [], reinforcementsTriggered: [] };
-      s.round = 3;
-      s.players[0].vp = 55;
-      s.players[1].vp = 30;
-
-      const triggered = triggerDynamicDramaEngine(s);
-      if (s.titanAlert) {
-        expect(s.titanAlert.text).toContain('TITAN DETECTED');
-        expect(s.units.some((u) => u.keywords.includes('TITANIC'))).toBe(true);
-      }
-    });
-
-    it('blocks Titan Boss spawn in rounds 1-2 or when fighting army points are low / AI wiped out', () => {
-      const s = createGame({
-        lists: [PRESETS.SM, PRESETS.ORK],
-        factions: [SM, ORK],
-        names: ['Player', 'Bot'],
-        seed: 42,
-      });
-      s.campaign = { node: 'boss-1', relics: [], rules: [], reinforcementsTriggered: [] };
-      // Test round 2: strictly blocked
-      s.round = 2;
-      s.players[0].vp = 55;
-      s.players[1].vp = 30;
-      triggerDynamicDramaEngine(s);
-      expect(s.titanAlert).toBeUndefined();
-      expect(s.units.some((u) => u.keywords.includes('TITANIC'))).toBe(false);
-
-      // Test round 3 with heavy casualties: all enemy units wiped out
-      s.round = 3;
-      s.campaign.dramaRounds = [];
-      const aiUnits = s.units.filter((u) => u.owner === 1);
-      aiUnits.forEach((u) => {
-        u.status = 'destroyed';
-        u.models.forEach((m) => { m.dead = true; });
-      });
-      triggerDynamicDramaEngine(s);
-      expect(s.titanAlert).toBeUndefined();
-      expect(s.units.some((u) => u.keywords.includes('TITANIC'))).toBe(false);
-    });
-  });
-
-  describe('Part 5: Dynamic Map Scaling & 25% Terrain Density', () => {
-    it('dynamically scales grid bounds from base 44x30 based on Player VP and maintains 25% coverage', () => {
-      const s = createGame({
-        lists: [PRESETS.SM, PRESETS.ORK],
-        factions: [SM, ORK],
-        names: ['Player', 'Bot'],
-        seed: 42,
-      });
-      // Standard games (< 3000 pts) remain locked to 44x60
-      expect(expandRoguelikeMap(s)).toBe(false);
-
-      // In large battles / allowed expansion, dynamically scale symmetrically
-      s.campaign = { node: 'battle-1', relics: [], rules: [], allowDynamicExpansion: true };
-      s.players[0].vp = 40;
-      const expanded = expandRoguelikeMap(s);
-      expect(expanded).toBe(true);
-      expect(s.table!.width).toBeGreaterThan(44);
-      expect(s.table!.height).toBeGreaterThan(30);
-
-      // Verify terrain coverage
-      const totalArea = s.table!.width * s.table!.height;
-      const terrainArea = s.terrain
-        .filter((t) => t.kind !== 'objective-area')
-        .reduce((sum, t) => sum + polygonArea(t.poly), 0);
-
-      expect(terrainArea / totalArea).toBeGreaterThanOrEqual(0.20);
-    });
-  });
-
-  describe('Part 6: Stratagem short_summary and Aggressive Bot CP spending', () => {
-    it('provides punchy quick summary and avoids hoarding CP in Rogue-like mode', () => {
+  describe('Part 4: Stratagem short_summary and Standard CP spending', () => {
+    it('provides punchy quick summary and assesses CP worth', () => {
       const rule: StratRule = { buffs: ['fnp5'] };
       const summary = stratagemShortSummary({
         id: 'test-strat',
@@ -265,12 +163,8 @@ describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
         seed: 42,
       });
 
-      // Standard mode hoards CP
+      // Standard mode evaluates CP carefully
       expect(cpWorth(s, 1)).toBeGreaterThanOrEqual(3);
-
-      // In campaign mode, bot spends CP aggressively (cpWorth = 2)
-      s.campaign = { node: 'node-1', relics: [], rules: [] };
-      expect(cpWorth(s, 1)).toBe(2);
     });
   });
 });

@@ -101,8 +101,8 @@ export function followedJob(plan: ArmyPlan, unitId: string): Job | undefined {
   return undefined;
 }
 
-/** battles the bot plays for the score above all: the campaign (won on points) and idle mode */
-export const pointsFirst = (s: GameState) => (s.idleTactic === 'assault' ? false : (!!s.campaign || !!s.idleBots));
+/** tournament tactical scoring is prioritized above all */
+export const pointsFirst = (s: GameState) => (s.idleTactic === 'assault' ? false : true);
 
 const cache = new WeakMap<GameState, Map<PlayerId, { key: string; plan: ArmyPlan }>>();
 
@@ -194,7 +194,7 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     }
   }
 
-  // a battle won on points (campaign, idle): every field objective gets a holder before anything hunts, and only the
+  // in tournament point-first play: every field objective gets a holder before anything hunts, and only the
   // army's one or two hardest hitters stay hunters
   if (pointsFirst(s)) {
     const hitters = mine.filter(free).map((u) => info.get(u.id)!).sort((a, b) => b.punch - a.punch).slice(0, mine.length >= 6 ? 2 : 1);

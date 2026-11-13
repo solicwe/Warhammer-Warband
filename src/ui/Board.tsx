@@ -15,7 +15,7 @@ import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { BattlefieldAnomaly, FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
 
 export type Paths = Map<string, Pt[]>;
@@ -233,20 +233,6 @@ export function getObjectiveEffects(s: GameState, o: ObjectiveState): ObjectiveD
     });
   }
 
-  // 10. Roguelike Supply Cache (3" zone)
-  if (s.campaign && o.controller === null) {
-    effects.push({
-      id: 'supply-cache',
-      radius: 3.0,
-      color: '#facc15',
-      fill: 'url(#supply-cache)',
-      badgeBg: 'rgba(113, 63, 18, 0.92)',
-      badgeBorder: '#ca8a04',
-      title: 'SUPPLY CACHE (3")',
-      desc: 'First capture awards +25 Scrap / +1 CP',
-    });
-  }
-
   return effects;
 }
 
@@ -410,22 +396,8 @@ const ModelToken = memo(function ModelToken({
         ? <image href={getModelPortrait(m)} x={p.x - pr * 0.9} y={p.y - pr * 0.9} width={pr * 1.8} height={pr * 1.8} clipPath="url(#clip-round)" preserveAspectRatio="xMidYMid slice" pointerEvents="none" />
         : <use href={`#tok-${modelToken(m)}`} x={p.x - pr * 0.82} y={p.y - pr * 0.82} width={pr * 1.64} height={pr * 1.64} pointerEvents="none" />}
       {m.isCharacter && <use href="#tok-crown" x={p.x - m.r * 0.55} y={p.y - m.r * 1.35} width={m.r * 1.1} height={m.r * 0.66} pointerEvents="none" />}
-      {(u.combatState || squadNum || (u.compressionTier ?? 1) > 1) && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
-        const cs = u.combatState;
-        const badges: { text: string; bg: string; w: number }[] = [];
-        if (squadNum) badges.push({ text: `#${squadNum}`, bg: '#334155', w: 0.65 });
-        if ((u.compressionTier ?? 1) > 1) badges.push({ text: `T${u.compressionTier}`, bg: '#d97706', w: 0.62 });
-        if (cs) {
-          if (cs.tokens.auspex > 0) badges.push({ text: `AUS ${cs.tokens.auspex}`, bg: '#0284c7', w: 0.94 });
-          if (cs.tokens.fervour > 0) badges.push({ text: `FRV ${cs.tokens.fervour}`, bg: '#dc2626', w: 0.92 });
-          if (cs.tokens.bastion > 0) badges.push({ text: `BST ${cs.tokens.bastion}`, bg: '#d97706', w: 0.92 });
-          if (cs.isExposed) badges.push({ text: 'EXP', bg: '#b45309', w: 0.72 });
-          if (cs.ailments.soulfire > 0) badges.push({ text: `SOUL ${cs.ailments.soulfire}`, bg: '#7c2d12', w: 1.05 });
-          if (cs.ailments.bleeding > 0) badges.push({ text: `BLD ${cs.ailments.bleeding}`, bg: '#881337', w: 0.92 });
-          if (cs.ailments.corroded > 0) badges.push({ text: `COR ${cs.ailments.corroded}`, bg: '#581c87', w: 0.92 });
-          if (cs.ailments.pinned > 0) badges.push({ text: `PIN ${cs.ailments.pinned}`, bg: '#334155', w: 0.9 });
-        }
-        if (!badges.length) return null;
+      {squadNum && (m.id === u.models[0]?.id || m.isCharacter) && (() => {
+        const badges: { text: string; bg: string; w: number }[] = [{ text: `#${squadNum}`, bg: '#334155', w: 0.65 }];
         let runningX = 0;
         const totalW = badges.reduce((acc, b) => acc + b.w + 0.08, 0) - 0.08;
         return (
@@ -767,6 +739,14 @@ function BoardImpl(props: BoardProps) {
   // zooming out stops when the whole table is in view and panning stays on it: the board can't shrink into a corner
   const homeRef = useRef(home);
   homeRef.current = home;
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const handler = () => setVb(homeRef.current);
+    el.addEventListener('reset-camera', handler);
+    return () => el.removeEventListener('reset-camera', handler);
+  }, []);
   const clampVb = useCallback((v: typeof vb) => {
     const hm = homeRef.current;
     // zooming out stops at twice the table's width (or once its whole height fits): a phone's bottom sheet covers the
@@ -1771,86 +1751,6 @@ function BoardImpl(props: BoardProps) {
           <text y={0.22} fontSize={0.6} textAnchor="middle" fill="#fff" fontWeight={900}>{m.kind === 'trap' ? '!' : m.kind === 'locate' ? 'L' : m.kind === 'consecrate' ? '+' : ''}</text>
         </g>
       ))}
-      {/* Dynamic Battlefield Anomalies (PoE League Mechanics) */}
-      {(s.anomalies ?? []).map((a) => {
-        const isAwake = s.round >= a.activeRound;
-        const isTriggered = a.triggered;
-        const color = a.type === 'WARP_BREACH' ? '#c084fc'
-          : a.type === 'ARCHEOTECH_SHRINE' ? '#fbbf24'
-          : a.type === 'ELDRITCH_ALTAR' ? '#ef4444'
-          : '#f97316';
-        const bgFill = a.type === 'WARP_BREACH' ? 'rgba(147, 51, 234, 0.12)'
-          : a.type === 'ARCHEOTECH_SHRINE' ? 'rgba(251, 191, 36, 0.10)'
-          : a.type === 'ELDRITCH_ALTAR' ? 'rgba(239, 68, 68, 0.12)'
-          : 'rgba(249, 115, 22, 0.12)';
-        const titleText = a.type === 'WARP_BREACH'
-          ? `WARP BREACH (Active Round ${a.activeRound}+): Move within ${a.radius}" to collapse. Deals 1d3 Mortal Wounds to nearby enemies and harvests +60 Scrap!`
-          : a.type === 'ARCHEOTECH_SHRINE'
-          ? `ARCHEOTECH SHRINE [${a.effectPayload?.shrineBuff ?? 'BLESSING'}]: Move within ${a.radius}" to claim ancient Archeotech blessings (${a.effectPayload?.shrineBuff === 'GOLIATH' ? '+1 Toughness & +2 Wounds' : '+1 Attack & +1 Strength'})!`
-          : a.type === 'ELDRITCH_ALTAR'
-          ? `ELDRITCH WAR-ALTAR: Pact of Ruin. Move within ${a.radius}" to harvest +120 Salvage Scrap and forbidden loot!`
-          : `PROMETHIUM HAZARD: Ruptures on proximity, showering combatants within 5" in 2 stacks of [Soulfire]!`;
-
-        const badgeLabel = isTriggered
-          ? (a.type === 'WARP_BREACH' ? 'COLLAPSED' : a.type === 'ARCHEOTECH_SHRINE' ? 'CLAIMED' : a.type === 'ELDRITCH_ALTAR' ? 'SEALED' : 'BURNT OUT')
-          : !isAwake
-          ? `AWAKENS RND ${a.activeRound}`
-          : (a.type === 'WARP_BREACH' ? 'WARP BREACH' : a.type === 'ARCHEOTECH_SHRINE' ? `SHRINE (${a.effectPayload?.shrineBuff ?? 'BUFF'})` : a.type === 'ELDRITCH_ALTAR' ? 'ELDRITCH ALTAR' : 'PROMETHIUM');
-
-        return (
-          <g
-            key={a.id}
-            transform={`translate(${a.position.x} ${a.position.y})`}
-            pointerEvents="all"
-            opacity={isTriggered ? 0.35 : isAwake ? 1 : 0.65}
-          >
-            <title>{titleText}</title>
-            <circle r={a.radius} fill={bgFill} stroke={color} strokeWidth={isTriggered ? 0.05 : 0.12} strokeDasharray={isTriggered ? '0.3 0.3' : '0.8 0.4'} />
-            {a.type === 'WARP_BREACH' && (
-              <g>
-                <circle r={0.9} fill="rgba(59, 7, 100, 0.85)" stroke="#c084fc" strokeWidth={0.12} />
-                <circle r={0.5} fill="#9333ea" opacity={0.6} />
-                <path d="M -0.35 -0.35 C -0.1 -0.65 0.45 -0.4 0.35 0.05 C 0.25 0.45 -0.35 0.35 -0.1 0.1" fill="none" stroke="#ffffff" strokeWidth={0.1} strokeLinecap="round" />
-              </g>
-            )}
-            {a.type === 'ARCHEOTECH_SHRINE' && (
-              <g>
-                <polygon points="0,-0.9 0.8,0 0,0.9 -0.8,0" fill="rgba(69, 26, 3, 0.9)" stroke="#fbbf24" strokeWidth={0.12} />
-                <polygon points="0.05,-0.55 -0.3,0.05 0.02,0.05 -0.05,0.55 0.3,-0.05 -0.02,-0.05" fill="#fbbf24" />
-              </g>
-            )}
-            {a.type === 'ELDRITCH_ALTAR' && (
-              <g>
-                <circle r={0.85} fill="rgba(69, 10, 10, 0.9)" stroke="#ef4444" strokeWidth={0.14} />
-                <polygon points="0,-0.65 0.55,0.35 -0.55,0.35" fill="none" stroke="#ef4444" strokeWidth={0.08} />
-                <polygon points="0,0.65 0.55,-0.35 -0.55,-0.35" fill="none" stroke="#ef4444" strokeWidth={0.08} />
-                <circle r={0.18} fill="#ef4444" />
-              </g>
-            )}
-            {a.type === 'PROMETHIUM_HAZARD' && (
-              <g>
-                <polygon points="0,-0.85 0.85,0 0,0.85 -0.85,0" fill="rgba(67, 20, 7, 0.9)" stroke="#f97316" strokeWidth={0.12} />
-                <path d="M 0 0.45 C 0.35 0.45 0.4 0.1 0.2 -0.1 C 0.3 -0.3 0.1 -0.5 0 -0.55 C -0.1 -0.5 -0.3 -0.3 -0.2 -0.1 C -0.4 0.1 -0.35 0.45 0 0.45 Z" fill="#f97316" />
-              </g>
-            )}
-            <g transform={`translate(0 ${a.radius > 3 ? a.radius + 0.6 : 3.6})`}>
-              <rect
-                x={-(badgeLabel.length * 0.17 + 0.6)}
-                y={-0.35}
-                width={badgeLabel.length * 0.34 + 1.2}
-                height={0.7}
-                rx={0.35}
-                fill="rgba(15, 23, 42, 0.92)"
-                stroke={color}
-                strokeWidth={0.08}
-              />
-              <text y={0.15} fontSize={0.36} textAnchor="middle" fill={color} fontWeight={900} letterSpacing={0.03}>
-                {badgeLabel}
-              </text>
-            </g>
-          </g>
-        );
-      })}
       {s.players.flatMap((P, pi) => (P.tunnels ?? []).map((t, i) => (
         <g key={`tunnel${pi}-${i}`} transform={`translate(${t.x} ${t.y})`} pointerEvents="none">
           <circle r={0.8} fill="rgba(12,14,18,0.85)" stroke={COLORS[pi]} strokeWidth={0.15} />
@@ -2031,11 +1931,10 @@ function BoardImpl(props: BoardProps) {
             })}
             {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (() => {
               const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
-              const tierSuffix = (u.compressionTier ?? 1) > 1 ? ` [T${u.compressionTier}]` : '';
               const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
               return (
                 <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                  {baseName}{squadSuffix}{tierSuffix}{u.battleShocked ? ' !' : ''}
+                  {baseName}{squadSuffix}{u.battleShocked ? ' !' : ''}
                 </text>
               );
             })()}
@@ -2387,7 +2286,9 @@ function plateFor(t: TerrainPiece): { href: string; ax: number; ay: number; ang:
   return { href: `${IMAGE_BASE}terrain/${PLATE_FILE[kind]}.webp`, ax: a.x, ay: a.y, ang, x: u0, y: v0, w: L, h: Wd };
 }
 
-const PPI = 40; // backdrop pixels per inch (sharp enough when zoomed in on a phone)
+const isMobileDevice = typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window);
+const clampedDpr = typeof window !== 'undefined' ? (isMobileDevice ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2.0)) : 1;
+const PPI = Math.round(26 * clampedDpr); // DPR-clamped backdrop resolution (prevents GPU fillrate lag on high-DPI mobile)
 const plateImgs = new Map<string, Promise<HTMLImageElement>>();
 const loadImg = (href: string) => {
   let p = plateImgs.get(href);

@@ -4749,7 +4749,7 @@
     {
       "id": "000004185",
       "name": "Victrix Honour Guard",
-      "role": "Infantry Epic Hero",
+      "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "IMPERIUM",
@@ -10738,7 +10738,7 @@
     {
       "id": "000002772",
       "name": "Company Heroes",
-      "role": "Infantry Character",
+      "role": "Infantry",
       "keywords": [
         "INFANTRY",
         "EXPLOSIVES",

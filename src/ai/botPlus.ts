@@ -320,7 +320,7 @@ export function botAdvanceActs(s: GameState, u: UnitState) {
   }
 }
 
-/** Deep Strike that may land closer to the enemy (Relic Teleportarium): where it lands with it, if that is worth it. */
+/** Deep Strike that may land closer to the enemy (e.g. 3" Deep Strike or Rapid Ingress): where it lands with it, if that is worth it. */
 export function botArrivalStratagem(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): boolean {
   // Imposing Arrival: closer than the usual 9" from the edge
   for (const { st, rule } of strats(s, u.owner)) {

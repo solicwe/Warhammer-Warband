@@ -19,6 +19,7 @@ import { armyPlan, followedJob, homeScoresVp, unitPunch, type Role } from './bot
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, securesObjectives, shotValue, unitValue,
 } from './botEval';
+import { getArchetypeForPlayer, ARCHETYPE_PROFILES, isScreeningUnit, needsDeepStrikeScreening } from './factionArchetypes';
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 
 export type Paths = Map<string, Pt[]>;
@@ -38,7 +39,7 @@ export const isLargeBattle = (s: GameState) =>
   bigBoard(s);
 
 export const isFastPlanning = (s: GameState, u?: UnitState) =>
-  fastPlanning || !!s.campaign || isLargeBattle(s) || bigBoard(s) || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
+  fastPlanning || isLargeBattle(s) || bigBoard(s) || (u ? (s.botLevels?.[u.owner] ?? s.botLevel) === 'easy' : s.botLevel === 'easy');
 
 /** Models the two armies brought (the dead count too, so a big game stays big as it goes) above which the bot plans
  *  moves the quick way: at 2000+ points every spot it tried was checked model by model for line of sight, and one
@@ -701,6 +702,76 @@ export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'station
   }
 }
 
+/** Faction-specific tactical tournament biases across 5 archetypes (screening, firing lanes, staging, threat bubbles) */
+function archetypeBiasScore(s: GameState, u: UnitState, kind: MoveKind | 'stationary', ctx: Ctx): number {
+  const profile = getArchetypeForPlayer(s, u.owner);
+  if (!profile) return 0;
+
+  let bias = 0;
+  const uAlive = alive(u);
+  if (!uAlive.length) return 0;
+  const c = centre(u);
+
+  // 1. GUNLINE_CASTLE: Firing lanes, 4-6" chaff screens in front of heavy guns, kite away from enemy melee
+  if (profile.name === 'GUNLINE_CASTLE') {
+    if (ctx.brawler || isScreeningUnit(u)) {
+      const tanks = boardUnits(s, u.owner).filter((f) => f.id !== u.id && (hasKw(f, 'VEHICLE') || maxRange(f) >= 24));
+      for (const t of tanks) {
+        const d = unitDistance(u, t);
+        if (d >= 3.5 && d <= 6.5) bias += 8 * profile.screeningPriority;
+      }
+    } else if (profile.kitePreference > 0.5) {
+      for (const f of ctx.foes) {
+        if (f.brawler) {
+          const d = unitDistance(u, f.u);
+          if (d < 10) bias -= (10 - d) * 2.5 * profile.kitePreference;
+          else if (d >= 16 && d <= 24) bias += 4;
+        }
+      }
+    }
+  }
+
+  // 2. PRESSURE_MELEE_TRADING: Stage behind obscuring cover in Turns 1-2, aggressive central dominance
+  if (profile.name === 'PRESSURE_MELEE_TRADING') {
+    if (s.round <= 2 && ctx.brawler) {
+      const seenByShooters = ctx.foes.some((f) => f.range >= 18 && seen(s, f.u, u));
+      if (!seenByShooters) bias += 14;
+    }
+    const nearObj = s.objectives.some((o) => dist(o, c) <= 4);
+    if (nearObj && oc(u) > 0) bias += 12 * profile.centerBoardDominance;
+  }
+
+  // 3. GLASS_CANNON_TRICKERY: Strict threat bubble avoidance (M + 8" charge), surgical objective snatching
+  if (profile.name === 'GLASS_CANNON_TRICKERY') {
+    for (const f of ctx.foes) {
+      const threatRange = f.M + 8.5;
+      const d = unitDistance(u, f.u);
+      if (d < threatRange && !isEngaged(s, u)) {
+        bias -= (threatRange - d) * 3.5;
+      }
+    }
+  }
+
+  // 4. ATTRITION_ANVIL: Center board control, toe-in cover holding
+  if (profile.name === 'ATTRITION_ANVIL') {
+    const centerObjs = s.objectives.filter((o) => dist(o, { x: tableW(s) / 2, y: tableH(s) / 2 }) <= 14);
+    for (const o of centerObjs) {
+      if (dist(o, c) <= 3.5) bias += 18 * profile.centerBoardDominance;
+    }
+  }
+
+  // 5. Backline Deep Strike screening for all factions with reserves/deep strike threat
+  if (needsDeepStrikeScreening(s, u.owner) && isScreeningUnit(u)) {
+    const friendlies = boardUnits(s, u.owner).filter((f) => f.id !== u.id);
+    const closestFriend = Math.min(99, ...friendlies.map((f) => unitDistance(u, f)));
+    if (closestFriend >= 12 && closestFriend <= profile.deepStrikeScreenGrid) {
+      bias += 10;
+    }
+  }
+
+  return bias;
+}
+
 /** How good it is for `u` to end its move at `spot` (null: where it stands now) after a move of this kind. */
 export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationary', spot: Spot | null, ctx: Ctx, moved = 0): number {
   const ms = alive(u);
@@ -714,7 +785,7 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
     // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
     const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
     const homeFactor = homeFactorOf(s, u, ctx, w);
-    return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u);
+    return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u) + archetypeBiasScore(s, u, kind, ctx);
   } finally {
     for (const [m, x, y] of saved) { m.x = x; m.y = y; }
     u.move = was.move;

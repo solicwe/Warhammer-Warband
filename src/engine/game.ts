@@ -1,11 +1,5 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
-import { clearCombatTokens, onBreacherChargeComplete, processCommandPhaseAilments, processMovementAilments } from './combatEngine';
-import { triggerRelicEvent } from './relicEngine';
-import { hasActiveKeystone, processKeystoneTurnStart } from './keystones';
-import { checkAnomalyTriggers, spawnBattlefieldAnomalies } from './anomalies';
-import { addWaaaghMomentum, processAscendancyTurnStart } from './ascendancy';
-import { processCampaignSystemsRoundStart, processCampaignSystemsCommandPhase } from './campaignSystems';
 import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
@@ -620,9 +614,7 @@ export function pileDistance(s: GameState, u: UnitState, kind: 'pileIn' | 'conso
 export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: ModelState, opt: MoveOptions = {}): number {
   if (opt.maxOverride !== undefined) return opt.maxOverride;
   const fl = unitFlags(s, u);
-  const fervourBonus = u.combatState?.tokens.fervour ?? 0;
-  const pinnedPenalty = Math.min(4, u.combatState?.ailments.pinned ?? 0);
-  const M0 = Math.max(1, (fl.moveSet || (m.profile.M ?? 0)) + fl.move + fervourBonus - pinnedPenalty);
+  const M0 = Math.max(1, (fl.moveSet || (m.profile.M ?? 0)) + fl.move);
   const M = fl.moveHalve ? M0 / 2 : M0; // Gravitic Pulse: halve the Move characteristic and Advance rolls
   let max = 0;
   if (kind === 'normal' || kind === 'fallback') max = M;
@@ -1190,37 +1182,14 @@ export function startTurn(s: GameState, p: PlayerId) {
   if (s.turn === 0) { initSagas(s); emit(s, 'battleStart', {}); fireAll(s, 'battleStart', 'both'); }
   if (p === s.firstPlayer) {
     emit(s, 'roundStart', {});
-    processCampaignSystemsRoundStart(s);
-    if (s.campaign && !s.campaign.battleEventTriggered) {
-      if (s.round >= 3) {
-        const reinf = triggerCampaignReinforcements(s);
-        if (!reinf) triggerDynamicDramaEngine(s);
-      } else {
-        triggerDynamicDramaEngine(s);
-      }
-    }
     fireAll(s, 'roundStart', 'both');
   }
   emit(s, 'turnStart', { p });
   startCommand(s);
 }
 
-/** Campaign: 25 Scrap each of the player's rounds; holding the centre objective (and only that one) adds +20 Scrap
- *  and +1 CP. */
-export function campaignRequisition(s: GameState) {
-  const centre = s.objectives.some((o) => o.type === 'central' && o.controller === 0);
-  const roundScrap = 25 + (centre ? 20 : 0);
-  s.campaignScrap = (s.campaignScrap ?? 0) + roundScrap;
-  if (centre) s.players[0].cp += 1;
-  log(s, `Logistics Requisition (Round ${s.round}): +${roundScrap} Scrap${centre ? ' (+20 Scrap and +1 CP for holding the centre)' : ''}`, 'vp', 0);
-}
-
 function startCommand(s: GameState) {
   s.phase = 'command';
-  processCommandPhaseAilments(s, s.active);
-  processKeystoneTurnStart(s, s.active);
-  processAscendancyTurnStart(s, s.active);
-  processCampaignSystemsCommandPhase(s, s.active);
   s.ordersUsed = {};
   expireTimed(s, 'commandStart', s.active);
   // Instant of Grace / Birth of a Saga end
@@ -1230,18 +1199,13 @@ function startCommand(s: GameState) {
   }
   if (s.tempCharacters) s.tempCharacters = s.tempCharacters.filter((x) => x.by !== s.active);
   for (const p of [0, 1] as PlayerId[]) {
-    if (!hasActiveKeystone(s, p, 'Vaal Soul-Harvester') && !hasActiveKeystone(s, p, 'vaal_harvester')) {
-      s.players[p].cp += RULES.cpPerCommandPhase;
-    }
+    s.players[p].cp += RULES.cpPerCommandPhase;
   }
   log(s, `+${RULES.cpPerCommandPhase}CP to both players (${s.players[0].cp} / ${s.players[1].cp})`, 'cp', null);
-  if (s.campaign && s.active === 0) campaignRequisition(s);
   emit(s, 'commandStart', { p: s.active });
   fireFor(s, 'commandStart', s.active);
   fireFor(s, 'eachCommandStart', 'both');
   drawUpTo(s, s.active);
-  // campaign: both sides hold their Secondary cards from the start of the battle, not only from their own first turn
-  if (s.campaign && s.round === 1) drawUpTo(s, other(s.active));
   emitReact(s, other(s.active), 'enemyCommandStart', {});
   // Terrifying Proficiency: enemy units near the marked unit must test too (−1 when Below Half-strength)
   const terrors = boardUnits(s, other(s.active)).filter((e) => unitFlags(s, e).forceShockAura > 0);
@@ -1305,7 +1269,7 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   const was = u.battleShocked;
   u.battleShocked = !t.passed;
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
-  if (!was && !t.passed) { fire(s, 'becameShocked', [u]); clearCombatTokens(u); }
+  if (!was && !t.passed) { fire(s, 'becameShocked', [u]); }
   emit(s, 'shockResult', { u, passed: t.passed });
 }
 
@@ -1455,11 +1419,6 @@ export function endBattle(s: GameState) {
 // ---------- movement phase actions ----------
 
 export function rollAdvance(s: GameState, u: UnitState) {
-  if (hasActiveKeystone(s, u.owner, 'unwavering_stance') || hasActiveKeystone(s, u.owner, 'Unwavering Stance')) {
-    u.advanceRoll = 0;
-    log(s, `${u.name} cannot Advance (Unwavering Stance)`, 'info', u.owner);
-    return;
-  }
   const det = rollMods(s, u);
   if (det.advanceFixed) {
     // Full Throttle / Target Sighted: no Advance roll, a fixed bonus instead
@@ -1616,18 +1575,6 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
     if (u.movedOver.ids.length) fire(s, 'endOfNormalMove', [u]);
   }
   onMoveEnd(s, u, kind);
-  processMovementAilments(s, u, maxMoved);
-  checkAnomalyTriggers(s, u);
-  if (kind === 'charge') {
-    const foe = engagedEnemies(s, u)[0];
-    if (foe) {
-      if (u.combatRole === 'BREACHER') onBreacherChargeComplete(s, u, foe);
-      triggerRelicEvent(s, 'ON_CHARGE_COMPLETE', u, foe);
-      if (hasKw(u, 'ORK') || hasKw(u, 'ORKS')) {
-        addWaaaghMomentum(s, u.owner, 20);
-      }
-    }
-  }
   if (label[kind]) log(s, `${u.name}: ${label[kind]}${maxMoved ? ` (${maxMoved.toFixed(1)}")` : ''}`, 'info', u.owner);
   // Shokk-boosta: a hazard roll for each model after the Advance
   if (kind === 'advance' && unitFlags(s, u).advanceHazard) {
@@ -1812,9 +1759,7 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
   if (u.move === 'fallback' && !canDo(s, u, 'chargeAfterFallBack')) return 'Fell Back this turn';
   if (u.cantCharge) return 'Disembarked (Rapid / Combat) or used an ability that prevents charging this turn';
   if (u.noChargeTurn === s.turn) return 'Arrived closer to the enemy than normal (Meteoric Descent): cannot charge this turn';
-  const canChargeAdv = isRiledUp(s, u) || canDo(s, u, 'chargeAfterAdvance')
-    || (u.combatState?.tokens.fervour ?? 0) >= 3
-    || (s.players[u.owner]?.waaaghMomentum ?? 0) >= 67;
+  const canChargeAdv = isRiledUp(s, u) || canDo(s, u, 'chargeAfterAdvance');
   if (u.move === 'advance' && !canChargeAdv) return 'Advanced this turn';
   if (!boardUnits(s, other(u.owner)).some((e) => !hasKw(e, 'AIRCRAFT') && unitDistance(u, e) <= RULES.charge.declareRange)) return `No enemy within ${RULES.charge.declareRange}"`;
   return null;
@@ -2267,7 +2212,7 @@ export function overwatchTargets(s: GameState, p: PlayerId): UnitState[] {
 export function overwatchCandidates(s: GameState, p: PlayerId): UnitState[] {
   if (canUseStratagem(s, p, 'fire-overwatch')) return [];
   const targets = overwatchTargets(s, p);
-  return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && !hasKw(u, 'TITANIC') && u.stratagemPhase !== `${s.turn}:${s.phase}` && !unitFlags(s, u).noOverwatch && (u.combatState?.ailments.pinned ?? 0) < 5
+  return boardUnits(s, p).filter((u) => !u.battleShocked && !isEngaged(s, u) && !hasKw(u, 'TITANIC') && u.stratagemPhase !== `${s.turn}:${s.phase}` && !unitFlags(s, u).noOverwatch
     && alive(u).some((m) => m.weapons.some((w) => !isMelee(w.profiles[0])))
     && targets.some((e) => unitDistance(u, e) <= RULES.snapShooting.range && alive(u).some((m) => unitVisibleTo(s, m, e))));
 }
@@ -2932,89 +2877,6 @@ export function createFactionTitan(factionId: string, factionName: string): Unit
   });
 }
 
-/** Enemy reinforcements in a campaign battle: at most once, in round 3 or 4, only while the player is ahead, and then
- *  only on a 40% roll each of those rounds (it used to come in every battle, even one the player was losing). */
-export function triggerCampaignReinforcements(s: GameState): boolean {
-  if (!s.campaign) return false;
-  if (s.campaign.battleEventTriggered) return false;
-  s.campaign.reinforcementsTriggered ??= [];
-  // Limit to at most once per battle to avoid repeated reinforcement spam
-  if (s.campaign.reinforcementsTriggered.length > 0) return false;
-  if (s.round < 3 || s.round > 4) return false;
-
-  const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
-  const enemyUnits = s.units.filter((u) => u.owner === 1 && onBoard(u) && alive(u).length > 0);
-  if (!playerUnits.length || !enemyUnits.length) return false;
-
-  const vpLead = s.players[0].vp - s.players[1].vp;
-  const ahead = vpLead >= 10 || (vpLead >= 0 && fightingArmyPoints(s, 0) >= fightingArmyPoints(s, 1) * 1.25);
-  if (!ahead || nextRandom(s) >= 0.4) return false;
-
-  s.campaign.reinforcementsTriggered.push(s.round);
-  s.campaign.battleEventTriggered = true;
-
-  // Filter candidates that strictly have real portraits
-  const validCandidates = enemyUnits.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
-  const candidate = validCandidates.find((u) => (u.keywords.includes('VEHICLE') || u.keywords.includes('MONSTER') || u.keywords.includes('ELITE')) && !u.keywords.includes('TITANIC'))
-    ?? validCandidates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC') && !u.keywords.includes('EPIC HERO'))
-    ?? validCandidates[0]
-    ?? enemyUnits[0];
-
-  const canonicalName = candidate.sources?.[0] ?? candidate.name;
-  const cloned: UnitState = structuredClone(candidate);
-  cloned.id = newUid('reinf');
-  cloned.name = canonicalName;
-  cloned.status = 'board';
-  cloned.move = null;
-  cloned.cantCharge = false;
-  cloned.weaponsFired = [];
-  cloned.sources = [canonicalName];
-  cloned.models = cloned.models.map((m, idx) => ({
-    ...m,
-    id: `${cloned.id}-m${idx}`,
-    source: canonicalName,
-    dead: false,
-    wounds: m.profile.W,
-  }));
-  cloned.startingStrength = cloned.models.length;
-
-  const prefPos = {
-    x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
-    y: (s.table?.height ?? RULES.battlefield.height) / 2,
-  };
-  const placed = setUpAway(s, cloned, 9, prefPos);
-  if (!placed) {
-    cloned.models.forEach((m, idx) => {
-      m.x = prefPos.x + (idx % 3) * 1.5;
-      m.y = prefPos.y + Math.floor(idx / 3) * 1.5;
-    });
-  }
-  s.units.push(cloned);
-
-  pushFx(s, {
-    kind: 'place',
-    unitId: cloned.id,
-    owner: 1,
-    at: centreOf(cloned),
-    deepStrike: true,
-    label: 'ENEMY DEEP STRIKE ARRIVAL',
-  });
-  s.screenShake = Date.now();
-
-  const alertText = `WARNING: STRATEGIC EVENT! Enemy heavy reinforcements (${cloned.name}, ${cloned.models.length} models) arrived via Deep Strike!`;
-  log(s, alertText, 'kill', 1);
-
-  s.reinforcementAlert = {
-    unitName: cloned.name,
-    factionName: s.players[1].name,
-    round: s.round,
-    count: cloned.models.length,
-    text: 'STRATEGIC EVENT: ENEMY REINFORCEMENTS DETECTED',
-  };
-
-  return true;
-}
-
 /** Polygon Area helper using shoelace formula */
 export function polygonArea(poly: Pt[]): number {
   let a = 0;
@@ -3048,272 +2910,16 @@ export function isFightEvenlyMatched(s: GameState): boolean {
   return ratio >= 0.60 || (maxPts - minPts) <= 250;
 }
 
-/** Dynamic Drama Engine for Rogue-like mode:
- * Checks conditions at the start of every Battle Round:
- * 1. Rubberband Trigger (Catch-up): VP Delta >= 30 forces High-Threat Event (elite spawn 9" away or Warp Storm debuff).
- * 2. Boss Spawns (Titan Class):
- *    - Strictly forbidden on Rounds 1-2 (s.round >= 3 only).
- *    - Strictly forbidden when points are small (< 400 player or < 150 AI).
- *    - Strictly forbidden on close "EVEN MATCH" on low stakes.
- *    - Triggers only when:
- *      (a) Boss / Elite node in campaign with player VP >= 50
- *      (b) Player has an overwhelming point lead (playerPts >= 500 && playerPts >= aiPts * 1.5)
- *    - Spawns faction-accurate Titan via Deep Strike (>9" away) with shockwave VFX and screen shake.
- */
-export function triggerDynamicDramaEngine(s: GameState): boolean {
-  if (!s.campaign) return false;
-  if (s.campaign.battleEventTriggered) return false;
-  s.campaign.dramaRounds ??= [];
-  if (s.campaign.dramaRounds.includes(s.round)) return false;
-  s.campaign.dramaRounds.push(s.round);
 
-  let triggeredAny = false;
-  const playerVp = s.players[0].vp;
-  const aiVp = s.players[1].vp;
-  const vpDelta = playerVp - aiVp;
-  const playerUnits = s.units.filter((u) => u.owner === 0 && onBoard(u) && alive(u).length > 0);
-  const playerPts = fightingArmyPoints(s, 0);
-  const aiPts = fightingArmyPoints(s, 1);
-
-  // STRICT GUARD: If the player is losing (fewer points AND trailing in VP, or army wiped out), NEVER trigger drama against player!
-  if (!playerUnits.length || (playerPts < aiPts && vpDelta <= 0)) {
-    return false;
-  }
-
-  // 1. Rubberband Trigger (Catch-up): VP Delta >= 30 (player leading massively on objectives), at most once per battle
-  if (vpDelta >= 30 && !s.campaign.eliteDramaTriggered) {
-    s.campaign.eliteDramaTriggered = true;
-    s.campaign.battleEventTriggered = true;
-    triggeredAny = true;
-    const mostExp = [...playerUnits].sort((a, b) => b.pts - a.pts)[0];
-    const enemyTemplates = s.units.filter((u) => u.owner === 1);
-
-    const roll = nextRandom(s);
-    if (roll < 0.5 && mostExp && enemyTemplates.length > 0) {
-      const validTemplates = enemyTemplates.filter((u) => hasPicture(u.sources?.[0] ?? u.name));
-      const cand = validTemplates.find((u) => !u.keywords.includes('CHARACTER') && !u.keywords.includes('TITANIC'))
-        ?? validTemplates[0]
-        ?? enemyTemplates[0];
-      const canonical = cand.sources?.[0] ?? cand.name;
-      const elite: UnitState = structuredClone(cand);
-      elite.id = newUid('elite-drama');
-      elite.name = `Elite Strike ${canonical}`;
-      elite.status = 'board';
-      elite.move = null;
-      elite.cantCharge = false;
-      elite.weaponsFired = [];
-      elite.sources = [canonical];
-      elite.pts = Math.round(cand.pts * 1.3);
-      elite.keywords = Array.from(new Set([...elite.keywords, 'ELITE']));
-
-      const leaderM = alive(mostExp)[0];
-      const targetPos = leaderM ? { x: leaderM.x, y: leaderM.y } : { x: 22, y: 15 };
-      elite.models = elite.models.map((m, idx) => ({
-        ...m,
-        id: `${elite.id}-m${idx}`,
-        source: canonical,
-        dead: false,
-        wounds: m.profile.W + 1,
-      }));
-      elite.startingStrength = elite.models.length;
-
-      const placed = setUpAway(s, elite, 9, targetPos);
-      if (!placed) {
-        elite.models.forEach((m, idx) => {
-          m.x = Math.max(3, Math.min((s.table?.width ?? RULES.battlefield.width) - 3, targetPos.x + 9 + (idx % 3) * 1.2));
-          m.y = Math.max(3, Math.min((s.table?.height ?? RULES.battlefield.height) - 3, targetPos.y + Math.floor(idx / 3) * 1.2));
-        });
-      }
-      s.units.push(elite);
-      pushFx(s, {
-        kind: 'place',
-        unitId: elite.id,
-        owner: 1,
-        at: centreOf(elite),
-        deepStrike: true,
-        label: 'ELITE DEEP STRIKE ARRIVAL',
-      });
-      s.screenShake = Date.now();
-      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Elite strike squad deployed via Deep Strike >9" from ${mostExp.name}!`, 'kill', 1);
-    } else {
-      s.warpStormActive = true;
-      for (const u of playerUnits) {
-        (u.timed ??= []).push({
-          e: { advanceBonus: -2, chargeBonus: -2 },
-          label: 'Warp Storm: -2" Adv & Charge',
-          until: 'turn',
-          by: 1,
-          turn: s.turn,
-        });
-      }
-      s.screenShake = Date.now();
-      log(s, `DRAMA CATCH-UP EVENT: Player leads by ${vpDelta} VP! Warp Storm erupted: All player units suffer -2" to Advance & Charge!`, 'kill', 1);
-    }
-  }
-
-  // 2. Boss Spawns (Titan Class):
-  // Strictly enforce currentRound >= 3 (NEVER on rounds 1-2).
-  // Strictly enforce adequate points (never on low points like 105 vs 158 pts).
-  // STRICT GUARD: If the player is losing (points significantly below AI and trailing), do NOT spawn Titan!
-  const nodeStr = typeof s.campaign.node === 'string' ? s.campaign.node : '';
-  const isBossNode = nodeStr.includes('boss') || nodeStr.includes('elite');
-  const isPlayerLosing = playerPts < aiPts * 0.75 && vpDelta < 0;
-  const hasOverwhelmingLead = playerPts >= 500 && (playerPts >= aiPts * 1.5 || vpDelta >= 25);
-  const pointsAdequate = playerPts >= 400 && aiPts >= 250 && !isPlayerLosing;
-
-  if (s.round >= 3 && !s.campaign.titanSpawned && pointsAdequate && (isBossNode || hasOverwhelmingLead)) {
-    const titanRoll = nextRandom(s);
-    // Baseline chance on overwhelming lead, high chance on boss nodes
-    if (titanRoll < 0.15 || isBossNode) {
-      s.campaign.titanSpawned = true;
-      s.campaign.battleEventTriggered = true;
-      triggeredAny = true;
-
-      const titan = createFactionTitan(s.players[1].factionId, s.players[1].name);
-
-      const preferPos = {
-        x: Math.max(5, (s.table?.width ?? RULES.battlefield.width) - 8),
-        y: (s.table?.height ?? RULES.battlefield.height) / 2,
-      };
-
-      const placed = setUpAway(s, titan, 9, preferPos);
-      if (!placed) {
-        titan.models[0].x = preferPos.x;
-        titan.models[0].y = preferPos.y;
-      }
-      s.units.push(titan);
-
-      pushFx(s, {
-        kind: 'place',
-        unitId: titan.id,
-        owner: 1,
-        at: centreOf(titan),
-        deepStrike: true,
-        label: 'TITAN DEEP STRIKE ARRIVAL',
-      });
-      s.screenShake = Date.now();
-
-      s.titanAlert = {
-        unitName: titan.name,
-        factionName: s.players[1].name,
-        round: s.round,
-        text: `TITAN DETECTED: ${titan.name.toUpperCase()}`,
-        triggered: true,
-      };
-
-      log(s, `TITAN DETECTED: ${titan.name} has entered the fray via Deep Strike (>9" from enemy lines)! Void Shields active!`, 'kill', 1);
-    }
-  }
-
-  return triggeredAny;
-}
 
 /** Rogue-like Dynamic Map Scaling & Generation:
  * Score-Based Expansion: Current Grid Size = Base Size (44x30) + (Player VP * Expansion Multiplier).
  * Triggers screen shake and dynamically renders new grid tiles and terrain on outer edges.
  * Maintains strict 25% footprint coverage ratio mixing heavy obscuring ruins, light craters, and barricades.
  */
-export function expandRoguelikeMap(s: GameState): boolean {
-  if (!s.campaign) return false;
-  // Dynamic mid-battle expansion is only permitted if explicitly enabled by campaign flag
-  if (!(s.campaign as { allowDynamicExpansion?: boolean })?.allowDynamicExpansion) return false;
-
-  const baseW = RULES.battlefield.width;
-  const baseH = RULES.battlefield.height;
-  s.table ??= { width: baseW, height: baseH };
-  s.table.width = Math.max(baseW, s.table.width);
-  s.table.height = Math.max(baseH, s.table.height);
-  const targetW = Math.max(baseW, Math.round(baseW + (s.players[0].vp * 0.35)));
-  const targetH = Math.max(baseH, Math.round(baseH + (s.players[0].vp * 0.35)));
-
-  if (targetW <= s.table.width && targetH <= s.table.height) return false;
-
-  const oldW = s.table.width;
-  const oldH = s.table.height;
-  s.table.width = targetW;
-  s.table.height = targetH;
-  s.screenShake = Date.now();
-
-  log(s, `Map Expanded! Dimensions increased from ${oldW}"×${oldH}" to ${targetW}"×${targetH}" (VP: ${s.players[0].vp})`, 'vp', 0);
-
-  // Maintain strict 25% footprint coverage ratio across the whole expanded grid
-  const totalArea = targetW * targetH;
-  const targetTerrainArea = totalArea * 0.25;
-
-  const currentTerrainArea = s.terrain
-    .filter((t) => t.kind !== 'objective-area')
-    .reduce((sum, t) => sum + polygonArea(t.poly), 0);
-
-  let neededArea = targetTerrainArea - currentTerrainArea;
-  let nextIdx = s.terrain.length + 1;
-  const kinds: ('ruin' | 'crater' | 'barricade')[] = ['ruin', 'crater', 'barricade', 'ruin'];
-  let kIdx = 0;
-  const addedPieces: TerrainPiece[] = [];
-
-  const existingModels = s.units.flatMap((u) => u.models.filter((m) => !m.dead));
-
-  while (neededArea > 8 && nextIdx < 70) {
-    const kind = kinds[kIdx % kinds.length];
-    kIdx++;
-    const inRightBand = targetW > oldW && (targetH <= oldH || nextRandom(s) > 0.5);
-    let x0: number, y0: number, pw: number, ph: number;
-
-    if (inRightBand) {
-      const availW = Math.max(2, targetW - oldW - 1);
-      pw = Math.min(availW, kind === 'ruin' ? 5 : 4);
-      ph = kind === 'ruin' ? 4 : kind === 'crater' ? 4 : 2;
-      x0 = oldW + 0.5 + nextRandom(s) * Math.max(0, targetW - oldW - pw - 1);
-      y0 = 2 + nextRandom(s) * Math.max(1, targetH - ph - 4);
-    } else {
-      const availH = Math.max(2, targetH - oldH - 1);
-      pw = kind === 'ruin' ? 5 : kind === 'crater' ? 4 : 4;
-      ph = Math.min(availH, kind === 'ruin' ? 4 : 3);
-      x0 = 2 + nextRandom(s) * Math.max(1, targetW - pw - 4);
-      y0 = oldH + 0.5 + nextRandom(s) * Math.max(0, targetH - oldH - ph - 1);
-    }
-
-    const poly = [
-      { x: x0, y: y0 },
-      { x: x0 + pw, y: y0 },
-      { x: x0 + pw, y: y0 + ph },
-      { x: x0, y: y0 + ph },
-    ];
-
-    // Ensure new terrain does not overlap existing models
-    const overlapsModel = existingModels.some((m) => m.x >= x0 - 1 && m.x <= x0 + pw + 1 && m.y >= y0 - 1 && m.y <= y0 + ph + 1);
-    if (overlapsModel) continue;
-
-    const pieceArea = pw * ph;
-    const isDense = kind === 'ruin';
-    const rot = Math.floor(nextRandom(s) * 4);
-    const walls = isDense ? (
-      rot === 0 ? [{ a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } }, { a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } }] :
-      rot === 1 ? [{ a: { x: x0 + pw, y: y0 }, b: { x: x0 + pw, y: y0 + ph } }, { a: { x: x0, y: y0 }, b: { x: x0 + pw, y: y0 } }] :
-      rot === 2 ? [{ a: { x: x0, y: y0 + ph }, b: { x: x0 + pw, y: y0 + ph } }, { a: { x: x0 + pw, y: y0 + ph }, b: { x: x0 + pw, y: y0 } }] :
-      [{ a: { x: x0, y: y0 }, b: { x: x0, y: y0 + ph } }, { a: { x: x0, y: y0 + ph }, b: { x: x0 + pw, y: y0 + ph } }]
-    ) : [];
-
-    const newPiece: TerrainPiece = {
-      id: `proc-t${nextIdx++}`,
-      kind: isDense ? 'ruin' : 'crater',
-      label: isDense ? 'Outer Obscuring Ruin (Dense)' : kind === 'crater' ? 'Light Crater' : 'Barricade',
-      category: isDense ? 'dense' : 'light',
-      height: isDense ? 5 : 1,
-      poly,
-      walls,
-      obstacles: kind === 'barricade' ? [{ a: { x: x0, y: y0 + ph / 2 }, b: { x: x0 + pw, y: y0 + ph / 2 } }] : [],
-    };
-
-    addedPieces.push(newPiece);
-    neededArea -= pieceArea;
-  }
-
-  // Assign fresh array to invalidate spatial caches for collision and line of sight
-  s.terrain = [...s.terrain, ...addedPieces];
-  return true;
+export function expandRoguelikeMap(_s: GameState): boolean {
+  return false;
 }
-
-/** Sanitize GameState to ensure all arrays and properties are initialized and never throw undefined length */
 export function sanitizeGameState(s: GameState): GameState {
   if (!s) return s;
   if (!Array.isArray(s.units)) s.units = [];
@@ -3416,10 +3022,6 @@ export function sanitizeGameState(s: GameState): GameState {
   if (s.table) {
     s.table.width = Math.max(RULES.battlefield.width, s.table.width || RULES.battlefield.width);
     s.table.height = Math.max(RULES.battlefield.height, s.table.height || RULES.battlefield.height);
-    const allowExp = !!(s.campaign as { allowDynamicExpansion?: boolean } | undefined)?.allowDynamicExpansion;
-    if (!allowExp && s.terrain?.some((t) => t.id.startsWith('proc-t'))) {
-      s.terrain = s.terrain.filter((t) => !t.id.startsWith('proc-t'));
-    }
   }
   return s;
 }

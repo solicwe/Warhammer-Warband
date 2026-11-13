@@ -234,7 +234,7 @@ export const setReactHook = (fn: ReactHook) => { reactHook = fn; };
 /** Tell the reaction system a moment has come for player p. True when p used a stratagem / a prompt was opened. */
 export const emitReact = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx = {}) => (reactHook ? reactHook(s, p, on, ctx) : false);
 
-// The ui knows which datasheets have a real picture; the campaign only offers and spawns those. The engine never
+// The ui knows which datasheets have a real picture. The engine never
 // imports the ui, so the ui registers the check here; with none registered every datasheet counts.
 let pictured: (datasheet: string) => boolean = () => true;
 export const setPicturedCheck = (fn: typeof pictured) => { pictured = fn; };

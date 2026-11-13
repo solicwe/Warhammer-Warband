@@ -270,7 +270,39 @@ describe('per-model loadouts when models share a profile name', () => {
     const [u] = buildUnits({ name: 't', factionId: 'CSM', battleSize: 'strike', detachments: [], units: [{ uid: 'a', datasheet: d.name, models: d.models.length, pts: 0 }] }, CSM, 0);
     const kits = new Set(u.models.map((m) => m.weapons.map((w) => w.name).sort().join('+')));
     expect(kits.size).toBeGreaterThan(1);
-    const { sectionOf } = await import('../ui/ArmyBuilder');
+    const { sectionOf, unitKind, getTacticalKeywordsForFaction } = await import('../ui/ArmyBuilder');
     expect(sectionOf(CSM.datasheets.find((x) => x.name === 'Masters of the Maelstrom'))).toBe('characters');
+
+    const SM = JSON.parse(fs.readFileSync('public/data/factions/SM.json', 'utf8')) as FactionData;
+    const companyHeroes = SM.datasheets.find((x) => x.name === 'Company Heroes');
+    expect(sectionOf(companyHeroes)).toBe('others');
+    expect(unitKind(companyHeroes!)).toBe('Infantry');
+
+    const victrix = SM.datasheets.find((x) => x.name === 'Victrix Honour Guard');
+    expect(sectionOf(victrix)).toBe('others');
+
+    const calgar = SM.datasheets.find((x) => x.name === 'Marneus Calgar')!;
+    expect(sectionOf(calgar)).toBe('characters');
+    expect(unitKind(calgar)).toBe('Epic Hero');
+
+    const captain = SM.datasheets.find((x) => x.name === 'Captain In Terminator Armour')!;
+    expect(sectionOf(captain)).toBe('characters');
+    expect(unitKind(captain)).toBe('Character');
+
+    const gunship = SM.datasheets.find((x) => x.name === 'Nephilim Jetfighter')!;
+    expect(unitKind(gunship)).toBe('Aircraft');
+
+    const predator = SM.datasheets.find((x) => x.name === 'Baal Predator')!;
+    expect(unitKind(predator)).toBe('Vehicle');
+
+    const redemptor = SM.datasheets.find((x) => x.name === 'Redemptor Dreadnought')!;
+    expect(unitKind(redemptor)).toBe('Walker');
+
+    const smKeywords = getTacticalKeywordsForFaction(SM);
+    expect(smKeywords).toContain('PHOBOS');
+    expect(smKeywords).toContain('GRAVIS');
+    expect(smKeywords).toContain('TACTICUS');
+    expect(smKeywords).toContain('TERMINATOR');
+    expect(smKeywords).toContain('WULFEN');
   });
 });

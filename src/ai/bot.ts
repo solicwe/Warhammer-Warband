@@ -19,6 +19,7 @@ import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, re
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, lookBudget, styleChosen } from './botLook';
 import { roughLos } from '../engine/visibility';
+import { getArchetypeForPlayer, ARCHETYPE_PROFILES } from './factionArchetypes';
 import './botUtility';
 import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';
@@ -580,10 +581,39 @@ export function botShootOne(s: GameState): boolean {
 
     let didShoot = false;
     if (!busy && ranked.length) botOffensiveStratagem(s, u, 'shoot', ranked.slice(0, 3).map((x) => x.t));
-    for (const { t } of ranked) {
+    for (let targetIdx = 0; targetIdx < ranked.length; targetIdx++) {
+      const { t } = ranked[targetIdx];
       if (!onBoard(t)) continue;
-      const r = buildShootPools(s, u.id, t.id, { mode });
+
+      let r = buildShootPools(s, u.id, t.id, { mode });
       if (r.error || !r.pools.length) continue;
+
+      // Mathhammer Expected Value Split Fire with Overkill Prevention
+      if (ranked.length > targetIdx + 1 && r.pools.length > 1) {
+        const profile = getArchetypeForPlayer(s, u.owner);
+        const tolerance = profile?.overkillToleranceFactor ?? 1.25;
+        const targetRemainingWounds = alive(t).reduce((sum, m) => sum + (m.wounds ?? m.profile.W ?? 1), 0);
+        const neededEV = targetRemainingWounds * tolerance;
+
+        let accumulatedEV = 0;
+        const skipWeapons: string[] = [];
+        for (const pool of r.pools) {
+          const ev = expectedDamage(s, pool, t).wounds;
+          if (accumulatedEV >= neededEV && ev > 0) {
+            skipWeapons.push(pool.weapon);
+          } else {
+            accumulatedEV += ev;
+          }
+        }
+
+        if (skipWeapons.length > 0) {
+          const splitR = buildShootPools(s, u.id, t.id, { mode, skipWeapons });
+          if (!splitR.error && splitR.pools.length > 0) {
+            r = splitR;
+          }
+        }
+      }
+
       didShoot = true;
       if (!botAttack(s, 'shoot', u.id, t.id, r.pools)) return true;
       if (!u.selectedToShoot) continue; // split fire: remaining weapons try the next target

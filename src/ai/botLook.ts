@@ -16,7 +16,7 @@ const STYLES: Record<string, Partial<BotW>> = {
   // the expert also tries playing the turn for the objectives, and for the kill
   objectives: { objective: 55, pullHolder: 2.6, pullObjective: 0.9, claimPull: 3.2, homeExpensive: 0.1 },
   hunt: { pullHammer: 1.2, pullBrawler: 1.2, chargeNonBrawler: 0.9, cautionOther: 0.6, cautionBrawler: 0.25 },
-  // the campaign is won on points: objectives first, the kill second
+  // tournament scoring prioritizes primary objectives and secondary VP
   rogue: {
     objective: 75,
     pullObjective: 1.1,
@@ -61,7 +61,7 @@ const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: numb
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
 export const lookBudget = (s: GameState, p?: PlayerId) => {
-  if (s.campaign || (s as any).idleMode || ((s.bots ?? []).length >= 2)) return 0;
+  if ((s as any).idleMode || ((s.bots ?? []).length >= 2)) return 0;
   return LEVELS[levelOf(s, p)].budget;
 };
 
@@ -149,7 +149,7 @@ export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): s
   }
   const b = budgetMs ?? lookBudget(s, p);
   if (s.phase === 'gameover') return 'steady';
-  if (s.campaign || (s as any).idleMode) return s.idleTactic === 'assault' ? 'assault' : 'rogue';
+  if ((s as any).idleMode) return s.idleTactic === 'assault' ? 'assault' : 'rogue';
   if (!enabled || inRollout || b <= 0) return 'steady';
   let best = { name: 'steady', v: -Infinity };
   for (const [name, v] of Object.entries(styleValues(s, p, b))) if (v > best.v + 1e-6) best = { name, v };

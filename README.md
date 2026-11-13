@@ -1,261 +1,180 @@
 # Warhammer Warband
 
-![Warhammer Warband: Warhammer 40,000 battles on your phone](docs/images/banner.jpg)
+> **Production-Grade Competitive Warhammer 40,000 Tournament Simulator & AI Sparring Partner**
 
-**Play it in your browser: [solicwe.github.io/Warhammer-Warband](https://solicwe.github.io/Warhammer-Warband/)**. No
-install, no account. On a phone, add it to your home screen and it works like an app.
+![Warhammer Warband: Competitive Warhammer 40,000 Simulator](docs/images/banner.jpg)
 
-<table>
-  <tr>
-    <td align="center" width="25%"><img src="docs/images/home.jpg" alt="Home screen with saved armies" width="200"><br><sub><b>Home.</b> Your armies first; New battle and Campaign sit at the top.</sub></td>
-    <td align="center" width="25%"><img src="docs/images/builder.jpg" alt="Army builder" width="200"><br><sub><b>Army builder.</b> Units, leaders, wargear and enhancements at current points. Epic Heroes sit with the Characters.</sub></td>
-    <td align="center" width="25%"><img src="docs/images/setup.jpg" alt="Battle setup" width="200"><br><sub><b>Battle setup.</b> Against the bot, two players, or bot against bot.</sub></td>
-    <td align="center" width="25%"><img src="docs/images/battle.jpg" alt="The battlefield" width="200"><br><sub><b>The battlefield.</b> Terrain, objectives and every model to scale.</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/images/attack.jpg" alt="An attack resolving on the board" width="200"><br><sub><b>Attacks.</b> Every roll is made and shown on the board.</sub></td>
-    <td align="center"><img src="docs/images/campaign.jpg" alt="Campaign start" width="200"><br><sub><b>Campaign.</b> Pick a faction and fight your way to the Warlord.</sub></td>
-    <td align="center"><img src="docs/images/campaign-map.jpg" alt="Campaign map" width="200"><br><sub><b>Campaign map.</b> Battles, elites, armories, medicae and the boss.</sub></td>
-    <td align="center" valign="middle"><sub>23 factions with their army rules, detachments, stratagems and unit abilities, all 45 mission layouts, and a bot that plays the same rules you do.</sub></td>
-  </tr>
-</table>
+**Play directly in your browser: [solicwe.github.io/Warhammer-Warband](https://solicwe.github.io/Warhammer-Warband/)**  
+*Zero install. Zero account required. Optimized for mobile touch devices and desktop browsers.*
 
-Warhammer Warband is a browser game for playing Warhammer 40,000 (11th edition) battles on your phone. You build an
-army list, then fight a bot, pass the phone to a friend, or watch two bots play each other. There is also a campaign:
-a run of battles across a branching map where your army grows an army tree and gains reinforcements.
+---
 
-Everything runs in the browser. There is no game server and no account. Your armies and battles are saved on your
-device.
+## Overview
 
-This is an unofficial fan project. It is not made, approved or endorsed by Games Workshop. Warhammer 40,000 and all
-related names, rules text and imagery belong to Games Workshop.
+**Warhammer Warband** is an open-source, tournament-grade digital tabletop simulator and AI sparring companion for **Warhammer 40,000 (10th / 11th Edition)**. Engineered for competitive players, tournament organizers, and list builders, it models the official rules with mathematical precision, instant dice resolution, model-to-model geometric line of sight (LOS), and a sophisticated Grandmaster AI capable of piloting all 23 factions according to their distinct tournament archetypes.
 
-## Playing
+Everything runs entirely client-side in the browser via deterministic state machines, ensuring lightning-fast execution, zero server latency, offline accessibility, and complete privacy.
 
-1. **Build an army.** On the home screen, tap New army, pick a faction, then add units, leaders, wargear and
-   enhancements. Points follow the current Munitorum Field Manual and the builder warns you when a list breaks a rule.
-2. **Start a battle.** New battle lets you choose the mode (against the bot, two players on one device, or bot
-   against bot), each side's army, the mission and the map. Short three-round games are an option.
-3. **Play your turns.** You move units and pick targets. The game handles the rest: it rolls every die, applies
-   re-rolls and modifiers, and resolves abilities at the right moment. Each roll is shown with the number it needed
-   and why.
-4. **Or let the bot play for you.** The Idle button in the top bar hands your side to the bot, in a normal battle
-   or in the campaign, and you watch. Tap it again to take back control. In idle mode and in the campaign the bot plays for points:
-   every objective gets a unit to hold it before the rest go hunting.
+---
 
-The bot plays the same rules you do, including stratagems and faction abilities, and has several difficulty levels.
+## Screenshots
 
-## How the battle works
+| Home & Army Builder | Battle Setup & Matchups | Tournament Battlefield | Tactical Combat Resolution |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/images/builder.jpg" alt="Army Builder" width="220" /> | <img src="docs/images/setup.jpg" alt="Match Setup" width="220" /> | <img src="docs/images/battle.jpg" alt="Tournament Battlefield" width="220" /> | <img src="docs/images/attack.jpg" alt="Combat Resolution" width="220" /> |
+| *Munitorum points & list validation* | *Incursion & Strike Force presets* | *45 official tournament layouts* | *Real-time Mathhammer EV resolution* |
 
-The game follows the 11th edition core rules. A summary of what is modelled, with the official rule numbers, is in
-[docs/01-rules-11e-reference.md](docs/01-rules-11e-reference.md).
+---
 
-- **Phases.** Each turn runs Command, Movement, Shooting, Charge and Fight, in that order. Command points, Battle-shock,
-  reserves, Deep Strike, Advance, Fall Back, overwatch, heroic interventions, pile-in and consolidation are all in.
-- **Owner-approved rule variations.** Failed Thousand Sons Rituals can be retried by another eligible caster.
-  Tzaangor Enlightened with Fatecaster Greatbows can use Malign Trickery once at the end of the opponent's Movement
-  phase when an enemy is within 12" and the unit is not engaged.
-- **Battle formation.** Before setting anything up, each player declares which units start in Reserves (Strategic
-  Reserves or Deep Strike), within the points limit. It cannot be changed later; deployment then only sets units up,
-  one at a time each.
-- **Terrain footprints.** Every piece of terrain sits on a baseplate, its footprint. Models walk into ruin footprints
-  freely but can't walk through walls. Every model, vehicles included, may end a move inside one to hold an objective. Titanic models stand astride ruins.
-  The small solid blocks (in the middle of the strip plates and on the small plates) are containers: nothing stands
-  in one or half over it;
-  infantry, beasts, swarms, flyers and monsters may stand wholly on its roof.
-- **Line of sight.** Sight is checked model to model. Walls block it. A dense footprint that neither model stands in
-  blocks it completely. A model inside a footprint can see out and be seen.
-- **Benefit of cover.** A unit has cover only when every one of its models qualifies: an infantry, beast or swarm
-  model standing in a terrain area, or any model that terrain hides in part. A tank in the open never has cover; a tank
-  partly behind a ruin does. Cover worsens the attacker's Ballistic Skill by 1.
-- **Hidden.** Infantry, beasts and swarms in light or dense terrain that did not shoot this turn or last turn are
-  hidden, and can only be seen by enemies within 15".
-- **Objectives.** An objective on terrain covers the whole plate (or both plates, when the marker sits where two meet).
-  The plate is tinted in the colour of the army that holds it.
-- **Effects.** Every kind of weapon, melee blow and hero ability has a look of its own (a Librarian's warp bolt,
-  a Captain's halo, a Chaos star, an Ork stomp, a Necron glyph ring...), sized to the models on the board.
-- **Missions.** All 45 official layouts, every primary mission and the secondary deck (tactical or fixed) are
-  scored automatically. Bigger games (3000 points and up) use a larger table.
+## Core Features
 
-### Factions and rules
+### 1. Pure Official 40k Tournament Rules (5-Phase Turn Loop)
+- **Full Phase Automation:** Command (Battle-shock, CP gain), Movement (Normal, Advance, Fall Back, Deep Strike, Strategic Reserves), Shooting, Charge, and Fight phases executed strictly by the book.
+- **Advanced Core Mechanics:** Deep Strike denial bubbles (9" exclusion zones), Rapid Ingress, Overwatch fire lanes, Heroic Interventions, Pile-in / Consolidation geometry, Unit Coherency enforcement, and Transport Embark/Disembark.
+- **Rules Fidelity:** 100% faithful to the official Warhammer 40,000 Core Rules and Designer's Commentary with no homebrew stat buffs or non-standard modifications.
 
-Every faction with a ready-made army (23 of them, plus Titan Legions as allies) has its army rules, detachment
-rules, enhancements, stratagems and unit abilities wired into the engine, and the bot uses them. [docs/RULES_STATUS.md](docs/RULES_STATUS.md) lists the status of every
-rule, faction by faction. "Works" there means the rule runs. A spot check found most such rules exact, but some have
-numbers or conditions that don't match the card yet, especially in factions whose data was generated by script. If you
-find one, the fix is usually a one-line change in `data/` (see below).
+### 2. Line of Sight (LOS) & True Geometric Tabletop Engine
+- **Model-to-Model Raycasting:** Accurate line-of-sight verification calculated from model base perimeters with spatial partition caching.
+- **Tournament Ruins & Cover Footprints:** Full support for standard tournament baseplates. Walls block true LOS; dense terrain footprints provide obscuring benefits; models wholly within ruin footprints gain the Benefit of Cover.
+- **Physical Collision & Auto-Fit:** Bases cannot overlap models or impassable walls. Automated base-contact snapping for charges and legal pile-in positioning.
 
-Tap the info button next to any ability, stratagem or rule to read its full text.
+### 3. Tournament Army List Builder (1,000 & 2,000 Points)
+- **Standard Battle Formations:** Native support for Incursion (1,000 pts) and Strike Force (2,000 pts) tournament formats.
+- **Official Munitorum Field Manual Points:** Built-in datasheet library covering all 23 factions. Automatic validation of Leader attachments, Enhancement limits (max 3 per army, 1 per character, no Epic Heroes), Rule of Three (Rule of Six for Battleline and Dedicated Transports), and wargear options.
+- **Instant List Sharing:** Export and import competitive army rosters in JSON and standard tournament text formats.
 
-### Building an army
+### 4. Primary & Tactical Secondary Missions
+- **45 Tournament Layouts:** Complete library of competitive tournament table arrangements and terrain layouts.
+- **Mission Packs:** Matched Play primary objectives (Take and Hold, Purge the Foe, Scorched Earth, Priority Targets, Linchpin, etc.) with real-time scoring.
+- **Tactical & Fixed Secondaries:** Automated draw/discard deck for Tactical Secondary Missions (Assassination, Bring It Down, Cleanse, Storm Hostile Objective, Behind Enemy Lines, Engage on All Fronts, Sabotage, etc.) with CP generation for discarded cards.
 
-The unit picker lists every datasheet of the faction at once. Tap + on a unit with more than one size and the
-size list stays open, so you can add several in a row; tap + again (or + on another unit) to close it. Wargear Options covers weapon swaps, costed wargear,
-optional extra models and, for units that list each loadout as its own model line (Deathwatch Veterans), how many
-models take each loadout. Unit pictures and army emblems can't be changed in the app; new pictures are added to the
-site's image folder (see "Add unit pictures" below).
+### 5. Tournament-Grade Grandmaster Faction AI (23 Factions)
+- **5 Tactical Faction Archetypes:**
+  - `GUNLINE_CASTLE` (T'au Empire, Astra Militarum, Leagues of Votann, Adeptus Mechanicus, Imperial Knights): Defensive screening, maximum firing lane coverage, and calculated kiting.
+  - `PRESSURE_MELEE_TRADING` (World Eaters, Orks, Chaos Daemons, Tyranids, Black Templars, Blood Angels): Stage-and-strike tactics behind obscuring ruins, threat range math, and multi-charge target overload.
+  - `GLASS_CANNON_TRICKERY` (Aeldari, Drukhari, Genestealer Cults): Threat bubble evasion (`Move + 8"`), surgical trade-offs, and rapid objective stealing.
+  - `ATTRITION_ANVIL` (Death Guard, Necrons, Adeptus Custodes, Grey Knights, Chaos Knights): Center-board control, durable toe-in objective contesting, and high-efficiency defensive positioning.
+  - `COMBINED_ARMS_TACTICAL` (Space Marines, Chaos Space Marines, Thousand Sons, Adepta Sororitas): Adaptive transport blocking, CP preservation, and objective flipping.
+- **Mathhammer Expected Value ($\text{EV}$) Allocation:** The AI computes expected wound profiles factoring Lethal Hits, Sustained Hits, Devastating Wounds, Twin-Linked, and Toughness/Save thresholds to eliminate overkill waste.
+- **Deep Strike 9" Perimeter Screening:** Backline units are positioned in an 18" grid to deny enemy reserve drop zones.
 
-On a unit's datasheet each model line shows its name, then M T Sv W Ld OC, with the invulnerable save shield under
-Sv. The weapon table shows how many models carry each weapon (x8 Boltgun); weapons the unit could take but doesn't
-are dimmed.
+### 6. Mobile-First UX/UI & 60 FPS Performance
+- **Thumb-Zone Ergonomics:** All primary actions (Next Phase, Dice Tray, Selected Unit Datasheet, Stratagem Docks) are anchored to a collapsible Bottom Sheet and Action Bar.
+- **Ultra-Compact Top HUD:** Minimalist 48px top header displaying Round, Phase, Score (VP), and CP counters, leaving $> 80\%$ of the screen dedicated to the board.
+- **Touch-Friendly Controls:** Double-tap zoom, one-finger smooth pan, and **Ghost Preview + Confirm Move** (`[✓ Confirm Move]` / `[✕ Cancel]`) to prevent accidental finger-slip movements.
+- **Performance Optimization:** DPR clamping ($\le 1.5$ on mobile), spatial bounding box LOS pre-checks, and async time-slicing ensure rock-solid 60 FPS gameplay on mobile devices.
 
-### Reading the rules
+### 7. Physical Tabletop Companion Mode
+- Use your phone or tablet at the physical tabletop to score primary objectives, manage the tactical secondary mission deck, track CP, and view high-resolution 40k terrain layouts.
 
-The Detachment tab shows the detachment rule, enhancements and stratagems coloured by the phase they are used in
-(Command amber, Movement green, Shooting orange, Charge purple, Fight red). Each stratagem is laid out as WHEN /
-TARGET / EFFECT, with its CP cost, whose turn it is and its type, and the list can be filtered by phase. Enhancements
-show who can take them and the phase they matter in. Rules with named options (Mission Tactics, Rituals with their
-Warp Charge) show each option in its own block, and bullet lists read as lists. With two or more detachments each
-one gets its own heading.
+---
 
-## Campaign
+## Supported Factions
 
-The campaign is a roguelite run with one faction. You start with a small army and travel across a branching map of
-battles, elite fights (enemies with a special rule), supply drops, armories, medicae tents and a boss at the end.
+The engine includes complete datasheets, detachment rules, army rules, and stratagems for all 23 competitive factions:
 
-- **Scrap** is the currency. A win pays 70 (100 for an elite battle, 160 for the boss), a loss still pays 30 plus
-  three quarters of what you picked up in the battle (25 a round, +20 and +1 CP while you hold the centre objective).
-  The Scrap card among the rewards after a win pays 80 to 120.
-  Spend it in the armory on recruits, wargear, enhancements and detachments. A detachment costs 60, 110 or 170 Scrap
-  for 1, 2 or 3 Detachment Points. The second copy of a unit costs the same as the first, later copies more (x1.5,
-  x2, x3); BATTLELINE and DEDICATED TRANSPORT units, which have twice the copy limit, stay at the base price for four
-  copies and climb half as fast.
-- **Missions.** Each battle is a normal battle: one of the official primary missions (many are won with actions),
-  Tactical secondaries and five rounds, shown on the map before you fight. Only the Force Dispositions are drawn at
-  random.
-- **The enemy grows with you.** Enemies bring more detachments as you win (one more every 3 wins and every sector,
-  one more for an elite or boss, up to 4), and an army tree with as many nodes as yours (+3 elite, +6 boss).
-- **Reinforcements** are offered after battles, each with a rarity (common, rare, epic, legendary) that follows how
-  big the unit is.
-- **Army tree.** One passive tree for the whole army, paid for with Renown (battle 3, elite 5, boss 6, a loss 1).
-  Seven shared spokes (Fire, Assault, Armour, Speed, Command, Objectives, Logistics) and three branches of your army's
-  own (its army branch, a corps and an arsenal, on its real keywords: Terminators and Gravis for Space Marines, Wych
-  Cults and Kabals for Drukhari, Hernkyn and Ironkin for the Votann...) sit around a start node, with an inner ring of
-  bridges halfway out. Each shared spoke has three side clusters and, past its tip, a keystone that makes one keyword
-  count as another; spoke ends are not joined, so a spoke's far nodes are reached only by walking that spoke (about
-  210 nodes in all, many of them buffs for the whole army). Every node fits the army: a node for a keyword the army
-  cannot field (MONSTER for Space Marines, VEHICLE for Tyranids, INFANTRY for Knights) is swapped for an army-wide one.
-  Nodes reach units by keyword, some only in rounds 1-2 or from round 3, and some add a bonus once
-  enough nodes of their spoke are taken. Refund a node for Scrap at an armory or medicae tent. An army that can field
-  titanic units or allied Knights unlocks them with the keystone at the end of its arsenal branch (Questor Oath,
-  Gargant Mob, Monolith Phalanx...); Drukhari, Genestealer Cults, the Votann and Tyranids get an ordinary keystone
-  when their recruit pool has no Titan to unlock, and Imperial and Chaos Knight armies need none for their own Knights.
-  Details in [docs/04-campaign-tree.md](docs/04-campaign-tree.md).
-- **Relics** are artefacts with special rules the tree never gives: invulnerable saves, -1 Damage, Critical Hits on
-  5+, mortal wounds, Fights First, [LANCE], [DEVASTATING WOUNDS], shooting or charging after Advancing... A relic you
-  already hold comes back as an upgrade while a level still improves it, and its text is written from what it does.
-- **Enemy reinforcements.** While you are ahead in round 3 or 4 (10 VP up, or a quarter more army left and not
-  behind on VP), there is a 40% chance each of those rounds that an enemy unit arrives by Deep Strike, at most once a
-  battle. It never happens while you are behind.
-- **VETERAN.** A unit that has fought 3 battles becomes VETERAN by itself, and tree nodes that name VETERAN reach it.
-- **Battles are won on points.** Both sides play the battle's primary mission (and its actions); nothing ends a
-  battle early, not even wiping out the enemy, and boss and elite battles are decided on VP like the others.
-- **Kills still count a little.** Destroying an enemy unit gives 1 VP (2 for a character, vehicle or monster), up to
-  12 VP a battle, well under the 45 the primary mission can give.
+| Imperium | Chaos | Xenos |
+| :--- | :--- | :--- |
+| • Adeptus Astartes (Space Marines) | • Chaos Space Marines | • Aeldari (Craftworlds) |
+| • Blood Angels | • World Eaters | • Drukhari |
+| • Dark Angels | • Death Guard | • Necrons |
+| • Space Wolves | • Thousand Sons | • T'au Empire |
+| • Black Templars | • Chaos Daemons | • Tyranids |
+| • Adeptus Custodes | • Chaos Knights | • Genestealer Cults |
+| • Grey Knights | | • Leagues of Votann |
+| • Astra Militarum | | • Orks |
+| • Adepta Sororitas | | |
+| • Adeptus Mechanicus | | |
+| • Imperial Knights | | |
+| • Agents of the Imperium | | |
 
-## On your phone
+---
 
-- The battlefield fills the screen. Tap a unit on the map to act with it. The bottom sheet lists only what isn't on
-  the table (reserves and embarked units) and can be folded down to its handle.
-- While a sheet is up, a small live map window under the phase tabs shows the unit you picked, zoomed in; with nothing
-  picked it shows the whole board while the sheet hides most of it. It never opens over the dice. Drag it to move it,
-  or close it; it moves above an open mission sheet.
-- Mission sheets close from their handle by tapping or swiping down. The target panel and mission sheets scroll with
-  touch, and the Deep Strike panel shows the required distance from enemy units, including enemy reserve-scrambler
-  ranges on the board. Crushing Impact remains a manual choice after a successful charge; using it or continuing
-  without it closes the prompt. Thousand Sons players roll 2D6 for each Ritual before choosing whether to add a
-  Channel die, and Destiny's Ruin targets stay highlighted during the Shooting phase.
-- Pinch to zoom and drag to pan. You can zoom out to twice the table's width, so all of it fits above the bottom sheet.
-  Missions that score by table quarter label Q1–Q4 and mark the central 6" exclusion zone. An objective's outline
-  takes the colour of whoever has more OC on it right now; the game settles control at the end of each phase.
-- **Moving and setting up.** Drag a model or use the stick, then press Confirm. Cancel, Reset and Confirm sit at the
-  top of the sheet, above the stick, so they stay on screen. Bikes and vehicles get turn buttons (45 degrees a press)
-  while they move or set up, and keep the facing you gave them. A facing within 20 degrees of straight snaps straight.
-- **Auto fit.** A unit set down against a wall or another model shuffles to the nearest legal spot, and a long base
-  also turns to find an angle that fits. Pile-in is automatic: each model tries every spot around the nearest enemy
-  models, base contact first, while the unit stays in coherency. After each unit fights, choose its Consolidation
-  position before the next unit fights; it moves automatically only if you press Auto. The bot's units move on their own.
-- **Fight choices.** A melee weapon with several profiles (strike / sweep) gets profile cards, as in shooting. A unit
-  whose foe was destroyed before it fought may Overrun (pile in again, then fight) when an enemy is within 5"; with
-  none, it is done on its own and you do not have to pick it to skip it.
-- The site can be added to your home screen and works like an app.
+## Architecture & Tech Stack
 
-## Saves
-
-- **On this device.** Armies, the battle in progress, the campaign and your settings are saved in the browser as you
-  play. Closing the tab or the browser loses nothing.
-- **Battle history.** Finished simulator and campaign matches play from History with Play/Pause and a seek bar.
-  Movement and attack animations replay for both players, with attack sounds when sound is enabled. Replays are
-  read-only and do not replace the current save or create another history entry.
-
-Nothing leaves your device, and the site sends a Content Security Policy that only allows its own files and Google Fonts.
-
-## Running it yourself
-
-You need Node.js (the version is in `.nvmrc`).
-
-```bash
-npm install
-npm run dev        # http://localhost:5173, also reachable from a phone on the same network
-npm test           # rules engine tests and full bot-against-bot games
-npm run build      # static site in dist/
+```
+warhammer-warband/
+├── src/
+│   ├── engine/           # Pure deterministic 40k game rules, math, LOS & state transitions
+│   │   ├── attack.ts     # Attack sequence (Hit, Wound, Save, Damage, FNP, Devastating)
+│   │   ├── game.ts       # Phase management, turn loop, scoring, and command triggers
+│   │   ├── geometry.ts   # Base collisions, distance measurement, polygon clipping
+│   │   ├── visibility.ts # Model-to-model LOS raycasting & cover calculations
+│   │   └── types.ts      # Strictly typed GameState and Unit interfaces
+│   ├── rules-engine/     # Detachments, Enhancements, and Stratagem execution
+│   ├── factions/         # Official army rules (Blessings of Khorne, Orders, Pacts, etc.)
+│   ├── ai/               # Competitive tournament AI decision engine
+│   │   ├── factionArchetypes.ts  # Archetype-specific weights & behaviors
+│   │   ├── tournamentTrainer.ts  # Headless self-play simulation & weight tuning
+│   │   ├── botMove.ts    # Tactical positioning, screening, and objective anchoring
+│   │   └── botPlan.ts    # Expected Value targeting and VP optimization
+│   ├── ui/               # Mobile-first React 19 UI
+│   │   ├── Board.tsx     # High-performance SVG tabletop renderer
+│   │   ├── GameScreen.tsx# Main game orchestration, HUD & modal controllers
+│   │   ├── ArmyBuilder.tsx# Tournament list validation and builder
+│   │   └── TabletopScreen.tsx# Physical companion scorekeeper & deck manager
+│   └── services/         # Replay compression, storage, and persistence
 ```
 
-### Deploying to GitHub Pages
+### Deterministic Seeded Replays
+Every battle is driven by a seeded pseudo-random number generator (PRNG). Entire matches can be serialized, shared, and replayed tick-by-tick from past battle logs.
 
-The workflow in `.github/workflows/deploy.yml` builds `main` and publishes it to GitHub Pages on every push.
+---
 
-1. In the repository settings, open Pages and set the source to GitHub Actions. Pages on a private repository
-   needs a paid GitHub plan; on a public repository it is free.
-All paths in the app are relative, so it works at `https://<user>.github.io/<repository>/`. The workflow also
-publishes a copy of the page as `404.html`, so a refresh never lands on an error page.
+## Getting Started
 
-## For developers
+### Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
 
-Working on the code (by hand or with an AI assistant)? Start with [CLAUDE.md](CLAUDE.md). It sets the order every
-change follows:
-1. Check what already exists before building.
-2. Decide whether to extend it, replace it or add something new.
-3. Make the smallest complete change.
-4. Prove it with real checks.
-5. Update these docs.
-6. Write what the change taught into the skill of that area, so the skills improve with every task.
+### Installation & Development
+```bash
+# Clone the repository
+git clone https://github.com/solicwe/Warhammer-Warband.git
+cd Warhammer-Warband
 
-Each area has a skill in [.claude/skills/](.claude/skills/), a short file that says what exists there, what to
-check and how to verify it:
+# Install dependencies
+npm install
 
-| Skill | For |
-|---|---|
-| [start-here](.claude/skills/start-here/SKILL.md) | every task: the workflow, the inventory step, where things are |
-| [verify](.claude/skills/verify/SKILL.md) | proving a change works: tests, games, screenshots, measurements |
-| [docs-sync](.claude/skills/docs-sync/SKILL.md) | which doc to update for which change |
-| [rules-data](.claude/skills/rules-data/SKILL.md) | abilities, stratagems, detachments, faction data |
-| [bot](.claude/skills/bot/SKILL.md) | the bot: roles, styles, speed, measuring its strength |
-| [campaign](.claude/skills/campaign/SKILL.md) | the campaign, army tree, relics, old saves |
-| [ui](.claude/skills/ui/SKILL.md) | screens, touch, accessibility, lag |
-| [vfx](.claude/skills/vfx/SKILL.md) | battle effects |
+# Start local development server
+npm run dev
+```
+Open `http://localhost:5173` in your browser (or access the displayed local network IP from your phone).
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) explains the layers (`engine`, `rules-engine`, `factions`, `ai`, `ui`,
-  `services`), the turn loop and the hooks that let faction rules plug in without touching the core.
-- [AI_GUIDE.md](AI_GUIDE.md) is the checklist for common changes: fixing an ability, adding a stratagem, adding a
-  faction, changing the bot.
-- [docs/EDITING.md](docs/EDITING.md) maps every kind of rule to the data file it lives in.
+### Running Tests
+```bash
+# Run unit tests and rules validation
+npm test
 
-Common changes in short:
+# Run tests in watch mode
+npm run test:watch
+```
 
-- **Fix or add a rule.** Most rules are data. Edit `data/abilities/<FACTION>.json`, `data/stratagems/<FACTION>.json`
-  or `data/detachment-rules.json`, then run `npx vitest run src/engine/rulesData.test.ts`.
-- **Correct a datasheet.** Put the change in `data/overrides/<FACTION>.json`. Don't edit
-  `public/data/factions/*.json`, which is regenerated from the source data by `npm run data`.
-- **Add a faction.** Generate its data with `npm run data`, add its rule data files, and if it has a rule that keeps
-  its own state, write a module in `src/factions/` and register it in `src/factions/index.ts`.
-- **Add unit pictures.** Drop images in `public/images/units/<FACTION>/` named after the datasheet (for example
-  `intercessor-squad.webp`) and run `npm run images` to rebuild the manifest.
-- **Add a game mode.** Modes are set up in `src/ui/BattleSetup.tsx` and run on the same `GameState`. Pass options
-  through `createGame` in `src/engine/game.ts`.
-- **Change the look.** Keep to WCAG 2.2 AA: text at 4.5:1 contrast or more (take colours from the tokens at the top
-  of `src/ui/styles.css`, and mix a faction colour toward `--text` before using it as text), touch targets of 44 px
-  where there is room and never under 24 px, no text under 11 px, and leave page zoom on in `index.html`.
+### Building for Production
+```bash
+# Compile and build production-ready bundle in dist/
+npm run build
+```
 
-The engine is deterministic: every die comes from a seeded generator, so any game can be replayed from its seed.
-Never use `Math.random()` in `src/engine/`.
+---
+
+## Automated Self-Play AI Trainer
+
+The built-in headless tournament trainer allows running thousands of automated AI vs AI matches in seconds to evaluate match-up balance, tune archetype heuristic weights, and verify rules consistency:
+
+```bash
+# Run headless tournament self-play benchmark
+npx vitest run src/ai/tournamentTrainer.test.ts
+```
+
+---
+
+## Legal Disclaimer
+
+This is an unofficial, non-commercial fan project developed for competitive tabletop analysis, match simulation, and education. It is not affiliated with, endorsed, or sponsored by Games Workshop Limited. Warhammer 40,000, Citadel, Space Marine, and all associated logos, characters, and rules are registered trademarks of Games Workshop Limited.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

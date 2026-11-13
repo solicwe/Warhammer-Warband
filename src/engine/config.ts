@@ -86,6 +86,6 @@ export const deploymentById = (id: string): DeploymentDef => {
   return { ...l, name: deploymentName(l.deployment) };
 };
 export const primaryById = (id: string): PrimaryDef => {
-  // a campaign battle saved before the old 'roguelike-annihilation' mission went plays Meatgrinder (both Purge the Foe)
+  // a legacy battle saved before the old 'roguelike-annihilation' mission went plays Meatgrinder (both Purge the Foe)
   return MISSIONS.primaries.find((p) => p.id === id) ?? MISSIONS.primaries.find((p) => p.id === 'meatgrinder')!;
 };

@@ -7,7 +7,6 @@ import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { PHOTO_EDIT, modelPortraitKey, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon } from './Icon';
-import { MUNITORUM_AMMO } from '../engine/campaignSystems';
 import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
 
@@ -364,11 +363,6 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
         <div className="grow">
           <h2 style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
             <span>{u.name}{squadNum ? ` [Squad #${squadNum}]` : ''}</span>
-            {u.compressionTier && u.compressionTier > 1 ? (
-              <span className="chip" style={{ background: '#f59e0b', color: '#000', fontWeight: 800 }}>
-                {u.compressionTier === 3 ? 'Tier III Apex' : 'Tier II Veteran'}
-              </span>
-            ) : null}
           </h2>
           {PHOTO_EDIT && <div className="tiny">Tap the picture or paste to set one · saved on this device</div>}
         </div>
@@ -387,118 +381,23 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
           <span key={`ord-${i}`} className="chip on" style={{ background: '#1c3d24', color: '#86efac', borderColor: '#22c55e', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="bullhorn" size={13} /> {t.label}</span>
         ))}
         {u.buffs.map((b, i) => <span key={i} className="chip">{b.label ?? b.kind}</span>)}
-        {u.combatRole && (
-          <span className="chip" style={{
-            background: u.combatRole === 'VANGUARD' ? '#1e3a8a' : u.combatRole === 'BREACHER' ? '#713f12' : u.combatRole === 'SKIRMISHER' ? '#164e63' : u.combatRole === 'GUNSHIP' ? '#7c2d12' : u.combatRole === 'BEHEMOTH' ? '#831843' : '#581c87',
-            color: '#fff',
-            fontWeight: 800,
-          }}>
-            ROLE: {u.combatRole}
-          </span>
-        )}
-        {u.combatState?.tokens.auspex ? <span className="chip" style={{ background: '#0284c7', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="radar" size={12} /> Auspex {u.combatState.tokens.auspex}/{u.combatState.maxTokenCaps.auspex}</span> : null}
-        {u.combatState?.tokens.fervour ? <span className="chip" style={{ background: '#dc2626', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="fight" size={12} /> Fervour {u.combatState.tokens.fervour}/{u.combatState.maxTokenCaps.fervour}</span> : null}
-        {u.combatState?.tokens.bastion ? <span className="chip" style={{ background: '#d97706', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="shield" size={12} /> Bastion {u.combatState.tokens.bastion}/{u.combatState.maxTokenCaps.bastion}</span> : null}
-        {u.combatState?.isExposed ? <span className="chip warn" style={{ background: '#78350f', color: '#fef08a', borderColor: '#facc15', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="target" size={12} /> EXPOSED</span> : null}
-        {u.combatState?.warpWardHP && u.combatState.warpWardHP > 0 ? <span className="chip" style={{ background: '#065f46', color: '#6ee7b7', borderColor: '#10b981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="heal" size={12} /> Shield {u.combatState.warpWardHP} HP</span> : null}
-        {u.combatState?.ailments.soulfire ? <span className="chip warn" style={{ background: '#7c2d12', color: '#fed7aa', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="zap" size={12} /> Soulfire ({u.combatState.ailments.soulfire}/5)</span> : null}
-        {u.combatState?.ailments.bleeding ? <span className="chip warn" style={{ background: '#881337', color: '#fecdd3', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="skull" size={12} /> Bleeding ({u.combatState.ailments.bleeding}/5)</span> : null}
-        {u.combatState?.ailments.corroded ? <span className="chip warn" style={{ background: '#581c87', color: '#f3e8ff', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="wargear" size={12} /> Corroded ({u.combatState.ailments.corroded}/5)</span> : null}
-        {u.combatState?.ailments.pinned ? <span className="chip warn" style={{ background: '#334155', color: '#cbd5e1', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="hold" size={12} /> Pinned ({u.combatState.ailments.pinned}/5)</span> : null}
       </div>
-      {u.combatState && (u.combatState.tokens.auspex > 0 || u.combatState.tokens.fervour > 0 || u.combatState.tokens.bastion > 0 || u.combatState.isExposed || (u.combatState.warpWardHP ?? 0) > 0 || u.combatState.ailments.soulfire > 0 || u.combatState.ailments.bleeding > 0 || u.combatState.ailments.corroded > 0 || u.combatState.ailments.pinned > 0) && (
-        <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid #334155', borderRadius: 6, padding: '8px 10px', fontSize: '0.8em', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-            <Icon name="radar" size={13} />
-            <span>Active Combat Tokens & Tactical Statuses:</span>
-          </div>
-          {u.combatState.tokens.auspex > 0 && (
-            <div style={{ color: '#38bdf8' }}>
-              <b>Auspex Scan ({u.combatState.tokens.auspex}/{u.combatState.maxTokenCaps.auspex}):</b> Target telemetry locked — friendly ranged attacks against this target re-roll Hit rolls of 1 and ignore Cover.
-            </div>
-          )}
-          {u.combatState.tokens.fervour > 0 && (
-            <div style={{ color: '#f87171' }}>
-              <b>Fervour ({u.combatState.tokens.fervour}/{u.combatState.maxTokenCaps.fervour}):</b> Zealous momentum — +1 Strength on melee attacks and +1" to Advance & Charge distances.
-            </div>
-          )}
-          {u.combatState.tokens.bastion > 0 && (
-            <div style={{ color: '#fbbf24' }}>
-              <b>Bastion ({u.combatState.tokens.bastion}/{u.combatState.maxTokenCaps.bastion}):</b> Armored wall — +1 Toughness and incoming Damage reduced by 1.
-            </div>
-          )}
-          {u.combatState.isExposed && (
-            <div style={{ color: '#facc15' }}>
-              <b>EXPOSED:</b> Designated by Vanguard spotters — takes +1 Damage from all incoming ranged weapon attacks.
-            </div>
-          )}
-          {u.combatState.warpWardHP && u.combatState.warpWardHP > 0 ? (
-            <div style={{ color: '#34d399' }}>
-              <b>Warp Shield ({u.combatState.warpWardHP} HP):</b> Kinetic force field — absorbs all incoming damage before unit models suffer Wounds.
-            </div>
-          ) : null}
-          {u.combatState.ailments.soulfire > 0 && (
-            <div style={{ color: '#fb923c' }}>
-              <b>Soulfire ({u.combatState.ailments.soulfire}/5):</b> Inflicted by warp flames — suffers 1 Mortal Wound at start of Command phase. Explodes for 3 Mortal Wounds at 5 stacks!
-            </div>
-          )}
-          {u.combatState.ailments.bleeding > 0 && (
-            <div style={{ color: '#fda4af' }}>
-              <b>Bleeding ({u.combatState.ailments.bleeding}/5):</b> Grievous wound — suffers 1 Mortal Wound whenever moving or charging. At 5 stacks, Advance moves are prohibited.
-            </div>
-          )}
-          {u.combatState.ailments.corroded > 0 && (
-            <div style={{ color: '#d8b4fe' }}>
-              <b>Corroded ({u.combatState.ailments.corroded}/5):</b> Acidic rust — Armour Save worsened by 1 (max -2). At 5 stacks, disables Invulnerable Saves!
-            </div>
-          )}
-          {u.combatState.ailments.pinned > 0 && (
-            <div style={{ color: '#cbd5e1' }}>
-              <b>Pinned ({u.combatState.ailments.pinned}/5):</b> Suppressive fire — -1" Movement per stack. At 5 stacks, Overwatch is disabled and unit Fights Last.
-            </div>
-          )}
-        </div>
-      )}
-      {((u.compressionTier && u.compressionTier > 1) || u.tempAmmoLoadout || (u.enhancements && u.enhancements.length > 0) || (u.socketedRelics && u.socketedRelics.length > 0) || squadNum) && (
+      {((u.enhancements && u.enhancements.length > 0) || squadNum) && (
         <div style={{ background: 'var(--surface-2, #1e293b)', border: '1px solid #d97706', borderRadius: 8, padding: '10px 12px', fontSize: '0.82em', display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--text, #f8fafc)' }}>
           <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.95em', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(217, 119, 6, 0.3)', paddingBottom: 4 }}>
             <Icon name="sparkles" size={14} />
-            <span>Unit Upgrades & Loadout Profile:</span>
+            <span>Unit Upgrades:</span>
             {squadNum && (
               <span className="chip" style={{ marginLeft: 'auto', background: '#334155', color: '#f8fafc' }}>
                 Squad #{squadNum}
               </span>
             )}
           </div>
-          {u.compressionTier && u.compressionTier > 1 && (
-            <div>
-              <span style={{ color: '#fcd34d', fontWeight: 700 }}>Compression Rank: {u.compressionTier === 3 ? 'Tier III Apex Elite (Merged 3+ Squads)' : 'Tier II Veteran Squad (Merged 2 Squads)'}</span>
-              <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {u.compressionTier === 3 ? 'Stats boosted: +2 Wounds, +1 Attack, +1 Strength, Feel No Pain 6+, +1 OC' : 'Stats boosted: +1 Wound, +1 Attack, +1 Save, +1 OC'}
-              </div>
-            </div>
-          )}
-          {u.tempAmmoLoadout && MUNITORUM_AMMO[u.tempAmmoLoadout] && (
-            <div>
-              <span style={{ color: '#60a5fa', fontWeight: 700 }}>Munitorum Ammo: {MUNITORUM_AMMO[u.tempAmmoLoadout].name}</span>
-              <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {MUNITORUM_AMMO[u.tempAmmoLoadout].desc}
-              </div>
-            </div>
-          )}
           {u.enhancements && u.enhancements.length > 0 && (
             <div>
               <span style={{ color: '#34d399', fontWeight: 700 }}>Active Enhancements:</span>
               <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {u.enhancements.join(', ')}
-              </div>
-            </div>
-          )}
-          {u.socketedRelics && u.socketedRelics.length > 0 && (
-            <div>
-              <span style={{ color: '#f472b6', fontWeight: 700 }}>Equipped Relics:</span>
-              <div style={{ color: '#cbd5e1', fontSize: '0.92em', marginTop: 1 }}>
-                {u.socketedRelics.join(', ')}
+                {u.enhancements.map((e) => (typeof e === 'string' ? e : e.name)).join(', ')}
               </div>
             </div>
           )}

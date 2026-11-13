@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getAbilityOrWeaponInfo, renderHighlightedText } from './AbilityBadgePopover';
 import type { ModelState, UnitState } from '../engine/types';
-import { dismissUnit } from '../engine/campaign';
 
 describe('AbilityBadgePopover', () => {
   it('resolves Bolt Rifle sample data with stats and keywords', () => {
@@ -97,24 +96,5 @@ describe('AbilityBadgePopover', () => {
     const nodes = renderHighlightedText('Within 12" and rolls 4+ on D6 to gain 1 CP') as React.ReactNode[];
     expect(Array.isArray(nodes)).toBe(true);
     expect(nodes.length).toBeGreaterThan(1);
-  });
-});
-
-describe('Campaign dismissUnit attachment cleanup', () => {
-  it('clears attachTo reference if the bodyguard squad is dismissed', () => {
-    const run = {
-      list: {
-        units: [
-          { uid: 'leader-1', datasheet: 'Captain', attachTo: 'bodyguard-1' },
-          { uid: 'bodyguard-1', datasheet: 'Intercessors' },
-        ],
-      },
-      story: [],
-    } as never;
-
-    const updated = dismissUnit(run, 'bodyguard-1');
-    expect(updated.list.units.length).toBe(1);
-    expect(updated.list.units[0].uid).toBe('leader-1');
-    expect(updated.list.units[0].attachTo).toBeUndefined();
   });
 });

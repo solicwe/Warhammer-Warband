@@ -1,11 +1,9 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { newUid, syncList } from '../engine/army';
 import type { GameState } from '../engine/types';
-import { ArcaneModesModal } from './ArcaneModesModal';
 import { ArmyBuilder } from './ArmyBuilder';
 import { BattleLogsModal } from './BattleLogsModal';
 import { BattleSetup } from './BattleSetup';
-import { CampaignScreen } from './Campaign';
 import { loadFaction, loadIndex, type FactionIndex } from './data';
 import { GameScreen } from './GameScreen';
 import { Home } from './Home';
@@ -20,7 +18,6 @@ type Screen =
   | { kind: 'build'; id: string; fresh?: boolean }
   | { kind: 'battle' }
   | { kind: 'game'; state: GameState; replay?: { states: GameState[]; index: number } }
-  | { kind: 'campaign' }
   | { kind: 'tabletop' };
 
 /** Keeps a rendering bug from taking the whole app down; the game itself is already saved. */
@@ -46,7 +43,6 @@ export default function App() {
   const [index, setIndex] = useState<FactionIndex | null>(null);
   const [saved, setSaved] = useState<GameState | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [showArcaneModal, setShowArcaneModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [replayError, setReplayError] = useState<string | null>(null);
 
@@ -73,8 +69,7 @@ export default function App() {
   const goHome = () => { setSaved(loadSaved()); setScreen({ kind: 'home' }); };
   const wrap = (node: ReactNode) => <div className="app-frame"><TokenSprites /><Guard onReset={goHome}>{node}</Guard></div>;
 
-  // leaving a campaign battle goes back to the campaign map (its result moves the run on)
-  const exitGame = () => { const sv = loadSaved(); setSaved(sv); setScreen(sv?.campaign ? { kind: 'campaign' } : { kind: 'home' }); };
+  const exitGame = () => { const sv = loadSaved(); setSaved(sv); setScreen({ kind: 'home' }); };
   if (screen.kind === 'game') return wrap(<div className="app game-app"><GameScreen
     key={screen.replay ? 'replay' : 'live'}
     initial={screen.state}
@@ -95,9 +90,6 @@ export default function App() {
       }
     }}
   /></div>);
-  if (screen.kind === 'campaign') {
-    return wrap(<CampaignScreen index={index} saved={saved} onBack={goHome} onPlay={(s) => setScreen({ kind: 'game', state: s })} onClearSaved={() => { clearSaved(); setSaved(null); }} />);
-  }
   if (screen.kind === 'tabletop') {
     return wrap(<TabletopScreen armies={armies} index={index} onBack={goHome} />);
   }
@@ -140,34 +132,11 @@ export default function App() {
           });
         }}
         onBattle={() => setScreen({ kind: 'battle' })}
-        onArcane={() => setShowArcaneModal(true)}
         onTabletop={() => setScreen({ kind: 'tabletop' })}
         onLogs={() => setShowLogsModal(true)}
-        onCampaign={() => setScreen({ kind: 'campaign' })}
         onContinue={() => { if (saved) setScreen({ kind: 'game', state: withAutoRules(saved) }); }}
         onAbandon={() => { clearSaved(); setSaved(null); }}
       />
-      {showArcaneModal && (
-        <ArcaneModesModal
-          onClose={() => setShowArcaneModal(false)}
-          onCampaign={() => {
-            setShowArcaneModal(false);
-            setScreen({ kind: 'campaign' });
-          }}
-          onBattle={() => {
-            setShowArcaneModal(false);
-            setScreen({ kind: 'battle' });
-          }}
-          onTabletop={() => {
-            setShowArcaneModal(false);
-            setScreen({ kind: 'tabletop' });
-          }}
-          onLogs={() => {
-            setShowArcaneModal(false);
-            setShowLogsModal(true);
-          }}
-        />
-      )}
       {showLogsModal && (
         <BattleLogsModal
           onClose={() => setShowLogsModal(false)}

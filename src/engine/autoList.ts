@@ -44,7 +44,7 @@ export const AUX_EXCLUSIONS: Record<string, string[]> = {
   CSM: ['WORLD EATERS', 'THOUSAND SONS', 'DEATH GUARD', 'EMPEROR’S CHILDREN'],
 };
 
-/** wild: ignore how hard a unit hits and pick at random (a campaign start that differs every run). */
+/** wild: ignore how hard a unit hits and pick at random (a fast draft that differs every time). */
 export function autoList(f: FactionData, points = 1000, seed = 1, wild = false): ArmyList {
   const rnd = rand(seed + f.id.length * 31);
   const excl = AUX_EXCLUSIONS[f.id] ?? [];

@@ -2,10 +2,6 @@
 import { flameTint, weaponFx, weaponPow } from './weaponFx';
 import { combatMods, runPoolFinishers, type CombinedMods } from './combatMods';
 import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
-import { checkBehemothRampage, onBreacherSavePassed, onVanguardHit } from './combatEngine';
-import { triggerRelicEvent } from './relicEngine';
-import { addBloodTithe, addWaaaghMomentum } from './ascendancy';
-import { absorbWarpWardDamage, checkMachineInstability, hasActiveKeystone } from './keystones';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
@@ -60,8 +56,6 @@ export function woundNeed(S: number, T: number): number {
 }
 
 const riled = isRiled;
-/** campaign battles: the most VP a side scores for kills in one battle (the primary gives up to 45) */
-export const CAMPAIGN_KILL_VP = 12;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
   const best = Math.min(m.shadowFieldDown ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
@@ -303,8 +297,6 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         pool.woundMod = wm;
         pool.woundNote = [`S${strength} vs T${T_T}`, ...(wm ? [`Buff ${wm > 0 ? '+' : ''}${wm}`] : []), ...cm.otherNotes].join(' · ');
         if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
-        if (s.gildedBonus && A.owner === 0 && s.gildedBonus.critThresholdBonus) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
-        if (s.tacticalClockDirective === 'WARMASTER_ASCENDANCY' && A.owner === 0) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name }, pool);
@@ -415,8 +407,6 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundNote = notes.join(' · ');
         applyCombatMods(pool, cm);
         if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
-        if (s.gildedBonus && A.owner === 0 && s.gildedBonus.critThresholdBonus) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
-        if (s.tacticalClockDirective === 'WARMASTER_ASCENDANCY' && A.owner === 0) pool.critHitOn = Math.min(pool.critHitOn ?? 6, 5);
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name }, pool);
@@ -554,9 +544,6 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
     s.lastAct = { unitId: A.id, owner: A.owner, kind: 'attack', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   }
   for (const h of startHooks) h(s, s.attack);
-  if (s.campaign) {
-    resolveAll(s);
-  }
 }
 
 /** How far below its average the worst random number of attacks of a pool is (0: nothing to re-roll). */
@@ -660,13 +647,6 @@ export function rollHits(s: GameState) {
   }
   const T_target = unitById(s, at.targetId);
   const A_unit = unitById(s, at.attackerId);
-  if (p.hits.some((h) => h.o !== 'miss')) {
-    onVanguardHit(s, A_unit, T_target);
-  }
-  const crits = p.hits.filter((h) => h.o === 'crit').length;
-  if (crits > 0) {
-    triggerRelicEvent(s, 'ON_CRIT_HIT', A_unit, T_target, { critCount: crits });
-  }
   at.stage = 'wound';
 }
 
@@ -912,34 +892,8 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
     onUnitDestroyed(s, u, s.attack?.attackerId);
     emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
     log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
-    // campaign battles: a kill is worth a little VP (2 for a character, vehicle or monster), at most CAMPAIGN_KILL_VP
-    // in a battle, so the primary mission (up to 45) still decides it
-    if (s.campaign) {
-      const p = other(u.owner), P = s.players[p];
-      const vp = Math.min(['CHARACTER', 'VEHICLE', 'MONSTER'].some((k) => kws.includes(k)) ? 2 : 1, CAMPAIGN_KILL_VP - (P.killVp ?? 0));
-      if (vp > 0) {
-        P.killVp = (P.killVp ?? 0) + vp;
-        P.vp += vp;
-        log(s, `${P.name} +${vp} VP for destroying ${u.name}`, 'vp', p);
-      }
-    }
-
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
-  if (s.attack?.attackerId) {
-    const killerUnit = s.units.find((x) => x.id === s.attack?.attackerId);
-    if (killerUnit) {
-      triggerRelicEvent(s, s.attack.kind === 'fight' ? 'ON_MELEE_KILL' : 'ON_MODEL_KILL', killerUnit, u, { killedModelsCount: 1 });
-      if (hasKw(killerUnit, 'ORK') || hasKw(killerUnit, 'ORKS')) {
-        addWaaaghMomentum(s, killerUnit.owner, 10);
-      }
-    }
-  }
-  for (const p of [0, 1] as PlayerId[]) {
-    if (s.players[p]?.tithe !== undefined || s.players[p]?.armyRules?.some((r) => r.name.toLowerCase().includes('tithe') || r.name.toLowerCase().includes('khorne'))) {
-      addBloodTithe(s, p, 1);
-    }
-  }
   if (dd) {
     // Vengeful Animus: no roll, it blows up anyway
     // Detonator (Deceptors): the opponent makes it explode without a roll
@@ -968,18 +922,9 @@ function loseWounds(s: GameState, u: UnitState, m: ModelState, n: number, lines?
   let lost = 0;
   const thief = woundsGoTo(s, u);
   if (thief && n > 0) { lines?.push(`${n} wound(s) go to ${thief.name} (THIEVES OF PAIN)`); applyMortalWounds(s, thief, n, 'THIEVES OF PAIN'); return 0; }
-  if (u.combatState?.warpWardHP && u.combatState.warpWardHP > 0) {
-    const { absorbed, remainingDmg } = absorbWarpWardDamage(u, n);
-    if (absorbed > 0) {
-      lines?.push(`Warp Ward absorbed ${absorbed} damage (${u.combatState.warpWardHP}/${u.combatState.maxWarpWardHP})`);
-      n = remainingDmg;
-      if (n <= 0) return 0;
-    }
-  }
   const buffFnp = (u.buffs ?? []).some((b) => b.kind === 'fnp4') ? 4 : (u.buffs ?? []).some((b) => b.kind === 'fnp5') ? 5 : (u.buffs ?? []).some((b) => b.kind === 'fnp6') ? 6 : undefined;
   const fxFnp = modelDefence(s, u, m, kind, psychic).fnp ?? undefined;
-  const bastionFnp = (u.combatState?.tokens.bastion ?? 0) >= 2 ? 5 : (u.combatState?.tokens.bastion ?? 0) >= 1 ? 6 : undefined;
-  const fnp = [u.core?.fnp, buffFnp, fxFnp, bastionFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
+  const fnp = [u.core?.fnp, buffFnp, fxFnp].filter((x): x is number => x !== undefined).reduce<number | undefined>((a, b) => (a === undefined ? b : Math.min(a, b)), undefined);
   const fnpRolls: number[] = [];
   for (let i = 0; i < n && !m.dead; i++) {
     if (fnp) { const r = d6(s); fnpRolls.push(r); if (r >= fnp) continue; }
@@ -995,9 +940,6 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
   if (n <= 0) return 0;
   const initialAlive = alive(u);
   if (!initialAlive.length) return 0;
-  if ((source === 'Soulfire' || source === 'Bleeding' || source === 'Conflagration') && (hasActiveKeystone(s, u.owner, 'Warp Inoculation') || hasActiveKeystone(s, u.owner, 'warp_inoculation'))) {
-    return 0;
-  }
   for (const h of mortalHooks) h(s, u, n);
   let killed = 0;
   let modelsHit = 0;
@@ -1095,7 +1037,6 @@ export function applyDamage(s: GameState) {
     }
     p.saveTargets[i] = `${m.name} (Sv${sv}+${inv ? ` / ${inv}++` : ''}, AP${effAp})`;
     d.o = ok ? 'saved' : 'fail';
-    if (ok) onBreacherSavePassed(s, T);
     if (!ok) {
       let dr = rollExpr(s, p.damage);
       if (dr.dice.length && dr.total < exprAverage(p.damage)) {
@@ -1127,14 +1068,6 @@ export function applyDamage(s: GameState) {
       if (md.damageSet) dmg = md.damageSet;
       if (md.halve) dmg = Math.ceil(dmg / 2);
       if (md.negate) { useNegate(s, T, m, md.negateKey); dmg = 0; p.damageLines.push(`${m.name}: damage reduced to 0 (once per phase)`); }
-      if (s.gildedBonus && A.owner === 0 && s.gildedBonus.damagePercent > 0) {
-        dmg = Math.max(1, Math.round(dmg * (1 + s.gildedBonus.damagePercent / 100)));
-      }
-      if (A.buffs.some((b) => b.label?.includes('Executioner')) && A.owner === 0) {
-        const foeUnits = s.units.filter((u) => u.owner === 1 && u.status !== 'destroyed');
-        const nemesis = foeUnits.sort((a, b) => (b.pts ?? 0) - (a.pts ?? 0))[0];
-        if (nemesis && T.id === nemesis.id) dmg += 1;
-      }
       const lost = dmg ? loseWounds(s, T, m, dmg, p.damageLines, kind, psychic) : 0;
       p.damageLines.push(`${m.name}: −${lost} W${dr.dice.length ? ` (D=${p.damage}→${dmg})` : ''}${m.dead ? ' (slain)' : ''}`);
     }
@@ -1153,8 +1086,6 @@ export function applyDamage(s: GameState) {
   const wounded = p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds;
   if (p.mortalPerWound && wounded && alive(T).length) applyMortalWounds(s, T, wounded * p.mortalPerWound, `${p.weapon}: mortal wounds on wounding`);
   p.killed = before - alive(T).length;
-  checkBehemothRampage(s, T);
-  checkMachineInstability(s, T);
   p.done = true;
   at.summary.push(`${p.weapon}: ${p.attacks} attacks → ${p.hits.filter((h) => h.o !== 'miss').length} hit → ${p.wounds.filter((w) => w.o !== 'fail').length + p.autoWounds} wound → ${p.killed} slain`);
   if (!alive(T).length) { at.stage = 'done'; return; }

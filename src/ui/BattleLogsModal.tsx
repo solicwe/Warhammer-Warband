@@ -10,7 +10,7 @@ interface Props {
 
 export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
   const [logs, setLogs] = useState<BattleRecord[]>(loadBattleLogs);
-  const [filter, setFilter] = useState<'all' | 'simulator' | 'tabletop' | 'campaign'>('all');
+  const [filter, setFilter] = useState<'all' | 'simulator' | 'tabletop'>('all');
 
   useEffect(() => {
     const onUpdate = () => setLogs(loadBattleLogs());
@@ -49,7 +49,7 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>BATTLE HISTORY</h3>
                 <span className="group-count num" style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: 'var(--surface-2)' }}>{logs.length}</span>
               </div>
-              <div className="tiny muted">Recorded simulator, tabletop, and campaign matches</div>
+              <div className="tiny muted">Recorded simulator and tabletop matches</div>
             </div>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="Close" style={{ minWidth: 40, minHeight: 40 }}>
@@ -59,14 +59,14 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
 
         {/* Filter segment */}
         <div className="seg" style={{ margin: '10px 16px 4px', display: 'flex', gap: 4 }}>
-          {(['all', 'simulator', 'tabletop', 'campaign'] as const).map((m) => (
+          {(['all', 'simulator', 'tabletop'] as const).map((m) => (
             <button
               key={m}
               className={filter === m ? 'on' : ''}
               onClick={() => setFilter(m)}
               style={{ flex: 1, textTransform: 'uppercase', minHeight: 34, fontSize: 11.5, padding: '4px 6px', fontWeight: 700 }}
             >
-              {m === 'all' ? 'All' : m === 'simulator' ? 'Simulator' : m === 'tabletop' ? 'Tabletop' : 'Campaign'}
+              {m === 'all' ? 'All' : m === 'simulator' ? 'Simulator' : 'Tabletop'}
             </button>
           ))}
         </div>
@@ -80,7 +80,7 @@ export function BattleLogsModal({ onClose, onReplay, replayError }: Props) {
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-2)' }}>No battle logs found</div>
                 <div style={{ fontSize: 12.5, marginTop: 4, color: 'var(--text-3)' }}>
-                  Complete a simulator battle, campaign sector, or tabletop match to automatically record match history here.
+                  Complete a simulator battle or tabletop match to automatically record match history here.
                 </div>
               </div>
             </div>
