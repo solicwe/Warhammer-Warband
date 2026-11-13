@@ -191,7 +191,7 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
   // in tournament point-first play: every field objective gets a holder before anything hunts, and only the
   // army's one or two hardest hitters stay hunters
   if (pointsFirst(s)) {
-    const hitters = mine.filter(free).map((u) => info.get(u.id)!).sort((a, b) => b.punch - a.punch).slice(0, mine.length >= 6 ? 2 : 1);
+    const hitters = mine.filter(free).map((u) => info.get(u.id)!).sort((a, b) => b.punch - a.punch).slice(0, Math.max(2, Math.floor(mine.length / 2)));
     for (const h of hitters) if (h.punch > 0) jobs.set(h.u.id, { role: 'hammer', why: `hunts: ${Math.round(h.punch)} pts of damage a turn` });
     const field = s.objectives.filter((o) => o.type !== 'home' && o.secured !== p).map((o) => ({ o, at: objPoint(s, o) }));
     for (const f of field) {
