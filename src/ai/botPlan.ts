@@ -73,7 +73,6 @@ export function homeScoresVp(s: GameState, p: PlayerId): boolean {
 /** How to play this battle round, and how much to fear losses (a factor on the movement scoring's caution). */
 export function stanceFor(s: GameState, p: PlayerId): { stance: Stance; risk: number } {
   if (lastTurn(s, p) && !botOff('allin')) return { stance: 'all-in', risk: 0.3 };
-  if (s.idleTactic === 'assault') return { stance: 'push', risk: 0.35 };
   // an aggressive army at every level: it goes forward from the first turn and keeps pressing (the home objective
   // keeps its one guard, the missions their objectives); only a big late lead makes it a little more careful
   if (s.round <= 1) return { stance: 'open', risk: 0.7 };
@@ -178,13 +177,8 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     const c0Sticky = c0 && securesObjectives(s, c0.u);
     // a gun line unit too: only a cheap one (a 250-point tank parked on home all game is the same waste)
     if (c0 && (c0.value <= 160 || c0Sticky || (s.idleTactic === 'assault' && cands.length >= 2 && c0.value <= 220)) && (!(c0.brawler && c0.value > 120) || c0Sticky)) {
-      // in assault mode, keep this unit holding home until home is secured;
-      // in standard mode, a squad this cheap loses nothing by sitting at home all game (the way a player parks Gretchin there); one
-      // already out in the field is doing a job there, so it is not called back
       const near = dist(centre(c0.u), hp) <= c0.M + 3;
-      const keep = s.idleTactic === 'assault'
-        ? true
-        : (!c0.brawler && c0.value <= 80 && near);
+      const keep = s.idleTactic === 'assault' ? true : (!c0.brawler && c0.value <= 80 && near);
       jobs.set(c0.u.id, {
         role: 'home',
         post: hp,

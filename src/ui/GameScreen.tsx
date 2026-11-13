@@ -3902,7 +3902,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                     g.deployAllOnField = [0, 1];
                   }
                 });
-                flash('Idle: the bot plays for you');
+                flash('Idle: AI bot takes over');
               } else {
                 setRush(false);
                 act((g) => { g.bots = g.idleBots; delete g.idleBots; });
@@ -3914,7 +3914,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             style={autoPlay ? { color: '#4ade80' } : undefined}
           >
             <span className="tb-ico"><Icon name="bot" size={20} /></span>
-            <span className="tb-lbl">{autoPlay ? (s.idleTactic === 'assault' ? 'IDLE ASSAULT' : 'IDLE OBJ') : 'IDLE'}</span>
+            <span className="tb-lbl">{autoPlay ? 'IDLE ON' : 'IDLE'}</span>
           </button>
           {canUndo && (
             <button
@@ -4460,37 +4460,26 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </div>
             )}
             <div className="field">
-              <span id="idle-tactic-menu">Idle Mode Strategy</span>
-              <div className="seg" role="radiogroup" aria-labelledby="idle-tactic-menu">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={(s.idleTactic ?? 'objectives') === 'objectives'}
-                  className={(s.idleTactic ?? 'objectives') === 'objectives' ? 'on' : ''}
-                  onClick={() => {
-                    act((g) => { g.idleTactic = 'objectives'; });
-                    flash('Idle: Objectives & Missions');
-                  }}
-                >
-                  <Icon name="objective" size={14} /> Objectives
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={s.idleTactic === 'assault'}
-                  className={s.idleTactic === 'assault' ? 'on' : ''}
-                  onClick={() => {
-                    act((g) => { g.idleTactic = 'assault'; });
-                    flash('Idle: Pure Assault & Hunt All');
-                  }}
-                >
-                  <Icon name="fight" size={14} /> Assault
-                </button>
+              <span id="bot-diff-menu">AI Difficulty Level</span>
+              <div className="seg" role="radiogroup" aria-labelledby="bot-diff-menu">
+                {(['easy', 'normal', 'hard', 'expert'] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    role="radio"
+                    aria-checked={(s.botLevel ?? 'normal') === lvl}
+                    className={(s.botLevel ?? 'normal') === lvl ? 'on' : ''}
+                    onClick={() => {
+                      act((g) => { g.botLevel = lvl; g.botLevels = [lvl, lvl]; });
+                      flash(`AI Level: ${lvl.toUpperCase()}`);
+                    }}
+                  >
+                    {lvl.toUpperCase()}
+                  </button>
+                ))}
               </div>
               <span className="field-note">
-                {s.idleTactic === 'assault'
-                  ? 'Assault: hunts and eliminates all enemy units; does not keep units holding home.'
-                  : 'Objectives: distributes units to control field objectives and score missions.'}
+                Tournament AI planning depth and lookahead tactical search budget.
               </span>
             </div>
             <div className="field">

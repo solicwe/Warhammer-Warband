@@ -61,7 +61,7 @@ const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: numb
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
 export const lookBudget = (s: GameState, p?: PlayerId) => {
-  if ((s as any).idleMode || ((s.bots ?? []).length >= 2)) return 0;
+  if (inRollout || !enabled) return 0;
   return LEVELS[levelOf(s, p)].budget;
 };
 
@@ -149,7 +149,6 @@ export function chooseTurnStyle(s: GameState, p: PlayerId, budgetMs?: number): s
   }
   const b = budgetMs ?? lookBudget(s, p);
   if (s.phase === 'gameover') return 'steady';
-  if ((s as any).idleMode) return s.idleTactic === 'assault' ? 'assault' : 'rogue';
   if (!enabled || inRollout || b <= 0) return 'steady';
   let best = { name: 'steady', v: -Infinity };
   for (const [name, v] of Object.entries(styleValues(s, p, b))) if (v > best.v + 1e-6) best = { name, v };

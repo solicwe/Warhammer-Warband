@@ -83,25 +83,18 @@ export function Home({
         {/* Play modes: START BATTLE hero button, Tabletop Companion and Match History */}
         <div className="home-modes" aria-label="Play modes">
           <button className="mode-btn-sub mode-btn-hero" onClick={onBattle} title="Play competitive tournament battle against AI or local opponent">
-            <Icon name="fight" size={24} />
-            <div className="mode-sub-info">
-              <span className="mode-sub-label">START BATTLE</span>
-              <small className="mode-sub-badge" style={{ opacity: 0.85, marginTop: 2 }}>Incursion (1,000 pts) · Strike Force (2,000 pts)</small>
-            </div>
+            <Icon name="fight" size={22} />
+            <span className="mode-sub-label">START BATTLE</span>
           </button>
 
           <nav className="modes-sub-grid" aria-label="Secondary play modes">
             <button className="mode-btn-sub" onClick={onTabletop} title="Physical 40k match scorekeeper, tactical deck, and 45 terrain maps">
               <Icon name="tabletop" size={18} />
-              <div className="mode-sub-info">
-                <span className="mode-sub-label">TABLETOP</span>
-              </div>
+              <span className="mode-sub-label">TABLETOP</span>
             </button>
             <button className="mode-btn-sub" onClick={onLogs} title="Past battle history and replays">
               <Icon name="history" size={18} />
-              <div className="mode-sub-info">
-                <span className="mode-sub-label">HISTORY</span>
-              </div>
+              <span className="mode-sub-label">HISTORY</span>
             </button>
           </nav>
         </div>
