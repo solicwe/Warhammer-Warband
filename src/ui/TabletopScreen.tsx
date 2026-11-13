@@ -18,6 +18,7 @@ import { type FactionIndex } from './data';
 import { Icon } from './Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { LayoutPreview } from './LayoutPreview';
+import { TabletopSetupGuide } from './TabletopSetupGuide';
 import { Die } from './RollOverlay';
 import { play } from './sfx';
 import { armyColor } from './Sheet';
@@ -192,6 +193,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   const [p1Disp, setP1Disp] = useState<DispositionId>('take-and-hold');
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-01');
   const [inspectLayout, setInspectLayout] = useState<LayoutDef | null>(null);
+  const [showLayoutMeasurements, setShowLayoutMeasurements] = useState<boolean>(true);
 
   // STEP 2: Players & Factions (No quick-fill clutter, pure manual selection)
   const [p0Name, setP0Name] = useState('Player 1');
@@ -1198,13 +1200,13 @@ export function TabletopScreen({ index, onBack }: Props) {
           )}
         </main>
 
-        {/* INSPECT LAYOUT MODAL */}
+        {/* INSPECT LAYOUT MODAL (TOURNAMENT COMPANION & MEASUREMENTS) */}
         {inspectLayout && (
           <div className="sheet-backdrop" onClick={() => setInspectLayout(null)} role="dialog" aria-modal="true">
             <div
               className="sheet-panel"
               onClick={(e) => e.stopPropagation()}
-              style={{ maxWidth: 460, maxHeight: '90vh', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
+              style={{ maxWidth: 520, maxHeight: '92vh', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
             >
               <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
@@ -1216,15 +1218,43 @@ export function TabletopScreen({ index, onBack }: Props) {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
-                <LayoutPreview layout={inspectLayout} width={280} />
+              {/* Mode Toggle: Show Real Measurements vs Clean Map */}
+              <div style={{ display: 'flex', gap: 6, background: 'var(--surface-2)', padding: 4, borderRadius: 8 }}>
+                <button
+                  type="button"
+                  className={`btn ${showLayoutMeasurements ? 'primary' : 'ghost'}`}
+                  style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  onClick={() => setShowLayoutMeasurements(true)}
+                >
+                  <Icon name="check" size={14} /> 📏 Show Measurements (บอกระยะจัดโต๊ะจริง)
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${!showLayoutMeasurements ? 'primary' : 'ghost'}`}
+                  style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  onClick={() => setShowLayoutMeasurements(false)}
+                >
+                  🗺️ Clean Map (แผนที่ปกติ)
+                </button>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-                <span>Red: Attacker Zone</span>
-                <span>Blue: Defender Zone</span>
-                <span>Circles: Objectives</span>
+              {/* Layout SVG Canvas */}
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
+                <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
               </div>
+
+              {/* Legend */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
+                <span>🔴 Red: Attacker Zone</span>
+                <span>🔵 Blue: Defender Zone</span>
+                <span>🎯 ①-⑥: Objectives</span>
+                <span>🏛️ Ruin Sizes: Width × Height</span>
+              </div>
+
+              {/* Physical Table Setup Guide Checklist */}
+              {showLayoutMeasurements && (
+                <TabletopSetupGuide layout={inspectLayout} />
+              )}
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button
@@ -2086,13 +2116,14 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
-              <LayoutPreview layout={curLayout} width={260} />
+              <LayoutPreview layout={curLayout} width={280} showMeasurements={true} />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-              <span>Red: Attacker Zone</span>
-              <span>Blue: Defender Zone</span>
-              <span>Circles: Objectives</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)' }}>
+              <span>🔴 Attacker</span>
+              <span>🔵 Defender</span>
+              <span>🎯 ①-⑥ Objectives</span>
+              <span>📏 44"×60"</span>
             </div>
           </div>
 
@@ -2197,22 +2228,62 @@ export function TabletopScreen({ index, onBack }: Props) {
         </div>
       )}
 
-      {/* ZOOM MAP MODAL */}
+      {/* ZOOM MAP MODAL (PHYSICAL TABLETOP MEASUREMENT COMPANION) */}
       {zoomMap && (
         <div className="sheet-backdrop" onClick={() => setZoomMap(false)} role="dialog" aria-modal="true">
           <div
             className="sheet-panel"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 440, padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
+            style={{ maxWidth: 520, maxHeight: '92vh', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
           >
             <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
-              <b style={{ fontSize: 15 }}>Layout {curLayout.number}: {deploymentName(curLayout.deployment)}</b>
+              <div>
+                <b style={{ fontSize: 16 }}>Layout {curLayout.number}: {deploymentName(curLayout.deployment)}</b>
+                <div className="tiny muted">Attacker edge: {curLayout.attackerEdge} · {curLayout.objectives.length} objectives</div>
+              </div>
               <button className="icon-btn" onClick={() => setZoomMap(false)} aria-label="Close">
                 <Icon name="close" size={20} />
               </button>
             </div>
-            <LayoutPreview layout={curLayout} width={340} />
-            <div className="tiny muted">Dimensions: 44" × 60" · Standard 11th Edition Terrain Layout</div>
+
+            {/* Mode Toggle */}
+            <div style={{ display: 'flex', gap: 6, background: 'var(--surface-2)', padding: 4, borderRadius: 8 }}>
+              <button
+                type="button"
+                className={`btn ${showLayoutMeasurements ? 'primary' : 'ghost'}`}
+                style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                onClick={() => setShowLayoutMeasurements(true)}
+              >
+                <Icon name="check" size={14} /> 📏 Show Measurements (บอกระยะจัดโต๊ะจริง)
+              </button>
+              <button
+                type="button"
+                className={`btn ${!showLayoutMeasurements ? 'primary' : 'ghost'}`}
+                style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                onClick={() => setShowLayoutMeasurements(false)}
+              >
+                🗺️ Clean Map (แผนที่ปกติ)
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
+              <LayoutPreview layout={curLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
+              <span>🔴 Red: Attacker Zone</span>
+              <span>🔵 Blue: Defender Zone</span>
+              <span>🎯 ①-⑥: Objectives</span>
+              <span>🏛️ Ruin Sizes: Width × Height</span>
+            </div>
+
+            {showLayoutMeasurements && (
+              <TabletopSetupGuide layout={curLayout} />
+            )}
+
+            <button className="btn ghost" style={{ minHeight: 40, marginTop: 4 }} onClick={() => setZoomMap(false)}>
+              Close
+            </button>
           </div>
         </div>
       )}
