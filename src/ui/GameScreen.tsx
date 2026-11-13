@@ -4023,23 +4023,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         )}
 
-        {/* Floating Reset Camera / Fit Board */}
-        <button
-          className="btn-fit-board"
-          onClick={() => {
-            const el = document.querySelector('.board-svg');
-            if (el) el.dispatchEvent(new CustomEvent('reset-camera'));
-          }}
-          title="Reset Camera / Fit Board"
-          aria-label="Reset Camera / Fit Board"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 3 21 3 21 9" />
-            <polyline points="9 21 3 21 3 15" />
-            <line x1="21" y1="3" x2="14" y2="10" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        </button>
+
 
         {/* Mobile Confirm Move / Cancel Floating Pill */}
         {mode && draft && (

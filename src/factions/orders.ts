@@ -222,22 +222,55 @@ export function extraOrder(s: GameState, officer: UnitState, n = 1) {
 /** The Order the bot gives this unit. */
 function pickOrder(officer: UnitState, target: UnitState, s: GameState): OrderName {
   const allowed = officerAllowedOrders(officer, s);
-  let pick: OrderName = 'Take Aim!';
+  const tc = centreOf(target);
+  const objectives = s.objectives ?? [];
+  const nearObjective = objectives.some((o) => Math.hypot(o.x - tc.x, o.y - tc.y) <= 4.0);
+  const enemyUnits = boardUnits(s, (1 - target.owner) as PlayerId);
+  const enemyNearby = enemyUnits.some((e) => unitDistance(target, e) <= 24);
+  const enemyVeryClose = enemyUnits.some((e) => unitDistance(target, e) <= 9);
+
+  // 1. Melee specialists (Bullgryn, Rough Riders, Ogryn)
   if (target.keywords.includes('MOUNTED') || target.keywords.includes('BULLGRYN') || target.keywords.includes('OGRYN')) {
-    pick = allowed.includes('Fix Bayonets!') ? 'Fix Bayonets!' : 'Move! Move! Move!';
-  } else if (allowed.includes('On My Signal') && armouredSkirmisher(target) && !boardUnits(s, target.owner === 0 ? 1 : 0).some((e) => unitDistance(e, target) <= 24)) {
-    pick = 'On My Signal'; // nothing to shoot yet: a free move when the enemy comes close
-  } else if (target.models[0].profile.Sv >= 4 && allowed.includes('Take Cover!')) {
-    pick = 'Take Cover!';
-  } else if (allowed.includes('Take Aim!')) {
-    pick = 'Take Aim!';
-  } else if (allowed.includes('Duty and Honour!')) {
-    pick = 'Duty and Honour!';
-  } else {
-    pick = allowed[0];
+    if (enemyVeryClose && allowed.includes('Fix Bayonets!')) return 'Fix Bayonets!';
+    if (allowed.includes('Move! Move! Move!')) return 'Move! Move! Move!';
+    if (allowed.includes('Fix Bayonets!')) return 'Fix Bayonets!';
   }
 
-  return pick;
+  // 2. High OC battleline / infantry contesting or holding an objective -> Duty and Honour! (+1 OC, +1 Ld to secure VP)
+  if (nearObjective && (target.keywords.includes('BATTLELINE') || target.keywords.includes('INFANTRY') || target.keywords.includes('REGIMENT'))) {
+    if (allowed.includes('Duty and Honour!')) return 'Duty and Honour!';
+  }
+
+  // 3. Early turn repositioning: infantry far from objectives need to reach No Man's Land
+  const closestObjDist = objectives.length ? Math.min(...objectives.map((o) => Math.hypot(o.x - tc.x, o.y - tc.y))) : 99;
+  if (s.round <= 2 && closestObjDist > 7.0 && !target.keywords.includes('ARTILLERY') && (target.keywords.includes('INFANTRY') || target.keywords.includes('REGIMENT'))) {
+    if (allowed.includes('Move! Move! Move!')) return 'Move! Move! Move!';
+  }
+
+  // 4. Primary offensive shooting: Take Aim! (+1 to Hit)
+  // Essential for Tanks, Heavy Weapons, Kasrkin, Scions, and firing squads
+  if (allowed.includes('Take Aim!') && (enemyNearby || target.keywords.includes('ARTILLERY') || target.keywords.includes('SQUADRON') || target.keywords.includes('VEHICLE'))) {
+    return 'Take Aim!';
+  }
+
+  // 5. Armoured skirmishers waiting for enemy advance
+  if (allowed.includes('On My Signal') && armouredSkirmisher(target) && !enemyNearby) {
+    return 'On My Signal';
+  }
+
+  // 6. Rapid Fire specialists with enemies in rapid fire range
+  if (allowed.includes('First Rank, Fire! Second Rank, Fire!') && enemyUnits.some((e) => unitDistance(target, e) <= 12)) {
+    return 'First Rank, Fire! Second Rank, Fire!';
+  }
+
+  // 7. Defensive survival: Take Cover! (+1 Save)
+  if (allowed.includes('Take Cover!')) {
+    return 'Take Cover!';
+  }
+
+  if (allowed.includes('Take Aim!')) return 'Take Aim!';
+  if (allowed.includes('Duty and Honour!')) return 'Duty and Honour!';
+  return allowed[0] ?? 'Take Aim!';
 }
 
 /** Mechanised Spearhead: one Order to this unit outside the count. */
@@ -256,8 +289,21 @@ function autoIssueFor(s: GameState, officer: UnitState, keep = 0) {
       const pool = unissued.length ? unissued : targets.filter((t) => officer.name.includes('Creed') && currentOrders(t).length === 1);
       if (!pool.length) break;
 
-      // Score targets: most valuable units near the enemy first
-      const bestTarget = pool.sort((a, b) => b.pts - a.pts)[0];
+      // Smart tournament scoring priority:
+      // 1. Objectives: Battleline/Infantry within 4" of an objective (needs Duty and Honour for primary VP)
+      // 2. High-firepower assets (Tanks, Artillery, Heavy Weapons) that benefit massively from Take Aim
+      // 3. Advancing infantry rushing to objectives
+      const scoreTarget = (u: UnitState) => {
+        let score = u.pts ?? 50;
+        const uc = centreOf(u);
+        const nearObj = (s.objectives ?? []).some((o) => Math.hypot(o.x - uc.x, o.y - uc.y) <= 4.0);
+        if (nearObj && (u.keywords.includes('BATTLELINE') || u.keywords.includes('REGIMENT'))) score += 120;
+        if (u.keywords.includes('SQUADRON') || u.keywords.includes('VEHICLE')) score += 80;
+        if (u.keywords.includes('ARTILLERY')) score += 70;
+        return score;
+      };
+
+      const bestTarget = pool.sort((a, b) => scoreTarget(b) - scoreTarget(a))[0];
 
       const pick = pickOrder(officer, bestTarget, s);
       issueOrder(s, officer.id, bestTarget.id, pick);

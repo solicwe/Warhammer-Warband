@@ -589,6 +589,15 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ab-add-size button.ab-pop-size { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface); color: var(--text); font: 500 16px var(--font-ui); text-align: left; cursor: pointer; }
 .ab-add-size button.ab-pop-size:disabled { opacity: 0.45; filter: grayscale(0.75); cursor: not-allowed; border-color: var(--line); }
 .ab-add-size button.ab-pop-size:disabled .ab-pop-plus { background: rgba(255, 255, 255, 0.08); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); }
+.ab-add-size button.ab-pop-size.over { opacity: 0.65; filter: grayscale(0.5); background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.45); }
+.ab-add-size button.ab-pop-size.over .ab-pop-plus { background: rgba(239, 68, 68, 0.18); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+.ab-pop button.ab-pop-size.over { opacity: 0.65; filter: grayscale(0.5); background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.45); }
+.ab-pop button.ab-pop-size.over .ab-pop-plus { color: #ef4444; }
+.ab-pop-pts.over, .ab-pts.over { color: #ef4444 !important; font-weight: 700; }
+.ab-over-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #ef4444; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.02em; }
+.ab-row.over-pts { opacity: 0.72; }
+.ab-row.over-pts:hover { opacity: 0.9; }
+.ab-add.over { border-color: rgba(239, 68, 68, 0.5) !important; color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
 .ab-add-size .ab-pop-models { font-weight: 700; }
 .ab-add-size .ab-pop-pts { font: 700 17px var(--font-cond); color: var(--text); }
 .ab-add-size .ab-pop-plus { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 64px; height: 34px; border-radius: 6px; background: var(--accent); color: var(--on-fill); font: 600 14px var(--font-ui); }

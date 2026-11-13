@@ -714,10 +714,13 @@ function archetypeBiasScore(s: GameState, u: UnitState, kind: MoveKind | 'statio
   // 1. GUNLINE_CASTLE: Firing lanes, 4-6" chaff screens in front of heavy guns, kite away from enemy melee
   if (profile.name === 'GUNLINE_CASTLE') {
     if (ctx.brawler || isScreeningUnit(u)) {
-      const tanks = boardUnits(s, u.owner).filter((f) => f.id !== u.id && (hasKw(f, 'VEHICLE') || maxRange(f) >= 24));
-      for (const t of tanks) {
-        const d = unitDistance(u, t);
-        if (d >= 3.5 && d <= 6.5) bias += 8 * profile.screeningPriority;
+      const nearObj = s.objectives.some((o) => dist(o, c) <= 3.5);
+      if (!nearObj) {
+        const tanks = boardUnits(s, u.owner).filter((f) => f.id !== u.id && (hasKw(f, 'VEHICLE') || maxRange(f) >= 24));
+        for (const t of tanks) {
+          const d = unitDistance(u, t);
+          if (d >= 3.5 && d <= 6.5) bias += 8 * profile.screeningPriority;
+        }
       }
     } else if (profile.kitePreference > 0.5) {
       for (const f of ctx.foes) {

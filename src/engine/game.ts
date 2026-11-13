@@ -343,7 +343,8 @@ export function listDispositionOptions(list: ArmyList, faction: FactionData): Di
   const out: DispositionId[] = [];
   for (const n of list.detachments) {
     const d = faction.detachments.find((x) => x.name === n);
-    for (const name of d?.forceDispositions ?? (d?.forceDisposition ? [d.forceDisposition] : [])) {
+    const raw = d?.forceDispositions ?? (d?.forceDisposition ? d.forceDisposition.split(',').map((s) => s.trim()) : []);
+    for (const name of raw) {
       const id = dispositionId(name);
       if (id && !out.includes(id)) out.push(id);
     }
@@ -355,8 +356,12 @@ export function listDisposition(list: ArmyList, faction: FactionData): Dispositi
   const picked = dispositionId(list.disposition);
   if (picked && listDispositionOptions(list, faction).includes(picked)) return picked;
   for (const n of list.detachments) {
-    const d = dispositionId(faction.detachments.find((x) => x.name === n)?.forceDisposition);
-    if (d) return d;
+    const d = faction.detachments.find((x) => x.name === n);
+    const raw = d?.forceDispositions ?? (d?.forceDisposition ? d.forceDisposition.split(',').map((s) => s.trim()) : []);
+    for (const name of raw) {
+      const id = dispositionId(name);
+      if (id) return id;
+    }
   }
   return 'take-and-hold';
 }

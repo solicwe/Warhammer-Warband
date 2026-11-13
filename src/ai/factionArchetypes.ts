@@ -102,7 +102,6 @@ export const ARCHETYPE_PROFILES: Record<FactionArchetype, ArchetypeProfile> = {
 export const FACTION_TO_ARCHETYPE: Record<string, FactionArchetype> = {
   // Gunline Castle
   TAU: 'GUNLINE_CASTLE',
-  AM: 'GUNLINE_CASTLE',
   LoV: 'GUNLINE_CASTLE',
   AdM: 'GUNLINE_CASTLE',
   QI: 'GUNLINE_CASTLE',
@@ -130,6 +129,7 @@ export const FACTION_TO_ARCHETYPE: Record<string, FactionArchetype> = {
 
   // Combined Arms Tactical
   SM: 'COMBINED_ARMS_TACTICAL',
+  AM: 'COMBINED_ARMS_TACTICAL',
   CSM: 'COMBINED_ARMS_TACTICAL',
   TS: 'COMBINED_ARMS_TACTICAL',
   AS: 'COMBINED_ARMS_TACTICAL',

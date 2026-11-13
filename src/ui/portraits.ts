@@ -1,5 +1,5 @@
-/** Players can't change unit pictures or the army emblem in the app; pictures are added to public/images on request. */
-export const PHOTO_EDIT = false;
+/** Players can change unit pictures or the army emblem in the app; photos can be exported as JSON or ZIP. */
+export const PHOTO_EDIT = true;
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
 //     `public/images/manifest.json` (built by `npm run images`). The folder can live elsewhere: set VITE_IMAGE_BASE.
@@ -437,6 +437,18 @@ function dataUrlBytes(url: string): { bytes: Uint8Array; ext: string } {
 
 /** A backup of the player's photos ({ datasheet: dataURL }), to move them to another browser. */
 export const exportPortraitsJson = (): string => JSON.stringify({ kind: 'w40k11-portraits', version: 1, portraits: cache });
+
+/** Export all custom portraits as a ZIP file. */
+export function exportPortraitsZip(): Uint8Array {
+  const files: { name: string; data: Uint8Array }[] = [];
+  for (const [name, url] of Object.entries(cache)) {
+    try {
+      const { bytes, ext } = dataUrlBytes(url);
+      files.push({ name: `${imageSlug(name)}.${ext}`, data: bytes });
+    } catch { /* skip unparseable entries */ }
+  }
+  return makeZip(files);
+}
 
 type SaveFn = (r: { filename: string; data: Blob }) => Promise<unknown>;
 type ClaudeHost = { use?: (name: string) => Promise<{ save: SaveFn } | null> };

@@ -72,8 +72,18 @@ export const LAYOUTS = (layoutsData as unknown as { layouts: LayoutDef[] }).layo
 export const deploymentName = (id: string) => MISSIONS.deploymentCards.find((d) => d.id === id)?.name ?? id;
 export const dispositionById = (id: string) => MISSIONS.forceDispositions.find((d) => d.id === id)!;
 /** Map a detachment's Force Disposition text ("Take and Hold") to its id. */
-export const dispositionId = (name: string | null | undefined): DispositionId | null =>
-  (MISSIONS.forceDispositions.find((d) => d.name.toLowerCase() === (name ?? '').toLowerCase())?.id ?? null);
+export const dispositionId = (name: string | null | undefined): DispositionId | null => {
+  if (!name) return null;
+  const direct = MISSIONS.forceDispositions.find((d) => d.name.toLowerCase() === name.trim().toLowerCase())?.id;
+  if (direct) return direct;
+  if (name.includes(',')) {
+    for (const part of name.split(',')) {
+      const match = MISSIONS.forceDispositions.find((d) => d.name.toLowerCase() === part.trim().toLowerCase())?.id;
+      if (match) return match;
+    }
+  }
+  return null;
+};
 /** Your primary mission: your disposition (row) against your opponent's (column). */
 export const primaryFor = (mine: DispositionId, theirs: DispositionId) => MISSIONS.primaries.find((p) => p.forceDisposition === mine && p.vs === theirs)!;
 /** The three official layouts for a pair of dispositions (order does not matter). */

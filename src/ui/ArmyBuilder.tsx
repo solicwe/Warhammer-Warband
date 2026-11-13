@@ -14,7 +14,7 @@ import { armyColor, dsColor, DatasheetView, weaponCounts } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { EnhTable, RuleCards, StratTable } from './RuleTable';
-import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion } from './portraits';
+import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion, exportPortraitsJson, exportPortraitsZip, download } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -728,6 +728,35 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || (list.factionId === 'TL' ? 'Towering Example (No Detachment)' : 'No Detachment selected')}</div>
           {chosenDets.length > 0 ? <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div> : (list.factionId === 'TL' ? <div className="tiny">{dispositionChips()}</div> : null)}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
+          {PHOTO_EDIT && (
+            <div className="ab-export-portraits-wrap" style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn small ghost"
+                style={{ fontSize: 11, padding: '3px 8px', height: 'auto' }}
+                onClick={async () => {
+                  const msg = await download('custom-portraits.json', exportPortraitsJson(), 'application/json');
+                  setNote(msg);
+                }}
+                title="Export all custom portraits as JSON"
+              >
+                <Icon name="history" size={13} /> Export JSON
+              </button>
+              <button
+                type="button"
+                className="btn small ghost"
+                style={{ fontSize: 11, padding: '3px 8px', height: 'auto' }}
+                onClick={async () => {
+                  const zip = exportPortraitsZip();
+                  const msg = await download('custom-portraits.zip', zip, 'application/zip');
+                  setNote(msg);
+                }}
+                title="Export all custom portraits as a ZIP file"
+              >
+                <Icon name="save" size={13} /> Export ZIP
+              </button>
+            </div>
+          )}
         </div>
         {faction.detachments.length > 0 && <button type="button" className="dt-gear" aria-label="Change Detachment" onClick={() => setDetPicker(true)}><Icon name="gear" size={26} /></button>}
       </div>
@@ -824,8 +853,17 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const title = SECTIONS.find((x) => x.id === adding)!.title;
     const factionTags = getTacticalKeywordsForFaction(faction);
 
+    const query = q.trim().toLowerCase();
+    const matchesSearch = (d: DatasheetData) => {
+      if (!query) return true;
+      if (d.name.toLowerCase().includes(query)) return true;
+      if (d.keywords?.some((k) => k.toLowerCase().includes(query))) return true;
+      if (d.role?.toLowerCase().includes(query)) return true;
+      return false;
+    };
+
     const sheets = faction.datasheets
-      .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && d.name.toLowerCase().includes(q.toLowerCase()) && pointsOptions(d).length)
+      .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && matchesSearch(d) && pointsOptions(d).length)
       .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
 
     const availableKinds = Array.from(new Set(sheets.map((d) => unitKind(d)))).sort((a, b) => KINDS.indexOf(a) - KINDS.indexOf(b));
@@ -944,14 +982,19 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               const count = list.units.filter((u) => u.datasheet === d.name).length;
               const open = view === d.name;
               const kind = groupOf(d);
+              const minPts = Math.min(...pointsOptions(d).map((o) => o.pts));
+              const overPts = pts + minPts > size.points;
               return [
                 (i === 0 || groupOf(visibleSheets[i - 1]) !== kind) && <div key={`kind-${kind}`} className="ab-kind">{kind}</div>,
-                <div key={d.id} className={`ab-row ${open ? 'open' : ''}`}>
+                <div key={d.id} className={`ab-row ${open ? 'open' : ''} ${overPts ? 'over-pts' : ''}`}>
                   <button type="button" className="ab-row-main" onClick={() => setView(open ? null : d.name)}>
                     <UnitArt sheet={d} />
                     <span className="ab-row-text">
                       <span className="ab-name">{d.name}{count ? <span className="ab-count"> ×{count}</span> : null}</span>
-                      <span className="ab-pts">{pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts</span>
+                      <span className={`ab-pts ${overPts ? 'over' : ''}`}>
+                        {pointsOptions(d).map((o) => `${o.models}: ${o.pts}`).join(' / ')} pts
+                        {overPts && <span className="ab-over-tag">Over Limit</span>}
+                      </span>
                       <span className="ab-sub">
                         {d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}
                         {d.keywords.includes('EPIC HERO') && <span className="ab-chip gold">Epic Hero</span>}
@@ -961,18 +1004,24 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                       {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> Transport capacity {t.capacity}</span> : null; })()}
                     </span>
                   </button>
-                  <button type="button" className="ab-add dark" aria-label={`Add ${d.name}`}
+                  <button type="button" className={`ab-add ${overPts ? 'over' : 'dark'}`} aria-label={`Add ${d.name}`}
                     onClick={() => (pointsOptions(d).length > 1 ? setAddSize(addSize === d.name ? null : d.name) : addUnit(d))}>+</button>
                 </div>,
                 // more than one unit size: pick it now
                 addSize === d.name && (
                   <div key={`size-${d.id}`} className="ab-add-size">
                     <div className="ab-pop-head">Unit size · {d.name}</div>
-                    {pointsOptions(d).map((o) => (
-                      <button key={o.models} type="button" className="ab-pop-size" onClick={() => addUnit(d, o)}>
-                        <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span><span className="ab-pop-pts">{o.pts} pts</span><span className="ab-pop-plus">+ Add</span>
-                      </button>
-                    ))}
+                    {pointsOptions(d).map((o) => {
+                      const over = pts + o.pts > size.points;
+                      return (
+                        <button key={o.models} type="button" className={`ab-pop-size ${over ? 'over' : ''}`} onClick={() => addUnit(d, o)}>
+                          <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
+                          <span className={`ab-pop-pts ${over ? 'over' : ''}`}>{o.pts} pts</span>
+                          {over && <span className="ab-over-tag">Over Limit</span>}
+                          <span className={`ab-pop-plus ${over ? 'over' : ''}`}>+ Add</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 ),
                 // the datasheet opens under its row, like in the list
@@ -1209,11 +1258,16 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <div className="ab-pop-card-text">
             <div className="ab-pop-name">{d.name}</div>
             {sub && <div className="ab-pop-sub">{sub}</div>}
-            {pointsOptions(d).map((o) => (
-              <button key={o.models} type="button" className="ab-pop-size" onClick={() => onNew(o.models)}>
-                <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">+</span>
-              </button>
-            ))}
+            {pointsOptions(d).map((o) => {
+              const over = pts + o.pts > size.points;
+              return (
+                <button key={o.models} type="button" className={`ab-pop-size ${over ? 'over' : ''}`} onClick={() => onNew(o.models)}>
+                  <span className={`ab-pop-pts ${over ? 'over' : ''}`}>{o.pts} pts</span> <span className="muted">({o.models})</span>
+                  {over && <span className="ab-over-tag">Over Limit</span>}
+                  <span className={`ab-pop-plus ${over ? 'over' : ''}`}>+</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1316,11 +1370,17 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       content = (
         <>
           <div className="ab-pop-head">Unit size · {u.datasheet}</div>
-          {opts.map((o) => (
-            <button key={o.models} type="button" className={`ab-pop-size ${u.models === o.models ? 'on' : ''}`} onClick={() => { setUnit(u.uid, { models: o.models, pts: o.pts }); close(); }}>
-              <span className="ab-pop-pts">{o.pts} pts</span> <span className="muted">({o.models})</span><span className="ab-pop-plus">{u.models === o.models ? <Icon name="check" size={18} /> : '+'}</span>
-            </button>
-          ))}
+          {opts.map((o) => {
+            const delta = o.pts - (u.pts ?? 0);
+            const over = pts + delta > size.points;
+            return (
+              <button key={o.models} type="button" className={`ab-pop-size ${u.models === o.models ? 'on' : ''} ${over ? 'over' : ''}`} onClick={() => { setUnit(u.uid, { models: o.models, pts: o.pts }); close(); }}>
+                <span className={`ab-pop-pts ${over ? 'over' : ''}`}>{o.pts} pts</span> <span className="muted">({o.models})</span>
+                {over && <span className="ab-over-tag">Over Limit</span>}
+                <span className="ab-pop-plus">{u.models === o.models ? <Icon name="check" size={18} /> : '+'}</span>
+              </button>
+            );
+          })}
         </>
       );
     } else {

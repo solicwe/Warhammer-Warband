@@ -2238,15 +2238,8 @@ function BoardImpl(props: BoardProps) {
             {/* a painted strip under the cards: it moves with every pan, so Chrome repaints where the cards were
                 (with nothing under them, old copies of the cards stayed on screen beside the board) */}
             <rect x={-PX} y={0} width={(SIDE + 1.5) * PX} height={h * PX} fill="var(--board)" pointerEvents="none" />
-            <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX} style={{ pointerEvents: 'auto' }}>
-              <div
-                className={`table-cards ${at}`}
-                onWheel={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerMove={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-              >
+            <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX} style={{ pointerEvents: 'none' }}>
+              <div className={`table-cards ${at}`}>
                 <div className={`table-head p${p}`}>{s.players[p].name} · army buffs</div>
                 {cards}
               </div>
