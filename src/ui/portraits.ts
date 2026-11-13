@@ -1,5 +1,5 @@
 /** Players can change unit pictures or the army emblem in the app; photos can be exported as JSON or ZIP. */
-export const PHOTO_EDIT = true;
+export const PHOTO_EDIT = false;
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
 //     `public/images/manifest.json` (built by `npm run images`). The folder can live elsewhere: set VITE_IMAGE_BASE.
@@ -27,17 +27,36 @@ function save() {
 /** Where the server images live (a folder next to the page by default, or a CDN / bucket URL). */
 export const IMAGE_BASE: string = ((import.meta.env?.VITE_IMAGE_BASE as string | undefined) ?? './images/').replace(/\/?$/, '/');
 
+/** File name used in the images folder: "Intercessor Squad" → "intercessor-squad". Same rule as scripts/build-images.mjs. */
+export function imageSlug(name: string): string {
+  return name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 /** Datasheet name → image URL, from the server manifest. */
 let served: Record<string, string> = {};
+let servedSlug = new Map<string, string>();
 export interface ImageManifest { version: number; units: Record<string, Record<string, string>> }
+
+/** Prepopulate seedSlug from bundled names.json */
+const seedSlug = new Map<string, string>();
+for (const [name, file] of Object.entries(namesSeed as Record<string, string>)) {
+  const url = /^(https?:|data:|\/)/.test(file) ? file : IMAGE_BASE + file;
+  seedSlug.set(imageSlug(name), url);
+}
 
 /** Fill the server images from a manifest (`units: { FACTION: { "Datasheet": "units/FACTION/file.webp" } }`). */
 export function applyManifest(m: ImageManifest, base = IMAGE_BASE) {
   const next: Record<string, string> = {};
+  const nextSlug = new Map<string, string>();
   for (const faction of Object.values(m.units ?? {})) {
-    for (const [name, file] of Object.entries(faction)) next[name] = /^(https?:|data:|\/)/.test(file) ? file : base + file;
+    for (const [name, file] of Object.entries(faction)) {
+      const url = /^(https?:|data:|\/)/.test(file) ? file : base + file;
+      next[name] = url;
+      nextSlug.set(imageSlug(name), url);
+    }
   }
   served = next;
+  servedSlug = nextSlug;
   version++;
   listeners.forEach((l) => l());
 }
@@ -92,8 +111,14 @@ const lookupPortrait = (datasheet: string): string | undefined => {
       ?? (!cloudLoaded && seedOn && SEED[curly] ? `/_blob/${SEED[curly]}` : undefined);
     if (c) return c;
   }
+  // Slug-based matching from currently served images
+  const targetSlug = imageSlug(datasheet);
+  if (targetSlug && servedSlug.has(targetSlug)) {
+    return servedSlug.get(targetSlug);
+  }
   if (Object.keys(served).length === 0) {
-    const seedHit = fromSeed(datasheet) || (straight !== datasheet ? fromSeed(straight) : undefined) || (curly !== datasheet ? fromSeed(curly) : undefined);
+    const seedHit = fromSeed(datasheet) || (straight !== datasheet ? fromSeed(straight) : undefined) || (curly !== datasheet ? fromSeed(curly) : undefined)
+      || (targetSlug ? seedSlug.get(targetSlug) : undefined);
     if (seedHit) return seedHit;
   }
   return undefined;
@@ -121,9 +146,32 @@ export const modelPortraitKey = (datasheet: string, model: string) => `${datashe
 export const kitOf = (m: { weapons?: { name: string }[]; gear?: string[] }) => [...new Set([...(m.weapons ?? []).map((w) => w.name), ...(m.gear ?? [])])].sort();
 export const modelVariantKey = (datasheet: string, model: string, kit: string[]) => `${datasheet}::${model}::${kit.join('+')}`;
 /** The picture for one model: its loadout's, else its name's, else the unit's. */
-export const getModelPortrait = (m: { source: string; name: string; weapons?: { name: string }[]; gear?: string[] }): string | undefined =>
-  getPortrait(modelVariantKey(m.source, m.name, kitOf(m)))
-  ?? (m.name && m.name !== m.source ? getPortrait(modelPortraitKey(m.source, m.name)) : undefined) ?? getPortrait(m.source);
+export const getModelPortrait = (m: { source: string; name: string; weapons?: { name: string }[]; gear?: string[] }): string | undefined => {
+  if (!m) return undefined;
+  const kit = kitOf(m);
+  // 1. Exact loadout variant key
+  const vKey = modelVariantKey(m.source, m.name, kit);
+  const vHit = getPortrait(vKey);
+  if (vHit) return vHit;
+
+  // 2. Variant key without generic 'Close combat weapon'
+  const nonGeneric = kit.filter((x) => !/^close combat weapon$/i.test(x.trim()));
+  if (nonGeneric.length > 0 && nonGeneric.length !== kit.length) {
+    const vKey2 = modelVariantKey(m.source, m.name, nonGeneric);
+    const vHit2 = getPortrait(vKey2);
+    if (vHit2) return vHit2;
+  }
+
+  // 3. Model name portrait (e.g. Havoc Champion, Wolf Scout Pack Leader, Visionary)
+  if (m.name && m.name !== m.source) {
+    const mKey = modelPortraitKey(m.source, m.name);
+    const mHit = getPortrait(mKey);
+    if (mHit) return mHit;
+  }
+
+  // 4. Unit datasheet portrait
+  return getPortrait(m.source);
+};
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
 export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);
 export const ownPortraitCount = (): number => Object.keys(cache).length;
@@ -377,9 +425,6 @@ export function usePastePortrait(datasheet: string | undefined) {
   }, [datasheet]);
 }
 
-/** File name used in the images folder: "Intercessor Squad" → "intercessor-squad". Same rule as scripts/build-images.mjs. */
-export const imageSlug = (name: string) =>
-  name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[’'`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // ---- export / import (for moving photos to the server or another device) ----
 

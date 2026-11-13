@@ -4,7 +4,7 @@ import { strength } from '../engine/state';
 import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
-import { PHOTO_EDIT, modelPortraitKey, usePastePortrait } from './portraits';
+import { PHOTO_EDIT, modelPortraitKey, modelVariantKey, kitOf, usePastePortrait } from './portraits';
 import { datasheetVariants, pictureVariants, type PictureVariant } from './loadout';
 import { Icon } from './Icon';
 import { useState, type ReactNode } from 'react';
@@ -357,9 +357,14 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="ds-head">
-        {sources.map((src) => (
-          <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={src} editable={PHOTO_EDIT} />
-        ))}
+        {sources.map((src) => {
+          const lead = tapped && tapped.source === src ? tapped : u.models.find((m) => m.source === src && m.isCharacter && !m.dead) ?? u.models.find((m) => m.source === src && !m.dead) ?? u.models.find((m) => m.source === src);
+          const vKey = lead ? modelVariantKey(lead.source, lead.name, kitOf(lead)) : src;
+          const mKey = lead && lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : src;
+          return (
+            <Portrait key={src} kind={tokenKind(u.models.find((m) => m.source === src)?.keywords ?? u.keywords, u.factionKeywords)} owner={u.owner} character={u.models.some((m) => m.source === src && m.isCharacter)} size={56} datasheet={vKey} fallback={[mKey, src]} editable={PHOTO_EDIT} />
+          );
+        })}
         <div className="grow">
           <h2 style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
             <span>{u.name}{squadNum ? ` [Squad #${squadNum}]` : ''}</span>
@@ -469,11 +474,10 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
 
 /** One picture per model (by name, and by loadout when the same model comes with different kits): tap to set one. */
 export function ModelPictures({ variants, kind, owner }: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
-  // pictures are changed on request now, not in the app: nothing to tap here
-  if (!variants.length || !PHOTO_EDIT) return null;
+  if (!variants.length) return null;
   return (
     <div>
-      <div className="small muted">Model pictures · tap to set one for each model / loadout</div>
+      <div className="small muted">{PHOTO_EDIT ? 'Model pictures · tap to set one for each model / loadout' : 'Model Portraits & Loadouts'}</div>
       <div className="model-pics">
         {variants.map((v) => (
           <div key={v.key} className="model-pic">

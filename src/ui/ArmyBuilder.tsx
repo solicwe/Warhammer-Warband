@@ -1145,7 +1145,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             </div>
           )}
 
-          {sheet && (
+          {sheet && Boolean((sheet.wargearOptions?.length ?? 0) > 0 || addonLines(sheet).length > 0 || loadoutLines(sheet).length > 0) && (
             <div className="ab-collapsible-section field">
               <button type="button" className="ab-section-toggle" onClick={() => toggleSection('wargear')}>
                 <span className="row gap-2" style={{ alignItems: 'center' }}>

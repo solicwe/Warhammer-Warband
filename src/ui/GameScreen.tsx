@@ -5,7 +5,7 @@ import { compressReplayTimeline } from '../services/replay';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
 import { camFocus, MapCam } from './MapCam';
-import { modelPortraitKey } from './portraits';
+import { modelPortraitKey, modelVariantKey, kitOf, getPortrait } from './portraits';
 import { unitAttachedSummary, unitDisplayName, unitKitSignature, unitSubDetails, unitWeaponsSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
@@ -1374,6 +1374,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const unitPortraitDatasheet = (u: UnitState) => {
     const lead = unitLeadModel(u);
     if (!lead) return undefined;
+    const vKey = modelVariantKey(lead.source, lead.name, kitOf(lead));
+    if (getPortrait(vKey)) return vKey;
     return lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source;
   };
 
@@ -1423,7 +1425,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const weaponsText = unitWeaponsSummary(u);
     return (
       <div className="row unit-card" style={{ flexWrap: 'nowrap', gap: 10 }}>
-        <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={40} datasheet={lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source} fallback={lead.source} />
+        <Portrait kind={unitToken(u)} owner={u.owner} character={u.models.some((x) => x.isCharacter && !x.dead)} size={40} datasheet={unitPortraitDatasheet(u)} fallback={[lead.name && lead.name !== lead.source ? modelPortraitKey(lead.source, lead.name) : lead.source, lead.source]} />
         <div className="grow">
           <div style={{ fontWeight: 700, color: getPlayerFactionTheme(s, u.owner).primary }}>{u.name} <span className="muted tiny">{alive(u).length}/{u.startingStrength}</span></div>
           {u.enhancements.length > 0 && (
