@@ -16,6 +16,7 @@ export const KEYS = {
   fx: 'fx-level',
   liveMap: 'live-map-on',
   fastShooting: 'fast-shooting',
+  botTactics: 'bot-tactics',
   battleLogs: 'w40k11-battle-logs',
 } as const;
 

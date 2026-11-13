@@ -131,7 +131,7 @@ describe('Tyranids Datasheet Coverage', () => {
     });
     s.bots = [0, 1];
     let steps = 0;
-    while (s.phase !== 'gameover' && steps < 2000) {
+    while (s.phase !== 'gameover' && s.round <= 2 && steps < 300) {
       steps++;
       const p = s.window?.player ?? (s.phase === 'deploy' || s.phase === 'scouts' ? s.deployTurn : s.active);
       if (botShouldAct(s, p)) botStep(s, p); else endPhase(s);

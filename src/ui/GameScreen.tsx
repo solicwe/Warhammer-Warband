@@ -135,7 +135,7 @@ function fxTags(e: Effect): [string, boolean][] {
     if (d.damage) o.push(['−1 D vs it', true]);
     if (d.inv) o.push([`${d.inv}+ inv`, true]);
     if (d.fnp) o.push([`FNP ${d.fnp}+`, true]);
-    if (d.save) o.push([`+${d.save} Sv`, true]);
+    if (d.save) o.push([`${sg(d.save)} Sv`, d.save > 0]);
     if (d.cover) o.push(['Cover', true]);
   }
   if (e.fightsFirst) o.push(['Fights first', true]);
@@ -213,6 +213,8 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     writeText(KEYS.fastShooting, String(v));
     act((g) => { g.defenderRolls = !v; });
   };
+  const [showBotTactics, setShowBotTactics] = useState<boolean>(() => readText(KEYS.botTactics) === 'true');
+  const [botIntents, setBotIntents] = useState<Intent[]>([]);
 
   useEffect(() => {
     if (fastShooting && s.defenderRolls !== false) {
@@ -287,6 +289,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const done = (name: string, intents: Intent[] = []) => {
         abortThinkingRef.current = null;
         setThinking(false);
+        setBotIntents(intents);
         styleRef.current = { p: who, name };
         act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
         // the commander says how it plays the turn, then what it goes for first
@@ -1053,7 +1056,12 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const own = new Set(u.abilities.map((a) => a.name));
       for (const a of effectsFor(s, u)) {
         if (a.from || a.holder.id !== u.id || own.has(a.label) || BLESSINGS.some((b) => b.name === a.label) || u.timed?.some((t) => t.label === a.label) || a.e.if?.length) continue;
-        const t = fxTags(a.e).map(([x]) => x);
+        // Never put enemy debuffs or plagues into a player's army buffs
+        const isEnemyDebuff = a.label === 'Afflicted' || a.label === 'Rattlejoint Ague' || a.label === 'Skullsquirm Blight' || a.label === 'Scabrous Soulrot';
+        if (isEnemyDebuff) continue;
+        const allTags = fxTags(a.e);
+        if (allTags.some(([, good]) => !good)) continue;
+        const t = allTags.map(([x]) => x);
         if (t.length) chip(u.owner, a.label, t);
       }
       const waaagh = u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
@@ -3997,6 +4005,12 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             }}
             onDragEnd={onDragEnd}
             side={sideCards}
+            botTactics={{
+              enabled: showBotTactics,
+              intents: botIntents,
+              actingBot,
+              phase: s.phase,
+            }}
           />
         </InlineErrorBoundary>
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
@@ -4036,7 +4050,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                 else if (mode.k === 'pile') confirmMove(mode.kind);
               }}
             >
-              ✓ Confirm Move
+              Confirm Move
             </button>
             <button
               className="btn-cancel"
@@ -4045,7 +4059,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                 setDraft(null);
               }}
             >
-              ✕ Cancel
+              Cancel
             </button>
           </div>
         )}
@@ -4464,6 +4478,40 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </div>
               <span className="field-note">
                 Tournament AI planning depth and lookahead tactical search budget.
+              </span>
+            </div>
+            <div className="field">
+              <span id="bot-overlay-menu">AI Tactical Overlay</span>
+              <div className="seg" role="radiogroup" aria-labelledby="bot-overlay-menu">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={showBotTactics}
+                  className={showBotTactics ? 'on' : ''}
+                  onClick={() => {
+                    setShowBotTactics(true);
+                    writeText(KEYS.botTactics, 'true');
+                    flash('AI Tactical Overlay: ON');
+                  }}
+                >
+                  On
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!showBotTactics}
+                  className={!showBotTactics ? 'on' : ''}
+                  onClick={() => {
+                    setShowBotTactics(false);
+                    writeText(KEYS.botTactics, 'false');
+                    flash('AI Tactical Overlay: OFF');
+                  }}
+                >
+                  Off
+                </button>
+              </div>
+              <span className="field-note">
+                Visualizes bot movement vectors, target priority laser lines, and intentions on the battlefield.
               </span>
             </div>
             <div className="field">

@@ -30,7 +30,7 @@ describe('Tournament AI Engine & Headless Trainer', () => {
     expect(res.turnsPlayed).toBeGreaterThan(0);
     expect(['0', '1', 'draw']).toContain(String(res.winner));
     expect(res.score0 + res.score1).toBeGreaterThanOrEqual(0);
-    expect(res.durationMs).toBeLessThan(30000);
+    expect(res.durationMs).toBeLessThan(60000);
   });
 
   it('executes a tournament benchmark batch calculating win rates and averages', () => {

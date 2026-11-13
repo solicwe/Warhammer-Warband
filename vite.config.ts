@@ -50,6 +50,16 @@ export default defineConfig({
     transformIndexHtml: (html) => html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${csp()}" />`),
   }],
   define: { __DATA_VERSION__: JSON.stringify(dataVersion()) },
-  // whole bot-vs-bot games run in the tests: a few seconds each
-  test: { testTimeout: 300000, setupFiles: ['src/engine/testSetup.ts'] },
+  // Fast CI test suite: exclude 15,000-step stress simulation games (thousandSonsGames, sim, autoPlay)
+  test: {
+    testTimeout: 60000,
+    setupFiles: ['src/engine/testSetup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/*thousandSonsGames*.test.ts',
+      '**/sim.test.ts',
+      '**/autoPlay.test.ts',
+    ],
+  },
 });

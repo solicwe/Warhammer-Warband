@@ -193,6 +193,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   const [p1Disp, setP1Disp] = useState<DispositionId>('take-and-hold');
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>('layout-01');
   const [inspectLayout, setInspectLayout] = useState<LayoutDef | null>(null);
+  const [zoomLayout, setZoomLayout] = useState<LayoutDef | null>(null);
   const [showLayoutMeasurements, setShowLayoutMeasurements] = useState<boolean>(true);
 
   // STEP 2: Players & Factions (No quick-fill clutter, pure manual selection)
@@ -1226,7 +1227,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                   style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   onClick={() => setShowLayoutMeasurements(true)}
                 >
-                  <Icon name="check" size={14} /> 📏 Show Measurements (บอกระยะจัดโต๊ะจริง)
+                  <Icon name="check" size={14} /> Show Measurements
                 </button>
                 <button
                   type="button"
@@ -1234,27 +1235,33 @@ export function TabletopScreen({ index, onBack }: Props) {
                   style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   onClick={() => setShowLayoutMeasurements(false)}
                 >
-                  🗺️ Clean Map (แผนที่ปกติ)
+                  Standard Map
                 </button>
               </div>
 
-              {/* Layout SVG Canvas */}
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
+              {/* Layout SVG Canvas with Click-to-Zoom */}
+              <div
+                style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8, cursor: 'zoom-in' }}
+                onClick={() => setZoomLayout(inspectLayout)}
+              >
                 <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
+                <button
+                  type="button"
+                  className="btn ghost small"
+                  style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 11, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '4px 8px', borderRadius: 4 }}
+                  onClick={(e) => { e.stopPropagation(); setZoomLayout(inspectLayout); }}
+                >
+                  Full Screen
+                </button>
               </div>
 
               {/* Legend */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-                <span>🔴 Red: Attacker Zone</span>
-                <span>🔵 Blue: Defender Zone</span>
-                <span>🎯 ①-⑥: Objectives</span>
-                <span>🏛️ Ruin Sizes: Width × Height</span>
+                <span>Red: Attacker Zone</span>
+                <span>Blue: Defender Zone</span>
+                <span>Objectives 1-6</span>
+                <span>Ruins: Width x Height (Inches)</span>
               </div>
-
-              {/* Physical Table Setup Guide Checklist */}
-              {showLayoutMeasurements && (
-                <TabletopSetupGuide layout={inspectLayout} />
-              )}
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button
@@ -2120,10 +2127,10 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)' }}>
-              <span>🔴 Attacker</span>
-              <span>🔵 Defender</span>
-              <span>🎯 ①-⑥ Objectives</span>
-              <span>📏 44"×60"</span>
+              <span>Red: Attacker</span>
+              <span>Blue: Defender</span>
+              <span>Objectives 1-6</span>
+              <span>44" x 60" Table</span>
             </div>
           </div>
 
@@ -2254,7 +2261,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => setShowLayoutMeasurements(true)}
               >
-                <Icon name="check" size={14} /> 📏 Show Measurements (บอกระยะจัดโต๊ะจริง)
+                <Icon name="check" size={14} /> Show Measurements
               </button>
               <button
                 type="button"
@@ -2262,27 +2269,74 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 onClick={() => setShowLayoutMeasurements(false)}
               >
-                🗺️ Clean Map (แผนที่ปกติ)
+                Standard Map
               </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8 }}>
+            <div
+              style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8, cursor: 'zoom-in' }}
+              onClick={() => setZoomLayout(curLayout)}
+            >
               <LayoutPreview layout={curLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
+              <button
+                type="button"
+                className="btn ghost small"
+                style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 11, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '4px 8px', borderRadius: 4 }}
+                onClick={(e) => { e.stopPropagation(); setZoomLayout(curLayout); }}
+              >
+                Full Screen
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-              <span>🔴 Red: Attacker Zone</span>
-              <span>🔵 Blue: Defender Zone</span>
-              <span>🎯 ①-⑥: Objectives</span>
-              <span>🏛️ Ruin Sizes: Width × Height</span>
+              <span>Red: Attacker Zone</span>
+              <span>Blue: Defender Zone</span>
+              <span>Objectives 1-6</span>
+              <span>Ruins: Width x Height (Inches)</span>
             </div>
-
-            {showLayoutMeasurements && (
-              <TabletopSetupGuide layout={curLayout} />
-            )}
 
             <button className="btn ghost" style={{ minHeight: 40, marginTop: 4 }} onClick={() => setZoomMap(false)}>
               Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* FULL SCREEN LAYOUT MODAL */}
+      {zoomLayout && (
+        <div
+          className="modal-backdrop"
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}
+          onClick={() => setZoomLayout(null)}
+        >
+          <div
+            className="modal-card"
+            style={{ maxWidth: 640, width: '96vw', maxHeight: '96vh', overflowY: 'auto', padding: 16, background: 'var(--surface-1)', borderRadius: 12, border: '1px solid var(--line-2)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div>
+                <b style={{ fontSize: 16, display: 'block' }}>Layout {zoomLayout.number}: {deploymentName(zoomLayout.deployment)}</b>
+                <div className="tiny muted">Attacker edge: {zoomLayout.attackerEdge} · {zoomLayout.objectives.length} objectives</div>
+              </div>
+              <button className="icon-btn" onClick={() => setZoomLayout(null)} aria-label="Close">
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', background: 'var(--surface-2)', borderRadius: 8, padding: 12 }}>
+              <LayoutPreview layout={zoomLayout} width={Math.min(500, window.innerWidth - 64)} showMeasurements={true} />
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 12, fontSize: 12, color: 'var(--text-3)' }}>
+              <span>Red: Attacker Zone</span>
+              <span>Blue: Defender Zone</span>
+              <span>Objectives: 1-6 with (X, Y) Coordinates</span>
+              <span>Table Dimensions: 44" x 60"</span>
+            </div>
+
+            <button className="btn ghost grow" style={{ width: '100%', minHeight: 40, marginTop: 14 }} onClick={() => setZoomLayout(null)}>
+              Close Full Screen
             </button>
           </div>
         </div>

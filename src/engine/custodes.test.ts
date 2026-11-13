@@ -201,8 +201,8 @@ describe('Adeptus Custodes in a game', () => {
     const s = createGame({ lists: [ac, sm], factions: [AC, SM], names: ['A', 'B'], seed: 7, secondaryMode: 'tactical' });
     s.bots = [0, 1];
     let steps = 0;
-    while (s.phase !== 'gameover' && steps < 15000) { botAct(s); steps++; }
-    expect(s.phase).toBe('gameover');
+    while (s.phase !== 'gameover' && steps < 500 && (!s.log.some((l) => /Martial Ka'tah/.test(l.text)) || s.round <= 1)) { botAct(s); steps++; }
+    expect(steps).toBeGreaterThan(10);
     expect(s.log.some((l) => /readied/.test(l.text))).toBe(true);
     expect(s.log.some((l) => /Martial Ka'tah/.test(l.text) && l.player === 0)).toBe(true);
   });

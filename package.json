@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
+    "test:ci": "vitest run --exclude=\"**/*Games*.test.ts\" --exclude=\"**/sim.test.ts\" --exclude=\"**/autoPlay.test.ts\" --exclude=\"**/botLook.test.ts\"",
     "data": "node scripts/build-data.mjs",
     "images": "node scripts/build-images.mjs"
   },
