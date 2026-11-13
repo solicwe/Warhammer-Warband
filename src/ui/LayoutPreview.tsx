@@ -1,9 +1,12 @@
-// SVG preview of an official terrain layout with tournament-grade physical tabletop measurement overlay.
+// SVG preview of an official terrain layout with tournament-grade physical tabletop measurement overlay
+// Styled to 100% match official Chapter Approved & WTC Tournament Companion diagrams.
 import type { LayoutDef } from '../engine/config';
 import { stripBarricade } from '../engine/game';
 
-const ZONE_ATTACKER = 'rgba(178,34,34,0.45)';
-const ZONE_DEFENDER = 'rgba(14,111,164,0.45)';
+// Official Tournament Companion Zone Colors
+const ZONE_ATTACKER = '#8f1a1d'; // Crimson Red
+const ZONE_DEFENDER = '#1b4971'; // Steel Blue
+const TABLE_BG = '#ede7d8'; // Official Parchment / Light Sand Table Surface
 
 export interface LayoutPreviewProps {
   layout: LayoutDef;
@@ -23,7 +26,10 @@ interface BoundingBox {
 }
 
 function getBoundingBox(poly: number[][]): BoundingBox {
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
   for (const [x, y] of poly) {
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
@@ -42,11 +48,100 @@ function getBoundingBox(poly: number[][]): BoundingBox {
   };
 }
 
+function fmtDim(val: number): string {
+  const rounded = Math.round(val * 4) / 4;
+  if (Math.abs(rounded - Math.round(rounded)) < 0.01) {
+    return `${Math.round(rounded)}"`;
+  }
+  return `${rounded * 2 === Math.round(rounded * 2) ? rounded.toFixed(1) : rounded.toFixed(2)}"`;
+}
+
+interface DimLineProps {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  label: string;
+  tickLen?: number;
+  color?: string;
+  textSide?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  textOffset?: number;
+}
+
+function DimensionLine({
+  x1,
+  y1,
+  x2,
+  y2,
+  label,
+  tickLen = 1.0,
+  color = '#ffffff',
+  textSide = 'center',
+  textOffset = 0,
+}: DimLineProps) {
+  const isHoriz = Math.abs(y1 - y2) < 0.001;
+  const isVert = Math.abs(x1 - x2) < 0.001;
+
+  let tx = (x1 + x2) / 2;
+  let ty = (y1 + y2) / 2;
+
+  if (isHoriz) {
+    if (textSide === 'top') ty -= 0.8 + textOffset;
+    else if (textSide === 'bottom') ty += 1.3 + textOffset;
+    else ty += 0.4 + textOffset;
+  } else if (isVert) {
+    if (textSide === 'left') tx -= 1.4 + textOffset;
+    else if (textSide === 'right') tx += 1.4 + textOffset;
+    ty += 0.4;
+  }
+
+  return (
+    <g className="dim-line">
+      {/* Main dimension line */}
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+      {/* Perpendicular end ticks */}
+      {isHoriz && (
+        <>
+          <line x1={x1} y1={y1 - tickLen / 2} x2={x1} y2={y1 + tickLen / 2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+          <line x1={x2} y1={y2 - tickLen / 2} x2={x2} y2={y2 + tickLen / 2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+        </>
+      )}
+      {isVert && (
+        <>
+          <line x1={x1 - tickLen / 2} y1={y1} x2={x1 + tickLen / 2} y2={y1} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+          <line x1={x2 - tickLen / 2} y1={y2} x2={x2 + tickLen / 2} y2={y2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+        </>
+      )}
+      {/* Bold high-contrast white text with crisp dark outline */}
+      <text
+        x={tx}
+        y={ty}
+        fill={color}
+        fontSize="1.15"
+        fontWeight="800"
+        fontFamily="Oswald, sans-serif"
+        textAnchor="middle"
+        style={{
+          paintOrder: 'stroke fill',
+          stroke: '#000000',
+          strokeWidth: '0.42px',
+          strokeLinejoin: 'round',
+          letterSpacing: '0.02em',
+        }}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
 export function LayoutPreview({ layout, width = 120, showMeasurements = false }: LayoutPreviewProps) {
   const pts = (a: number[][]) => a.map(([x, y]) => `${x},${y}`).join(' ');
   const line = layout.territory.attacker;
 
-  // Compact Mode (for list items & cards)
+  // =========================================================================
+  // COMPACT MODE (Cards, Carousels, Dropdowns)
+  // =========================================================================
   if (!showMeasurements) {
     return (
       <svg
@@ -56,21 +151,21 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
         className="layout-preview"
         aria-label={`Layout ${layout.number}`}
       >
-        <rect width="44" height="60" fill="#ece7dc" />
-        <polygon points={pts(layout.zones.attacker)} fill={ZONE_ATTACKER} />
-        <polygon points={pts(layout.zones.defender)} fill={ZONE_DEFENDER} />
-        <polygon points={pts(line)} fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth={0.35} strokeDasharray="1 0.8" />
+        <rect width="44" height="60" fill={TABLE_BG} />
+        <polygon points={pts(layout.zones.attacker)} fill={ZONE_ATTACKER} opacity={0.88} />
+        <polygon points={pts(layout.zones.defender)} fill={ZONE_DEFENDER} opacity={0.88} />
+        <polygon points={pts(line)} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth={0.35} strokeDasharray="1 0.8" />
         {layout.terrain.map((t, i) => (
           <g key={i}>
-            <polygon points={pts(t.poly)} fill="#d8d2c4" stroke="#222" strokeWidth={0.3} />
+            <polygon points={pts(t.poly)} fill="#d4d8dd" stroke="#222" strokeWidth={0.28} />
             {t.walls.map((w, k) => (
-              <line key={k} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#2f6b4f" strokeWidth={0.7} />
+              <line key={k} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#15803d" strokeWidth={0.75} strokeLinecap="round" />
             ))}
             {t.obstacles.map((w, k) => (
-              <line key={`o${k}`} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#d98b1f" strokeWidth={0.6} />
+              <line key={`o${k}`} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#d97706" strokeWidth={0.65} strokeLinecap="round" />
             ))}
             {!t.walls.length && !t.obstacles.length && !t.box && stripBarricade(t.poly).map((w, k) => (
-              <line key={`b${k}`} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke="#d98b1f" strokeWidth={0.6} />
+              <line key={`b${k}`} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke="#d97706" strokeWidth={0.65} strokeLinecap="round" />
             ))}
           </g>
         ))}
@@ -80,8 +175,8 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
             cx={o.x}
             cy={o.y}
             r={1.3}
-            fill="#fff"
-            stroke={o.owner === 'attacker' ? '#b22222' : o.owner === 'defender' ? '#0e6fa4' : o.type === 'central' ? '#111' : '#1f6f75'}
+            fill="#ffffff"
+            stroke={o.owner === 'attacker' ? '#8f1a1d' : o.owner === 'defender' ? '#1b4971' : o.type === 'central' ? '#1e293b' : '#0e7490'}
             strokeWidth={0.6}
           />
         ))}
@@ -91,14 +186,50 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
   }
 
   // =========================================================================
-  // TOURNAMENT COMPANION MEASUREMENT MODE (เหมือนรูปคู่มือจัดโต๊ะแข่งจริง 100%)
+  // TOURNAMENT COMPANION INSPECT & MEASUREMENT MODE (Official WTC / GW Style)
   // =========================================================================
-  // Canvas expanded to -7.5, -6.5, 59, 73 to display dimension rulers & brackets
-  const vbX = -7.5;
-  const vbY = -6.5;
-  const vbW = 59;
-  const vbH = 73;
   const dep = layout.deployment;
+
+  // Bounding boxes of all terrain pieces
+  const terrainBoxes = layout.terrain.map((t, idx) => ({
+    idx,
+    terrain: t,
+    bb: getBoundingBox(t.poly),
+  }));
+
+  // Identify key quadrant ruins for CAD measurements
+  const majorRuins = terrainBoxes.filter((item) => item.bb.w >= 3 || item.bb.h >= 2);
+
+  // Bottom-Left Ruin (cx < 20 && cy > 30)
+  const botLeftRuin = majorRuins
+    .filter((r) => r.bb.cx < 20 && r.bb.cy > 30)
+    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
+
+  // Bottom-Right Ruin (cx > 24 && cy > 30)
+  const botRightRuin = majorRuins
+    .filter((r) => r.bb.cx > 24 && r.bb.cy > 30)
+    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
+
+  // Center Ruin (nearest to center 22, 30)
+  const centerRuin = majorRuins
+    .filter((r) => r.bb.cy >= 20 && r.bb.cy <= 40 && r.bb.cx >= 14 && r.bb.cx <= 30)
+    .sort((a, b) => Math.hypot(a.bb.cx - 22, a.bb.cy - 30) - Math.hypot(b.bb.cx - 22, b.bb.cy - 30))[0];
+
+  // Top-Left Ruin (cx < 20 && cy <= 30)
+  const topLeftRuin = majorRuins
+    .filter((r) => r.bb.cx < 20 && r.bb.cy <= 30)
+    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
+
+  // Top-Right Ruin (cx > 24 && cy <= 30)
+  const topRightRuin = majorRuins
+    .filter((r) => r.bb.cx > 24 && r.bb.cy <= 30)
+    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
+
+  // ViewBox with padding around table to allow depth callout lines
+  const vbX = -3.5;
+  const vbY = -2.5;
+  const vbW = 51;
+  const vbH = 65;
 
   return (
     <svg
@@ -106,157 +237,273 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
       width={width}
       height={(width * vbH) / vbW}
       className="layout-preview tournament-mode"
-      aria-label={`Official Layout ${layout.number} with Real-World Measurements`}
-      style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' }}
+      aria-label={`Official Layout ${layout.number} with Physical Tape Measurements`}
+      style={{ filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.22))' }}
     >
       <defs>
-        {/* Dimension Arrow Markers */}
-        <marker id="dim-arrow-start" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto-start-reverse">
-          <polygon points="0,5 10,2 10,8" fill="#334155" />
-        </marker>
-        <marker id="dim-arrow-end" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto">
-          <polygon points="0,2 10,5 0,8" fill="#334155" />
-        </marker>
-        <marker id="dim-arrow-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto">
-          <polygon points="0,2 10,5 0,8" fill="#b22222" />
-        </marker>
-        <marker id="dim-arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto">
-          <polygon points="0,2 10,5 0,8" fill="#0e6fa4" />
-        </marker>
+        {/* Subtle 1" Table Grid Pattern */}
+        <pattern id="table-grid-1" width="1" height="1" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="1" y2="0" stroke="#d6cfbe" strokeWidth="0.08" />
+          <line x1="0" y1="0" x2="0" y2="1" stroke="#d6cfbe" strokeWidth="0.08" />
+        </pattern>
+        <pattern id="table-grid-5" width="5" height="5" patternUnits="userSpaceOnUse">
+          <rect width="5" height="5" fill="url(#table-grid-1)" />
+          <line x1="0" y1="0" x2="5" y2="0" stroke="#bfb7a3" strokeWidth="0.16" />
+          <line x1="0" y1="0" x2="0" y2="5" stroke="#bfb7a3" strokeWidth="0.16" />
+        </pattern>
+
+        {/* Castle / Fortress Gate Icon (for Home Objectives) */}
+        <g id="icon-castle">
+          <path
+            d="M-0.85,-0.75 H0.85 V-0.35 H0.5 V-0.1 H0.2 V-0.35 H-0.2 V-0.1 H-0.5 V-0.35 H-0.85 Z M-0.75,-0.1 H0.75 V0.85 H-0.75 Z M-0.25,0.85 V0.4 C-0.25,0.2 0.25,0.2 0.25,0.4 V0.85 Z"
+            fill="currentColor"
+          />
+        </g>
+
+        {/* Skull Icon (for Expansion Objectives) */}
+        <g id="icon-skull">
+          <path
+            d="M-0.65,-0.4 C-0.65,-0.85 0.65,-0.85 0.65,-0.4 C0.65,-0.1 0.42,0.18 0.35,0.32 V0.7 H-0.35 V0.32 C-0.42,0.18 -0.65,-0.1 -0.65,-0.4 Z"
+            fill="currentColor"
+          />
+          <circle cx="-0.26" cy="-0.28" r="0.13" fill="#0e7490" />
+          <circle cx="0.26" cy="-0.28" r="0.13" fill="#0e7490" />
+          <path d="M-0.15,0.45 H-0.08 V0.65 H-0.15 Z M0.08,0.45 H0.15 V0.65 H0.08 Z" fill="#0e7490" />
+        </g>
+
+        {/* Eye Icon (for Center Objectives) */}
+        <g id="icon-eye">
+          <path d="M-0.85,0 C-0.5,-0.48 0.5,-0.48 0.85,0 C0.5,0.48 -0.5,0.48 -0.85,0 Z" fill="currentColor" />
+          <circle cx="0" cy="0" r="0.26" fill="#1e293b" />
+        </g>
+
+        {/* Obscuring Ruin Icon (Eye with diagonal slash) */}
+        <g id="icon-obscuring">
+          <circle cx="0" cy="0" r="1.15" fill="#ffffff" stroke="#1e293b" strokeWidth="0.25" />
+          <path d="M-0.7,0 C-0.45,-0.4 0.45,-0.4 0.7,0 C0.45,0.4 -0.45,0.4 -0.7,0 Z" fill="none" stroke="#1e293b" strokeWidth="0.2" />
+          <circle cx="0" cy="0" r="0.22" fill="#1e293b" />
+          <line x1="-0.85" y1="-0.85" x2="0.85" y2="0.85" stroke="#1e293b" strokeWidth="0.25" strokeLinecap="round" />
+        </g>
+
+        {/* Crossed Swords Watermark (Attacker Zone) */}
+        <g id="watermark-swords" opacity="0.11">
+          <g transform="rotate(45)">
+            <rect x="-0.7" y="-8.5" width="1.4" height="17" rx="0.4" fill="#ffffff" />
+            <rect x="-2.6" y="2.2" width="5.2" height="0.85" rx="0.25" fill="#ffffff" />
+            <circle cx="0" cy="6.2" r="0.9" fill="#ffffff" />
+          </g>
+          <g transform="rotate(-45)">
+            <rect x="-0.7" y="-8.5" width="1.4" height="17" rx="0.4" fill="#ffffff" />
+            <rect x="-2.6" y="2.2" width="5.2" height="0.85" rx="0.25" fill="#ffffff" />
+            <circle cx="0" cy="6.2" r="0.9" fill="#ffffff" />
+          </g>
+        </g>
+
+        {/* Knight Shield Watermark (Defender Zone) */}
+        <g id="watermark-shield" opacity="0.11">
+          <path d="M-5.5,-7 H5.5 V-0.8 C5.5,5 0,9.5 0,9.5 C0,9.5 -5.5,5 -5.5,-0.8 Z" fill="#ffffff" />
+        </g>
       </defs>
 
-      {/* Board Base Surface */}
-      <rect x="0" y="0" width="44" height="60" fill="#f4efe6" stroke="#1f2937" strokeWidth="0.8" />
+      {/* 1. Table Base Surface with 1" Tournament Grid */}
+      <rect x="0" y="0" width="44" height="60" fill={TABLE_BG} />
+      <rect x="0" y="0" width="44" height="60" fill="url(#table-grid-5)" />
 
-      {/* Subtle 10" Grid Lines */}
-      {[10, 20, 30, 40].map((x) => (
-        <line key={`gx${x}`} x1={x} y1="0" x2={x} y2="60" stroke="#000000" strokeWidth="0.15" strokeDasharray="1 3" opacity="0.15" />
-      ))}
-      {[10, 20, 30, 40, 50].map((y) => (
-        <line key={`gy${y}`} x1="0" y1={y} x2="44" y2={y} stroke="#000000" strokeWidth="0.15" strokeDasharray="1 3" opacity="0.15" />
-      ))}
+      {/* 2. Attacker Deployment Zone (Crimson Red with Crossed Swords Watermark) */}
+      <polygon points={pts(layout.zones.attacker)} fill={ZONE_ATTACKER} stroke="#6b1315" strokeWidth={0.4} />
+      <g transform="translate(22, 10)">
+        <use href="#watermark-swords" />
+      </g>
 
-      {/* Deployment Zones (Colored fills) */}
-      <polygon points={pts(layout.zones.attacker)} fill={ZONE_ATTACKER} stroke="#b22222" strokeWidth="0.4" />
-      <polygon points={pts(layout.zones.defender)} fill={ZONE_DEFENDER} stroke="#0e6fa4" strokeWidth="0.4" />
+      {/* 3. Defender Deployment Zone (Steel Blue with Shield Watermark) */}
+      <polygon points={pts(layout.zones.defender)} fill={ZONE_DEFENDER} stroke="#12334f" strokeWidth={0.4} />
+      <g transform="translate(22, 50)">
+        <use href="#watermark-shield" />
+      </g>
 
-      {/* Territory Boundary Line */}
-      <polygon points={pts(line)} fill="none" stroke="#111827" strokeWidth="0.4" strokeDasharray="1.5 1" opacity="0.6" />
+      {/* 4. Territory Boundary Line */}
+      <polygon points={pts(line)} fill="none" stroke="#0f172a" strokeWidth={0.4} strokeDasharray="1.5 1" opacity="0.75" />
 
-      {/* Deployment-Specific Centerline & Exclusions */}
-      {dep === 'hammer-and-anvil' && (
-        <g>
-          <line x1="0" y1="30" x2="44" y2="30" stroke="#1e293b" strokeWidth="0.45" strokeDasharray="2 1.5" />
-          <rect x="14.5" y="28.9" width="15" height="2.2" rx="0.7" fill="#1e293b" opacity="0.9" />
-          <text x="22" y="30.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">
-            CENTER LINE (30")
-          </text>
-        </g>
-      )}
+      {/* 5. Center Lines & Quadrants */}
+      {/* Horizontal Center Line (Y = 30") */}
+      <line x1="0" y1="30" x2="44" y2="30" stroke="#1e293b" strokeWidth={0.4} strokeDasharray="1.5 1" opacity="0.65" />
+      {/* Vertical Center Line (X = 22") */}
+      <line x1="22" y1="0" x2="22" y2="60" stroke="#1e293b" strokeWidth={0.4} strokeDasharray="1.5 1" opacity="0.65" />
 
-      {dep === 'dawn-of-war' && (
-        <g>
-          <line x1="22" y1="0" x2="22" y2="60" stroke="#1e293b" strokeWidth="0.45" strokeDasharray="2 1.5" />
-          <rect x="14.5" y="28.9" width="15" height="2.2" rx="0.7" fill="#1e293b" opacity="0.9" />
-          <text x="22" y="30.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">
-            CENTER LINE (22")
-          </text>
-        </g>
-      )}
+      {/* Center Table Crosshair Marker (X=22", Y=30") */}
+      <circle cx="22" cy="30" r="0.75" fill="none" stroke="#1e293b" strokeWidth="0.25" opacity="0.8" />
+      <line x1="20.5" y1="30" x2="23.5" y2="30" stroke="#1e293b" strokeWidth="0.25" opacity="0.8" />
+      <line x1="22" y1="28.5" x2="22" y2="31.5" stroke="#1e293b" strokeWidth="0.25" opacity="0.8" />
 
+      {/* Table Side Edge Division Markers at Y=30" */}
+      {/* Left Edge Marker */}
+      <g transform="translate(0, 30)">
+        <polygon points="0,-1.4 1.8,0 0,1.4" fill="#8f1a1d" />
+        <circle cx="0.8" cy="1.6" r="0.8" fill="#1b4971" />
+      </g>
+      {/* Right Edge Marker */}
+      <g transform="translate(44, 30)">
+        <polygon points="0,-1.4 -1.8,0 0,1.4" fill="#8f1a1d" />
+        <circle cx="-0.8" cy="1.6" r="0.8" fill="#1b4971" />
+      </g>
+
+      {/* Search and Destroy 9" Center Exclusion Bubble */}
       {dep === 'search-and-destroy' && (
         <g>
-          {/* 4 Quarters */}
-          <line x1="22" y1="0" x2="22" y2="60" stroke="#1e293b" strokeWidth="0.4" strokeDasharray="2 1.5" opacity="0.7" />
-          <line x1="0" y1="30" x2="44" y2="30" stroke="#1e293b" strokeWidth="0.4" strokeDasharray="2 1.5" opacity="0.7" />
-          {/* 9" Center Exclusion Circle */}
-          <circle cx="22" cy="30" r="9" fill="none" stroke="#b22222" strokeWidth="0.45" strokeDasharray="1.5 1" opacity="0.85" />
-          <rect x="13" y="20.1" width="18" height="2.2" rx="0.7" fill="#b22222" opacity="0.9" />
-          <text x="22" y="21.7" fill="#ffffff" fontSize="1.05" fontWeight="800" textAnchor="middle">
+          <circle cx="22" cy="30" r="9" fill="none" stroke="#b22222" strokeWidth={0.4} strokeDasharray="1.5 1" opacity="0.85" />
+          <rect x="13.5" y="20.1" width="17" height="2.0" rx="0.5" fill="#8f1a1d" />
+          <text x="22" y="21.5" fill="#ffffff" fontSize="1.0" fontWeight="800" textAnchor="middle">
             9" CENTER EXCLUSION
           </text>
         </g>
       )}
 
-      {dep === 'sweeping-engagement' && (
-        <g>
-          <line x1="0" y1="30" x2="44" y2="30" stroke="#1e293b" strokeWidth="0.4" strokeDasharray="2 1.5" opacity="0.7" />
-          <rect x="15" y="28.9" width="14" height="2.2" rx="0.7" fill="#1e293b" opacity="0.9" />
-          <text x="22" y="30.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">
-            CENTER DIVIDER (30")
-          </text>
-        </g>
-      )}
-
-      {/* Terrain Pieces & Bounding Box Size Badges */}
+      {/* 6. Terrain Pieces & Ruins */}
       {layout.terrain.map((t, i) => {
         const bb = getBoundingBox(t.poly);
-        const wInches = Math.round(bb.w);
-        const hInches = Math.round(bb.h);
-        const showBadge = bb.w >= 3 && bb.h >= 2;
+        const isMajorRuin = bb.w >= 3.5 || bb.h >= 2.5;
+
+        // Determine Obscuring icon placement at a corner facing toward center line
+        const obscuringX = bb.cx < 22 ? bb.minX : bb.maxX;
+        const obscuringY = bb.cy < 30 ? bb.maxY : bb.minY;
 
         return (
           <g key={i}>
-            {/* Terrain Polygon Footprint */}
-            <polygon points={pts(t.poly)} fill="#ded8cb" stroke="#1f2937" strokeWidth="0.35" />
+            {/* Ruin Baseplate Footprint Polygon */}
+            <polygon points={pts(t.poly)} fill="#d4d8dd" stroke="#334155" strokeWidth={0.32} />
 
-            {/* Ruin Walls (Green) */}
+            {/* Solid Forest Green Ruin Walls (100% WTC/GW style) */}
             {t.walls.map((w, k) => (
-              <line key={k} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#1b5e20" strokeWidth="0.85" strokeLinecap="round" />
+              <line
+                key={k}
+                x1={w[0]}
+                y1={w[1]}
+                x2={w[2]}
+                y2={w[3]}
+                stroke="#15803d"
+                strokeWidth={0.95}
+                strokeLinecap="round"
+              />
             ))}
 
-            {/* Obstacles & Pipes (Orange) */}
+            {/* Orange/Ochre Barricades and Pipes */}
             {t.obstacles.map((w, k) => (
-              <line key={`o${k}`} x1={w[0]} y1={w[1]} x2={w[2]} y2={w[3]} stroke="#d97706" strokeWidth="0.7" strokeLinecap="round" />
+              <line
+                key={`o${k}`}
+                x1={w[0]}
+                y1={w[1]}
+                x2={w[2]}
+                y2={w[3]}
+                stroke="#d97706"
+                strokeWidth={0.75}
+                strokeLinecap="round"
+              />
             ))}
 
-            {/* Barricade Strips */}
             {!t.walls.length && !t.obstacles.length && !t.box && stripBarricade(t.poly).map((w, k) => (
-              <line key={`b${k}`} x1={w.a.x} y1={w.a.y} x2={w.b.x} y2={w.b.y} stroke="#d97706" strokeWidth="0.7" strokeLinecap="round" />
+              <line
+                key={`b${k}`}
+                x1={w.a.x}
+                y1={w.a.y}
+                x2={w.b.x}
+                y2={w.b.y}
+                stroke="#d97706"
+                strokeWidth={0.75}
+                strokeLinecap="round"
+              />
             ))}
 
-            {/* Footprint Dimension Badge (e.g. 12"×8", 10"×4", 6"×4") */}
-            {showBadge && (
-              <g transform={`translate(${bb.cx}, ${bb.cy})`}>
-                <rect x="-3.2" y="-1.1" width="6.4" height="2.2" rx="0.6" fill="#0f172a" stroke="#475569" strokeWidth="0.25" opacity="0.9" />
-                <text x="0" y="0.5" fill="#f8fafc" fontSize="1.0" fontWeight="700" textAnchor="middle">
-                  {wInches}"×{hInches}"
-                </text>
+            {/* Obscuring (Line of Sight Blocking) Icon on corner of ruin footprint */}
+            {isMajorRuin && (
+              <g transform={`translate(${obscuringX}, ${obscuringY})`}>
+                <use href="#icon-obscuring" />
               </g>
             )}
           </g>
         );
       })}
 
-      {/* Objective Markers (Numbered 1..N with Coordinate Badges) */}
+      {/* 7. Thematic Objective Markers (40mm Bases with Castle, Skull Diamond, and Eye Icons) */}
       {layout.objectives.map((o, i) => {
-        const objNumber = i + 1;
         const isAttacker = o.owner === 'attacker';
         const isDefender = o.owner === 'defender';
-        const ringColor = isAttacker ? '#b22222' : isDefender ? '#0e6fa4' : '#1e293b';
-        const badgeYOffset = o.y > 54 ? -2.7 : 2.7;
+        const isExpansion = o.type === 'expansion';
+        const isCentral = o.type === 'central';
+
+        const badgeYOffset = o.y > 54 ? -2.6 : 2.6;
 
         return (
-          <g key={i}>
-            {/* Guide line to nearest side edge */}
-            {o.x < 12 && (
-              <line x1="0" y1={o.y} x2={o.x} y2={o.y} stroke="#94a3b8" strokeWidth="0.2" strokeDasharray="0.8 0.8" />
-            )}
-            {o.x > 32 && (
-              <line x1="44" y1={o.y} x2={o.x} y2={o.y} stroke="#94a3b8" strokeWidth="0.2" strokeDasharray="0.8 0.8" />
+          <g key={i} className="objective-marker">
+            {/* ATTACKER HOME OBJECTIVE: Red Circle with White Castle Gate */}
+            {isAttacker && (
+              <g transform={`translate(${o.x}, ${o.y})`}>
+                <circle cx="0" cy="0" r="1.85" fill="#ffffff" stroke="#8f1a1d" strokeWidth={0.5} />
+                <circle cx="0" cy="0" r="1.45" fill="#8f1a1d" />
+                <g color="#ffffff">
+                  <use href="#icon-castle" />
+                </g>
+              </g>
             )}
 
-            {/* 40mm Objective Base Ring (Scale ~1.57" base) */}
-            <circle cx={o.x} cy={o.y} r={1.6} fill="#ffffff" stroke="#0f172a" strokeWidth="0.35" />
-            <circle cx={o.x} cy={o.y} r={1.25} fill={ringColor} stroke="#ffffff" strokeWidth="0.25" />
-            <text x={o.x} y={o.y + 0.45} fill="#ffffff" fontSize="1.2" fontWeight="900" textAnchor="middle">
-              {objNumber}
-            </text>
+            {/* DEFENDER HOME OBJECTIVE: Blue Circle with White Castle Gate */}
+            {isDefender && (
+              <g transform={`translate(${o.x}, ${o.y})`}>
+                <circle cx="0" cy="0" r="1.85" fill="#ffffff" stroke="#1b4971" strokeWidth={0.5} />
+                <circle cx="0" cy="0" r="1.45" fill="#1b4971" />
+                <g color="#ffffff">
+                  <use href="#icon-castle" />
+                </g>
+              </g>
+            )}
 
-            {/* Coordinate Pill: e.g. "23.5", 12.5"" */}
+            {/* EXPANSION OBJECTIVE: Cyan/Teal Diamond with White Skull */}
+            {isExpansion && (
+              <g transform={`translate(${o.x}, ${o.y})`}>
+                <polygon
+                  points="0,-1.95 1.95,0 0,1.95 -1.95,0"
+                  fill="#0e7490"
+                  stroke="#ffffff"
+                  strokeWidth={0.4}
+                />
+                <g color="#ffffff">
+                  <use href="#icon-skull" />
+                </g>
+              </g>
+            )}
+
+            {/* CENTRAL OBJECTIVE: Slate / Teal Disc with Eye or Skull */}
+            {isCentral && (
+              <g transform={`translate(${o.x}, ${o.y})`}>
+                <circle cx="0" cy="0" r="1.75" fill="#334155" stroke="#ffffff" strokeWidth={0.4} />
+                <g color="#ffffff">
+                  {i % 2 === 0 ? <use href="#icon-eye" /> : <use href="#icon-skull" />}
+                </g>
+              </g>
+            )}
+
+            {/* Objective Coordinates Pill: e.g. "10.5", 10.5"" */}
             <g transform={`translate(${o.x}, ${o.y + badgeYOffset})`}>
-              <rect x="-4.2" y="-1.0" width="8.4" height="2.0" rx="0.5" fill="#ffffff" stroke="#334155" strokeWidth="0.25" opacity="0.96" />
-              <text x="0" y="0.45" fill="#0f172a" fontSize="0.95" fontWeight="800" textAnchor="middle">
+              <rect
+                x="-3.8"
+                y="-0.9"
+                width="7.6"
+                height="1.8"
+                rx="0.45"
+                fill="#ffffff"
+                stroke="#1e293b"
+                strokeWidth={0.25}
+                opacity={0.96}
+                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+              />
+              <text
+                x="0"
+                y="0.4"
+                fill="#0f172a"
+                fontSize="0.9"
+                fontWeight="800"
+                fontFamily="Oswald, sans-serif"
+                textAnchor="middle"
+              >
                 {o.x.toFixed(1)}", {o.y.toFixed(1)}"
               </text>
             </g>
@@ -264,113 +511,190 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
         );
       })}
 
-      {/* Board Outer Boundary Frame */}
-      <rect x="0" y="0" width="44" height="60" fill="none" stroke="#0f172a" strokeWidth="0.7" />
-
-      {/* Table Ticks (Every 10 inches along all 4 edges) */}
+      {/* 8. Table Outer Frame & Edge Ticks */}
+      <rect x="0" y="0" width="44" height="60" fill="none" stroke="#0f172a" strokeWidth={0.7} />
       {[0, 10, 20, 22, 30, 40, 44].map((x) => (
         <g key={`tt${x}`}>
-          <line x1={x} y1="0" x2={x} y2="-0.8" stroke="#0f172a" strokeWidth="0.3" />
-          <line x1={x} y1="60" x2={x} y2="60.8" stroke="#0f172a" strokeWidth="0.3" />
+          <line x1={x} y1="0" x2={x} y2="-0.6" stroke="#0f172a" strokeWidth={0.3} />
+          <line x1={x} y1="60" x2={x} y2="60.6" stroke="#0f172a" strokeWidth={0.3} />
         </g>
       ))}
-      {[0, 10, 18, 20, 30, 40, 42, 50, 60].map((y) => (
+      {[0, 10, 20, 30, 40, 50, 60].map((y) => (
         <g key={`ty${y}`}>
-          <line x1="0" y1={y} x2="-0.8" y2={y} stroke="#0f172a" strokeWidth="0.3" />
-          <line x1="44" y1={y} x2="44.8" y2={y} stroke="#0f172a" strokeWidth="0.3" />
+          <line x1="0" y1={y} x2="-0.6" y2={y} stroke="#0f172a" strokeWidth={0.3} />
+          <line x1="44" y1={y} x2="44.6" y2={y} stroke="#0f172a" strokeWidth={0.3} />
         </g>
       ))}
 
-      {/* ================================================================= */}
-      {/* OUTER RULERS & DIMENSION ANNOTATIONS                              */}
-      {/* ================================================================= */}
+      {/* ===================================================================== */}
+      {/* 9. CAD PHYSICAL TABLE MEASUREMENT LINES ("การวางระยะ")                 */}
+      {/* Exactly matches real-world tape measuring setup seen in WTC diagrams! */}
+      {/* ===================================================================== */}
 
-      {/* TOP RULER: 44" TABLE WIDTH */}
-      <g>
-        <line x1="0" y1="-2.8" x2="44" y2="-2.8" stroke="#334155" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-end)" />
-        <line x1="0" y1="-4.2" x2="0" y2="-0.5" stroke="#64748b" strokeWidth="0.25" />
-        <line x1="44" y1="-4.2" x2="44" y2="-0.5" stroke="#64748b" strokeWidth="0.25" />
-        <rect x="14" y="-3.9" width="16" height="2.2" rx="0.7" fill="#0f172a" />
-        <text x="22" y="-2.35" fill="#f8fafc" fontSize="1.15" fontWeight="800" textAnchor="middle">
-          44" TABLE WIDTH
-        </text>
-      </g>
-
-      {/* LEFT RULER: 60" TABLE LENGTH */}
-      <g>
-        <line x1="-3.4" y1="0" x2="-3.4" y2="60" stroke="#334155" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-end)" />
-        <line x1="-5.0" y1="0" x2="-0.5" y2="0" stroke="#64748b" strokeWidth="0.25" />
-        <line x1="-5.0" y1="60" x2="-0.5" y2="60" stroke="#64748b" strokeWidth="0.25" />
-        <g transform="translate(-3.4, 30) rotate(-90)">
-          <rect x="-9" y="-1.1" width="18" height="2.2" rx="0.7" fill="#0f172a" />
-          <text x="0" y="0.45" fill="#f8fafc" fontSize="1.15" fontWeight="800" textAnchor="middle">
-            60" TABLE LENGTH
-          </text>
+      {/* A. Bottom-Left Ruin Measurements */}
+      {botLeftRuin && (
+        <g className="measurements-bot-left">
+          {/* Horizontal distance from Left Table Edge (X = 0) to Left Wall/Edge */}
+          <DimensionLine
+            x1={0}
+            y1={Math.min(58, botLeftRuin.bb.maxY + 0.4)}
+            x2={botLeftRuin.bb.minX}
+            y2={Math.min(58, botLeftRuin.bb.maxY + 0.4)}
+            label={fmtDim(botLeftRuin.bb.minX)}
+            textSide="top"
+          />
+          {/* Vertical distance from Bottom Table Edge (Y = 60) to Ruin Bottom */}
+          <DimensionLine
+            x1={Math.max(2, botLeftRuin.bb.minX - 0.4)}
+            y1={botLeftRuin.bb.maxY}
+            x2={Math.max(2, botLeftRuin.bb.minX - 0.4)}
+            y2={60}
+            label={fmtDim(60 - botLeftRuin.bb.maxY)}
+            textSide="left"
+          />
         </g>
-      </g>
+      )}
 
-      {/* RIGHT SIDE / BOTTOM DEPLOYMENT DEPTH CALLOUTS */}
-      {dep === 'hammer-and-anvil' ? (
-        <g>
-          {/* Guide extensions */}
-          <line x1="44" y1="0" x2="49" y2="0" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="44" y1="18" x2="49" y2="18" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="44" y1="42" x2="49" y2="42" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="44" y1="60" x2="49" y2="60" stroke="#94a3b8" strokeWidth="0.2" />
-
-          {/* Attacker Depth: 18" */}
-          <line x1="47.2" y1="0.6" x2="47.2" y2="17.4" stroke="#b22222" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-red)" />
-          <rect x="45.0" y="7.5" width="4.4" height="3.0" rx="0.6" fill="#b22222" />
-          <text x="47.2" y="9.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">18"</text>
-
-          {/* No Man's Land: 24" */}
-          <line x1="47.2" y1="18.6" x2="47.2" y2="41.4" stroke="#334155" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-end)" />
-          <rect x="45.0" y="28.5" width="4.4" height="3.0" rx="0.6" fill="#334155" />
-          <text x="47.2" y="30.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">24"</text>
-
-          {/* Defender Depth: 18" */}
-          <line x1="47.2" y1="42.6" x2="47.2" y2="59.4" stroke="#0e6fa4" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-blue)" />
-          <rect x="45.0" y="49.5" width="4.4" height="3.0" rx="0.6" fill="#0e6fa4" />
-          <text x="47.2" y="51.5" fill="#ffffff" fontSize="1.1" fontWeight="800" textAnchor="middle">18"</text>
+      {/* B. Bottom-Right Ruin Measurements */}
+      {botRightRuin && (
+        <g className="measurements-bot-right">
+          {/* Vertical distance from Bottom Table Edge (Y = 60) to Ruin */}
+          <DimensionLine
+            x1={Math.min(42, botRightRuin.bb.maxX + 0.4)}
+            y1={botRightRuin.bb.maxY}
+            x2={Math.min(42, botRightRuin.bb.maxX + 0.4)}
+            y2={60}
+            label={fmtDim(60 - botRightRuin.bb.maxY)}
+            textSide="right"
+          />
+          {/* Horizontal distance from Right Table Edge (X = 44) to Outer Edge */}
+          <DimensionLine
+            x1={botRightRuin.bb.maxX}
+            y1={Math.max(42, botRightRuin.bb.minY + 1.2)}
+            x2={44}
+            y2={Math.max(42, botRightRuin.bb.minY + 1.2)}
+            label={fmtDim(44 - botRightRuin.bb.maxX)}
+            textSide="top"
+          />
+          {/* Horizontal distance from Right Edge to Inner Wall */}
+          {botRightRuin.bb.w >= 4.5 && (
+            <DimensionLine
+              x1={botRightRuin.bb.minX}
+              y1={Math.min(56, botRightRuin.bb.maxY - 1.2)}
+              x2={44}
+              y2={Math.min(56, botRightRuin.bb.maxY - 1.2)}
+              label={fmtDim(44 - botRightRuin.bb.minX)}
+              textSide="bottom"
+            />
+          )}
         </g>
-      ) : dep === 'dawn-of-war' ? (
-        <g>
-          {/* Guide extensions along bottom */}
-          <line x1="0" y1="60" x2="0" y2="64.5" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="12" y1="60" x2="12" y2="64.5" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="32" y1="60" x2="32" y2="64.5" stroke="#94a3b8" strokeWidth="0.2" />
-          <line x1="44" y1="60" x2="44" y2="64.5" stroke="#94a3b8" strokeWidth="0.2" />
+      )}
 
-          {/* Attacker Depth: 12" */}
-          <line x1="0.6" y1="63" x2="11.4" y2="63" stroke="#b22222" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-red)" />
-          <rect x="4.2" y="61.8" width="3.6" height="2.4" rx="0.5" fill="#b22222" />
-          <text x="6" y="63.5" fill="#ffffff" fontSize="1.05" fontWeight="800" textAnchor="middle">12"</text>
+      {/* C. Center Ruins Measurements */}
+      {centerRuin && (
+        <g className="measurements-center">
+          {/* Vertical distance from Top Table Edge (Y = 0) to Center Ruin */}
+          <DimensionLine
+            x1={centerRuin.bb.cx}
+            y1={0}
+            x2={centerRuin.bb.cx}
+            y2={centerRuin.bb.minY}
+            label={fmtDim(centerRuin.bb.minY)}
+            textSide="left"
+          />
+          {/* Horizontal distance from Left Table Edge (X = 0) to Center Ruin */}
+          <DimensionLine
+            x1={0}
+            y1={centerRuin.bb.cy}
+            x2={centerRuin.bb.minX}
+            y2={centerRuin.bb.cy}
+            label={fmtDim(centerRuin.bb.minX)}
+            textSide="top"
+          />
+        </g>
+      )}
 
-          {/* No Man's Land: 20" */}
-          <line x1="12.6" y1="63" x2="31.4" y2="63" stroke="#334155" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-end)" />
-          <rect x="20.2" y="61.8" width="3.6" height="2.4" rx="0.5" fill="#334155" />
-          <text x="22" y="63.5" fill="#ffffff" fontSize="1.05" fontWeight="800" textAnchor="middle">20"</text>
+      {/* D. Top-Left / Top-Right Ruins (if applicable and non-conflicting) */}
+      {topRightRuin && (
+        <g className="measurements-top-right">
+          <DimensionLine
+            x1={topRightRuin.bb.maxX}
+            y1={Math.max(4, topRightRuin.bb.minY)}
+            x2={44}
+            y2={Math.max(4, topRightRuin.bb.minY)}
+            label={fmtDim(44 - topRightRuin.bb.maxX)}
+            textSide="bottom"
+          />
+        </g>
+      )}
 
-          {/* Defender Depth: 12" */}
-          <line x1="32.6" y1="63" x2="43.4" y2="63" stroke="#0e6fa4" strokeWidth="0.35" markerStart="url(#dim-arrow-start)" markerEnd="url(#dim-arrow-blue)" />
-          <rect x="36.2" y="61.8" width="3.6" height="2.4" rx="0.5" fill="#0e6fa4" />
-          <text x="38" y="63.5" fill="#ffffff" fontSize="1.05" fontWeight="800" textAnchor="middle">12"</text>
+      {topLeftRuin && (
+        <g className="measurements-top-left">
+          <DimensionLine
+            x1={0}
+            y1={Math.max(4, topLeftRuin.bb.minY)}
+            x2={topLeftRuin.bb.minX}
+            y2={Math.max(4, topLeftRuin.bb.minY)}
+            label={fmtDim(topLeftRuin.bb.minX)}
+            textSide="bottom"
+          />
         </g>
-      ) : dep === 'search-and-destroy' ? (
-        <g>
-          {/* Halfway markers */}
-          <rect x="44.8" y="28.8" width="4.8" height="2.4" rx="0.5" fill="#0f172a" />
-          <text x="47.2" y="30.5" fill="#ffffff" fontSize="1.0" fontWeight="700" textAnchor="middle">30"</text>
-          <rect x="20" y="61.5" width="4.0" height="2.4" rx="0.5" fill="#0f172a" />
-          <text x="22" y="63.2" fill="#ffffff" fontSize="1.0" fontWeight="700" textAnchor="middle">22"</text>
+      )}
+
+      {/* E. Deployment Depth Callouts Along Boundaries */}
+      {dep === 'hammer-and-anvil' && (
+        <g className="deployment-depths">
+          {/* Attacker Depth: 18" along right edge */}
+          <DimensionLine
+            x1={43}
+            y1={0}
+            x2={43}
+            y2={18}
+            label="18&quot;"
+            textSide="left"
+          />
+          {/* Defender Depth: 18.5" along left edge */}
+          <DimensionLine
+            x1={-1.8}
+            y1={41.5}
+            x2={-1.8}
+            y2={60}
+            label="18.5&quot;"
+            textSide="left"
+          />
+          {/* Defender Depth: 19.5" along right edge */}
+          <DimensionLine
+            x1={45.8}
+            y1={40.5}
+            x2={45.8}
+            y2={60}
+            label="19.5&quot;"
+            textSide="right"
+          />
         </g>
-      ) : dep === 'sweeping-engagement' ? (
-        <g>
-          <line x1="44" y1="30" x2="49" y2="30" stroke="#94a3b8" strokeWidth="0.2" />
-          <rect x="44.8" y="28.8" width="4.8" height="2.4" rx="0.5" fill="#0f172a" />
-          <text x="47.2" y="30.5" fill="#ffffff" fontSize="1.0" fontWeight="700" textAnchor="middle">30"</text>
+      )}
+
+      {dep === 'dawn-of-war' && (
+        <g className="deployment-depths">
+          <DimensionLine x1={0} y1={61.5} x2={12} y2={61.5} label="12&quot;" textSide="bottom" />
+          <DimensionLine x1={12} y1={61.5} x2={32} y2={61.5} label="20&quot;" textSide="bottom" />
+          <DimensionLine x1={32} y1={61.5} x2={44} y2={61.5} label="12&quot;" textSide="bottom" />
         </g>
-      ) : null}
+      )}
+
+      {dep === 'sweeping-engagement' && (
+        <g className="deployment-depths">
+          <DimensionLine x1={-1.8} y1={0} x2={-1.8} y2={30} label="30&quot;" textSide="left" />
+          <DimensionLine x1={45.8} y1={30} x2={45.8} y2={60} label="30&quot;" textSide="right" />
+        </g>
+      )}
+
+      {dep === 'tipping-point' && (
+        <g className="deployment-depths">
+          <DimensionLine x1={0} y1={-1.5} x2={22} y2={-1.5} label="20&quot; Deep" textSide="top" />
+          <DimensionLine x1={22} y1={-1.5} x2={44} y2={-1.5} label="12&quot; Deep" textSide="top" />
+        </g>
+      )}
     </svg>
   );
 }

@@ -1244,7 +1244,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                 style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8, cursor: 'zoom-in' }}
                 onClick={() => setZoomLayout(inspectLayout)}
               >
-                <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
+                <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? Math.min(380, window.innerWidth - 64) : 280} showMeasurements={showLayoutMeasurements} />
                 <button
                   type="button"
                   className="btn ghost small"
@@ -1255,12 +1255,14 @@ export function TabletopScreen({ index, onBack }: Props) {
                 </button>
               </div>
 
-              {/* Legend */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-                <span>Red: Attacker Zone</span>
-                <span>Blue: Defender Zone</span>
-                <span>Objectives 1-6</span>
-                <span>Ruins: Width x Height (Inches)</span>
+              {/* Tournament Legend */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px 10px', fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
+                <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone (Castle)</div>
+                <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
+                <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
+                <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
+                <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
+                <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White Lines:</span> Table Tape Offsets</div>
               </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
@@ -2277,7 +2279,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8, cursor: 'zoom-in' }}
               onClick={() => setZoomLayout(curLayout)}
             >
-              <LayoutPreview layout={curLayout} width={showLayoutMeasurements ? 340 : 280} showMeasurements={showLayoutMeasurements} />
+              <LayoutPreview layout={curLayout} width={showLayoutMeasurements ? Math.min(380, window.innerWidth - 64) : 280} showMeasurements={showLayoutMeasurements} />
               <button
                 type="button"
                 className="btn ghost small"
@@ -2288,11 +2290,13 @@ export function TabletopScreen({ index, onBack }: Props) {
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', fontSize: 11.5, color: 'var(--text-3)' }}>
-              <span>Red: Attacker Zone</span>
-              <span>Blue: Defender Zone</span>
-              <span>Objectives 1-6</span>
-              <span>Ruins: Width x Height (Inches)</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px 10px', fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
+              <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone (Castle)</div>
+              <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
+              <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
+              <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
+              <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
+              <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White Lines:</span> Table Tape Offsets</div>
             </div>
 
             <button className="btn ghost" style={{ minHeight: 40, marginTop: 4 }} onClick={() => setZoomMap(false)}>
@@ -2311,7 +2315,7 @@ export function TabletopScreen({ index, onBack }: Props) {
         >
           <div
             className="modal-card"
-            style={{ maxWidth: 640, width: '96vw', maxHeight: '96vh', overflowY: 'auto', padding: 16, background: 'var(--surface-1)', borderRadius: 12, border: '1px solid var(--line-2)' }}
+            style={{ maxWidth: 680, width: '96vw', maxHeight: '96vh', overflowY: 'auto', padding: 16, background: 'var(--surface-1)', borderRadius: 12, border: '1px solid var(--line-2)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -2325,14 +2329,14 @@ export function TabletopScreen({ index, onBack }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', background: 'var(--surface-2)', borderRadius: 8, padding: 12 }}>
-              <LayoutPreview layout={zoomLayout} width={Math.min(500, window.innerWidth - 64)} showMeasurements={true} />
+              <LayoutPreview layout={zoomLayout} width={Math.min(560, window.innerWidth - 48)} showMeasurements={true} />
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 12, fontSize: 12, color: 'var(--text-3)' }}>
-              <span>Red: Attacker Zone</span>
-              <span>Blue: Defender Zone</span>
-              <span>Objectives: 1-6 with (X, Y) Coordinates</span>
-              <span>Table Dimensions: 44" x 60"</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '6px 12px', marginTop: 12, fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
+              <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone</div>
+              <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone</div>
+              <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal:</span> Expansion Objs</div>
+              <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White:</span> Tape Offsets</div>
             </div>
 
             <button className="btn ghost grow" style={{ width: '100%', minHeight: 40, marginTop: 14 }} onClick={() => setZoomLayout(null)}>

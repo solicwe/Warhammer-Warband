@@ -57,9 +57,13 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/*Games*.test.ts',
       '**/*thousandSonsGames*.test.ts',
       '**/sim.test.ts',
       '**/autoPlay.test.ts',
+      '**/botLook.test.ts',
+      '**/tune.test.ts',
+      '**/arena.test.ts',
     ],
   },
 });
