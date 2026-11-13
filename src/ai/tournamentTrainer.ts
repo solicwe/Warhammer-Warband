@@ -2,7 +2,7 @@ import { createGame, endPhase, closeWindow } from '../engine/game';
 import { PRESETS } from '../ui/presets';
 import { botAct } from './bot';
 import { finishAttack, resolveAll } from '../engine/attack';
-import { setLookahead } from './botLook';
+import { setLookahead, isLookahead } from './botLook';
 import type { GameState, PlayerId } from '../engine/types';
 import { getArchetypeForPlayer, FACTION_TO_ARCHETYPE } from './factionArchetypes';
 
@@ -109,52 +109,55 @@ export function runHeadlessGame(
   s.deployAllOnField = [0, 1];
 
   // Disable heavy lookahead rollouts during headless training runs
+  const wasLook = isLookahead();
   setLookahead(false);
 
   let steps = 0;
   let stuckCount = 0;
   const maxSteps = 300;
 
-  while (s.phase !== 'gameover' && steps < maxSteps) {
-    steps++;
-    if (s.attack) {
-      resolveAll(s);
-      finishAttack(s);
-      stuckCount = 0;
-      continue;
-    }
-    const prevPhase = s.phase;
-    const prevTurn = s.turn;
-    const prevStep = s.fight?.step;
-    const prevWin = s.window;
+  try {
+    while (s.phase !== 'gameover' && steps < maxSteps) {
+      steps++;
+      if (s.attack) {
+        resolveAll(s);
+        finishAttack(s);
+        stuckCount = 0;
+        continue;
+      }
+      const prevPhase = s.phase;
+      const prevTurn = s.turn;
+      const prevStep = s.fight?.step;
+      const prevWin = s.window;
 
-    botAct(s);
+      botAct(s);
 
-    const isStuck = (
-      s.phase === prevPhase &&
-      s.turn === prevTurn &&
-      s.fight?.step === prevStep &&
-      s.window === prevWin &&
-      !s.attack
-    );
+      const isStuck = (
+        s.phase === prevPhase &&
+        s.turn === prevTurn &&
+        s.fight?.step === prevStep &&
+        s.window === prevWin &&
+        !s.attack
+      );
 
-    if (isStuck) {
-      stuckCount++;
-      const stuckThreshold = s.phase === 'deploy' ? 35 : 4;
-      if (stuckCount >= stuckThreshold) {
-        if (s.window) {
-          closeWindow(s);
-        } else {
-          endPhase(s);
+      if (isStuck) {
+        stuckCount++;
+        const stuckThreshold = s.phase === 'deploy' ? 35 : 4;
+        if (stuckCount >= stuckThreshold) {
+          if (s.window) {
+            closeWindow(s);
+          } else {
+            endPhase(s);
+          }
+          stuckCount = 0;
         }
+      } else {
         stuckCount = 0;
       }
-    } else {
-      stuckCount = 0;
     }
+  } finally {
+    setLookahead(wasLook);
   }
-
-  setLookahead(true);
 
   const score0 = (s.players[0].vp ?? 0) + (s.players[0].secVp ?? 0);
   const score1 = (s.players[1].vp ?? 0) + (s.players[1].secVp ?? 0);

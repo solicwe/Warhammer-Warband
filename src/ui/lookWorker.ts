@@ -6,7 +6,7 @@ import { botAct, botStep } from '../ai/bot';
 import type { GameState, PlayerId } from '../engine/types';
 
 type Msg =
-  | { kind?: 'look'; state: GameState; p: PlayerId; id: number }
+  | { kind?: 'look'; state: GameState; p: PlayerId; id: number; budget?: number }
   | { kind: 'step'; state: GameState; who: PlayerId | null; id: number; style?: { p: PlayerId; name: string } };
 
 // the lookahead runs only when asked (a look message); a step never starts one by itself
@@ -30,7 +30,8 @@ self.onmessage = (e: MessageEvent<Msg>) => {
   setLookahead(true);
   // each way of playing the turn is reported as soon as it has been played out, so the screen can show the thinking
   const progress = (name: string, value: number, done: number, total: number) => self.postMessage({ id: m.id, progress: { name, value, done, total } });
-  try { res = lookAhead(g, m.p, lookBudget(g, m.p), progress); } catch { /* a failed look plays the turn as it is */ }
+  const budget = Math.min(m.budget ?? lookBudget(g, m.p), 1500);
+  try { res = lookAhead(g, m.p, budget, progress); } catch { /* a failed look plays the turn as it is */ }
   setLookahead(false);
   self.postMessage({ id: m.id, name: res.name, values: res.values, intents: res.intents });
 };

@@ -1395,6 +1395,19 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <Icon name="leave" size={22} />Leave Squad
             </button>
           )}
+          {joined.map((j) => (
+            <button
+              key={j.c.uid}
+              type="button"
+              onClick={() => {
+                setUnit(j.c.uid, { attachTo: undefined });
+                setNote(`${j.c.datasheet} left ${u.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="leave" size={22} />Leave Squad <span className="ab-pop-val">{j.c.datasheet}</span>
+            </button>
+          ))}
           {myLoad && cargo.length > 0 && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
               <Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span>

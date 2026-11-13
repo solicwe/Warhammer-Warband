@@ -213,8 +213,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     writeText(KEYS.fastShooting, String(v));
     act((g) => { g.defenderRolls = !v; });
   };
-  const [showBotTactics, setShowBotTactics] = useState<boolean>(() => readText(KEYS.botTactics) === 'true');
-  const [botIntents, setBotIntents] = useState<Intent[]>([]);
 
   useEffect(() => {
     if (fastShooting && s.defenderRolls !== false) {
@@ -289,7 +287,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const done = (name: string, intents: Intent[] = []) => {
         abortThinkingRef.current = null;
         setThinking(false);
-        setBotIntents(intents);
         styleRef.current = { p: who, name };
         act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
         // the commander says how it plays the turn, then what it goes for first
@@ -324,7 +321,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         done(e.data.name ?? 'steady', e.data.intents);
       };
       worker.onerror = () => { window.clearTimeout(fallback); worker.onmessage = null; done('steady'); };
-      try { worker.postMessage({ state: s, p: who, id }); } catch { window.clearTimeout(fallback); done('steady'); }
+      try { worker.postMessage({ state: s, p: who, id, budget: effectiveBudget }); } catch { window.clearTimeout(fallback); done('steady'); }
       return;
     }
     // bot-vs-bot: nobody "has" the step (e.g. ending the fight phase) — let the driver move the game on
@@ -4007,12 +4004,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             }}
             onDragEnd={onDragEnd}
             side={sideCards}
-            botTactics={{
-              enabled: showBotTactics,
-              intents: botIntents,
-              actingBot,
-              phase: s.phase,
-            }}
           />
         </InlineErrorBoundary>
         <AttackReport s={s} level={((spectate && speed === 2) || (rush && actingBot !== null)) && fxLevel === 'full' ? 'short' : fxLevel} quick={(o) => spectate || rush || bots.includes(o)} onBusy={setReporting}
@@ -4480,40 +4471,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </div>
               <span className="field-note">
                 Tournament AI planning depth and lookahead tactical search budget.
-              </span>
-            </div>
-            <div className="field">
-              <span id="bot-overlay-menu">AI Tactical Overlay</span>
-              <div className="seg" role="radiogroup" aria-labelledby="bot-overlay-menu">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={showBotTactics}
-                  className={showBotTactics ? 'on' : ''}
-                  onClick={() => {
-                    setShowBotTactics(true);
-                    writeText(KEYS.botTactics, 'true');
-                    flash('AI Tactical Overlay: ON');
-                  }}
-                >
-                  On
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={!showBotTactics}
-                  className={!showBotTactics ? 'on' : ''}
-                  onClick={() => {
-                    setShowBotTactics(false);
-                    writeText(KEYS.botTactics, 'false');
-                    flash('AI Tactical Overlay: OFF');
-                  }}
-                >
-                  Off
-                </button>
-              </div>
-              <span className="field-note">
-                Visualizes bot movement vectors, target priority laser lines, and intentions on the battlefield.
               </span>
             </div>
             <div className="field">

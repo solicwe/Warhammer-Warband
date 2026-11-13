@@ -79,13 +79,6 @@ export interface BoardProps {
   quickActions?: { unitId: string; actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] };
   onMoveDeathstrikeMarker?: (unitId: string, pt: Pt) => void;
   onTapDeathstrikeMarker?: (unitId: string) => void;
-  /** AI Tactical Overlay: visualized vectors, target priority laser lines, and intention labels */
-  botTactics?: {
-    enabled?: boolean;
-    intents?: Intent[];
-    actingBot?: PlayerId | null;
-    phase?: string;
-  };
 }
 
 /** Width of the table beside the battlefield that holds the side cards, in inches; card text is laid out at PX px per inch. */
@@ -1822,81 +1815,6 @@ function BoardImpl(props: BoardProps) {
       {props.losLines?.map((l, i) => (
         <line key={`los${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke={l.cover ? '#fbbf24' : '#86efac'} strokeWidth={0.07} strokeDasharray="0.3 0.2" opacity={0.85} pointerEvents="none" />
       ))}
-      {/* AI Tactical Overlay: Vectors, Target Priority Lasers, and Tactical Callouts */}
-      {props.botTactics?.enabled && (
-        <g className="bot-tactical-overlay" pointerEvents="none">
-          {/* Tactical HUD Pill */}
-          <g transform="translate(1.5, 1.5)">
-            <rect x="0" y="0" width="13.5" height="2.2" rx="0.5" fill="rgba(15, 23, 42, 0.9)" stroke="#06b6d4" strokeWidth="0.08" />
-            <circle cx="1.1" cy="1.1" r="0.3" fill="#06b6d4" />
-            <text x="1.9" y="1.45" fill="#f8fafc" fontSize="0.85" fontWeight="800" letterSpacing="0.04em">
-              AI TACTICAL OVERLAY
-            </text>
-          </g>
-
-          {/* Render Bot Intents (Attacks & Priorities) */}
-          {(props.botTactics.intents ?? []).map((intent, idx) => {
-            const isShoot = intent.kind === 'shoot';
-            const strokeColor = isShoot ? '#ef4444' : intent.kind === 'fight' ? '#f59e0b' : '#a855f7';
-            const midX = (intent.from.x + intent.to.x) / 2;
-            const midY = (intent.from.y + intent.to.y) / 2;
-            return (
-              <g key={`intent-${idx}`}>
-                {/* Tactical Target Laser Line */}
-                <line
-                  x1={intent.from.x}
-                  y1={intent.from.y}
-                  x2={intent.to.x}
-                  y2={intent.to.y}
-                  stroke={strokeColor}
-                  strokeWidth={0.12}
-                  strokeDasharray="0.4 0.2"
-                  opacity={0.85}
-                />
-                {/* Target Reticle at destination */}
-                <circle cx={intent.to.x} cy={intent.to.y} r={1.2} fill="none" stroke={strokeColor} strokeWidth={0.08} strokeDasharray="0.3 0.15" />
-                <line x1={intent.to.x - 1.5} y1={intent.to.y} x2={intent.to.x + 1.5} y2={intent.to.y} stroke={strokeColor} strokeWidth={0.06} />
-                <line x1={intent.to.x} y1={intent.to.y - 1.5} x2={intent.to.x} y2={intent.to.y + 1.5} stroke={strokeColor} strokeWidth={0.06} />
-                {/* Intent Tag */}
-                <g transform={`translate(${midX}, ${midY})`}>
-                  <rect x="-3.5" y="-0.9" width="7.0" height="1.8" rx="0.5" fill="rgba(15, 23, 42, 0.9)" stroke={strokeColor} strokeWidth="0.06" />
-                  <text x="0" y="0.4" fill="#ffffff" fontSize="0.75" fontWeight="800" textAnchor="middle">
-                    {intent.kind.toUpperCase()} {intent.killed > 0 ? `(Est ${intent.killed} dead)` : ''}
-                  </text>
-                </g>
-              </g>
-            );
-          })}
-
-          {/* When Bot is Active: Show unit objective pursuit vectors in Movement/Charge */}
-          {props.botTactics.actingBot !== null && props.botTactics.actingBot !== undefined && (
-            <g opacity={0.75}>
-              {s.units
-                .filter((u) => u.owner === props.botTactics!.actingBot && onBoard(u) && alive(u).length > 0)
-                .map((u) => {
-                  const pts = alive(u).map((m) => posOf(u, m.id, m));
-                  const uCx = pts.reduce((a, b) => a + b.x, 0) / pts.length;
-                  const uCy = pts.reduce((a, b) => a + b.y, 0) / pts.length;
-                  const targetObj = s.objectives.find((o) => o.controller !== u.owner);
-                  if (!targetObj) return null;
-                  return (
-                    <line
-                      key={`vec-${u.id}`}
-                      x1={uCx}
-                      y1={uCy}
-                      x2={targetObj.x}
-                      y2={targetObj.y}
-                      stroke="#06b6d4"
-                      strokeWidth={0.08}
-                      strokeDasharray="0.5 0.3"
-                      opacity={0.6}
-                    />
-                  );
-                })}
-            </g>
-          )}
-        </g>
-      )}
       {/* engagement range of enemies while moving */}
       {engagementRings.map(({ id, m }) => (
         <BaseShape key={`e${id}`} m={m} p={m} grow={RULES.engagementRange} fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.55)" strokeWidth={0.06} strokeDasharray="0.3 0.15" />

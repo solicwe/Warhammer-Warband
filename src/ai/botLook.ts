@@ -53,10 +53,10 @@ const STYLES: Record<string, Partial<BotW>> = {
  *  different on each copy, so one lucky roll doesn't decide it), and how long it may think on a phone. */
 const LEVELS: Record<BotLevel, { styles: string[]; samples: number; budget: number }> = {
   easy: { styles: [], samples: 0, budget: 0 },
-  // every level plays forward: the look picks between pressing styles, never sitting back
-  normal: { styles: ['steady', 'aggressive'], samples: 1, budget: 3000 },
-  hard: { styles: ['steady', 'aggressive', 'hunt'], samples: 1, budget: 6000 },
-  expert: { styles: ['steady', 'aggressive', 'objectives', 'hunt'], samples: 1, budget: 12000 },
+  // every level plays forward: snappy responsive thinking without UI lag
+  normal: { styles: ['steady', 'aggressive'], samples: 1, budget: 400 },
+  hard: { styles: ['steady', 'aggressive', 'hunt'], samples: 1, budget: 800 },
+  expert: { styles: ['steady', 'aggressive', 'objectives', 'hunt'], samples: 1, budget: 1200 },
 };
 export const levelOf = (s: GameState, p?: PlayerId): BotLevel => (p !== undefined ? s.botLevels?.[p] : undefined) ?? s.botLevel ?? 'normal';
 /** How long the app lets the bot think about its turn at this level (a Web Worker, so the screen never freezes). */
@@ -77,6 +77,7 @@ let inRollout = false;
 let enabled = true;
 /** Switch lookahead off (tests that need the plain bot, quick games). */
 export const setLookahead = (on: boolean) => { enabled = on; };
+export const isLookahead = () => enabled;
 
 /** Each side's own weights before any style was mixed in (styles are applied on top of these, not compounded). */
 const own: Partial<Record<PlayerId, BotW>> = {};
@@ -122,7 +123,8 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
   try {
     let steps = 0;
     let seen = c.fxSeq ?? 0;
-    while (c.phase !== 'gameover' && c.turn < end && steps < 1500) {
+    while (c.phase !== 'gameover' && c.turn < end && steps < 300) {
+      if (Date.now() > deadline) return -Infinity; // out of time: this style is not compared
       if (botOff('fastLook')) botAct(c); else withFastPlanning(() => botAct(c));
       steps++;
       if (intents && c.turn === s.turn) {
@@ -132,7 +134,6 @@ function rollout(s: GameState, p: PlayerId, style: Partial<BotW>, deadline = Inf
         }
       }
       seen = c.fxSeq ?? seen;
-      if (Date.now() > deadline) return -Infinity; // out of time: this style is not compared
     }
   } finally {
     inRollout = false;

@@ -281,32 +281,46 @@ export function orderTo(s: GameState, officer: UnitState, target: UnitState) {
 
 function autoIssueFor(s: GameState, officer: UnitState, keep = 0) {
   const p = officer.owner;
-  {
-    while (ordersRemaining(s, officer) > keep) {
-      const targets = boardUnits(s, p).filter((t) => canOfficerTarget(officer, t, s));
-      // prioritize targets that don't have an order yet
-      const unissued = targets.filter((t) => currentOrders(t).length === 0);
-      const pool = unissued.length ? unissued : targets.filter((t) => officer.name.includes('Creed') && currentOrders(t).length === 1);
-      if (!pool.length) break;
+  let guard = 0;
+  const failedTargetIds = new Set<string>();
 
-      // Smart tournament scoring priority:
-      // 1. Objectives: Battleline/Infantry within 4" of an objective (needs Duty and Honour for primary VP)
-      // 2. High-firepower assets (Tanks, Artillery, Heavy Weapons) that benefit massively from Take Aim
-      // 3. Advancing infantry rushing to objectives
-      const scoreTarget = (u: UnitState) => {
-        let score = u.pts ?? 50;
-        const uc = centreOf(u);
-        const nearObj = (s.objectives ?? []).some((o) => Math.hypot(o.x - uc.x, o.y - uc.y) <= 4.0);
-        if (nearObj && (u.keywords.includes('BATTLELINE') || u.keywords.includes('REGIMENT'))) score += 120;
-        if (u.keywords.includes('SQUADRON') || u.keywords.includes('VEHICLE')) score += 80;
-        if (u.keywords.includes('ARTILLERY')) score += 70;
-        return score;
-      };
+  while (ordersRemaining(s, officer) > keep && ++guard < 25) {
+    const targets = boardUnits(s, p).filter((t) => !failedTargetIds.has(t.id) && canOfficerTarget(officer, t, s));
+    // prioritize targets that don't have an order yet
+    const unissued = targets.filter((t) => currentOrders(t).length === 0);
+    const pool = unissued.length ? unissued : targets.filter((t) => officer.name.includes('Creed') && currentOrders(t).length === 1);
+    if (!pool.length) break;
 
-      const bestTarget = pool.sort((a, b) => scoreTarget(b) - scoreTarget(a))[0];
+    // Smart tournament scoring priority:
+    // 1. Objectives: Battleline/Infantry within 4" of an objective (needs Duty and Honour for primary VP)
+    // 2. High-firepower assets (Tanks, Artillery, Heavy Weapons) that benefit massively from Take Aim
+    // 3. Advancing infantry rushing to objectives
+    const scoreTarget = (u: UnitState) => {
+      let score = u.pts ?? 50;
+      const uc = centreOf(u);
+      const nearObj = (s.objectives ?? []).some((o) => Math.hypot(o.x - uc.x, o.y - uc.y) <= 4.0);
+      if (nearObj && (u.keywords.includes('BATTLELINE') || u.keywords.includes('REGIMENT'))) score += 120;
+      if (u.keywords.includes('SQUADRON') || u.keywords.includes('VEHICLE')) score += 80;
+      if (u.keywords.includes('ARTILLERY')) score += 70;
+      return score;
+    };
 
-      const pick = pickOrder(officer, bestTarget, s);
-      issueOrder(s, officer.id, bestTarget.id, pick);
+    const bestTarget = pool.sort((a, b) => scoreTarget(b) - scoreTarget(a))[0];
+    const allowed = officerAllowedOrders(officer, s);
+    const preferred = pickOrder(officer, bestTarget, s);
+
+    const candidates = [preferred, ...allowed.filter((o) => o !== preferred)];
+    let issued = false;
+    for (const ord of candidates) {
+      const err = issueOrder(s, officer.id, bestTarget.id, ord);
+      if (err === null) {
+        issued = true;
+        break;
+      }
+    }
+
+    if (!issued) {
+      failedTargetIds.add(bestTarget.id);
     }
   }
 }
