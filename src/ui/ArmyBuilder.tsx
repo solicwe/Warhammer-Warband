@@ -1196,6 +1196,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport))
       .map((t) => ({ t, c: embarkCheck(list, faction, rider.uid, t.uid) })).filter(({ c }) => !c.why || c.full);
     const myLoad = transportLoads(list, faction).find((t) => t.uid === u.uid);
+    const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
     const cargo = !myLoad ? [] : list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
       .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !list.units.some((t) => t.uid === r.embarkIn))
       .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
@@ -1408,6 +1409,31 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <Icon name="leave" size={22} />Leave Squad <span className="ab-pop-val">{j.c.datasheet}</span>
             </button>
           ))}
+          {riders.map((r) => (
+            <button
+              key={r.uid}
+              type="button"
+              onClick={() => {
+                setUnit(r.uid, { embarkIn: undefined });
+                setNote(`${r.datasheet} disembarked from ${u.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{r.datasheet}</span>
+            </button>
+          ))}
+          {riders.length > 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                riders.forEach((r) => setUnit(r.uid, { embarkIn: undefined }));
+                setNote(`All units disembarked from ${u.datasheet}`);
+                close();
+              }}
+            >
+              <Icon name="leave" size={22} />Disembark All
+            </button>
+          )}
           {myLoad && cargo.length > 0 && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
               <Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span>

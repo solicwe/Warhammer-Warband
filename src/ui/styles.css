@@ -3872,16 +3872,15 @@ select option {
     -webkit-backdrop-filter: none !important;
   }
 
-  /* Solid / high-opacity dark overlays instead of expensive GPU filters */
+  /* Translucent overlays allowing background and roster visibility */
   .modal-overlay,
   .tray-backdrop,
   .sheet-backdrop,
   .dialog-backdrop {
-    background: rgba(11, 15, 25, 0.95) !important;
+    background: rgba(11, 15, 25, 0.45) !important;
   }
 
   .panel,
-  .tray,
   .bottom-sheet,
   .action-bar,
   .top-hud {
