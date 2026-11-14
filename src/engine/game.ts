@@ -482,6 +482,14 @@ export function createGame(o: NewGameOptions): GameState {
     P.armyRules = P.armyRules.filter((r) => safeUpper((r as any)?.name || r) !== 'OATH OF MOMENT');
     for (const u of s.units) if (u.owner === p) u.abilities = u.abilities.filter((a) => safeUpper((a as any)?.name || a) !== 'OATH OF MOMENT');
   }
+  // Isolate and sanitize army rules so no third-party or allied bleed-through occurs
+  for (const p of [0, 1] as PlayerId[]) {
+    const P = s.players[p];
+    if (P.factionId === 'CD') P.armyRules = P.armyRules.filter((r) => safeUpper((r as any)?.name || r) !== 'DARK PACTS');
+    if (P.factionId === 'DRU') P.armyRules = P.armyRules.filter((r) => !['BATTLE FOCUS', 'DISPARATE PATHS'].includes(safeUpper((r as any)?.name || r)));
+    if (P.factionId === 'GC') P.armyRules = P.armyRules.filter((r) => !['SYNAPSE', 'SHADOW IN THE WARP'].includes(safeUpper((r as any)?.name || r)));
+    if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => !['OATH OF MOMENT', 'DARK PACTS'].includes(safeUpper((r as any)?.name || r)));
+  }
   // oval bases and hulls start pointing from their deployment zone towards the enemy's
   for (const p of [0, 1] as PlayerId[]) {
     const a = polyCentroid(zoneOf(s, p)), b = polyCentroid(zoneOf(s, other(p)));

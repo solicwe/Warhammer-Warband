@@ -712,6 +712,7 @@
       "Immolator": "units/AS/immolator-b106ba4a.jpg",
       "Intranzia Fraye": "units/AS/intranzia-fraye-34ed7481.jpg",
       "Junith Eruita": "units/AS/junith-eruita-46a9e484.jpg",
+      "Ministorum Priest": "units/AS/sanctifiers-missionarie-764ff326.jpg",
       "Mortifiers": "units/AS/mortifiers-2053d2c5.jpg",
       "Morvenn Vahl": "units/AS/morvenn-vahl-89d9541d.jpg",
       "Palatine": "units/AS/palatine-1b274e69.jpg",
@@ -761,7 +762,16 @@
       "Sisters of Battle Squad::Sister Superior::Bolt pistol+Close combat weapon": "units/AS/battle-sisters-squad-9f226c0a.jpg",
       "Triumph Of Saint Katherine": "units/AS/triumph-of-saint-katherine-59adf076.jpg",
       "Zephyrim Squad": "units/AS/zephyrim-squad-a203094f.jpg",
-      "emblem:AS:": "units/AS/emblem-as-fc0aa097.png"
+      "emblem:AS:": "units/AS/emblem-as-fc0aa097.png",
+      "Battle Sisters Squad::Sister Superior::Bolt pistol+Close combat weapon": "units/AS/battle-sisters-squad-9f226c0a.jpg",
+      "Celestian Sacresants::Celestian Sacresant::Anointed halberd+Bolt pistol": "units/AS/celestian-sacresants-celestian-sacresants-anointed-halberd-bolt-pistol-3470207d.jpg",
+      "Celestian Sacresants::Celestian Sacresant::Bolt pistol+Hallowed mace": "units/AS/celestian-sacresants-celestian-sacresants-bolt-pistol-hallowed-mace-5cc3857e.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Blessed sword": "units/AS/celestian-insidiants-celestian-insidiants-blessed-sword-8f9b6f35.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Condemnor bolt pistol+Null mace": "units/AS/celestian-insidiants-celestian-insidiant-superior-condemnor-bolt-pistol-null-mac-a70489fe.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Condemnor bolt pistol+Null mace+Simulacrum imperialis": "units/AS/celestian-insidiants-celestian-insidiant-superior-condemnor-bolt-pistol-null-mac-a70489fe.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Denuncia oratory+Null mace": "units/AS/celestian-insidiants-celestian-insidiants-denuncia-oratory-null-mace-42161725.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Ministorum hand flamer+Null mace": "units/AS/celestian-insidiants-celestian-insidiants-ministorum-hand-flamer-null-mace-4a77e9f8.jpg",
+      "Celestian Insidiants::Celestian Insidiant::Virge of admonition": "units/AS/celestian-insidiants-celestian-insidiants-virge-of-admonition-f2184148.jpg"
     },
     "TS": {
       "Ahriman": "units/TS/ahriman-bd69bec9.jpg",
@@ -1431,7 +1441,6 @@
       "Lord Marshal Dreir": "units/AM/lord-marshal-dreir-5e51c3f4.jpg",
       "Lord Solar Leontus": "units/AM/lord-solar-leontus-8652e99b.jpg",
       "Militarum Tempestus Command Squad": "units/AM/militarum-tempestus-command-squad-e8b73758.jpg",
-      "Ministorum Priest": "units/AM/ministorum-priest-cf9a31d3.jpg",
       "Nork Deddog": "units/AM/nork-deddog-f6178c8e.jpg",
       "Ogryn Bodyguard": "units/AM/ogryn-bodyguard-aba90611.jpg",
       "Ogryn Squad": "units/AM/ogryn-squad-e79580ff.jpg",

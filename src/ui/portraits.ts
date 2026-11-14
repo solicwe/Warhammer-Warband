@@ -139,6 +139,30 @@ export function isPlaceholderIcon(imgUrl?: string): boolean {
   return imgUrl.includes('placeholder') || imgUrl.includes('default') || imgUrl.includes('generic') || imgUrl.startsWith('#tok-');
 }
 
+const SOURCE_ALIASES: Record<string, string[]> = {
+  'Battle Sisters Squad': ['Sisters of Battle Squad'],
+  'Sisters of Battle Squad': ['Battle Sisters Squad'],
+  'Sororitas Rhino': ['Imperial Rhino', 'Rhino'],
+  'Ministorum Priest': ['Preacher', 'Missionarie', 'Missionaries'],
+  'Cadian Shock Troops': ['Cadian Shock Troops Squad'],
+  'Deathwatch Kill Team': ['Deathwatch Veterans'],
+};
+
+function candidateModelNames(name?: string): string[] {
+  if (!name) return [];
+  const base = name.trim();
+  const withoutEpic = base.replace(/\s*[-–]\s*EPIC HERO\s*$/i, '').trim();
+  const cands = [base, withoutEpic];
+  for (const n of [base, withoutEpic]) {
+    if (!n) continue;
+    if (n.endsWith('s') && !n.endsWith('ss')) cands.push(n.slice(0, -1));
+    else cands.push(n + 's');
+    if (/men$/i.test(n)) cands.push(n.replace(/men$/i, 'man'));
+    if (/man$/i.test(n)) cands.push(n.replace(/man$/i, 'men'));
+  }
+  return [...new Set(cands.filter(Boolean))];
+}
+
 /** A unit whose models have different names (Wardens of Ultramar, a squad's sergeant): each model name can have its
  *  own picture, stored under "Datasheet::Model name"; a model without one shows the unit's picture. */
 export const modelPortraitKey = (datasheet: string, model: string) => `${datasheet}::${model}`;
@@ -149,28 +173,47 @@ export const modelVariantKey = (datasheet: string, model: string, kit: string[])
 export const getModelPortrait = (m: { source: string; name: string; weapons?: { name: string }[]; gear?: string[] }): string | undefined => {
   if (!m) return undefined;
   const kit = kitOf(m);
-  // 1. Exact loadout variant key
-  const vKey = modelVariantKey(m.source, m.name, kit);
-  const vHit = getPortrait(vKey);
-  if (vHit) return vHit;
+  const sources = [m.source, ...(SOURCE_ALIASES[m.source] ?? [])];
+  const names = candidateModelNames(m.name);
+
+  // 1. Exact loadout variant key across sources & name variants
+  for (const src of sources) {
+    for (const nm of names) {
+      const vKey = modelVariantKey(src, nm, kit);
+      const vHit = getPortrait(vKey);
+      if (vHit) return vHit;
+    }
+  }
 
   // 2. Variant key without generic 'Close combat weapon'
   const nonGeneric = kit.filter((x) => !/^close combat weapon$/i.test(x.trim()));
   if (nonGeneric.length > 0 && nonGeneric.length !== kit.length) {
-    const vKey2 = modelVariantKey(m.source, m.name, nonGeneric);
-    const vHit2 = getPortrait(vKey2);
-    if (vHit2) return vHit2;
+    for (const src of sources) {
+      for (const nm of names) {
+        const vKey2 = modelVariantKey(src, nm, nonGeneric);
+        const vHit2 = getPortrait(vKey2);
+        if (vHit2) return vHit2;
+      }
+    }
   }
 
   // 3. Model name portrait (e.g. Havoc Champion, Wolf Scout Pack Leader, Visionary)
-  if (m.name && m.name !== m.source) {
-    const mKey = modelPortraitKey(m.source, m.name);
-    const mHit = getPortrait(mKey);
-    if (mHit) return mHit;
+  for (const src of sources) {
+    for (const nm of names) {
+      if (nm && nm !== src) {
+        const mKey = modelPortraitKey(src, nm);
+        const mHit = getPortrait(mKey);
+        if (mHit) return mHit;
+      }
+    }
   }
 
   // 4. Unit datasheet portrait
-  return getPortrait(m.source);
+  for (const src of sources) {
+    const hit = getPortrait(src);
+    if (hit) return hit;
+  }
+  return undefined;
 };
 /** true when the player added this photo in the app (so it can be removed); server images can't be. */
 export const hasOwnPortrait = (datasheet: string): boolean => datasheet in cache || (cloudMode === 'write' && datasheet in cloud);

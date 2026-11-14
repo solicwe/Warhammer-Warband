@@ -746,4 +746,72 @@ describe('User Feedback Fixes Verification', () => {
     expect(term.homer).toBeDefined();
     expect(pointInPoly(term.homer!, zoneOf(s, term.owner))).toBe(true);
   });
+
+  it('army rules isolation: CD has no Dark Pacts, DRU has no Battle Focus, GC has no Synapse', () => {
+    const cd = JSON.parse(fs.readFileSync('public/data/factions/CD.json', 'utf8'));
+    expect(cd.armyRules.map((r: { name: string }) => r.name)).not.toContain('Dark Pacts');
+    expect(cd.armyRules.map((r: { name: string }) => r.name)).toContain('The Shadow of Chaos');
+
+    const dru = JSON.parse(fs.readFileSync('public/data/factions/DRU.json', 'utf8'));
+    expect(dru.armyRules.map((r: { name: string }) => r.name)).not.toContain('Battle Focus');
+    expect(dru.armyRules.map((r: { name: string }) => r.name)).not.toContain('Disparate Paths');
+    expect(dru.armyRules.map((r: { name: string }) => r.name)).toContain('Power from Pain');
+
+    const gc = JSON.parse(fs.readFileSync('public/data/factions/GC.json', 'utf8'));
+    expect(gc.armyRules.map((r: { name: string }) => r.name)).not.toContain('Synapse');
+    expect(gc.armyRules.map((r: { name: string }) => r.name)).not.toContain('Shadow in the Warp');
+    expect(gc.armyRules.map((r: { name: string }) => r.name)).toContain('Cult Ambush');
+  });
+
+  it('Adepta Sororitas and multi-model portraits correctly resolve specific model and loadout pictures', async () => {
+    const { getModelPortrait, loadImageManifest } = await import('../ui/portraits');
+    await loadImageManifest();
+
+    // 1. Celestian Sacresants regular model (singular Celestian Sacresant) with Anointed halberd
+    const sacresant = getModelPortrait({
+      source: 'Celestian Sacresants',
+      name: 'Celestian Sacresant',
+      weapons: [{ name: 'Anointed halberd' }, { name: 'Bolt pistol' }],
+    });
+    expect(sacresant).toContain('anointed-halberd');
+
+    // 2. Celestian Insidiants regular model (singular Celestian Insidiant) with Blessed sword
+    const insidiant = getModelPortrait({
+      source: 'Celestian Insidiants',
+      name: 'Celestian Insidiant',
+      weapons: [{ name: 'Blessed sword' }],
+    });
+    expect(insidiant).toContain('blessed-sword');
+
+    // 3. Battle Sisters Squad Sister Superior with alias support
+    const superior = getModelPortrait({
+      source: 'Battle Sisters Squad',
+      name: 'Sister Superior',
+      weapons: [{ name: 'Bolt pistol' }, { name: 'Close combat weapon' }],
+    });
+    expect(superior).toBeDefined();
+
+    // 4. Sororitas Rhino alias
+    const rhino = getModelPortrait({
+      source: 'Sororitas Rhino',
+      name: 'Sororitas Rhino',
+      weapons: [],
+    });
+    expect(rhino).toBeDefined();
+
+    // 5. Saint Celestine multi-model characters
+    const celestine = getModelPortrait({
+      source: 'Saint Celestine',
+      name: 'Celestine – EPIC HERO',
+      weapons: [{ name: 'The Ardent Blade' }],
+    });
+    expect(celestine).toContain('celestine-epic-hero');
+
+    const geminae = getModelPortrait({
+      source: 'Saint Celestine',
+      name: 'Geminae Superia',
+      weapons: [{ name: 'Bolt pistol' }, { name: 'Power weapon' }],
+    });
+    expect(geminae).toContain('geminae-superia');
+  });
 });

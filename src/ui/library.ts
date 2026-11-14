@@ -70,7 +70,13 @@ export function withAutoRules(s: GameState): GameState {
   if (!s.autoRules) s.autoRules = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
   // people make every choice themselves (stratagem prompts, reactions, Rituals, Blessings); bots make their own
   s.decides = ([0, 1] as PlayerId[]).filter((p) => !(s.bots ?? []).includes(p));
-  // battles saved before the Thousand Sons fix still carry army rules that are not theirs
-  for (const P of s.players) if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => { const n = typeof r === 'string' ? r : (r as any)?.name; return n !== 'Oath of Moment' && n !== 'Dark Pacts'; });
+  // battles saved before faction fixes still carry army rules that are not theirs
+  for (const P of s.players) {
+    const cleanName = (r: unknown) => (typeof r === 'string' ? r : (r as any)?.name)?.trim();
+    if (P.factionId === 'TS') P.armyRules = P.armyRules.filter((r) => { const n = cleanName(r); return n !== 'Oath of Moment' && n !== 'Dark Pacts'; });
+    if (P.factionId === 'CD') P.armyRules = P.armyRules.filter((r) => cleanName(r) !== 'Dark Pacts');
+    if (P.factionId === 'DRU') P.armyRules = P.armyRules.filter((r) => { const n = cleanName(r); return n !== 'Battle Focus' && n !== 'Disparate Paths'; });
+    if (P.factionId === 'GC') P.armyRules = P.armyRules.filter((r) => { const n = cleanName(r); return n !== 'Synapse' && n !== 'Shadow in the Warp'; });
+  }
   return s;
 }
