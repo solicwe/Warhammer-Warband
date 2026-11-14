@@ -825,8 +825,8 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
 /** Formation helper: lay out a unit around a point in rows with 0.5" gaps. */
 export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
   const ms = alive(u);
-  // spacing from each base's extent along x and y (compact spacing so squads tuck tightly behind cover)
-  const pad = ms.length > 12 ? 0.15 : 0.25;
+  // spacing from each base's extent along x and y (an oval base or hull is longer one way)
+  const pad = ms.length > 12 ? 0.3 : 0.6;
   const box = ms.map((m) => bodyBox(bodyAt(m, { x: 0, y: 0 })));
   const stepX = Math.max(...box.map((k) => k.x1 - k.x0)) + pad, stepY = Math.max(...box.map((k) => k.y1 - k.y0)) + pad;
   const perRow = Math.max(1, Math.ceil(Math.sqrt(ms.length)));
@@ -837,6 +837,26 @@ export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, P
     return { x: c.x + (col - (inRow - 1) / 2) * stepX, y: c.y + (row - (rows - 1) / 2) * stepY * (facingUp ? 1 : -1) };
   });
   // characters and big models take the central slots so casualties don't strand them
+  const slotOrder = slots.map((p, i) => i).sort((a, b) => dist(slots[a], c) - dist(slots[b], c));
+  const modelOrder = [...ms].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.profile.W - a.profile.W);
+  const out = new Map<string, Pt>();
+  modelOrder.forEach((m, i) => out.set(m.id, slots[slotOrder[i]]));
+  return out;
+}
+
+/** Compact formation: tightly bunches models with 0.15" gaps to tuck behind ruins and solid walls. */
+export function compactFormation(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
+  const ms = alive(u);
+  const pad = 0.15;
+  const box = ms.map((m) => bodyBox(bodyAt(m, { x: 0, y: 0 })));
+  const stepX = Math.max(...box.map((k) => k.x1 - k.x0)) + pad, stepY = Math.max(...box.map((k) => k.y1 - k.y0)) + pad;
+  const perRow = Math.max(1, Math.ceil(Math.sqrt(ms.length)));
+  const rows = Math.ceil(ms.length / perRow);
+  const slots: Pt[] = ms.map((_, i) => {
+    const row = Math.floor(i / perRow), col = i % perRow;
+    const inRow = Math.min(perRow, ms.length - row * perRow);
+    return { x: c.x + (col - (inRow - 1) / 2) * stepX, y: c.y + (row - (rows - 1) / 2) * stepY * (facingUp ? 1 : -1) };
+  });
   const slotOrder = slots.map((p, i) => i).sort((a, b) => dist(slots[a], c) - dist(slots[b], c));
   const modelOrder = [...ms].sort((a, b) => Number(b.isCharacter) - Number(a.isCharacter) || b.profile.W - a.profile.W);
   const out = new Map<string, Pt>();

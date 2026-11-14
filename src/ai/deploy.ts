@@ -5,7 +5,7 @@
 //  - a unit with OC on the home objective while nobody holds it;
 //  - units spread out rather than packed together (blast weapons, room to move), vehicles never boxed in.
 import { RULES } from '../engine/config';
-import { formationAt, isRiledUp, objectiveTerrain, scoutsOf, validatePlacement, zoneOf } from '../engine/game';
+import { compactFormation, formationAt, isRiledUp, objectiveTerrain, scoutsOf, validatePlacement, zoneOf } from '../engine/game';
 import { bodyAt, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap, segCrossesPoly, segSegDist } from '../engine/geometry';
 import { canDo, unitFlags } from '../rules-engine/effects';
 import { canLeave } from './botMove';
@@ -156,16 +156,17 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       const c = { x, y };
       if (how === 'deploy' && !circleTouchesPoly(c, 0, zone)) continue;
       if (how === 'infiltrate' && circleTouchesPoly(c, RULES.reserves.enemyDistance, enemyZone)) continue;
-      const pos = formationAt(u, c, up);
-      if (!validatePlacement(s, u, pos, how).ok) continue;
-      const ms = alive(u).map((m) => ({ ...m, ...pos.get(m.id)! }) as ModelState);
-      const centre = polyCentroid(ms);
-      let score = 0;
-      const wholly = ms.every((m) => bodyWhollyInPoly(bodyAt(m, m), zone));
-      if (how === 'deploy') {
-        if (!wholly) continue;
-        score += 50;
-      }
+      const poses = alive(u).length > 3 ? [formationAt(u, c, up), compactFormation(u, c, up)] : [formationAt(u, c, up)];
+      for (const pos of poses) {
+        if (!validatePlacement(s, u, pos, how).ok) continue;
+        const ms = alive(u).map((m) => ({ ...m, ...pos.get(m.id)! }) as ModelState);
+        const centre = polyCentroid(ms);
+        let score = 0;
+        const wholly = ms.every((m) => bodyWhollyInPoly(bodyAt(m, m), zone));
+        if (how === 'deploy') {
+          if (!wholly) continue;
+          score += 50;
+        }
 
       // shelter: physically behind a terrain footprint or solid wall relative to enemy zone
       const sheltered = isBehindTerrain(s, ec, centre);
@@ -226,6 +227,7 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       // where the player pointed, if they did
       if (opt.near) score -= dist(centre, opt.near) * 0.4;
       cands.push({ pos, ms, centre, score });
+      }
     }
   }
   cands.sort((a, b) => b.score - a.score);
