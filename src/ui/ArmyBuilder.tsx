@@ -1663,6 +1663,35 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 <input className="ab-title ab-name-input" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
                 <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
                 <span className="ab-det-name">{list.detachments.join(' · ') || 'No Detachment selected'}</span>
+                {PHOTO_EDIT && (
+                  <div className="ab-export-portraits-wrap" style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn small ghost"
+                      style={{ fontSize: 11, padding: '2px 6px', height: 'auto' }}
+                      onClick={async () => {
+                        const msg = await download('custom-portraits.json', exportPortraitsJson(), 'application/json');
+                        setNote(msg);
+                      }}
+                      title="Export all custom portraits as JSON"
+                    >
+                      <Icon name="history" size={12} /> Export JSON
+                    </button>
+                    <button
+                      type="button"
+                      className="btn small ghost"
+                      style={{ fontSize: 11, padding: '2px 6px', height: 'auto' }}
+                      onClick={async () => {
+                        const zip = exportPortraitsZip();
+                        const msg = await download('custom-portraits.zip', zip, 'application/zip');
+                        setNote(msg);
+                      }}
+                      title="Export all custom portraits as a ZIP file"
+                    >
+                      <Icon name="save" size={12} /> Export ZIP
+                    </button>
+                  </div>
+                )}
               </span>
               {list.units.length > 0 && (
                 // the page runs where confirm() dialogs are blocked: tap once to arm, again to clear
