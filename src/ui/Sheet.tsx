@@ -472,20 +472,7 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
   );
 }
 
-/** One picture per model (by name, and by loadout when the same model comes with different kits): tap to set one. */
-export function ModelPictures({ variants, kind, owner }: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
-  if (!variants.length) return null;
-  return (
-    <div>
-      <div className="small muted">{PHOTO_EDIT ? 'Model pictures · tap to set one for each model / loadout' : 'Model Portraits & Loadouts'}</div>
-      <div className="model-pics">
-        {variants.map((v) => (
-          <div key={v.key} className="model-pic">
-            <Portrait kind={kind} owner={owner} size={48} datasheet={v.key} fallback={v.fallback} editable={PHOTO_EDIT} />
-            <span>{v.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+/** Model portraits & loadouts section is closed per user preference. */
+export function ModelPictures(_props: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
+  return null;
 }

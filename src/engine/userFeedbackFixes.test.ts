@@ -633,4 +633,117 @@ describe('User Feedback Fixes Verification', () => {
     // Open shooter shoots at normal 3+
     expect(openPool?.skill).toBe(3);
   });
+
+  it('Melee 2nd-rank fighting eligibility: squad mates in base contact allow trailing models to fight', async () => {
+    const { buildFightPools } = await import('./attack');
+    const { autoApproach } = await import('./game');
+
+    const s = {
+      phase: 'fight',
+      round: 1,
+      turn: 1,
+      active: 0,
+      players: [{ id: 0, role: 'attacker', factionId: 'SM', detachments: [] }, { id: 1, role: 'defender', factionId: 'CSM', detachments: [] }],
+      terrain: [],
+      units: [],
+      objectives: [],
+      log: [],
+    } as unknown as any;
+
+    const enemyModel = { id: 'e1', name: 'Legionary', x: 20, y: 20, r: 0.63, dead: false, wounds: 2, keywords: ['INFANTRY'], profile: { T: 4, W: 2, Sv: 3 } };
+    const enemyUnit: any = {
+      id: 'foe',
+      name: 'Legionaries',
+      owner: 1,
+      status: 'board',
+      sources: ['Legionaries'],
+      keywords: ['INFANTRY'],
+      factionKeywords: ['CHAOS SPACE MARINES'],
+      abilities: [],
+      enhancements: [],
+      buffs: [],
+      core: {},
+      models: [enemyModel],
+    };
+
+    // Attacking squad of 3 models:
+    // m1 is directly in base contact with e1 (gap <= 0.05)
+    // m2 is in base contact with m1 (gap <= 0.05), so in 2nd rank behind m1
+    // m3 is far away (> 2" away)
+    const m1 = { id: 'm1', name: 'Marine 1', x: 20, y: 20 - 0.63 - 0.63, r: 0.63, dead: false, wounds: 2, keywords: ['INFANTRY'], profile: { T: 4, W: 2, Sv: 3, A: 2, WS: 3, S: 4, AP: 0, D: 1 } };
+    const m2 = { id: 'm2', name: 'Marine 2', x: 20, y: m1.y - 0.63 - 0.63, r: 0.63, dead: false, wounds: 2, keywords: ['INFANTRY'], profile: { T: 4, W: 2, Sv: 3, A: 2, WS: 3, S: 4, AP: 0, D: 1 } };
+    const m3 = { id: 'm3', name: 'Marine 3', x: 20, y: m1.y - 5.0, r: 0.63, dead: false, wounds: 2, keywords: ['INFANTRY'], profile: { T: 4, W: 2, Sv: 3, A: 2, WS: 3, S: 4, AP: 0, D: 1 } };
+
+    const meleeWeapon = {
+      name: 'Close combat weapon',
+      profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '2', skill: 3, S: 4, AP: 0, D: '1', abilities: [] }],
+    };
+    (m1 as any).weapons = [meleeWeapon];
+    (m2 as any).weapons = [meleeWeapon];
+    (m3 as any).weapons = [meleeWeapon];
+
+    const friendlyUnit: any = {
+      id: 'fr',
+      name: 'Intercessors',
+      owner: 0,
+      status: 'board',
+      sources: ['Intercessor Squad'],
+      keywords: ['INFANTRY'],
+      factionKeywords: ['SPACE MARINES'],
+      abilities: [],
+      enhancements: [],
+      buffs: [],
+      core: {},
+      models: [m1, m2, m3],
+    };
+    s.units = [friendlyUnit, enemyUnit];
+
+    const result = buildFightPools(s, friendlyUnit.id, enemyUnit.id);
+    expect(result.error).toBeUndefined();
+    // Both m1 (1st rank) and m2 (2nd rank behind m1) should be eligible to fight!
+    const totalModels = result.pools.reduce((sum, p) => sum + p.models, 0);
+    expect(totalModels).toBe(2);
+    expect(result.pools[0].fromIds).toEqual(['m1', 'm2']);
+    expect(result.pools[0].attackNote).toContain('2 models');
+  });
+
+  it('Teleport Homer marker placement establishes legal deployment territory anchor', async () => {
+    const { startOfBattle } = await import('./missions');
+    const { zoneOf } = await import('./game');
+    const { pointInPoly } = await import('./geometry');
+    const s = {
+      phase: 'command',
+      round: 1,
+      turn: 1,
+      active: 0,
+      deploymentId: 'dawn-of-war',
+      players: [
+        { id: 0, role: 'attacker', name: 'Player', factionId: 'SM', detachments: [] },
+        { id: 1, role: 'defender', name: 'Opponent', factionId: 'CSM', detachments: [] },
+      ],
+      terrain: [],
+      markers: [],
+      objectives: [
+        { id: 'home', x: 22, y: 8, r: 0.78, type: 'home' },
+        { id: 'center', x: 22, y: 30, r: 0.78, type: 'central' },
+        { id: 'enemyHome', x: 22, y: 52, r: 0.78, type: 'home' },
+      ],
+      units: [
+        {
+          id: 'term',
+          name: 'Terminator Squad',
+          owner: 0,
+          status: 'reserves',
+          abilities: [{ name: 'Teleport Homer: Place marker' }],
+          models: [],
+        },
+      ],
+      log: [],
+    } as unknown as any;
+
+    startOfBattle(s);
+    const term = s.units[0];
+    expect(term.homer).toBeDefined();
+    expect(pointInPoly(term.homer!, zoneOf(s, term.owner))).toBe(true);
+  });
 });

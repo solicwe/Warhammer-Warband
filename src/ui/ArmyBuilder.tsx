@@ -779,9 +779,19 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   /** The Detachments page: every detachment of the faction, open one to read it, tick one to use it. */
   const detPickerPage = () => {
     if (!detPicker || !faction) return null;
+    const subPriority = (d: { subfaction?: string }) => {
+      if (list.subfaction && d.subfaction === list.subfaction) return 0;
+      if (!d.subfaction) return 1;
+      return 2;
+    };
     const dets = faction.detachments.filter((d) => d.forceDisposition && (allowed(d) || list.detachments.includes(d.name)))
-      // the army's own detachments first, then one group per Chapter (or other sub-faction)
-      .sort((a, b) => (a.subfaction ?? '').localeCompare(b.subfaction ?? ''));
+      // selected subfaction detachments first, then generic/faction-wide, then others
+      .sort((a, b) => {
+        const pA = subPriority(a);
+        const pB = subPriority(b);
+        if (pA !== pB) return pA - pB;
+        return (a.subfaction ?? '').localeCompare(b.subfaction ?? '') || a.name.localeCompare(b.name);
+      });
     const groupName = (k?: string) => (k ? subTag(k) : `${factionName} detachments`);
     // Detachment Points: picks add up to the battle size's DP (one detachment alone may cost more)
     const dpOf = (n: string) => faction.detachments.find((x) => x.name === n)?.dp ?? 0;
@@ -859,6 +869,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       if (!query) return true;
       if (d.name.toLowerCase().includes(query)) return true;
       if (d.keywords?.some((k) => k.toLowerCase().includes(query))) return true;
+      if (d.factionKeywords?.some((k) => k.toLowerCase().includes(query))) return true;
       if (d.role?.toLowerCase().includes(query)) return true;
       return false;
     };
@@ -1107,10 +1118,25 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                     if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
                     return (
                       <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
-                        onClick={() => setUnit(u.uid, on ? { enhancement: undefined, enhancementPts: undefined } : { enhancement: o.name, enhancementPts: o.pts })}>
+                        onClick={() => {
+                          if (on) {
+                            setUnit(u.uid, { enhancement: undefined, enhancementPts: undefined });
+                          } else if (taken && !o.upgrade) {
+                            set({
+                              units: list.units.map((x) => {
+                                if (x.uid === taken.uid) return { ...x, enhancement: undefined, enhancementPts: undefined };
+                                if (x.uid === u.uid) return { ...x, enhancement: o.name, enhancementPts: o.pts };
+                                return x;
+                              }),
+                            });
+                            setNote(`Transferred ${o.name} from ${taken.datasheet} to ${u.datasheet}`);
+                          } else {
+                            setUnit(u.uid, { enhancement: o.name, enhancementPts: o.pts });
+                          }
+                        }}>
                         <span className="enh-head"><b>{o.name}</b><span>{on ? <><Icon name="check" size={15} /> Selected</> : `+${o.pts} pts`}</span></span>
                         {o.text && <span className="enh-text"><Em text={o.text} names={ruleNames} /></span>}
-                        <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? ` · taken by ${taken.datasheet} (one per army)` : ''}</span>
+                        <span className="enh-foot">{o.detachment}{o.upgrade ? ' · Upgrade' : ''}{taken ? (o.upgrade ? ` · taken by ${taken.datasheet}` : ` · taken by ${taken.datasheet} (tap to transfer)`) : ''}</span>
                       </button>
                     );
                   })}

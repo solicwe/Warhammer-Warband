@@ -4,7 +4,6 @@ import { KEYS, readText, writeText, saveBattleLog, loadBattleLogs, type BattleRe
 import { compressReplayTimeline } from '../services/replay';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
-import { camFocus, MapCam } from './MapCam';
 import { modelPortraitKey, modelVariantKey, kitOf, getPortrait } from './portraits';
 import { unitAttachedSummary, unitDisplayName, unitKitSignature, unitSubDetails, unitWeaponsSummary } from './loadout';
 import { WeaponFireModePanel } from './WeaponFireModePanel';
@@ -205,8 +204,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const [fxLevel, setFxLevelRaw] = useState<FxLevel>(loadFxLevel);
   const setFxLevel = (v: FxLevel) => { setFxLevelRaw(v); writeText(KEYS.fx, v); };
   const [sound, setSound] = useState(soundOn());
-  const [liveMap, setLiveMapRaw] = useState<boolean>(() => readText(KEYS.liveMap) !== '0');
-  const setLiveMap = (v: boolean) => { setLiveMapRaw(v); writeText(KEYS.liveMap, v ? '1' : '0'); };
   const [fastShooting, setFastShootingRaw] = useState<boolean>(() => readText(KEYS.fastShooting) === 'true');
   const setFastShooting = (v: boolean) => {
     setFastShootingRaw(v);
@@ -4057,17 +4054,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           </div>
         )}
       </div>
-      {(isMobileScreen || liveMap) && !viewing && !sheet && !showStrats && (
-        <MapCam
-          s={s}
-          focus={camFocus(modeUnit ?? selUnit)}
-          onClose={() => {
-            setLiveMap(false);
-            flash('Mirror closed (re-enable in Menu)');
-          }}
-          forceShow={liveMap}
-        />
-      )}
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
           <span className="drawer-grip" aria-hidden="true" />
@@ -4392,9 +4378,6 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
               </button>
               <button className="menu-item" onClick={() => { setShowMenu(false); setShowMissions(true); }}>
                 <Icon name="objective" size={22} /><span><b>Mission rules</b><small>Scoring for both sides, manual scoring</small></span>
-              </button>
-              <button className="menu-item" onClick={() => { const next = !liveMap; setLiveMap(next); setShowMenu(false); flash(next ? 'Mirror opened' : 'Mirror closed'); }}>
-                <Icon name="camera" size={22} /><span><b>Mirror camera</b><small>{liveMap ? 'Active · tap to hide' : 'Picture-in-picture view of battlefield'}</small></span>
               </button>
             </div>
             <div className="field">

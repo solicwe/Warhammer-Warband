@@ -1,6 +1,6 @@
 // Chapter Approved 2026-27 primary missions: Force Disposition matchups, objective actions,
 // operation markers and the scoring conditions of all 25 primary cards.
-import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
+import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById } from './state';
 import type { GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';

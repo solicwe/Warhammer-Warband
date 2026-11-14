@@ -825,8 +825,8 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
 /** Formation helper: lay out a unit around a point in rows with 0.5" gaps. */
 export function formationAt(u: UnitState, c: Pt, facingUp = true): Map<string, Pt> {
   const ms = alive(u);
-  // spacing from each base's extent along x and y (an oval base or hull is longer one way)
-  const pad = ms.length > 12 ? 0.3 : 0.6;
+  // spacing from each base's extent along x and y (compact spacing so squads tuck tightly behind cover)
+  const pad = ms.length > 12 ? 0.15 : 0.25;
   const box = ms.map((m) => bodyBox(bodyAt(m, { x: 0, y: 0 })));
   const stepX = Math.max(...box.map((k) => k.x1 - k.x0)) + pad, stepY = Math.max(...box.map((k) => k.y1 - k.y0)) + pad;
   const perRow = Math.max(1, Math.ceil(Math.sqrt(ms.length)));
@@ -2029,7 +2029,10 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
         const g = gapTo(m, c);
         if (g < g0 - 0.05 && g <= RULES.engagementRange) spots.push({ p: c, g: Math.max(g, 0.05), t });
       }
-      const friendsInContact = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id).flatMap(alive).filter((f) => enemyModels.some((e) => baseDist(f, e) <= 0.05));
+      const inContact = (b: Body) => enemyModels.some((e) => baseDist(b, e) <= 0.05);
+      const otherFriends: Body[] = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id).flatMap(alive).filter((f) => inContact(f));
+      const squadFriends: Body[] = ms.filter((f) => f.id !== m.id && pos.has(f.id)).map((f) => bodyAt(f, pos.get(f.id)!)).filter((b) => inContact(b));
+      const friendsInContact = [...otherFriends, ...squadFriends];
       for (const f of friendsInContact) for (let k = 0; k < 24; k++) {
         const c = contactAt(m, f, (k / 24) * Math.PI * 2, 0.02);
         const t = dist(m, c);

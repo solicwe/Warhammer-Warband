@@ -107,22 +107,48 @@ export function saveBattleLog(record: BattleRecord): void {
     } : undefined,
   };
   const filtered = current.filter((r) => r.id !== cleanRecord.id);
-  const trimmed = [cleanRecord, ...filtered].slice(0, 30).map((r, idx) => {
+  let candidates: BattleRecord[] = [cleanRecord, ...filtered].slice(0, 30).map((r, idx) => {
     if (idx >= 10 && r.replayState?.timeline) {
       const { timeline: _, ...restReplay } = r.replayState;
       return { ...r, replayState: restReplay };
     }
     return r;
   });
-  if (!writeJSON(KEYS.battleLogs, trimmed)) {
-    const minimal = [cleanRecord, ...filtered].slice(0, 15).map((r, idx) => {
-      if (idx >= 5 && r.replayState?.timeline) {
-        const { timeline: _, ...restReplay } = r.replayState;
-        return { ...r, replayState: restReplay };
-      }
-      return r;
-    });
-    writeJSON(KEYS.battleLogs, minimal);
+
+  // Attempt initial write
+  if (writeJSON(KEYS.battleLogs, candidates)) return;
+
+  // Level 1 prune: strip timelines from all except top 3 newest replays
+  candidates = candidates.slice(0, 20).map((r, idx) => {
+    if (idx >= 3 && r.replayState?.timeline) {
+      const { timeline: _, ...restReplay } = r.replayState;
+      return { ...r, replayState: restReplay };
+    }
+    return r;
+  });
+  if (writeJSON(KEYS.battleLogs, candidates)) return;
+
+  // Level 2 prune: keep timeline only for current game
+  candidates = candidates.map((r, idx) => {
+    if (idx >= 1 && r.replayState?.timeline) {
+      const { timeline: _, ...restReplay } = r.replayState;
+      return { ...r, replayState: restReplay };
+    }
+    return r;
+  });
+  if (writeJSON(KEYS.battleLogs, candidates)) return;
+
+  // Level 3 progressive FIFO purge: pop oldest records until write succeeds
+  while (candidates.length > 1) {
+    candidates.pop();
+    if (writeJSON(KEYS.battleLogs, candidates)) return;
+  }
+
+  // Level 4 ultimate fallback: save current record without timeline
+  if (candidates.length === 1 && candidates[0].replayState?.timeline) {
+    const { timeline: _, ...restReplay } = candidates[0].replayState;
+    candidates[0] = { ...candidates[0], replayState: restReplay };
+    writeJSON(KEYS.battleLogs, candidates);
   }
 }
 
