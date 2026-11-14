@@ -410,28 +410,18 @@ button.ab-faction { border: none; background: none; padding: 0; text-align: left
 .ab-moreinfo svg { transform: rotate(180deg); }
 .ds-more svg { transform: none; }
 
-.ab-subgroup-title {
+.ab-pop-tier-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 4px 8px;
   background: var(--surface-2);
-  font: 700 12px var(--font-cond);
-  letter-spacing: 0.12em;
+  font: 700 11px var(--font-cond);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  border-bottom: 1px solid var(--line);
-  border-top: 1px solid var(--line);
-}
-.ab-subgroup-title:first-child {
-  border-top: none;
-}
-.ab-subgroup-count {
-  font: 600 11px var(--font-cond);
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text-2);
+  border-radius: 4px;
+  margin: 6px 0 3px;
 }
 
 .ab-filter-bar {

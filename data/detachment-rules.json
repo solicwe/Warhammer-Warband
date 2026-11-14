@@ -6616,7 +6616,7 @@
           "auto": true,
           "botOnly": true,
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "do": [
             {
@@ -6635,7 +6635,7 @@
           "auto": true,
           "botOnly": true,
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "do": [
             {
@@ -6652,7 +6652,7 @@
         {
           "when": "selectedToShoot",
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "if": [
             "!marked:pathWarrior"
@@ -6675,7 +6675,7 @@
         {
           "when": "selectedToShoot",
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "if": [
             "!marked:pathWarrior"
@@ -6698,7 +6698,7 @@
         {
           "when": "selectedToFight",
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "if": [
             "!marked:pathWarrior"
@@ -6721,7 +6721,7 @@
         {
           "when": "selectedToFight",
           "units": [
-            "ASPECT WARRIORS|AVATAR OF KHAINE"
+            "ASPECT WARRIORS|ASPECT WARRIOR|AVATAR OF KHAINE"
           ],
           "if": [
             "!marked:pathWarrior"

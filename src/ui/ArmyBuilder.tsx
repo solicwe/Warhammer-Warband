@@ -85,7 +85,7 @@ export const FACTION_TACTICAL_KEYWORDS: Record<string, string[]> = {
   NEC: ['CANOPTEK', 'CRYPTEK', 'NOBLE', 'OVERLORD', 'DESTROYER CULT', 'TRIARCH', 'FLAYED ONES', 'LYCHGUARD', 'IMMORTALS', 'C’TAN SHARD'],
   TAU: ['BATTLESUIT', 'KROOT', 'VESPID', 'STEALTH', 'GHOSTKEEL', 'MARKERLIGHT', 'DRONE', 'SHAPER'],
   TYR: ['SYNAPSE', 'VANGUARD INVADER', 'ENDLESS MULTITUDE', 'HARVESTER', 'MONSTER', 'BURROWER', 'SWARM', 'LICTOR', 'PSYKER'],
-  AE: ['ASPECT WARRIOR', 'WRAITH CONSTRUCT', 'GUARDIANS', 'FARSEER', 'WARLOCK', 'AUTARCH', 'SPIRITSEER', 'WINDRIDERS', 'RANGERS', 'HARLEQUIN', 'TROUPE', 'ANHRATHE'],
+  AE: ['ASPECT WARRIORS', 'ASPECT WARRIOR', 'WRAITH CONSTRUCT', 'GUARDIANS', 'FARSEER', 'WARLOCK', 'AUTARCH', 'SPIRITSEER', 'WINDRIDERS', 'RANGERS', 'HARLEQUIN', 'TROUPE', 'ANHRATHE'],
   DRU: ['KABAL', 'WYCH CULT', 'HAEMONCULUS COVENS', 'BLADES FOR HIRE', 'SCOURGES', 'INCUBI', 'MANDRAKES', 'BEAST'],
   AS: ['PENITENT', 'CELESTIAN', 'SERAPHIM', 'ZEPHYRIM', 'REPENTIA', 'RETRIBUTOR', 'DOMINION', 'PARAGON WARSUITS', 'MINISTORUM PRIEST', 'JUMP PACK'],
   AdM: ['SKITARII', 'CULT MECHANICUS', 'KATAPHRON', 'ELECTRO-PRIESTS', 'LEGIO CYBERNETICA', 'TECH-PRIEST', 'SICARIAN', 'SYDONIAN', 'PTERAXII', 'SERBERYS'],
@@ -648,38 +648,13 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           );
         };
 
-        const renderSectionContent = () => {
-          if (sec.id === 'characters') {
-            const isEpic = (u: ArmyUnitEntry) => !!sheetOf(u.datasheet)?.keywords.includes('EPIC HERO');
-            const epics = us.filter(isEpic);
-            const chars = us.filter((u) => !isEpic(u));
-            if (epics.length > 0 && chars.length > 0) {
-              return (
-                <>
-                  <div className="ab-subgroup-title">
-                    <span>Epic Heroes</span>
-                    <span className="ab-subgroup-count">{epics.length}</span>
-                  </div>
-                  {epics.map(renderSquad)}
-                  <div className="ab-subgroup-title">
-                    <span>Characters</span>
-                    <span className="ab-subgroup-count">{chars.length}</span>
-                  </div>
-                  {chars.map(renderSquad)}
-                </>
-              );
-            }
-          }
-          return us.map(renderSquad);
-        };
-
         return (
           <section key={sec.id} className="ab-section">
             <div className="ab-section-head">
               <span>{sec.title}</span>
               <button type="button" className="ab-add" aria-label={`Add ${sec.title}`} onClick={() => { setQ(''); setAdding(sec.id); }}>+</button>
             </div>
-            {renderSectionContent()}
+            {us.map(renderSquad)}
           </section>
         );
       })}
@@ -1316,12 +1291,31 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
 
     let content: React.ReactNode;
     if (pop.mode === 'squad') {
+      const isAlly = (d: DatasheetData) => !!(d.ally || detAlly(d));
+      const existing = attachOptions(list, faction, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet));
+      const mainExisting = existing.filter((b) => !isAlly(sheetOf(b.datasheet)!));
+      const allyExisting = existing.filter((b) => isAlly(sheetOf(b.datasheet)!));
+      const mainNew = squadsFor.filter((d) => !isAlly(d));
+      const allyNew = squadsFor.filter(isAlly);
+
       content = (
         <>
           <div className="ab-pop-head">{supportIn(list, sheet) ? 'Add Squad (as Support)' : 'Add Squad (as Leader)'}</div>
-          {attachOptions(list, faction, u).filter((b) => squadsFor.some((d) => d.name === b.datasheet))
-            .map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
-          {squadsFor.map((d) => newCard(d, (models) => {
+          {(mainExisting.length > 0 || mainNew.length > 0) && (
+            <div className="ab-pop-tier-title">{factionName} (Main Army)</div>
+          )}
+          {mainExisting.map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
+          {mainNew.map((d) => newCard(d, (models) => {
+            const b = newEntry(d, models);
+            if (!b) return;
+            set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
+            setNote(`Added ${d.name}; ${u.datasheet} joined it`); close();
+          }))}
+          {(allyExisting.length > 0 || allyNew.length > 0) && (
+            <div className="ab-pop-tier-title">Allied Squads</div>
+          )}
+          {allyExisting.map((b) => rosterCard(b, () => attach(u.uid, b.uid, `${u.datasheet} joined ${b.datasheet}`)))}
+          {allyNew.map((d) => newCard(d, (models) => {
             const b = newEntry(d, models);
             if (!b) return;
             set({ units: [...list.units.map((x) => (x.uid === u.uid ? { ...x, attachTo: b.uid, embarkIn: undefined } : x)), b] });
@@ -1331,12 +1325,32 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       );
     } else if (pop.mode === 'leader' || pop.mode === 'support') {
       const support = pop.mode === 'support';
+      const isAlly = (d: DatasheetData) => !!(d.ally || detAlly(d));
+      const candidates = leadersFor(support);
+      const existing = list.units.filter((c) => candidates.some((d) => d.name === c.datasheet) && attachOptions(list, faction, c).some((b) => b.uid === u.uid));
+      const mainExisting = existing.filter((c) => !isAlly(sheetOf(c.datasheet)!));
+      const allyExisting = existing.filter((c) => isAlly(sheetOf(c.datasheet)!));
+      const mainNew = candidates.filter((d) => !isAlly(d));
+      const allyNew = candidates.filter(isAlly);
+
       content = (
         <>
           <div className="ab-pop-head">{support ? 'Add Support' : 'Add Leader'} · {u.datasheet}</div>
-          {list.units.filter((c) => leadersFor(support).some((d) => d.name === c.datasheet) && attachOptions(list, faction, c).some((b) => b.uid === u.uid))
-            .map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} joined ${u.datasheet}`)))}
-          {leadersFor(support).map((d) => newCard(d, (models) => {
+          {(mainExisting.length > 0 || mainNew.length > 0) && (
+            <div className="ab-pop-tier-title">{factionName} (Main Army)</div>
+          )}
+          {mainExisting.map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} joined ${u.datasheet}`)))}
+          {mainNew.map((d) => newCard(d, (models) => {
+            const c = newEntry(d, models, { attachTo: u.uid });
+            if (!c) return;
+            set({ units: [...list.units, c] });
+            setNote(`Added ${d.name} to ${u.datasheet}`); close();
+          }))}
+          {(allyExisting.length > 0 || allyNew.length > 0) && (
+            <div className="ab-pop-tier-title">Allied Leaders</div>
+          )}
+          {allyExisting.map((c) => rosterCard(c, () => attach(c.uid, u.uid, `${c.datasheet} joined ${u.datasheet}`)))}
+          {allyNew.map((d) => newCard(d, (models) => {
             const c = newEntry(d, models, { attachTo: u.uid });
             if (!c) return;
             set({ units: [...list.units, c] });

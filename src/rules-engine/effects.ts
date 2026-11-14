@@ -497,7 +497,10 @@ export const unitMatches = (u: UnitState, filters?: string[]) => (filters ?? [])
   if (alt.startsWith('id:')) return u.id === alt.slice(3);
   if (alt.startsWith('kw:')) return kwPhraseMatch(u, alt.slice(3));
   if (alt.startsWith('!')) return !(u.keywords.includes(alt.slice(1)) || u.factionKeywords.includes(alt.slice(1)));
-  return u.keywords.includes(alt) || u.factionKeywords.includes(alt);
+  if (u.keywords.includes(alt) || u.factionKeywords.includes(alt)) return true;
+  if (alt === 'ASPECT WARRIORS' && (u.keywords.includes('ASPECT WARRIOR') || u.factionKeywords.includes('ASPECT WARRIOR'))) return true;
+  if (alt === 'ASPECT WARRIOR' && (u.keywords.includes('ASPECT WARRIORS') || u.factionKeywords.includes('ASPECT WARRIORS'))) return true;
+  return false;
 }));
 
 function playerDetEffects(s: GameState, p: PlayerId): { e: Effect; label: string }[] {
