@@ -215,20 +215,25 @@ function makePlan(s: GameState, p: PlayerId, mine: UnitState[]): ArmyPlan {
     if (i.value >= 170 || (i.punch >= topPunch * 0.5 && i.value >= 90)) jobs.set(i.u.id, { role: 'hammer', why: `${Math.round(i.punch)} pts of damage a turn` });
   }
 
-  // anchors: the field objectives, nearest unit first; cheap brawlers screen instead of standing in the open
+  // anchors: the field objectives, nearest unit first; cheap brawlers screen instead of standing in the open (unless pressure melee army like Orks/WE)
+  const isPressure = s.players[p]?.factionId === 'ORK' || s.players[p]?.factionId === 'WE';
   const field = s.objectives.filter((o) => !(o.type === 'home' && o.owner === p)).map((o) => ({ o, at: objPoint(s, o) }))
     .filter(({ o }) => !(o.type === 'home'))
     .sort((a, b) => Math.min(...mine.map((u) => dist(centre(u), a.at))) - Math.min(...mine.map((u) => dist(centre(u), b.at))));
   for (const f of field) {
-    const c = mine.filter(free).map((u) => info.get(u.id)!).filter((i) => i.oc > 0 && !(i.brawler && i.value <= 120))
+    const c = mine.filter(free).map((u) => info.get(u.id)!).filter((i) => i.oc > 0 && (!i.brawler || isPressure || i.value > 120))
       .map((i) => ({ i, d: dist(centre(i.u), f.at) / Math.max(4, i.M) })).sort((a, b) => a.d - b.d)[0];
-    if (c && c.d <= 4) jobs.set(c.i.u.id, { role: 'anchor', post: f.at, why: `takes objective ${s.objectives.indexOf(f.o) + 1}` });
+    if (c && (c.d <= 4 || (isPressure && c.d <= 6))) jobs.set(c.i.u.id, { role: 'anchor', post: f.at, why: `takes objective ${s.objectives.indexOf(f.o) + 1}` });
   }
 
-  // what's left: cheap fighters close in out of sight and charge what comes near; cheap shooters take what needs bodies
+  // what's left: cheap fighters close in out of sight and charge what comes near; pressure melee pushes forward
   for (const u of mine.filter(free)) {
     const i = info.get(u.id)!;
-    jobs.set(u.id, i.brawler ? { role: 'screen', why: 'cheap fighters: wait in cover, then charge' } : { role: 'anchor', why: 'takes whatever needs bodies' });
+    if (isPressure && i.brawler) {
+      jobs.set(u.id, { role: 'hammer', why: 'green tide rush: advance out of deployment zone and krump' });
+    } else {
+      jobs.set(u.id, i.brawler ? { role: 'screen', why: 'cheap fighters: wait in cover, then charge' } : { role: 'anchor', why: 'takes whatever needs bodies' });
+    }
   }
   return { stance, risk, jobs };
 }

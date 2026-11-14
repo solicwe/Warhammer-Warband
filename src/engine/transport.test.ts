@@ -44,6 +44,25 @@ describe('army builder: who starts in which transport', () => {
     // too many models
     const full = list('ORK', [['Trukk', 1, 60], ['Boyz', 20, 180, { embarkIn: 'x0' }], ['Warboss', 1, 100, { warlord: true }]]);
     expect(transportLoads(full, ORK)[0].problems.some((p) => /not enough room/.test(p))).toBe(true);
+
+    // split units (Immolator, Sagitaur) take half space
+    const as = load('AS');
+    const immolator = list('AS', [['Immolator', 1, 115], ['Battle Sisters Squad', 10, 100, { embarkIn: 'x0' }]]);
+    const imLoads = transportLoads(immolator, as);
+    expect(imLoads[0].problems).toEqual([]);
+    expect(imLoads[0].used).toBe(5);
+
+    // Night Scythe takes a Necrons Infantry unit
+    const nec = load('NEC');
+    const scythe = list('NEC', [['Night Scythe', 1, 145], ['Necron Warriors', 10, 100, { embarkIn: 'x0' }]]);
+    const nsLoads = transportLoads(scythe, nec);
+    expect(nsLoads[0].problems).toEqual([]);
+
+    // Attached character embarkIn syncing
+    const attachedEmbark = list('SM', [['Impulsor', 1, 75], ['Intercessor Squad', 5, 80], ['Captain', 1, 80, { attachTo: 'x1', embarkIn: 'x0', warlord: true }]]);
+    const attLoads = transportLoads(attachedEmbark, SM);
+    expect(attLoads[0].problems).toEqual([]);
+    expect(attLoads[0].used).toBe(6);
   });
 
   it('the units start the battle embarked; a Dedicated Transport left empty is lost when deployment ends', () => {

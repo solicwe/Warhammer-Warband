@@ -733,14 +733,20 @@ function archetypeBiasScore(s: GameState, u: UnitState, kind: MoveKind | 'statio
     }
   }
 
-  // 2. PRESSURE_MELEE_TRADING: Stage behind obscuring cover in Turns 1-2, aggressive central dominance
+  // 2. PRESSURE_MELEE_TRADING: Aggressive forward push out of deployment zone, midfield domination, Waaagh! advance
   if (profile.name === 'PRESSURE_MELEE_TRADING') {
-    if (s.round <= 2 && ctx.brawler) {
-      const seenByShooters = ctx.foes.some((f) => f.range >= 18 && seen(s, f.u, u));
-      if (!seenByShooters) bias += 14;
+    const tableMid = { x: tableW(s) / 2, y: tableH(s) / 2 };
+    const distToCenter = dist(c, tableMid);
+    if (distToCenter < 24) bias += (24 - distToCenter) * 1.2 * profile.centerBoardDominance;
+    const inOwnDeploy = pointInPoly(c, zoneOf(s, u.owner));
+    if (inOwnDeploy && kind === 'stationary' && s.round <= 2 && ctx.foes.length > 0 && ctx.role !== 'home') {
+      bias -= 25; // Heavily penalize sitting idle in deployment zone
+    }
+    if (kind === 'advance' && (s.players[u.owner].riledUntilTurn >= s.turn || ctx.brawler)) {
+      bias += 15;
     }
     const nearObj = s.objectives.some((o) => dist(o, c) <= 4);
-    if (nearObj && oc(u) > 0) bias += 12 * profile.centerBoardDominance;
+    if (nearObj && oc(u) > 0) bias += 18 * profile.centerBoardDominance;
   }
 
   // 3. GLASS_CANNON_TRICKERY: Strict threat bubble avoidance (M + 8" charge), surgical objective snatching
@@ -784,8 +790,9 @@ export function scoreSpot(s: GameState, u: UnitState, kind: MoveKind | 'stationa
   u.maxMoved = Math.max(u.maxMoved, moved);
   try {
     const w = BW(u.owner);
-    // a screen keeps out of sight like a shooting unit (it's there to be in the way later, not shot now)
-    const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
+    const isPressureMelee = s.players[u.owner]?.factionId === 'ORK' || s.players[u.owner]?.factionId === 'WE';
+    const rawCaution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
+    const caution = isPressureMelee ? rawCaution * (s.players[u.owner].riledUntilTurn >= s.turn ? 0.35 : 0.5) : rawCaution;
     const homeFactor = homeFactorOf(s, u, ctx, w);
     return objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor) + shootScore(s, u, kind, ctx) + chargeScore(s, u, ctx) - caution * dangerScore(s, u, ctx) + pullScore(s, u, ctx) - crowdScore(s, u) + positionScore(s, u) + denialScore(u, ctx) + slip(s, u) + archetypeBiasScore(s, u, kind, ctx);
   } finally {

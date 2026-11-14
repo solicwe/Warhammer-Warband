@@ -2519,6 +2519,7 @@ const modelSpace = (t: TransportInfo, u: UnitState, m: ModelState) => {
 
 /** Transport space a unit takes (Downtrodden: every 2 Gretchin take the space of 1 model). */
 function unitSpace(t: TransportInfo, u: UnitState) {
+  if (t.unitCapacity) return 1;
   const ms = alive(u);
   if (!u.abilities.some((a) => a.name === 'Downtrodden')) return ms.reduce((b, m) => b + modelSpace(t, u, m), 0);
   const grots = ms.filter((m) => /gretchin/i.test(m.name)).length;
@@ -2542,7 +2543,9 @@ export function canEmbarkIn(s: GameState, u: UnitState, t: UnitState): string | 
     const why = transportFit(T, modelKws(u, m)).why;
     if (why) return `${m.name}: ${why}`;
   }
-  if (u.factionKeywords.length && t.factionKeywords.length && !u.factionKeywords.some((k) => t.factionKeywords.includes(k))) return 'Different faction';
+  const sharedAlliance = u.keywords.some((k) => ['IMPERIUM', 'CHAOS', 'AELDARI'].includes(k.toUpperCase()) && t.keywords.some((tk) => tk.toUpperCase() === k.toUpperCase()));
+  const sharesFaction = u.factionKeywords.some((k) => t.factionKeywords.includes(k));
+  if (!sharesFaction && !sharedAlliance && !inquisitorsUsingBodyguardTransport.size && !u.abilities.some((a) => a.name === 'Authority of the Inquisition')) return 'Different faction';
   const need = unitSpace(T, u);
   if (transportSpaceUsed(s, t) + need > T.capacity) return `Not enough room (${transportSpaceUsed(s, t)}+${need}/${T.capacity})`;
   return null;

@@ -172,10 +172,12 @@ export function botCommand(s: GameState) {
     const t = [...enemies].sort((a, b) => hurt(b) - hurt(a))[0];
     setOathTarget(s, p, t.id);
   }
-  if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed && s.round >= 2) {
+  if (P.armyRules.some((r) => r.name === 'Waaagh!') && !P.waaaghUsed) {
     const brawlers = mine.filter((u) => isBrawler(s, u));
-    const close = brawlers.filter((u) => enemies.some((e) => unitDistance(u, e) <= 16));
-    if (pace(s) >= 3 || close.length >= Math.max(1, brawlers.length / 2)) callWaaagh(s, p);
+    const close = brawlers.filter((u) => enemies.some((e) => unitDistance(u, e) <= 22));
+    if ((s.round === 1 && close.length >= 2) || s.round >= 2) {
+      callWaaagh(s, p);
+    }
   }
   if (P.armyRules.some((r) => r.name === 'Shadow in the Warp') && !P.shadowInTheWarpUsed && s.round >= 2) {
     if (shouldUnleashShadow(s, p)) unleashShadowInTheWarp(s, p);

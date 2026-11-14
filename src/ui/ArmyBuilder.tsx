@@ -627,7 +627,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       return {
         label: 'Remove',
         run: () => {
-          set({ units: list.units.filter((u) => u.datasheet !== name) });
+          const target = list.units.find((u) => u.datasheet === name);
+          if (target) removeUnit(target.uid);
           setNote(`Removed ${name}`);
         },
       };
@@ -730,8 +731,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       return {
         label: 'Remove Transport',
         run: () => {
-          const t = list.units.find((u) => u.datasheet === name);
-          if (t) removeUnit(t.uid);
+          const emptyT = list.units.find((u) => u.datasheet === name && !list.units.some((r) => r.embarkIn === u.uid && !r.attachTo))
+            ?? list.units.find((u) => u.datasheet === name);
+          if (emptyT) removeUnit(emptyT.uid);
           setNote(`Removed empty ${name}`);
         },
       };
@@ -745,6 +747,36 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         run: () => {
           setDets(list.detachments.filter((d) => d !== dName));
           setNote(`Removed Detachment "${dName}"`);
+        },
+      };
+    }
+    // 13. Unit cannot embark in transport
+    const cannotEmbarkMatch = /^(.+?) cannot embark in (.+?): (.+)$/.exec(e);
+    if (cannotEmbarkMatch) {
+      const riderName = cannotEmbarkMatch[1];
+      return {
+        label: `Disembark ${riderName}`,
+        run: () => {
+          const rider = list.units.find((u) => u.datasheet === riderName && u.embarkIn);
+          if (rider) setUnit(rider.uid, { embarkIn: undefined });
+          setNote(`Disembarked ${riderName}`);
+        },
+      };
+    }
+    // 14. Transport not enough room
+    const noRoomMatch = /^(.+?): not enough room/.exec(e);
+    if (noRoomMatch) {
+      const tName = noRoomMatch[1];
+      return {
+        label: 'Disembark passengers',
+        run: () => {
+          const t = list.units.find((u) => u.datasheet === tName);
+          if (t) {
+            set({
+              units: list.units.map((u) => (u.embarkIn === t.uid ? { ...u, embarkIn: undefined } : u)),
+            });
+            setNote(`Disembarked passengers from ${tName}`);
+          }
         },
       };
     }
@@ -884,7 +916,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
 
         const renderSquad = (u: ArmyUnitEntry) => {
           // a transport shows the units that start the battle inside it in its own card
-          const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
+          const riders = list.units.filter((r) => !r.attachTo && (r.embarkIn === u.uid || list.units.some((c) => c.attachTo === r.uid && c.embarkIn === u.uid)));
           if (!joined(u).length && !riders.length) return unitRow(u);
           return (
             <div key={u.uid} className="ab-group">
@@ -1444,7 +1476,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const rides = isTransport ? [] : list.units.filter((t) => t.uid !== rider.uid && parseTransport(sheetOf(t.datasheet)?.transport))
       .map((t) => ({ t, c: embarkCheck(list, faction, rider.uid, t.uid) })).filter(({ c }) => !c.why || c.full);
     const myLoad = transportLoads(list, faction).find((t) => t.uid === u.uid);
-    const riders = list.units.filter((r) => r.embarkIn === u.uid && !r.attachTo);
+    const riders = list.units.filter((r) => !r.attachTo && (r.embarkIn === u.uid || list.units.some((c) => c.attachTo === r.uid && c.embarkIn === u.uid)));
     const cargo = !myLoad ? [] : list.units.filter((r) => r.uid !== u.uid && !r.attachTo)
       .filter((r) => !r.embarkIn || r.embarkIn === u.uid || !list.units.some((t) => t.uid === r.embarkIn))
       .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);

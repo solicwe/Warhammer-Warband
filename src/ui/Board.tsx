@@ -850,6 +850,10 @@ function BoardImpl(props: BoardProps) {
   };
 
   const onWheel = (e: React.WheelEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest?.('.table-cards, .scrollable, [data-no-board-zoom]')) {
+      return;
+    }
     zoomAt(e.deltaY > 0 ? 1.12 : 1 / 1.12, screenToBoard(e.clientX, e.clientY));
   };
 
@@ -2241,7 +2245,7 @@ function BoardImpl(props: BoardProps) {
                 (with nothing under them, old copies of the cards stayed on screen beside the board) */}
             <rect x={-PX} y={0} width={(SIDE + 1.5) * PX} height={h * PX} fill="var(--board)" pointerEvents="none" />
             <foreignObject x={0} y={0} width={(SIDE - 0.5) * PX} height={h * PX} style={{ pointerEvents: 'none' }}>
-              <div className={`table-cards ${at}`}>
+              <div className={`table-cards ${at}`} onWheel={(e) => e.stopPropagation()}>
                 <div className={`table-head p${p}`}>{s.players[p].name} · Active Buffs</div>
                 {cards}
               </div>

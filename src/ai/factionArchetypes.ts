@@ -40,16 +40,16 @@ export const ARCHETYPE_PROFILES: Record<FactionArchetype, ArchetypeProfile> = {
   },
   PRESSURE_MELEE_TRADING: {
     name: 'PRESSURE_MELEE_TRADING',
-    description: 'Stage behind obscuring ruins turns 1-2, multi-charge overload turns 2-3, aggressive OC flipping',
-    kitePreference: 0.05,
-    screeningPriority: 0.60,
-    stagingBehindRuins: true,
+    description: 'Stage aggressively into midfield ruins, multi-charge overload turns 1-3, aggressive OC flipping and board flooding',
+    kitePreference: 0.0,
+    screeningPriority: 0.35,
+    stagingBehindRuins: false,
     threatBubbleEvasion: 0.0,
-    centerBoardDominance: 0.90,
+    centerBoardDominance: 1.35,
     toeInCoverHolding: true,
-    deepStrikeScreenGrid: 16.0,
-    overkillToleranceFactor: 1.30,
-    chargeThreshold: 0.40, // Willing to take longer charges (7-9")
+    deepStrikeScreenGrid: 15.0,
+    overkillToleranceFactor: 1.40,
+    chargeThreshold: 0.30, // Highly willing to take 8-10" charges
     vpFirstBias: 0.85,
   },
   GLASS_CANNON_TRICKERY: {

@@ -65,7 +65,7 @@ export function parseTransport(text?: string): TransportInfo | null {
       text,
     };
   }
-  const cap = /transport capacity of (\d+)\s+([^.(]*?)\s*models?\b/i.exec(text);
+  const cap = /transport capacity of (\d+)\s+([^.(]*?)\s*(?:models?|units?)\b/i.exec(text);
   if (!cap) return null;
   const list = (re: RegExp) => {
     const m = re.exec(text);
@@ -73,15 +73,16 @@ export function parseTransport(text?: string): TransportInfo | null {
   };
   // what it carries: "Tacticus or Phobos Infantry" → TACTICUS INFANTRY / PHOBOS INFANTRY; "… and 1 Necrons Infantry Character model"
   let kinds = cap[2].split(/\s+or\s+|\s+and\s+/i).map((k) => k.replace(/[’]/g, "'").trim().toUpperCase()).filter(Boolean);
-  const plus = /^\s*models?\s+and\s+\d+\s+([^.]+?)\s+models?\b/i.exec(text.slice(cap.index + cap[0].length - (/models?$/i.exec(cap[0])?.[0].length ?? 0)));
+  const plus = /^\s*(?:models?|units?)\s+and\s+\d+\s+([^.]+?)\s*(?:models?|units?)\b/i.exec(text.slice(cap.index + cap[0].length - (/(?:models?|units?)$/i.exec(cap[0])?.[0].length ?? 0)));
   const tailType = /\b(INFANTRY(?: CHARACTER)?|MONSTER|CHARACTER)$/.exec(kinds[kinds.length - 1] ?? '')?.[1];
   if (tailType) kinds = kinds.map((k) => (/\b(INFANTRY|MONSTER|CHARACTER)\b/.test(k) ? k : `${k} ${tailType}`));
   if (plus) kinds.push(plus[1].replace(/[’]/g, "'").trim().toUpperCase());
   // "(excluding Obliterator and Jump Pack models)" right after the capacity: those can't ride
-  const capEx = /^\s*models?\s*\(excluding ([^)]+)\)/i.exec(text.slice(cap.index + cap[0].length - (/models?$/i.exec(cap[0])?.[0].length ?? 0)));
+  const capEx = /^\s*(?:models?|units?)\s*\(excluding ([^)]+)\)/i.exec(text.slice(cap.index + cap[0].length - (/(?:models?|units?)$/i.exec(cap[0])?.[0].length ?? 0)));
   const forbidM = /cannot transport ([^.(]*?)(?:\s*\(excluding ([^)]+)\))?\s*\./i.exec(text);
   const spaces: [string, number][] = [];
   for (const m of text.matchAll(/Each ([^.]+?) model[s]? takes? (?:up )?the space of (\d+) models/gi)) for (const w of words(m[1])) spaces.push([w, +m[2]]);
+  const unitCap = /transport capacity of (\d+)\s+[^.(]*?\bunits?\b/i.test(text);
   return {
     capacity: +cap[1],
     double: spaces.filter(([, n]) => n === 2).map(([w]) => w),
@@ -91,6 +92,7 @@ export function parseTransport(text?: string): TransportInfo | null {
     infantryOnly: kinds.length > 0 && kinds.every((k) => /INFANTRY/.test(k)),
     kinds: kinds.filter((k) => k !== 'INFANTRY'),
     spaces,
+    unitCapacity: unitCap,
     text,
   };
 }
@@ -1349,12 +1351,17 @@ export function embarkCheck(list: ArmyList, faction: FactionData, riderUid: stri
       if (!sh) continue;
       const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
       if (fit.why) return { why: fit.why, n: 0 };
-      n += g.models * fit.space;
+      if (info.unitCapacity) { n += 1; break; }
+      const isSplit = g.split || (info.text && /split into two units/i.test(info.text) && g.models > info.capacity);
+      const effModels = isSplit ? Math.ceil(g.models / 2) : g.models;
+      n += effModels * fit.space;
     }
     return { why: null, n };
   };
   const me = spaceOf(riderUid);
-  const used = list.units.filter((u) => u.embarkIn === t.uid && !u.attachTo && u.uid !== riderUid).reduce((a, r) => a + spaceOf(r.uid).n, 0);
+  const used = list.units
+    .filter((u) => !u.attachTo && u.uid !== riderUid && (u.embarkIn === t.uid || list.units.some((c) => c.attachTo === u.uid && c.embarkIn === t.uid)))
+    .reduce((a, r) => a + spaceOf(r.uid).n, 0);
   if (me.why) return { why: me.why, full: false, need: 0, used, capacity: info.capacity };
   const full = used + me.n > info.capacity;
   return { why: full ? `Full (${used}/${info.capacity}, needs ${me.n})` : null, full, need: me.n, used, capacity: info.capacity };
@@ -1367,7 +1374,11 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
     const ts = sheetOf(t.datasheet);
     const info = parseTransport(ts?.transport);
     if (!ts || !info) return [];
-    const riders = list.units.filter((u) => u.embarkIn === t.uid && !u.attachTo);
+    const riders = list.units.filter((u) => {
+      if (u.attachTo) return false;
+      if (u.embarkIn === t.uid) return true;
+      return list.units.some((c) => c.attachTo === u.uid && c.embarkIn === t.uid);
+    });
     const problems: string[] = [];
     let used = 0;
     for (const r of riders) {
@@ -1376,7 +1387,14 @@ export function transportLoads(list: ArmyList, faction: FactionData) {
         if (!sh) continue;
         const fit = transportFit(info, [...sh.keywords, ...sh.factionKeywords, sh.name]);
         if (fit.why) problems.push(`${g.datasheet} cannot embark in ${t.datasheet}: ${fit.why}`);
-        else used += g.models * fit.space;
+        else if (info.unitCapacity) {
+          used += 1;
+          break;
+        } else {
+          const isSplit = g.split || (info.text && /split into two units/i.test(info.text) && g.models > info.capacity);
+          const effModels = isSplit ? Math.ceil(g.models / 2) : g.models;
+          used += effModels * fit.space;
+        }
       }
     }
     if (used > info.capacity) problems.push(`${t.datasheet}: not enough room (${used}/${info.capacity})`);

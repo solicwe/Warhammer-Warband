@@ -211,6 +211,7 @@ export interface TransportInfo {
   except?: string[];
   /** models taking more than one space: [keyword phrase, spaces] */
   spaces?: [string, number][];
+  unitCapacity?: boolean;
 }
 
 export interface UnitState {
