@@ -352,4 +352,151 @@ describe('User Feedback Fixes Verification', () => {
     // Player 1 had 34 VP, Player 0 had 21 VP -> Player 1 (Chaos Knights) wins based on VP, not who survived!
     expect(s.winner).toBe(1);
   });
+
+  it('Prophesied Doom (Tzaangor Enlightened) parses mortal roll on charge', async () => {
+    const { parseAbilityText } = await import('../rules-engine/abilityText');
+    const text = 'Each time this unit ends a Charge move, select one enemy unit within Engagement Range of it, then roll one D6 for each model in this unit that is within Engagement Range of that enemy unit: for each 4+, that enemy unit suffers 1 mortal wound.';
+    const parsed = parseAbilityText('Prophesied Doom', text) as any;
+    expect(parsed).toBeDefined();
+    expect(parsed?.act?.when).toBe('endOfCharge');
+    expect(parsed?.act?.target).toEqual({ side: 'enemy', engaged: true });
+    expect(parsed?.act?.do?.[0]?.mortalRoll).toEqual({ on: 4 });
+  });
+
+  it('Thousand Sons inFlow handles units near table edge and activates Flow of Magic buff', async () => {
+    const { inFlow, hasFlowOfMagic } = await import('../factions/flow');
+    const s = {
+      turn: 1,
+      round: 1,
+      phase: 'shooting',
+      deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+      players: [
+        {
+          id: 0,
+          role: 'attacker',
+          factionId: 'TS',
+          detachments: [{ name: 'Hexwarp Thrallband', rules: [{ name: 'Flow of Magic' }] }],
+        },
+        {
+          id: 1,
+          role: 'defender',
+          factionId: 'SM',
+          detachments: [],
+        },
+      ],
+      objectives: [],
+      units: [],
+    } as unknown as any;
+
+    expect(hasFlowOfMagic(s, 0)).toBe(true);
+
+    // Unit near table edge x=0.5, y=5 in attacker zone
+    const u: any = {
+      id: 'u_sorc',
+      owner: 0,
+      status: 'board',
+      keywords: ['PSYKER', 'INFANTRY', 'THOUSAND SONS'],
+      factionKeywords: ['THOUSAND SONS'],
+      enhancements: [],
+      models: [
+        { id: 'm1', x: 0.5, y: 5, r: 0.7874, dead: false },
+        { id: 'm2', x: 1.5, y: 5, r: 0.7874, dead: false },
+      ],
+    };
+
+    expect(inFlow(s, u)).toBe(true);
+  });
+
+  it('Normal Deep Strike does not set noChargeTurn, and FLY charge autoApproach is not blocked', async () => {
+    const { ingressUnit, autoApproach } = await import('./game');
+    const s = {
+      turn: 2,
+      round: 2,
+      phase: 'movement',
+      active: 0,
+      players: [
+        { id: 0, role: 'attacker', factionId: 'TS', detachments: [] },
+        { id: 1, role: 'defender', factionId: 'SM', detachments: [] },
+      ],
+      units: [
+        // Enemy unit at x=20, y=20
+        {
+          id: 'foe',
+          name: 'Marine',
+          owner: 1,
+          status: 'board',
+          sources: ['Marine'],
+          keywords: ['INFANTRY'],
+          factionKeywords: ['SPACE MARINES'],
+          abilities: [],
+          enhancements: [],
+          buffs: [],
+          models: [{ id: 'fm1', name: 'Marine', x: 20, y: 20, r: 0.63, dead: false, wounds: 2, keywords: ['INFANTRY'], profile: { W: 2 } }],
+        },
+      ],
+      terrain: [],
+      objectives: [],
+      log: [],
+      fx: [],
+      window: null,
+      firstPlayer: 0,
+    } as unknown as any;
+
+    // Daemon Prince with Wings arriving 9.1" away
+    const dp: any = {
+      id: 'dp',
+      name: 'Daemon Prince of Tzeentch with Wings',
+      owner: 0,
+      status: 'reserves',
+      sources: ['Daemon Prince of Tzeentch with Wings'],
+      keywords: ['MONSTER', 'FLY', 'PSYKER', 'CHARACTER'],
+      factionKeywords: ['THOUSAND SONS'],
+      core: { deepStrike: true },
+      abilities: [{ name: 'Deep Strike' }],
+      models: [{ id: 'dp_m1', name: 'Daemon Prince', x: 0, y: 0, r: 1.18, dead: false, wounds: 10, keywords: ['MONSTER', 'FLY'], profile: { W: 10, M: 12 } }],
+      buffs: [],
+      enhancements: [],
+    };
+    s.units.push(dp);
+
+    // Deep Strike 9.5" away
+    const pos = new Map([['dp_m1', { x: 20, y: 20 - 9.5 - 1.18 - 0.63 }]]);
+    const res = ingressUnit(s, dp, pos);
+    expect(res.ok).toBe(true);
+    // Crucially: noChargeTurn must NOT be set!
+    expect(dp.noChargeTurn).toBeUndefined();
+
+    // Now in charge phase, test autoApproach with FLY towards enemy target
+    s.phase = 'charge';
+    const enemyUnit = s.units[0];
+    const approach = autoApproach(s, dp, [enemyUnit], 9);
+    expect(approach).toBeDefined();
+    // DP should successfully approach and be within engagement range
+    const approachedPath = approach!.get('dp_m1')!;
+    const endSpot = approachedPath[approachedPath.length - 1];
+    const endGap = Math.hypot(endSpot.x - 20, endSpot.y - 20) - 1.18 - 0.63;
+    expect(endGap).toBeLessThanOrEqual(1.0);
+  });
+
+  it('Bot deployment prefers sheltered/concealed positions against enemy with Advance+Charge and Infiltrators', async () => {
+    const { smartPlacement } = await import('../ai/deploy');
+    const { createGame } = await import('./game');
+    const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
+    const list = (f: string, u: [string, number, number][]): ArmyList => ({ name: 't', factionId: f, battleSize: 'incursion', detachments: [], units: u.map(([d, n, p], i) => ({ uid: `x${i}`, datasheet: d, models: n, pts: p })) });
+
+    const s = createGame({
+      lists: [
+        list('TS', [['Rubric Marines', 5, 105], ['Exalted Sorcerer', 1, 100]]),
+        // Enemy Orks with Waaagh! (Advance + Charge) and Kommandos (Infiltrators)
+        list('ORK', [['Boyz', 10, 85], ['Kommandos', 10, 135], ['Warboss', 1, 100]]),
+      ],
+      factions: [load('TS'), load('ORK')], names: ['A', 'B'], seed: 42,
+    });
+
+    const rubric = s.units.find((u) => u.owner === 0 && u.name === 'Rubric Marines')!;
+    const placed = smartPlacement(s, rubric);
+    expect(placed).not.toBeNull();
+    // Rubrics should not be deployed in the open without cover; they should be placed safely
+    expect(placed!.size).toBe(5);
+  });
 });

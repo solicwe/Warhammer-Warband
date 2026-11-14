@@ -1684,8 +1684,10 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   u.move = 'ingress'; // before placing: rules on arrival (Dread Reputation) read it
   placeUnit(s, u, pos);
   pushFx(s, { kind: 'place', unitId: u.id, owner: u.owner });
-  if (closest <= RULES.reserves.enemyDistance || (how === 'deepStrike' && unitFlags(s, u).deepStrikeInFlow)) u.noChargeTurn = s.turn;
-  log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closest <= RULES.reserves.enemyDistance ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
+  const fl = unitFlags(s, u);
+  const closerReserves = (fl.deepStrikeRange && fl.deepStrikeRange < 8.9) || (fl.ingressRange && fl.ingressRange < 8.9) || fl.deepStrikeInFlow;
+  if (closerReserves && closest < (RULES.reserves.enemyDistance - 0.05)) u.noChargeTurn = s.turn;
+  log(s, `${u.name} arrives (${how === 'deepStrike' ? 'Deep Strike' : 'Ingress'})${closerReserves && closest < (RULES.reserves.enemyDistance - 0.05) ? ' within 9" of the enemy → cannot charge this turn' : ''}`, 'info', u.owner);
   if (u.owner === s.active && s.phase === 'movement') {
     s.lastAct = { unitId: u.id, owner: u.owner, kind: 'move', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
     offerReactions(s, 'enemyMovedNear', u);
@@ -1961,9 +1963,8 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
     && !endSpotBlocked(s, b, b) && clearOfOthers(b);
   const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms).length === 0;
   const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => gap(bodyAt(m, p), e)));
-  // each model goes in a straight line from where it stands: that line must not pass through an enemy model
-  const foesAll = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
-  const clearLine = (m: ModelState, p: Pt) => foesAll.every((e) => segSegDist(axis(e), { a: { x: m.x, y: m.y }, b: p }) >= girth(e) + girth(m) - 0.03);
+  // each model goes in a straight line from where it stands: that line must not pass through an enemy model (except charge target, or FLY)
+  const clearLine = (m: ModelState, p: Pt) => hasKw(u, 'FLY') || avoid.every((e) => segSegDist(axis(e), { a: { x: m.x, y: m.y }, b: p }) >= girth(e) + girth(m) - 0.03);
   const inContact = (m: ModelState) => enemyModels.some((e) => baseDist(m, e) <= 0.05);
 
   // 1) block shift

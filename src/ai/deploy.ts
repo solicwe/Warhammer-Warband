@@ -5,8 +5,9 @@
 //  - a unit with OC on the home objective while nobody holds it;
 //  - units spread out rather than packed together (blast weapons, room to move), vehicles never boxed in.
 import { RULES } from '../engine/config';
-import { formationAt, objectiveTerrain, validatePlacement, zoneOf } from '../engine/game';
+import { formationAt, isRiledUp, objectiveTerrain, scoutsOf, validatePlacement, zoneOf } from '../engine/game';
 import { bodyAt, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap, segCrossesPoly, segSegDist } from '../engine/geometry';
+import { canDo, unitFlags } from '../rules-engine/effects';
 import { canLeave } from './botMove';
 import { isBrawler, maxRange, moveOf, oc, securesObjectives, unitValue } from './botEval';
 import { alive, onBoard, other, tableH, tableW, withinTerrain } from '../engine/state';
@@ -110,6 +111,15 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
   // every unit starts as well hidden as the zone allows: nothing is left out in the open for a first-turn alpha strike
   const bait = false;
 
+  // Analyze enemy threats: Advance + Charge, Scouts, and Infiltrators
+  const foes = s.units.filter((e) => e.owner !== u.owner && e.status !== 'destroyed');
+  const enemyHasAdvanceCharge = foes.some((e) => canDo(s, e, 'chargeAfterAdvance') || isRiledUp(s, e) || (e.abilities ?? []).some((a) => /advance.*charge/i.test(`${a.name} ${a.text ?? ''}`))) ||
+    (s.players[other(u.owner)]?.armyRules ?? []).some((r) => /waaagh|advance and charge|fleet of foot/i.test(`${r.name} ${r.text ?? ''}`)) ||
+    (s.players[other(u.owner)]?.detachments ?? []).some((d: any) => /advance and charge|assault doctrine/i.test(`${typeof d === 'string' ? d : d.name} ${(d.rules ?? []).map((r: any) => `${r.name} ${r.text ?? ''}`).join(' ')}`));
+  const enemyHasScout = foes.some((e) => scoutsOf(s, e) > 0);
+  const enemyHasInfiltrator = foes.some((e) => e.core.infiltrators || unitFlags(s, e).infiltrators);
+  const enemyAggroThreat = enemyHasAdvanceCharge || enemyHasScout || enemyHasInfiltrator;
+
   // Sample watchers across enemyZone: full coverage of the enemy deployment area
   const placed = s.units.filter((e) => e.owner !== u.owner && onBoard(e)).flatMap(alive);
   const enemyXs = enemyZone.map((p) => p.x), enemyYs = enemyZone.map((p) => p.y);
@@ -159,19 +169,33 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
 
       // shelter: physically behind a terrain footprint or solid wall relative to enemy zone
       const sheltered = isBehindTerrain(s, ec, centre);
-      if (sheltered) score += 12;
+      if (sheltered) score += 20;
 
       // cover: models standing in terrain areas
       const covered = ms.filter((m) => withinTerrain(s, m, ['light', 'dense'])).length / ms.length;
-      score += covered * (vehicle ? 2 : 5);
+      score += covered * (vehicle ? 3 : 6);
 
-      // how far forward: melee and fast units stage forward if sheltered or in cover; exposed units stay back
+      // how far forward: concealed/sheltered units may stage forward; exposed units stay back
       const forward = 1 - Math.max(0, dist(centre, ec) - frontDist) / zoneDepth; // 1 = front edge, 0 = back edge
       if (how === 'infiltrate') { /* placed by objectives and cover, not by depth */ }
       else if (bait) score += forward * 6;
-      else if (brawler || fast) score += forward * (sheltered || covered > 0.5 ? 5 : 1);
-      else if (range >= 30) score += (1 - Math.abs(forward - 0.35)) * 3;
-      else score += forward * (sheltered || covered > 0.5 ? 2.5 : 0.5);
+      else if (sheltered || covered > 0.5) {
+        if (brawler || fast) score += forward * 4;
+        else if (range >= 30) score += (1 - Math.abs(forward - 0.25)) * 3;
+        else score += forward * 2;
+      } else {
+        // Exposed spot in the open: penalize forward placement, especially against advance+charge/scout/infiltrators
+        score -= forward * (enemyAggroThreat ? 25 : 12);
+      }
+
+      // Threat buffer against turn-1 Advance+Charge, Scouts, and Infiltrators
+      if (enemyAggroThreat && !sheltered && how === 'deploy') {
+        const minFoeDist = Math.min(...watchers.map((w) => dist(centre, w)));
+        const threatDist = enemyHasAdvanceCharge ? 24 : (enemyHasScout ? 20 : 16);
+        if (minFoeDist <= threatDist) {
+          score -= (1 - minFoeDist / threatDist) * (isChar || !brawler ? 30 : 18);
+        }
+      }
 
       // objectives out in the middle: Infiltrators sit on one, others start where they reach one in their first move
       if (holdsGround || how === 'infiltrate') {
@@ -226,11 +250,13 @@ export function smartPlacement(s: GameState, u: UnitState, opt: DeployOptions = 
       score += (seenCount / watchers.length) * 8;
     } else if (seenCount === 0) {
       // completely hidden behind a footprint or solid wall: highest priority to prevent turn 1 shots
-      score += 35;
-      if (isChar) score += 25;
+      score += 45;
+      if (isChar) score += 30;
+      if (enemyAggroThreat) score += 15;
     } else {
-      score -= 25 + (seenCount / watchers.length) * 50 * (0.75 + 0.25 * worth);
-      if (isChar) score -= 35;
+      score -= 35 + (seenCount / watchers.length) * 60 * (0.75 + 0.25 * worth);
+      if (isChar) score -= 40;
+      if (enemyAggroThreat) score -= 20;
     }
     // shooters: sight of the middle objectives from here (to shoot whatever goes onto them)
     if (!brawler && range >= 18 && middle.length) {

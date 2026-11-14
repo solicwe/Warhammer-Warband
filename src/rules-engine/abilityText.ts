@@ -244,6 +244,17 @@ function wholeText(t: string): AbilityRule | null {
   if (/^each time this (?:model|unit|model's unit) ends a charge move, select one enemy unit within engagement range of (?:it|this model|this unit),? (?:and|then) roll one d6:/.test(t) && rows.length && /\.?$/.test(t) && !/adding|for each|subtract/.test(t)) {
     return { parsed: true, act: { when: 'endOfCharge', auto: true, target: { side: 'enemy', engaged: true }, roll: 'D6', table: rows } };
   }
+  if ((m = /^each time this (?:model|unit) ends a charge move, select one enemy unit within engagement range of (?:it|this unit),? (?:and|then) roll one d6 for each model in this unit that is within engagement range of that enemy unit: for each (\d)\+, that enemy unit suffers (d3|\d+) mortal wounds?(?: \(to a maximum of (\d+) mortal wounds?\))?\.?$/.exec(t))) {
+    return {
+      parsed: true,
+      act: {
+        when: 'endOfCharge',
+        auto: true,
+        target: { side: 'enemy', engaged: true },
+        do: [{ mortalRoll: { on: Number(m[1]), ...(m[2] !== '1' ? { dmg: m[2].toUpperCase() } : {}), ...(m[3] ? { max: Number(m[3]) } : {}) } }],
+      },
+    };
+  }
   if ((m = /^at the start of the fight phase, each enemy unit within (\d+)" of this (?:model|unit) must take a battle-shock test(, subtracting 1 from that test)?\.?$/.exec(t))) {
     return { parsed: true, act: { when: 'fightStart', auto: true, target: { side: 'enemy', range: Number(m[1]), each: true }, do: [{ shock: m[2] ? -1 : 0 }] } };
   }

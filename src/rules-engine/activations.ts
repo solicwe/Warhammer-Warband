@@ -14,6 +14,7 @@ import {
   type Incoming, type Limit, unitFlags, unitMatches,
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
+import { unitInRange } from '../engine/missions';
 import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
@@ -801,7 +802,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.reviveRoll) { const n = revive(s, on, rollExpr(s, a.reviveRoll).total, a.reviveW1); log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
     if (a.mutate) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.mutated = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is mutated`, 'info', u.owner); }
+        if (o.controller === u.owner && (unitInRange(s, on, o) || alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6))) { o.mutated = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is mutated`, 'info', u.owner); }
       }
     }
     if (a.revive) { const n = revive(s, on, a.revive); if (n) log(s, `${def.name}: ${n} model(s) returned to ${on.name}`, 'info', u.owner); }
@@ -927,12 +928,12 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.secure) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
+        if (o.controller === u.owner && (unitInRange(s, on, o) || alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6))) { o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is secured`, 'info', u.owner); }
       }
     }
     if (a.wardObjective) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) {
+        if (o.controller === u.owner && (unitInRange(s, on, o) || alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6))) {
           o.warded = u.owner;
           o.secured = u.owner;
           log(s, `${def.name}: objective ${o.id} is Warded`, 'info', u.owner);
@@ -951,7 +952,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.snare) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.snared = u.owner; log(s, `${def.name}: objective ${o.id} is snared`, 'info', u.owner); }
+        if (o.controller === u.owner && (unitInRange(s, on, o) || alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6))) { o.snared = u.owner; log(s, `${def.name}: objective ${o.id} is snared`, 'info', u.owner); }
       }
     }
     if (a.secureDead) {
@@ -961,7 +962,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     }
     if (a.sabotage) {
       for (const o of s.objectives) {
-        if (o.controller === u.owner && alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6)) { o.sabotaged = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is sabotaged (enemy units ending a move on it may suffer D3 mortal wounds)`, 'info', u.owner); }
+        if (o.controller === u.owner && (unitInRange(s, on, o) || alive(on).some((m) => ptGap(m, o) <= 3 + 1e-6))) { o.sabotaged = u.owner; o.secured = u.owner; log(s, `${def.name}: objective ${o.id} is sabotaged (enemy units ending a move on it may suffer D3 mortal wounds)`, 'info', u.owner); }
       }
     }
     if (a.vow) {
