@@ -1040,8 +1040,30 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const buffTags: Record<string, [string, boolean][]> = {};
     const riled: string[] = [];
     // buffs every unit of an army has (detachment rules, WAAAGH!) go on one card above the map, not on each unit
-    const armyChips: [Map<string, string[]>, Map<string, string[]>] = [new Map(), new Map()];
-    const chip = (p: PlayerId, label: string, tags: string[]) => { const m = armyChips[p]; m.set(label, [...new Set([...(m.get(label) ?? []), ...tags])]); };
+    const armyChips: [Map<string, { target: string; tags: string[] }>, Map<string, { target: string; tags: string[] }>] = [new Map(), new Map()];
+    const chip = (p: PlayerId, label: string, target: string, tags: string[]) => {
+      const m = armyChips[p];
+      const existing = m.get(label);
+      if (existing) {
+        existing.tags = [...new Set([...existing.tags, ...tags])];
+      } else {
+        m.set(label, { target, tags });
+      }
+    };
+    const formatTarget = (e: any, bearers?: any[]) => {
+      if (bearers && bearers.length > 0) {
+        const names = [...new Set(bearers.map((m: any) => m.name || m.keywords?.find((k: string) => k === 'WARBOSS' || k === 'CHARACTER') || 'Character'))];
+        return names.join(', ');
+      }
+      if (!e?.units || e.units.length === 0) return 'Every unit';
+      const clean = (e.units as string[]).map((u: string) => {
+        return u
+          .split('|')
+          .map((part) => part.replace(/^name:/, '').trim())
+          .join(' / ');
+      }).join(', ');
+      return clean || 'Every unit';
+    };
     for (const u of s.units) {
       if (!onBoard(u)) continue;
       // plus auras of other units that always apply (a conditional one only matters at the moment it holds)
@@ -1056,10 +1078,10 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         const allTags = fxTags(a.e);
         if (allTags.some(([, good]) => !good)) continue;
         const t = allTags.map(([x]) => x);
-        if (t.length) chip(u.owner, a.label, t);
+        if (t.length) chip(u.owner, a.label, formatTarget(a.e, a.bearers), t);
       }
       const waaagh = u.abilities.some((a) => a.name === 'Waaagh!') && s.players[u.owner].riledUntilTurn >= s.turn;
-      if (waaagh) chip(u.owner, 'WAAAGH!', ['5+ inv', 'Assault', 'Adv & Charge']);
+      if (waaagh) chip(u.owner, 'WAAAGH!', 'Every unit', ['5+ inv', 'Assault', 'Adv & Charge']);
       const riledTags: [string, boolean][] = isRiled(s, u) && !waaagh ? [['5+ inv', true], ['Assault', true], ['Adv & Charge', true]] : [];
       if (s.players[u.owner].favoured === u.id) riledTags.push(['Favoured: re-roll Wounds', true]);
       const tags = [...riledTags, ...u.buffs.map((b) => BUFF_TAG[b.kind]).filter((x): x is [string, boolean] => !!x), ...(u.timed ?? []).flatMap((t) => fxTags(t.e)), ...auras];
@@ -3802,7 +3824,12 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
   // army-wide buff cards of one side
   const buffCards = (p: PlayerId) => [
-    ...[...armyChips[p]].map(([label, tags]) => <div key={`a${p}${label}`} className={`buffcard p${p}`}><b>{label}</b><span>Every unit: {tags.join(' · ')}</span></div>),
+    ...[...armyChips[p]].map(([label, { target, tags }]) => (
+      <div key={`a${p}${label}`} className={`buffcard p${p}`}>
+        <b>{label}</b>
+        <span>{target ? `${target}: ` : ''}{tags.join(' · ')}</span>
+      </div>
+    )),
     ...activeIds(s, p).map((id) => { const b = blessingById(id)!; return <div key={`${p}${id}`} className={`buffcard p${p}`}><b>{b.name}</b><span>{b.text}</span></div>; }),
     ...(s.players[p].pledge?.round === s.round || s.players[p].pactPoints
       ? [<div key={`pact${p}`} className={`buffcard p${p}`}><b>{s.players[p].pledge?.round === s.round ? `Pledge ${s.players[p].pledge!.n} · ` : ''}Pact {s.players[p].pactPoints ?? 0}</b><span>{PACT_BONUSES}</span></div>]
