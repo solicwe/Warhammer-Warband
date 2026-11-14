@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey } from '../engine/army';
+import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf } from '../engine/allies';
 import { Em } from './Em';
@@ -36,11 +36,16 @@ export const SECTIONS: { id: Section; title: string }[] = [
 /** Units listed under Others although they carry the CHARACTER keyword or similar tags (e.g. bodyguard units). */
 const NON_CHARACTERS = new Set(['Victrix Honour Guard', 'Company Heroes']);
 
-export function sectionOf(d: DatasheetData | undefined, factionId?: string): Section {
+export function sectionOf(
+  d: DatasheetData | undefined,
+  factionId?: string,
+  listOrDets?: ArmyList | string[],
+  faction?: FactionData | null,
+): Section {
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || NON_CHARACTERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || d.keywords.includes('EPIC HERO')) return 'characters';
-  if (d.keywords.includes('BATTLELINE') || d.role === 'Battleline') return 'battleline';
+  if (isBattlelineUnit(d, listOrDets, faction)) return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
   return 'others';
 }
@@ -60,16 +65,20 @@ export const KINDS = [
   'Other',
 ] as const;
 
-export function unitKind(d: DatasheetData | undefined): (typeof KINDS)[number] {
+export function unitKind(
+  d: DatasheetData | undefined,
+  listOrDets?: ArmyList | string[],
+  faction?: FactionData | null,
+): (typeof KINDS)[number] {
   if (!d) return 'Other';
   const k = (w: string) => d.keywords.includes(w);
   if (k('EPIC HERO')) return 'Epic Hero';
   if (k('CHARACTER')) return 'Character';
+  if (isBattlelineUnit(d, listOrDets, faction)) return 'Battleline';
   if (k('AIRCRAFT')) return 'Aircraft';
   if (k('WALKER')) return 'Walker';
   if (k('VEHICLE')) return 'Vehicle';
   if (k('MOUNTED')) return 'Mounted';
-  if (k('BATTLELINE') || d.role === 'Battleline') return 'Battleline';
   if (k('INFANTRY')) return k('GRAVIS') || k('TERMINATOR') ? 'Heavy Infantry' : k('JUMP PACK') || k('FLY') ? 'Fast Infantry' : 'Infantry';
   return 'Other';
 }
@@ -548,7 +557,200 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const next = { ...x, ...patch };
     return syncWargear(d, untouched ? defaultWargear(d, { ...next, wargear: undefined }) : next);
   }) });
-  const removeUnit = (uid: string) => set({ units: list.units.filter((x) => x.uid !== uid).map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)) });
+  const removeUnit = (uid: string) => {
+    if (menu === uid) setMenu(null);
+    set({
+      units: list.units
+        .filter((x) => x.uid !== uid)
+        .map((x) => (x.attachTo === uid ? { ...x, attachTo: undefined } : x.embarkIn === uid ? { ...x, embarkIn: undefined } : x)),
+    });
+  };
+
+  const getErrorFix = (e: string): { label: string; run: () => void } | null => {
+    // 1. "Tempestus Scions: maximum 3 per army"
+    const maxMatch = /^(.+?): maximum (\d+) per army$/.exec(e);
+    if (maxMatch) {
+      const name = maxMatch[1];
+      return {
+        label: 'Remove excess',
+        run: () => {
+          const matchUnits = list.units.filter((u) => u.datasheet === name);
+          if (matchUnits.length > 0) {
+            const last = matchUnits[matchUnits.length - 1];
+            removeUnit(last.uid);
+            setNote(`Removed excess ${name}`);
+          }
+        },
+      };
+    }
+    // 2. "No Warlord selected"
+    if (e.startsWith('No Warlord selected')) {
+      return {
+        label: 'Set Warlord',
+        run: () => {
+          const isOfficer = (u: ArmyUnitEntry) => {
+            const d = sheetOf(u.datasheet);
+            const kw = [...(d?.keywords ?? []), ...(d?.factionKeywords ?? [])].map((x) => x.toUpperCase());
+            return kw.includes('MILITARUM TEMPESTUS') && kw.includes('OFFICER');
+          };
+          const officer = list.units.find(isOfficer);
+          const firstChar = officer ?? list.units.find((u) => sheetOf(u.datasheet)?.keywords.includes('CHARACTER'));
+          if (firstChar) {
+            set({ units: list.units.map((u) => ({ ...u, warlord: u.uid === firstChar.uid })) });
+            setNote(`Made ${firstChar.datasheet} Warlord`);
+          }
+        },
+      };
+    }
+    // 3. Bridgehead Strike Warlord requirement
+    if (e.includes('MILITARUM TEMPESTUS OFFICER must be your Warlord')) {
+      return {
+        label: 'Make Tempestus Warlord',
+        run: () => {
+          const isOfficer = (u: ArmyUnitEntry) => {
+            const d = sheetOf(u.datasheet);
+            const kw = [...(d?.keywords ?? []), ...(d?.factionKeywords ?? [])].map((x) => x.toUpperCase());
+            return kw.includes('MILITARUM TEMPESTUS') && kw.includes('OFFICER');
+          };
+          const officer = list.units.find(isOfficer);
+          if (officer) {
+            set({ units: list.units.map((u) => ({ ...u, warlord: u.uid === officer.uid })) });
+            setNote(`Made ${officer.datasheet} Warlord`);
+          }
+        },
+      };
+    }
+    // 4. "Not in 11th edition"
+    const not11eMatch = /^(.+?): not in 11th edition/.exec(e);
+    if (not11eMatch) {
+      const name = not11eMatch[1];
+      return {
+        label: 'Remove',
+        run: () => {
+          set({ units: list.units.filter((u) => u.datasheet !== name) });
+          setNote(`Removed ${name}`);
+        },
+      };
+    }
+    // 5. Subfaction mismatch: "... cannot join a ... army" or "... select that sub-faction first"
+    const subMatch = /^(.+?) is a .+? unit (?:and cannot join|: select that)/.exec(e);
+    if (subMatch) {
+      const name = subMatch[1];
+      return {
+        label: 'Remove',
+        run: () => {
+          const u = list.units.find((x) => x.datasheet === name);
+          if (u) removeUnit(u.uid);
+          setNote(`Removed ${name}`);
+        },
+      };
+    }
+    // 6. Wargear points out of date
+    const wgMatch = /^(.+?): wargear points out of date/.exec(e);
+    if (wgMatch) {
+      const name = wgMatch[1];
+      return {
+        label: 'Update',
+        run: () => {
+          if (!faction) return;
+          const synced = syncList(list, faction);
+          onChange(synced);
+          setNote(`Updated wargear points for ${name}`);
+        },
+      };
+    }
+    // 7. EPIC HERO taking Enhancements
+    const epicEnhMatch = /^(.+?) is an EPIC HERO and cannot take Enhancements/.exec(e);
+    if (epicEnhMatch) {
+      const name = epicEnhMatch[1];
+      return {
+        label: 'Remove Enhancement',
+        run: () => {
+          set({
+            units: list.units.map((u) =>
+              u.datasheet === name ? { ...u, enhancement: undefined, enhancementPts: undefined } : u,
+            ),
+          });
+          setNote(`Removed enhancement from ${name}`);
+        },
+      };
+    }
+    // 8. Not a CHARACTER taking Enhancements
+    const nonCharEnhMatch = /^(.+?) is not a CHARACTER and cannot take Enhancements/.exec(e);
+    if (nonCharEnhMatch) {
+      const name = nonCharEnhMatch[1];
+      return {
+        label: 'Remove Enhancement',
+        run: () => {
+          set({
+            units: list.units.map((u) =>
+              u.datasheet === name ? { ...u, enhancement: undefined, enhancementPts: undefined } : u,
+            ),
+          });
+          setNote(`Removed enhancement from ${name}`);
+        },
+      };
+    }
+    // 9. Cannot attach
+    const attachMatch = /^(.+?) cannot be attached to/.exec(e);
+    if (attachMatch) {
+      const name = attachMatch[1];
+      return {
+        label: 'Detach',
+        run: () => {
+          set({
+            units: list.units.map((u) =>
+              u.datasheet === name ? { ...u, attachTo: undefined } : u,
+            ),
+          });
+          setNote(`Detached ${name}`);
+        },
+      };
+    }
+    // 10. Transport no longer in army
+    const rideMatch = /^(.+?): the chosen transport is no longer in the army/.exec(e);
+    if (rideMatch) {
+      const name = rideMatch[1];
+      return {
+        label: 'Disembark',
+        run: () => {
+          set({
+            units: list.units.map((u) =>
+              u.datasheet === name ? { ...u, embarkIn: undefined } : u,
+            ),
+          });
+          setNote(`Disembarked ${name}`);
+        },
+      };
+    }
+    // 11. Empty Dedicated Transport
+    const dtMatch = /^(.+?) \(Dedicated Transport\) is empty/.exec(e);
+    if (dtMatch) {
+      const name = dtMatch[1];
+      return {
+        label: 'Remove Transport',
+        run: () => {
+          const t = list.units.find((u) => u.datasheet === name);
+          if (t) removeUnit(t.uid);
+          setNote(`Removed empty ${name}`);
+        },
+      };
+    }
+    // 12. Detachment not in 11th edition
+    const detMatch = /^Detachment "(.+?)" is not in 11th edition/.exec(e);
+    if (detMatch) {
+      const dName = detMatch[1];
+      return {
+        label: 'Remove Detachment',
+        run: () => {
+          setDets(list.detachments.filter((d) => d !== dName));
+          setNote(`Removed Detachment "${dName}"`);
+        },
+      };
+    }
+    return null;
+  };
+
   const addUnit = (d: DatasheetData, chosen?: { models: number; pts: number }) => {
     const opt = chosen ?? pointsOptions(d)[0];
     if (!opt) return;
@@ -564,7 +766,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       `${list.detachments.join(', ') || 'No Detachment'} · ${pts}/${size.points} pts`,
       '',
       ...SECTIONS.flatMap((sec) => {
-        const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet), list.factionId) === sec.id);
+        const us = list.units.filter((u) => sectionOf(sheetOf(u.datasheet), list.factionId, list, faction) === sec.id);
         if (!us.length) return [];
         return [`${sec.title.toUpperCase()}`, ...us.map((u) => {
           const wg = wargearSummary(sheetOf(u.datasheet), u);
@@ -604,7 +806,30 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               {isEpic && <span className="ab-badge-epic">Epic Hero</span>}
               {isAircraft && <span className="ab-badge-aircraft">Aircraft</span>}
             </span>
-            <span className="ab-pts">{ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (duplicate +{taxes.get(u.uid)})</span> : null}{u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}{sheet?.subfaction && <span className={`ab-chip ${wrong ? 'bad' : ''}`}>{subTag(sheet.subfaction)}</span>}{!sheet && faction && <span className="ab-chip bad">Not in 11th edition</span>}</span>
+            <span className="ab-pts">
+              {ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (duplicate +{taxes.get(u.uid)})</span> : null}
+              {u.enhancement && <span className="ab-enh"> {u.enhancement}</span>}
+              {sheet?.subfaction && (
+                <span
+                  className={`ab-chip ${wrong ? 'bad' : ''}`}
+                  onClick={wrong ? (e) => { e.stopPropagation(); removeUnit(u.uid); } : undefined}
+                  title={wrong ? 'Click to remove invalid unit' : undefined}
+                  style={wrong ? { cursor: 'pointer' } : undefined}
+                >
+                  {subTag(sheet.subfaction)}{wrong ? ' ×' : ''}
+                </span>
+              )}
+              {!sheet && faction && (
+                <span
+                  className="ab-chip bad"
+                  onClick={(e) => { e.stopPropagation(); removeUnit(u.uid); }}
+                  title="Click to remove invalid unit"
+                  style={{ cursor: 'pointer' }}
+                >
+                  Not in 11th edition ×
+                </span>
+              )}
+            </span>
             {line && <span className="ab-sub">{line}</span>}
             {wg && <span className="ab-sub ab-wg"><Icon name="wargear" size={13} /> {wg}</span>}
           </span>
@@ -620,15 +845,36 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
 
   const listTab = () => (
     <>
-      {errors.length > 0 && <div className="ab-errors">{errors.map((e) => <div key={e}>{e}</div>)}</div>}
-      {SECTIONS.filter((sec) => sec.id !== 'allies' || faction?.datasheets.some((d) => d.ally || (detAlly(d) && offered(d))) || list.units.some((u) => sectionOf(sheetOf(u.datasheet), list.factionId) === 'allies')).map((sec) => {
+      {errors.length > 0 && (
+        <div className="ab-errors">
+          {errors.map((e) => {
+            const fix = getErrorFix(e);
+            return (
+              <div key={e} className="ab-error-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ flex: 1 }}>{e}</span>
+                {fix && (
+                  <button
+                    type="button"
+                    className="btn small"
+                    style={{ whiteSpace: 'nowrap', padding: '3px 8px', fontSize: '12px', background: 'var(--bad)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                    onClick={fix.run}
+                  >
+                    {fix.label}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {SECTIONS.filter((sec) => sec.id !== 'allies' || faction?.datasheets.some((d) => d.ally || (detAlly(d) && offered(d))) || list.units.some((u) => sectionOf(sheetOf(u.datasheet), list.factionId, list, faction) === 'allies')).map((sec) => {
         // a unit with its Leader / Support shows as one card, in the section of its (first) character
         const joined = (b: ArmyUnitEntry) => list.units.filter((c) => c.attachTo === b.uid);
         const homeOf = (u: ArmyUnitEntry): string => {
           const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
           if (body) return homeOf(body);
           const first = joined(u)[0];
-          return sectionOf(sheetOf((first ?? u).datasheet), list.factionId);
+          return sectionOf(sheetOf((first ?? u).datasheet), list.factionId, list, faction);
         };
         const inRide = (u: ArmyUnitEntry) => !!u.embarkIn && list.units.some((t) => t.uid === u.embarkIn);
         const us = list.units.filter((u) => (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo)) && !inRide(u) && homeOf(u) === sec.id);
@@ -850,14 +1096,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     };
 
     const sheets = faction.datasheets
-      .filter((d) => offered(d) && sectionOf(d, list.factionId) === adding && matchesSearch(d) && pointsOptions(d).length)
-      .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a)) - KINDS.indexOf(unitKind(b)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
+      .filter((d) => offered(d) && sectionOf(d, list.factionId, list, faction) === adding && matchesSearch(d) && pointsOptions(d).length)
+      .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a, list, faction)) - KINDS.indexOf(unitKind(b, list, faction)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
 
-    const availableKinds = Array.from(new Set(sheets.map((d) => unitKind(d)))).sort((a, b) => KINDS.indexOf(a) - KINDS.indexOf(b));
+    const availableKinds = Array.from(new Set(sheets.map((d) => unitKind(d, list, faction)))).sort((a, b) => KINDS.indexOf(a) - KINDS.indexOf(b));
     const availableTags = factionTags.filter((tag) => sheets.some((d) => d.keywords.includes(tag)));
 
     const visibleSheets = sheets.filter((d) => {
-      if (filterMode === 'kind' && selectedKind) return unitKind(d) === selectedKind;
+      if (filterMode === 'kind' && selectedKind) return unitKind(d, list, faction) === selectedKind;
       if (filterMode === 'keyword' && selectedTag) return d.keywords.includes(selectedTag);
       return true;
     });
@@ -865,12 +1111,12 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     // the allied list is grouped by the book each unit comes from
     const groupOf = (d: DatasheetData) => (
       d.ally
-        ? `${d.allyName} · ${unitKind(d)}`
+        ? `${d.allyName} · ${unitKind(d, list, faction)}`
         : detAlly(d)
-          ? `${detAlly(d)!.rule} · ${unitKind(d)}`
+          ? `${detAlly(d)!.rule} · ${unitKind(d, list, faction)}`
           : filterMode === 'keyword' && selectedTag
-            ? `${selectedTag} · ${unitKind(d)}`
-            : unitKind(d)
+            ? `${selectedTag} · ${unitKind(d, list, faction)}`
+            : unitKind(d, list, faction)
     );
 
     return (
@@ -986,7 +1232,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                         {d.subfaction && <span className="ab-chip">{subTag(d.subfaction)}</span>}
                         {d.keywords.includes('EPIC HERO') && <span className="ab-chip gold">Epic Hero</span>}
                         {d.keywords.includes('AIRCRAFT') && <span className="ab-chip aircraft">Aircraft</span>}
-                        {d.role}
+                        {isBattlelineUnit(d, list, faction) ? 'Battleline' : d.role}
                       </span>
                       {(() => { const t = parseTransport(d.transport); return t ? <span className="ab-sub ab-cap"><Icon name="embark" size={13} /> Transport capacity {t.capacity}</span> : null; })()}
                     </span>
@@ -1010,7 +1256,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 open && (
                   <div className="ab-inline" key={`peek-${d.id}`}>
                     <div className="ab-inline-body">
-                      <DatasheetView sheet={d} factionId={faction.id} />
+                      <DatasheetView sheet={d} factionId={faction.id} list={list} />
                       <button type="button" className="ab-moreinfo" onClick={() => setView(null)}>Close <Icon name="down" size={18} /></button>
                     </div>
                   </div>
@@ -1062,7 +1308,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               (() => {
                 let models;
                 try { models = buildUnits({ ...list, units: [{ ...u, attachTo: undefined }] }, faction, 0).flatMap((x) => x.models); } catch { models = undefined; }
-                return <DatasheetView sheet={sheet} factionId={faction.id} variants={models && datasheetVariants(sheet, models)} counts={models && weaponCounts(models)} />;
+                return <DatasheetView sheet={sheet} factionId={faction.id} list={list} variants={models && datasheetVariants(sheet, models)} counts={models && weaponCounts(models)} />;
               })()
             )}
             {isSheetOpen && !sheet && <div className="sheet-title">{u.datasheet}</div>}
@@ -1163,7 +1409,12 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>
               : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split && <Icon name="check" size={16} />}{sp.name}: {sp.label}</button>;
           })()}
-          <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>Close <Icon name="down" size={18} /></button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+            <button type="button" className="btn small danger" onClick={() => removeUnit(u.uid)}>
+              <Icon name="delete" size={16} /> Delete {u.datasheet}
+            </button>
+            <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>Close <Icon name="down" size={18} /></button>
+          </div>
         </div>
       </div>
     );
@@ -1513,7 +1764,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <div className="tray-backdrop" onClick={(e) => { e.stopPropagation(); setPeek(null); }}>
             <div className="tray" role="dialog" aria-label={`${peek} datasheet`} onClick={(e) => e.stopPropagation()}>
               <div className="tray-head"><span className="sheet-title grow">{peek}</span><button className="btn small ghost" onClick={() => setPeek(null)}>Close</button></div>
-              <DatasheetView sheet={sheetOf(peek)!} factionId={faction.id} />
+              <DatasheetView sheet={sheetOf(peek)!} factionId={faction.id} list={list} />
             </div>
           </div>
         )}

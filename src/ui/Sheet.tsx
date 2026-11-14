@@ -1,7 +1,7 @@
 import { abilityRule, abilityStatus, type AbilityStatus } from '../rules-engine/effects';
 import { readableOnDark } from './factionColors';
 import { strength } from '../engine/state';
-import type { AbilityData, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
+import type { AbilityData, ArmyList, DatasheetData, ModelProfileData, UnitState, WeaponData } from '../engine/types';
 import { abilitiesOf, abilityLabel } from '../engine/weapons';
 import { Portrait, tokenKind, type TokenKind } from './Tokens';
 import { PHOTO_EDIT, modelPortraitKey, modelVariantKey, kitOf, usePastePortrait } from './portraits';
@@ -9,6 +9,7 @@ import { datasheetVariants, pictureVariants, type PictureVariant } from './loado
 import { Icon } from './Icon';
 import { useState, type ReactNode } from 'react';
 import { Em } from './Em';
+import { isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
 
 /** The characteristics band, laid out like the printed datasheet: framed boxes, the invulnerable save as a shield under Sv. */
 function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
@@ -260,20 +261,42 @@ export function renderAbilitiesContent(
   return out;
 }
 
-export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: DatasheetData; factionId?: string; variants?: PictureVariant[]; counts?: Record<string, number> }) {
+export function DatasheetView({
+  sheet,
+  factionId,
+  variants,
+  counts,
+  list,
+  detachments,
+}: {
+  sheet: DatasheetData;
+  factionId?: string;
+  variants?: PictureVariant[];
+  counts?: Record<string, number>;
+  list?: ArmyList;
+  detachments?: string[];
+}) {
   const probe = { sources: [sheet.name], abilities: [] } as unknown as UnitState;
   const rulesFaction = sheet.ally ?? factionId;
   const [more, setMore] = useState(false);
   usePastePortrait(sheet.name);
-  const groups = statGroups(sheet.models);
+  const activeListOrDets = list ?? detachments;
+  const isBl = isBattlelineUnit(sheet, activeListOrDets);
+  const activeKws = effectiveKeywords(sheet, activeListOrDets);
+  const displayRole = isBl ? 'Battleline' : sheet.role;
+  const modelsWithOc = sheet.models.map((m) => ({
+    ...m,
+    OC: effectiveModelOc(sheet, m, activeListOrDets),
+  }));
+  const groups = statGroups(modelsWithOc);
   const names = [...sheet.abilities.map((a) => a.name), ...sheet.leads, sheet.name];
   return (
     <div className="ds-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 8, ['--ds-band' as string]: dsColor(factionId) }}>
       <div className="ds-head">
-        <Portrait kind={tokenKind(sheet.keywords, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable={PHOTO_EDIT} />
+        <Portrait kind={tokenKind(activeKws, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable={PHOTO_EDIT} />
         <div className="grow">
           <h2>{sheet.name}</h2>
-          <div className="tiny">{sheet.role}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''}{PHOTO_EDIT ? ' · tap the picture or paste to set one' : ''}</div>
+          <div className="tiny">{displayRole}{sheet.keywords.includes('EPIC HERO') ? ' · Epic Hero' : ''}{PHOTO_EDIT ? ' · tap the picture or paste to set one' : ''}</div>
         </div>
       </div>
       <div className="ds-statband">
@@ -321,7 +344,7 @@ export function DatasheetView({ sheet, factionId, variants, counts }: { sheet: D
             </>
           )}
           <div className="ds-kw"><b>FACTION KEYWORDS:</b> {sheet.factionKeywords.join(', ')}</div>
-          <div className="kw ds-kw2"><b>KEYWORDS:</b> {sheet.keywords.join(', ')}</div>
+          <div className="kw ds-kw2"><b>KEYWORDS:</b> {activeKws.join(', ')}</div>
           {(() => {
             // pictures per model (Wardens of Ultramar, a sergeant) and per loadout (Terminator with claws / with a hammer)
             // every model name counts, the one named like the unit too (Chaplain Grimaldus + Cenobyte Servitors): that one

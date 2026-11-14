@@ -857,7 +857,7 @@ function makeModels(sheet: DatasheetData, e: Pick<ArmyUnitEntry, 'models' | 'war
     return {
       id: `${unitId}-m${i}`,
       name: p.name,
-      profile,
+      profile: { ...profile },
       source: sheet.name,
       isCharacter: modelIsChar,
       isBodyguard: bodyguard,
@@ -972,7 +972,35 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     // (Daemonic Allegiance with none picked: Nurgle, its first option)
     const marks = [...new Set([e, ...joiners].map((x) => x.mark ?? (sheetOf(x).abilities.some((a) => a.name === 'Daemonic Allegiance') ? 'NURGLE' : undefined)).filter((k): k is string => !!k))];
     if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
-    const keywords = [...new Set([...sheets.flatMap((s) => s.keywords), ...marks, ...(sheet.name === 'Sanctifiers' && joiners.length > 0 ? ['SCOUTS'] : [])])];
+
+    // Detachment & Ability Battleline / Stat Boosts
+    const isBl = isBattlelineUnit(sheet, list, faction);
+    if (isBl) {
+      for (const m of models) {
+        if (!m.keywords.includes('BATTLELINE')) m.keywords = [...m.keywords, 'BATTLELINE'];
+      }
+    }
+    for (const m of models) {
+      if (m.source === sheet.name) {
+        m.profile = { ...m.profile, OC: effectiveModelOc(sheet, m.profile, list, faction) };
+      }
+    }
+    for (const j of joiners) {
+      const jSheet = sheetOf(j);
+      if (jSheet && isBattlelineUnit(jSheet, list, faction)) {
+        for (const m of models) {
+          if (m.source === jSheet.name && !m.keywords.includes('BATTLELINE')) {
+            m.keywords = [...m.keywords, 'BATTLELINE'];
+          }
+        }
+      }
+    }
+
+    const keywords = [...new Set([
+      ...sheets.flatMap((s) => effectiveKeywords(s, list, faction)),
+      ...marks,
+      ...(sheet.name === 'Sanctifiers' && joiners.length > 0 ? ['SCOUTS'] : []),
+    ])];
     units.push({
       id,
       owner,
@@ -1372,6 +1400,132 @@ export function effectiveMark(u: ArmyUnitEntry, sheet?: DatasheetData): string |
 export const markable = (sheet: DatasheetData) => sheet.factionKeywords.includes('HERETIC ASTARTES') && !sheet.keywords.includes('EPIC HERO')
   && !CHAOS_MARKS.some((k) => sheet.keywords.includes(k));
 
+/**
+ * Checks whether a unit has the BATTLELINE keyword, either intrinsically on its datasheet
+ * or dynamically granted by an active Detachment rule or datasheet ability across 11th edition.
+ */
+export function isBattlelineUnit(
+  sheet: DatasheetData | undefined,
+  listOrDets?: ArmyList | string[] | null,
+  faction?: FactionData | null,
+): boolean {
+  if (!sheet) return false;
+  if (sheet.keywords.includes('BATTLELINE') || sheet.role === 'Battleline') return true;
+  if (sheet.maxPerArmy === 6) return true;
+  if (sheet.name === 'Belisarius Cawl') return true; // Mantra of Discipline gives BATTLELINE
+
+  const dets = Array.isArray(listOrDets)
+    ? listOrDets
+    : (listOrDets?.detachments ?? []);
+
+  if (!dets.length) return false;
+
+  const name = sheet.name;
+  const kw = sheet.keywords;
+
+  // 1. AM: Bridgehead Strike -> Fire Zone Purge:
+  // "If a friendly MILITARUM TEMPESTUS OFFICER model is your WARLORD, friendly TEMPESTUS SCIONS units have: BATTLELINE. +1 OC."
+  if (dets.includes('Bridgehead Strike') && name === 'Tempestus Scions') {
+    if (listOrDets && typeof listOrDets === 'object' && !Array.isArray(listOrDets) && faction) {
+      const warlordEntry = listOrDets.units.find((u) => u.warlord);
+      if (warlordEntry) {
+        const wSheet = faction.datasheets.find((d) => d.name === warlordEntry.datasheet);
+        const wKws = [...(wSheet?.keywords ?? []), ...(wSheet?.factionKeywords ?? [])].map((x) => x.toUpperCase());
+        return wKws.includes('MILITARUM TEMPESTUS') && wKws.includes('OFFICER');
+      }
+    }
+    // In builder or before Warlord is assigned, treat as active for Bridgehead Strike
+    return true;
+  }
+
+  // 2. AC: Null Maiden Vigil -> Silent Sisterhood: Prosecutor Squad has BATTLELINE
+  if (dets.includes('Null Maiden Vigil') && (name === 'Prosecutor Squad' || name === 'Prosecutors')) return true;
+
+  // 3. AE: Windrider Host -> Ride the Wind: Windriders gain BATTLELINE
+  if (dets.includes('Windrider Host') && name === 'Windriders') return true;
+
+  // 4. AE: Spirit Conclave -> Shepherds of the Dead: Wraithblades and Wraithguard gain BATTLELINE
+  if (dets.includes('Spirit Conclave') && (name === 'Wraithblades' || name === 'Wraithguard')) return true;
+
+  // 5. AE: Ghosts of the Webway / Serpent’s Brood -> Acrobatic Onslaught / Boons of the Brood: Troupe gain BATTLELINE
+  if ((dets.includes('Ghosts of the Webway') || dets.includes('Serpent’s Brood') || dets.includes("Serpent's Brood")) && name === 'Troupe') return true;
+
+  // 6. CSM: Chaos Cult -> KEYWORDS: Traitor Guardsmen Squad gain BATTLELINE
+  if (dets.includes('Chaos Cult') && (name === 'Traitor Guardsmen Squad' || name === 'Traitor Guardsmen Squads')) return true;
+
+  // 7. DG: Shamblerot Vectorium -> Numberless Horde: Poxwalkers gain BATTLELINE
+  if (dets.includes('Shamblerot Vectorium') && name === 'Poxwalkers') return true;
+
+  // 8. LoV: Dêlve Assault Shift -> Fury From The Dêlve: Cthonian Beserks gain BATTLELINE
+  if ((dets.includes('Dêlve Assault Shift') || dets.includes('Delve Assault Shift')) && (name === 'Cthonian Beserks' || name === 'Cthonian Berserks')) return true;
+
+  // 9. ORK: Kult of Speed -> Adrenaline Junkies: Warbikers have BATTLELINE
+  if (dets.includes('Kult of Speed') && name === 'Warbikers') return true;
+
+  // 10. ORK: Taktikal Brigade -> Suspiciously Well Organised: Stormboyz have BATTLELINE
+  if (dets.includes('Taktikal Brigade') && name === 'Stormboyz') return true;
+
+  // 11. ORK: Runt Swarm -> Sneaky Little Gitz: Gretchin have BATTLELINE
+  if (dets.includes('Runt Swarm') && name === 'Gretchin') return true;
+
+  // 12. QI: Spearhead-At-Arms -> Knightly Teachings: Armiger models gain BATTLELINE
+  if (dets.includes('Spearhead-At-Arms') && kw.includes('ARMIGER')) return true;
+
+  // 13. QT: Houndpack Lance -> Marked Prey: War Dog units have BATTLELINE
+  if (dets.includes('Houndpack Lance') && kw.includes('WAR DOG')) return true;
+
+  // 14. SM: Darkflight Pursuit -> Black-winged Vengeance: Outrider Squad units have BATTLELINE
+  if (dets.includes('Darkflight Pursuit') && name === 'Outrider Squad') return true;
+
+  // 15. TAU: Kroot Hunting Pack -> KEYWORDS: Kroot Carnivores have BATTLELINE
+  if (dets.includes('Kroot Hunting Pack') && (name === 'Kroot Carnivores' || name === 'Kroot Carnivore')) return true;
+
+  // 16. TS: Warpmeld Pact / Servants of Change -> Warpmeld Sacrifice / All-Seeing Mutant Hordes: Tzaangors have BATTLELINE
+  if ((dets.includes('Warpmeld Pact') || dets.includes('Servants of Change')) && name === 'Tzaangors') return true;
+
+  // 17. TYR: Warrior Bioform Onslaught -> Leader-beasts: Tyranid Warriors have BATTLELINE
+  if (dets.includes('Warrior Bioform Onslaught') && (name === 'Tyranid Warriors with Ranged Bio-weapons' || name === 'Tyranid Warriors with Melee Bio-weapons')) return true;
+
+  // 18. WE: Cult of Blood -> Idols of Khorne: Jakhals and Goremongers gain BATTLELINE
+  if (dets.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) return true;
+
+  return false;
+}
+
+/** Returns the unit's effective keywords, adding BATTLELINE if granted by detachment or ability. */
+export function effectiveKeywords(
+  sheet: DatasheetData | undefined,
+  listOrDets?: ArmyList | string[] | null,
+  faction?: FactionData | null,
+): string[] {
+  if (!sheet) return [];
+  const base = [...sheet.keywords];
+  if (isBattlelineUnit(sheet, listOrDets, faction) && !base.includes('BATTLELINE')) {
+    base.push('BATTLELINE');
+  }
+  return base;
+}
+
+/** Computes effective model OC taking into account detachment rules like Fire Zone Purge (+1 OC) and Travelling Players (OC 2). */
+export function effectiveModelOc(
+  sheet: DatasheetData | undefined,
+  modelProfile: { name?: string; OC?: number | null },
+  listOrDets?: ArmyList | string[] | null,
+  faction?: FactionData | null,
+): number {
+  if (!sheet) return modelProfile.OC ?? 0;
+  const baseModel = sheet.models?.find((m) => !modelProfile.name || m.name === modelProfile.name) ?? sheet.models?.[0];
+  const base = baseModel?.OC ?? modelProfile.OC ?? 0;
+  const dets = Array.isArray(listOrDets) ? listOrDets : (listOrDets?.detachments ?? []);
+  if (dets.includes('Bridgehead Strike') && sheet.name === 'Tempestus Scions' && isBattlelineUnit(sheet, listOrDets, faction)) {
+    return base + 1;
+  }
+  if ((dets.includes('Ghosts of the Webway') || dets.includes('Serpent’s Brood') || dets.includes("Serpent's Brood")) && sheet.name === 'Troupe') {
+    return 2;
+  }
+  return base;
+}
+
 export function validateList(list: ArmyList, faction: FactionData, size: { points: number; dp: number; unitLimit: number; enhancements: number }): string[] {
   const errs: string[] = [];
   const pts = listPoints(list, faction);
@@ -1407,11 +1561,24 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const sheet = faction.datasheets.find((d) => d.name === name);
     if (!sheet) continue;
     const isEpicHero = sheet.keywords.includes('EPIC HERO') || sheet.maxPerArmy === 1;
-    const isBattleline = sheet.keywords.includes('BATTLELINE') || sheet.keywords.includes('DEDICATED TRANSPORT')
-      || (list.detachments.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers'))
+    const isBattleline = isBattlelineUnit(sheet, list, faction)
+      || sheet.keywords.includes('DEDICATED TRANSPORT')
       || sheet.maxPerArmy === 6;
     const limit = isEpicHero ? 1 : isBattleline ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
+  }
+  // Bridgehead Strike: Scions need a Militarum Tempestus Officer Warlord for Battleline
+  if (list.detachments.includes('Bridgehead Strike')) {
+    const warlord = list.units.find((u) => u.warlord);
+    const scionCount = list.units.filter((u) => u.datasheet === 'Tempestus Scions').length;
+    if (warlord && scionCount > size.unitLimit) {
+      const wSheet = faction.datasheets.find((d) => d.name === warlord.datasheet);
+      const wKws = [...(wSheet?.keywords ?? []), ...(wSheet?.factionKeywords ?? [])].map((x) => x.toUpperCase());
+      const isOfficer = wKws.includes('MILITARUM TEMPESTUS') && wKws.includes('OFFICER');
+      if (!isOfficer) {
+        errs.push('Bridgehead Strike: a MILITARUM TEMPESTUS OFFICER must be your Warlord for Tempestus Scions to have BATTLELINE');
+      }
+    }
   }
   const shadowAssignment = faction.datasheets.flatMap((sheet) => sheet.abilities
     .flatMap((ability) => [...(ability.text ?? '').matchAll(/cannot have more than 1 ([A-Z ]+)/g)].map((match) => match[1].trim())));
