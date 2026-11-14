@@ -2051,6 +2051,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
       }
       const inContact = (b: Body) => enemyModels.some((e) => baseDist(b, e) <= 0.05);
       const otherFriends: Body[] = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id).flatMap(alive).filter((f) => inContact(f));
+      // squad mates in base contact with enemy are valid 2nd-rank contact points, but direct enemy engagement is preferred
       const squadFriends: Body[] = ms.filter((f) => f.id !== m.id && pos.has(f.id)).map((f) => bodyAt(f, pos.get(f.id)!)).filter((b) => inContact(b));
       const friendsInContact = [...otherFriends, ...squadFriends];
       for (const f of friendsInContact) for (let k = 0; k < 24; k++) {
@@ -2058,7 +2059,7 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
         const t = dist(m, c);
         if (t > maxDist + 1e-6) continue;
         const g = gapTo(m, c);
-        if (g < g0 - 0.05) spots.push({ p: c, g: 0.06, t });
+        if (g < g0 - 0.05) spots.push({ p: c, g: g <= RULES.engagementRange ? Math.max(g, 0.04) : 1.05, t });
       }
       spots.sort((a, b) => a.g - b.g || a.t - b.t);
       let placed = false, tries = 0;

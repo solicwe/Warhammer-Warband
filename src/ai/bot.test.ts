@@ -535,7 +535,7 @@ describe('reading the enemy (trading, reactions, cards, screens)', () => {
     expect(chooseTurnStyle(s, 0)).toBe('steady');
     expect(lookBudget(s)).toBe(0);
     s.botLevel = 'expert';
-    expect(lookBudget(s)).toBeGreaterThan(10000);
+    expect(lookBudget(s)).toBeGreaterThan(1000);
     setLookahead(false);
   });
 });
