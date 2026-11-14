@@ -457,7 +457,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const [detPicker, setDetPicker] = useState(false);
   const [openDet, setOpenDet] = useState<string | null>(null);
   const [openSecs, setOpenSecs] = useState<string[]>([]);
-  const [addSize, setAddSize] = useState<string | null>(null); // the datasheet whose unit size is being picked to add it
+  const [addSizePop, setAddSizePop] = useState<{ d: DatasheetData; x: number; y: number; top: number } | null>(null); // floating unit size picker for adding
   const [pop, setPop] = useState<{ uid: string; x: number; y: number; mode?: 'squad' | 'leader' | 'support' | 'embark' | 'size' } | null>(null); // the ⋮ quick menu
   const [picker, setPicker] = useState<{ factionId: string | null } | null>(startPicker ? { factionId: null } : null); // faction → sub-faction chooser
   const [view, setView] = useState<string | null>(null);
@@ -471,6 +471,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     setView(null);
     setSelectedKind(null);
     setSelectedTag(null);
+    setAddSizePop(null);
   }, [adding]); // the datasheet opened under a row of the add list
   const [note, setNote] = useState<string | null>(null);
 
@@ -554,7 +555,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     set({ units: [...list.units, syncWargear(d, defaultWargear(d, { uid: newUid('e'), datasheet: d.name, models: opt.models, pts: opt.pts }))] });
     setNote(`Added ${d.name}`);
     setView(null); // adding closes the datasheet open in the add list
-    setAddSize(null);
+    setAddSizePop(null);
   };
 
   const share = async () => {
@@ -1005,25 +1006,20 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                     </span>
                   </button>
                   <button type="button" className={`ab-add ${overPts ? 'over' : 'dark'}`} aria-label={`Add ${d.name}`}
-                    onClick={() => (pointsOptions(d).length > 1 ? setAddSize(addSize === d.name ? null : d.name) : addUnit(d))}>+</button>
+                    onClick={(e) => {
+                      const opts = pointsOptions(d);
+                      if (opts.length > 1) {
+                        if (addSizePop?.d.name === d.name) {
+                          setAddSizePop(null);
+                        } else {
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setAddSizePop({ d, x: r.right, y: r.bottom, top: r.top });
+                        }
+                      } else {
+                        addUnit(d);
+                      }
+                    }}>+</button>
                 </div>,
-                // more than one unit size: pick it now
-                addSize === d.name && (
-                  <div key={`size-${d.id}`} className="ab-add-size">
-                    <div className="ab-pop-head">Unit size · {d.name}</div>
-                    {pointsOptions(d).map((o) => {
-                      const over = pts + o.pts > size.points;
-                      return (
-                        <button key={o.models} type="button" className={`ab-pop-size ${over ? 'over' : ''}`} onClick={() => addUnit(d, o)}>
-                          <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
-                          <span className={`ab-pop-pts ${over ? 'over' : ''}`}>{o.pts} pts</span>
-                          {over && <span className="ab-over-tag">Over Limit</span>}
-                          <span className={`ab-pop-plus ${over ? 'over' : ''}`}>+ Add</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ),
                 // the datasheet opens under its row, like in the list
                 open && (
                   <div className="ab-inline" key={`peek-${d.id}`}>
@@ -1485,6 +1481,59 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     );
   };
 
+  /**
+   * Floating popover dialog when tapping '+' to add a datasheet that has multiple size options.
+   * Floating popover with backdrop, matching the quickMenu (⋮) and Add Leader design.
+   */
+  const sizePickerMenu = () => {
+    if (!addSizePop || !faction) return null;
+    const { d, x, y, top: btnTop } = addSizePop;
+    const opts = pointsOptions(d);
+    if (!opts.length) return null;
+
+    const w = Math.min(280, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(window.innerWidth - w - 8, x - w));
+    const estH = 46 + opts.length * 52;
+
+    let top = y + 4;
+    if (top + estH > window.innerHeight - 16) {
+      const aboveTop = (btnTop ?? y - 40) - estH - 4;
+      top = Math.max(8, aboveTop >= 8 ? aboveTop : window.innerHeight - estH - 16);
+    }
+    const maxHeight = Math.max(120, window.innerHeight - top - 16);
+
+    return (
+      <div className="ab-pop-backdrop" onClick={() => setAddSizePop(null)}>
+        <div
+          className="ab-pop"
+          style={{ left, top, width: w, maxHeight }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="ab-pop-head">Unit size · {d.name}</div>
+          {opts.map((o) => {
+            const over = pts + o.pts > size.points;
+            return (
+              <button
+                key={o.models}
+                type="button"
+                className={`ab-pop-size ${over ? 'over' : ''}`}
+                onClick={() => {
+                  addUnit(d, o);
+                  setAddSizePop(null);
+                }}
+              >
+                <span className="ab-pop-models">{o.models} {o.models === 1 ? 'model' : 'models'}</span>
+                <span className={`ab-pop-pts ${over ? 'over' : ''}`}>{o.pts} pts</span>
+                {over && <span className="ab-over-tag">Over Limit</span>}
+                <span className={`ab-pop-plus ${over ? 'over' : ''}`}>+</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const pickerSheet = () => {
     if (!picker || !index) return null;
     const step = picker.factionId ? index.factions.find((f) => f.id === picker.factionId) : null;
@@ -1595,6 +1644,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       {note && <div className="toast ab-toast">{note}</div>}
       {addSheet()}
       {quickMenu()}
+      {sizePickerMenu()}
       {detPickerPage()}
       {pickerSheet()}
     </div>

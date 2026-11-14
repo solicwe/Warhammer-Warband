@@ -1963,8 +1963,9 @@ export function autoApproach(s: GameState, u: UnitState, targets: UnitState[], m
     && !endSpotBlocked(s, b, b) && clearOfOthers(b);
   const coherent = () => coherencyProblems(ms.map((m) => pos.get(m.id)!), RULES.coherency.near, RULES.coherency.max, ms).length === 0;
   const gapTo = (m: ModelState, p: Pt) => Math.min(...enemyModels.map((e) => gap(bodyAt(m, p), e)));
-  // each model goes in a straight line from where it stands: that line must not pass through an enemy model (except charge target, or FLY)
-  const clearLine = (m: ModelState, p: Pt) => hasKw(u, 'FLY') || avoid.every((e) => segSegDist(axis(e), { a: { x: m.x, y: m.y }, b: p }) >= girth(e) + girth(m) - 0.03);
+  // each model goes in a straight line from where it stands: that line must not pass through an enemy model (FLY can move over enemy models)
+  const foesAll = boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT')).flatMap(alive);
+  const clearLine = (m: ModelState, p: Pt) => hasKw(u, 'FLY') || foesAll.every((e) => segSegDist(axis(e), { a: { x: m.x, y: m.y }, b: p }) >= girth(e) + girth(m) - 0.03);
   const inContact = (m: ModelState) => enemyModels.some((e) => baseDist(m, e) <= 0.05);
 
   // 1) block shift
