@@ -7,7 +7,7 @@ import { isDaemonsArmy, isDaemonUnit, isUnderShadowOfChaos } from '../factions/d
 import { zonePoly } from '../engine/missions';
 import { levelOfControl, markRuleLabel, objectivePolys, scaledPoly } from '../engine/game';
 import { unitFlags } from '../rules-engine/effects';
-import { getUnitLoneOpRange, isHidden, isInfantryBeastLoneOpActive, modelVisible } from '../engine/visibility';
+import { getUnitLoneOpRange, isHidden, isInfantryBeastLoneOpActive, modelVisible, unitIsInfantryLike } from '../engine/visibility';
 import { modelToken } from './Tokens';
 import { getModelPortrait, IMAGE_BASE, usePortraitsVersion } from './portraits';
 
@@ -1330,15 +1330,16 @@ function BoardImpl(props: BoardProps) {
       const loRange = getUnitLoneOpRange(s, u);
       const hasStealth = !!(u.core.stealth || uFlags.stealth || u.buffs?.some((b) => b.kind === 'smoke'));
       const hasLoneOp = loRange !== null;
+      const isInfantryLike = unitIsInfantryLike(u);
       const hasCover = !!(
         u.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') ||
-        ms.some((m) => {
+        (isInfantryLike && ms.some((m) => {
           const mr = m.hl ? Math.max(m.r, m.hw ?? m.r) + (m.hl ?? 0) : m.r;
           return terrainWithBoxes.some(({ t, minX, maxX, minY, maxY }) => {
             if (m.x + mr < minX || m.x - mr > maxX || m.y + mr < minY || m.y - mr > maxY) return false;
             return bodyTouchesPoly(m, 0, t.poly);
           });
-        })
+        }))
       );
       map.set(u.id, {
         hasFlowOfMagic: unitHasFlow,

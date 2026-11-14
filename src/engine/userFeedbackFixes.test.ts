@@ -499,4 +499,138 @@ describe('User Feedback Fixes Verification', () => {
     // Rubrics should not be deployed in the open without cover; they should be placed safely
     expect(placed!.size).toBe(5);
   });
+
+  it('11th Edition Knight and Vehicle Cover rules: partially obscured gives -1 BS per model, footprint alone does not', async () => {
+    const { hasCover } = await import('./visibility');
+    const { buildShootPools } = await import('./attack');
+
+    const s = {
+      phase: 'shooting',
+      round: 1,
+      turn: 1,
+      active: 0,
+      players: [
+        { id: 0, role: 'attacker', factionId: 'SM', detachments: [] },
+        { id: 1, role: 'defender', factionId: 'QI', detachments: [] },
+      ],
+      terrain: [
+        // Footprint terrain (ruin footprint with a solid wall)
+        {
+          id: 't1',
+          category: 'dense',
+          poly: [{ x: 10, y: 10 }, { x: 25, y: 10 }, { x: 25, y: 25 }, { x: 10, y: 25 }],
+          walls: [{ a: { x: 10, y: 10 }, b: { x: 20, y: 10 } }], // Wall along part of top edge
+          windows: [],
+        },
+      ],
+      units: [],
+      objectives: [],
+      log: [],
+    } as unknown as any;
+
+    // Knight standing in the footprint but out in the open (no wall between attacker and knight)
+    const knightInFootprint: any = {
+      id: 'knight',
+      name: 'Knight Paladin',
+      owner: 1,
+      status: 'board',
+      sources: ['Knight Paladin'],
+      keywords: ['VEHICLE', 'TITANIC', 'IMPERIAL KNIGHTS', 'TOWERING'],
+      factionKeywords: ['IMPERIAL KNIGHTS'],
+      abilities: [],
+      enhancements: [],
+      buffs: [],
+      core: {},
+      models: [{
+        id: 'km1',
+        name: 'Knight Paladin',
+        x: 22,
+        y: 18,
+        r: 2.5,
+        hl: 2.0,
+        hw: 1.5,
+        dead: false,
+        wounds: 22,
+        keywords: ['VEHICLE', 'TITANIC'],
+        profile: { W: 22, T: 12, Sv: 3 },
+      }],
+    };
+
+    // Attacker model 1 (x: 22, y: 2): unobstructed LoS straight down into Knight at x:22, y:18
+    const shooterOpen: ModelState = {
+      id: 'sm1',
+      name: 'Marine 1',
+      x: 22,
+      y: 2,
+      r: 0.63,
+      dead: false,
+      wounds: 2,
+      keywords: ['INFANTRY'],
+      profile: { W: 2, BS: 3 },
+    } as unknown as ModelState;
+
+    // Attacker model 2 (x: 20, y: 2): Wall ends at x=20; right side of Knight base is visible past wall edge, but left side of base is blocked behind wall
+    const shooterObscured: ModelState = {
+      id: 'sm2',
+      name: 'Marine 2',
+      x: 20,
+      y: 2,
+      r: 0.63,
+      dead: false,
+      wounds: 2,
+      keywords: ['INFANTRY'],
+      profile: { W: 2, BS: 3 },
+    } as unknown as ModelState;
+
+    // 1) Non-Infantry standing in footprint alone with clear LoS does NOT get cover:
+    expect(hasCover(s, shooterOpen, knightInFootprint)).toBe(false);
+
+    // 2) Partially obscured by wall gives Cover (-1 BS):
+    expect(hasCover(s, shooterObscured, knightInFootprint)).toBe(true);
+
+    // 3) Attack pools check per model: shooter with cover gets -1 BS (Cover -1 BS)
+    const testWeapon = {
+      name: 'Bolt rifle',
+      profiles: [{
+        name: 'Bolt rifle',
+        range: 24,
+        A: '2',
+        skill: 3,
+        S: 4,
+        AP: -1,
+        D: '1',
+        abilities: [],
+      }],
+    };
+    (shooterOpen as any).weapons = [testWeapon];
+    (shooterObscured as any).weapons = [testWeapon];
+
+    const attackerUnit: any = {
+      id: 'attackers',
+      name: 'Intercessors',
+      owner: 0,
+      status: 'board',
+      sources: ['Intercessor Squad'],
+      keywords: ['INFANTRY'],
+      factionKeywords: ['SPACE MARINES'],
+      abilities: [],
+      enhancements: [],
+      buffs: [],
+      core: {},
+      weaponsFired: [],
+      models: [shooterOpen, shooterObscured],
+    };
+    s.units = [attackerUnit, knightInFootprint];
+
+    const pools = buildShootPools(s, attackerUnit.id, knightInFootprint.id, { mode: 'normal' });
+    const coveredPool = pools.pools.find((p) => p.skillNote?.includes('Cover −1 BS'));
+    const openPool = pools.pools.find((p) => !p.skillNote?.includes('Cover'));
+
+    expect(coveredPool).toBeDefined();
+    expect(openPool).toBeDefined();
+    // Obscured shooter has -1 BS (skill becomes 4+ instead of 3+)
+    expect(coveredPool?.skill).toBe(4);
+    // Open shooter shoots at normal 3+
+    expect(openPool?.skill).toBe(3);
+  });
 });

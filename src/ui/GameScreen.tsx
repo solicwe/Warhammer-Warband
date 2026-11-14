@@ -3076,7 +3076,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             const tFlags = unitFlags(s, T);
             const tHasStealth = !!(T.core.stealth || tFlags.stealth || T.buffs?.some((b) => b.kind === 'smoke'));
             const tHasLoneOp = !!((!T.sources || T.sources.length <= 1) && (T.core.loneOperative || loneOperativeNow(s, T) || tFlags.loneOperative));
-            const tHasCover = !!(T.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke') || alive(T).some((m) => s.terrain.some((t) => bodyTouchesPoly(m, 0, t.poly))));
+            const tHasCover = res.pools.some((p) => p.skillNote?.includes('Cover')) || !!(T.buffs?.some((b) => b.kind === 'cover' || b.kind === 'smoke'));
             const groups = new Map<string, typeof res.pools>();
             for (const p of res.pools) { const k = p.weapon + '|' + p.profile.name; groups.set(k, [...(groups.get(k) ?? []), p]); }
             let total = 0, slain = 0;
