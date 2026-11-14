@@ -1258,7 +1258,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               {/* Tournament Legend */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px 10px', fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
                 <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone (Castle)</div>
-                <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
+                <div><span style={{ color: 'var(--p0)', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
                 <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
                 <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
                 <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
@@ -2292,7 +2292,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px 10px', fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
               <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone (Castle)</div>
-              <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
+              <div><span style={{ color: 'var(--p0)', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
               <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
               <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
               <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
@@ -2334,7 +2334,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '6px 12px', marginTop: 12, fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
               <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone</div>
-              <div><span style={{ color: '#38bdf8', fontWeight: 700 }}>Blue:</span> Defender Zone</div>
+              <div><span style={{ color: 'var(--p0)', fontWeight: 700 }}>Blue:</span> Defender Zone</div>
               <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal:</span> Expansion Objs</div>
               <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White:</span> Tape Offsets</div>
             </div>
