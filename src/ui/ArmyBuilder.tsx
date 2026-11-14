@@ -1199,10 +1199,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               ? <div className="tiny muted">{sp.name}: {sp.label}</div>
               : <button className={`btn ${u.split ? 'on' : ''}`} onClick={() => setUnit(u.uid, { split: !u.split })}>{u.split && <Icon name="check" size={16} />}{sp.name}: {sp.label}</button>;
           })()}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-            <button type="button" className="btn small danger" onClick={() => removeUnit(u.uid)}>
-              <Icon name="delete" size={16} /> Delete {u.datasheet}
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
             <button type="button" className="ab-moreinfo" onClick={() => setMenu(null)}>Close <Icon name="down" size={18} /></button>
           </div>
         </div>
