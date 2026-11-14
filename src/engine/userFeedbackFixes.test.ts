@@ -813,5 +813,41 @@ describe('User Feedback Fixes Verification', () => {
       weapons: [{ name: 'Bolt pistol' }, { name: 'Power weapon' }],
     });
     expect(geminae).toContain('geminae-superia');
+
+    // 6. Wargear variant portrait resolution
+    const wolfScoutPlasma = getModelPortrait({
+      source: 'Wolf Scouts',
+      name: 'Wolf Scout',
+      weapons: [{ name: 'Combat Knife' }, { name: 'Plasma Gun' }],
+    });
+    expect(wolfScoutPlasma).toContain('plasma-gun');
+
+    const wolfScoutRunic = getModelPortrait({
+      source: 'Wolf Scouts',
+      name: 'Wolf Scout',
+      weapons: [{ name: 'Bolt Pistol' }, { name: 'Runic Stave' }, { name: 'Thunderclap' }],
+    });
+    expect(wolfScoutRunic).toContain('runic-stave');
+
+    const rubricSoulreaper = getModelPortrait({
+      source: 'Rubric Marines',
+      name: 'Rubric Marine',
+      weapons: [{ name: 'Close combat weapon' }, { name: 'Soulreaper cannon' }],
+    });
+    expect(rubricSoulreaper).toContain('soulreaper-cannon');
+
+    const scarabSoulreaper = getModelPortrait({
+      source: 'Scarab Occult Terminators',
+      name: 'Scarab Occult Terminator',
+      weapons: [{ name: 'Prosperine khopesh' }, { name: 'Soulreaper cannon' }],
+    });
+    expect(scarabSoulreaper).toContain('soulreaper-cannon');
+
+    const cadianFlamer = getModelPortrait({
+      source: 'Cadian Command Squad',
+      name: 'Cadian Veteran Guardsman',
+      weapons: [{ name: 'Close combat weapon' }, { name: 'Flamer' }, { name: 'Laspistol' }],
+    });
+    expect(cadianFlamer).toContain('flamer');
   });
 });

@@ -110,7 +110,17 @@ export function pictureVariants(source: string, models: ModelState[]): PictureVa
     const display = [...ranged, ...melee, ...gear].map(itemTag).filter(Boolean);
     const tag = display.length ? display.join(' + ') : 'standard kit';
 
-    return { key: modelVariantKey(source, g.name, g.kit), fallback: [nameKey, source], label: `${g.name || source} · ${tag}` };
+    const fallbacks = [nameKey, source];
+    if (nonGeneric.length > 0 && nonGeneric.length !== g.kit.length) {
+      fallbacks.unshift(modelVariantKey(source, g.name, nonGeneric));
+    }
+    const primaryGuns = ranged.filter((w) => !/pistol/i.test(w));
+    const defining = [...primaryGuns, ...melee];
+    if (defining.length === 1) {
+      fallbacks.unshift(modelVariantKey(source, g.name, [defining[0]]));
+    }
+
+    return { key: modelVariantKey(source, g.name, g.kit), fallback: fallbacks, label: `${g.name || source} · ${tag}` };
   }).sort((a, b) => a.label.localeCompare(b.label));
 }
 

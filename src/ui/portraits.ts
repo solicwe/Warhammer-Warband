@@ -144,8 +144,16 @@ const SOURCE_ALIASES: Record<string, string[]> = {
   'Sisters of Battle Squad': ['Battle Sisters Squad'],
   'Sororitas Rhino': ['Imperial Rhino', 'Rhino'],
   'Ministorum Priest': ['Preacher', 'Missionarie', 'Missionaries'],
+  'Preacher': ['Ministorum Priest'],
   'Cadian Shock Troops': ['Cadian Shock Troops Squad'],
-  'Deathwatch Kill Team': ['Deathwatch Veterans'],
+  'Deathwatch Kill Team': ['Deathwatch Veterans', 'Deathwatch Veteran'],
+  'Eradicator Squad': ['Eradicator Squad with Heavy Bolters', 'Eradicator Squad with Melta Rifles'],
+  'Eradicator Squad with Heavy Bolters': ['Eradicator Squad'],
+  'Eradicator Squad with Melta Rifles': ['Eradicator Squad'],
+  'Invader ATVs': ['Invader ATV'],
+  'Invader ATV': ['Invader ATVs'],
+  'Daemon Prince of Tzeentch with Wings': ['Daemon Prince of Tzeentch with wings'],
+  'Daemon Prince of Tzeentch with wings': ['Daemon Prince of Tzeentch with Wings'],
 };
 
 function candidateModelNames(name?: string): string[] {
@@ -153,7 +161,15 @@ function candidateModelNames(name?: string): string[] {
   const base = name.trim();
   const withoutEpic = base.replace(/\s*[-–]\s*EPIC HERO\s*$/i, '').trim();
   const cands = [base, withoutEpic];
-  for (const n of [base, withoutEpic]) {
+
+  // Compound / multi-role model strings (e.g. "Shock Trooper Sergeants and 18 Shock Trooper", "Combat Servitors and Gun Servitors")
+  const parts = withoutEpic
+    .split(/\s*(?:,|&|\band\b|\bor\b)\s*/i)
+    .map((s) => s.replace(/^\d+\s*/, '').trim())
+    .filter(Boolean);
+  cands.push(...parts);
+
+  for (const n of [...cands]) {
     if (!n) continue;
     if (n.endsWith('s') && !n.endsWith('ss')) cands.push(n.slice(0, -1));
     else cands.push(n + 's');
@@ -193,6 +209,31 @@ export const getModelPortrait = (m: { source: string; name: string; weapons?: { 
         const vKey2 = modelVariantKey(src, nm, nonGeneric);
         const vHit2 = getPortrait(vKey2);
         if (vHit2) return vHit2;
+      }
+    }
+  }
+
+  // 3. Variant key by defining weapon (primary ranged weapon or heavy/special melee weapon)
+  const isMelee = (w: string) => /chainsword|power\s+(weapon|sword|axe|fist|lance)|thunder hammer|force\s+|claws|blade|halberd|spear|relic weapon|eviscerator|talons|maul/i.test(w);
+  const isGear = (w: string) => /vox-caster|icon|banner|shield|mine|pack|signum|array|auspex|narthecium|teleport/i.test(w);
+  const primaryGuns = nonGeneric.filter((w) => !/pistol/i.test(w) && !isMelee(w) && !isGear(w));
+  const specialMelee = nonGeneric.filter(isMelee);
+  const defining = [...primaryGuns, ...specialMelee];
+  if (defining.length > 0 && defining.length < nonGeneric.length) {
+    for (const src of sources) {
+      for (const nm of names) {
+        const vKey3 = modelVariantKey(src, nm, defining);
+        const vHit3 = getPortrait(vKey3);
+        if (vHit3) return vHit3;
+      }
+    }
+  }
+  if (defining.length === 1) {
+    for (const src of sources) {
+      for (const nm of names) {
+        const vKey4 = modelVariantKey(src, nm, [defining[0]]);
+        const vHit4 = getPortrait(vKey4);
+        if (vHit4) return vHit4;
       }
     }
   }
