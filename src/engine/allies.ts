@@ -100,3 +100,317 @@ export function allyErrors(list: ArmyList, faction: FactionData, sizePoints: num
 }
 
 const titleGod = (g: string) => g[0] + g.slice(1).toLowerCase();
+
+export interface SubPointsItem {
+  id: string;
+  label: string;
+  shortLabel?: string;
+  spent: number;
+  cap: number;
+  over: boolean;
+  unit?: string;
+  title?: string;
+}
+
+const defaultUnitPoints = (u: ArmyUnitEntry): number => {
+  const enhPts = (u.enhancements && u.enhancements.length > 0)
+    ? u.enhancements.reduce((s, x) => s + x.pts, 0)
+    : (u.enhancementPts ?? 0);
+  return (u.pts ?? 0) + enhPts + (u.wargearPts ?? 0);
+};
+
+/** Returns separate points caps (allied daemons, cult marines, detachment allies) actively tracked for an army. */
+export function subPointsList(
+  list: ArmyList,
+  faction: FactionData | null | undefined,
+  sizePoints: number,
+  unitPoints: (u: ArmyUnitEntry) => number = defaultUnitPoints,
+): SubPointsItem[] {
+  if (!faction) return [];
+  const tier = sizePoints <= 1000 ? 0 : sizePoints <= 2000 ? 1 : 2;
+  const sheetOf = (u: ArmyUnitEntry) => faction.datasheets.find((d) => d.name === u.datasheet);
+  const items: SubPointsItem[] = [];
+
+  const add = (
+    id: string,
+    label: string,
+    shortLabel: string,
+    cap: number,
+    predicate: (u: ArmyUnitEntry, d?: DatasheetData) => boolean,
+    title?: string,
+  ) => {
+    const matching = list.units.filter((u) => predicate(u, sheetOf(u)));
+    const spent = matching.reduce((sum, u) => sum + unitPoints(u), 0);
+    items.push({
+      id,
+      label,
+      shortLabel,
+      spent,
+      cap,
+      over: spent > cap,
+      unit: 'pts',
+      title: title ?? `${label}: ${spent}/${cap} pts`,
+    });
+  };
+
+  // 1. Daemonic Pact: CSM and QT, or any army having allied Legiones Daemonica units (not pure CD)
+  const hasDaemons = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d?.ally === 'CD' || (d?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD');
+  });
+  if (faction.id === 'CSM' || faction.id === 'QT' || hasDaemons) {
+    if (faction.id !== 'CD') {
+      const cap = [250, 500, 750][tier];
+      add(
+        'daemonic-pact',
+        'Daemonic Pact',
+        'Daemons',
+        cap,
+        (_u, d) => !!d && (d.ally === 'CD' || (d.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD')),
+        `Daemonic Pact: Allied Legiones Daemonica units (up to ${cap} pts)`
+      );
+    }
+  }
+
+  // 2. Cult of the Dark Gods: CSM cult Legionaries
+  const cultNames = ['Khorne Berzerkers', 'Rubric Marines', 'Plague Marines', 'Noise Marines'];
+  const hasCult = list.units.some((u) => cultNames.includes(u.datasheet));
+  if (faction.id === 'CSM' || hasCult) {
+    const cap = [250, 500, 750][tier];
+    add(
+      'cult-marines',
+      'Cult of the Dark Gods',
+      'Cult',
+      cap,
+      (u) => cultNames.includes(u.datasheet),
+      `Cult of the Dark Gods: Cult Legionaries in Heretic Astartes (up to ${cap} pts)`
+    );
+  }
+
+  // 3. Plague Legions: DG detachment Tallyband Summoners
+  const hasPlagueLegions = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('PLAGUE LEGIONS') || d.keywords.includes('PLAGUE LEGIONS'));
+  });
+  if (list.detachments.includes('Tallyband Summoners') || (faction.id === 'DG' && hasPlagueLegions)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'plague-legions',
+      'Plague Legions',
+      'Plague',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('PLAGUE LEGIONS') || d.keywords.includes('PLAGUE LEGIONS')),
+      `Plague Legions: Tallyband Summoners allied daemons (up to ${cap} pts)`
+    );
+  }
+
+  // 4. Legions of Excess: EC detachment Carnival of Excess
+  const hasLegionsExcess = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('LEGIONS OF EXCESS') || d.keywords.includes('LEGIONS OF EXCESS'));
+  });
+  if (list.detachments.includes('Carnival of Excess') || (faction.id === 'EC' && hasLegionsExcess)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'legions-of-excess',
+      'Legions of Excess',
+      'Excess',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('LEGIONS OF EXCESS') || d.keywords.includes('LEGIONS OF EXCESS')),
+      `Legions of Excess: Carnival of Excess allied daemons (up to ${cap} pts)`
+    );
+  }
+
+  // 5. Scintillating Legions: TS detachment Changehost of Deceit
+  const hasScintillating = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('SCINTILLATING LEGIONS') || d.keywords.includes('SCINTILLATING LEGIONS'));
+  });
+  if (list.detachments.includes('Changehost of Deceit') || (faction.id === 'TS' && hasScintillating)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'scintillating-legions',
+      'Scintillating Legions',
+      'Scintillating',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('SCINTILLATING LEGIONS') || d.keywords.includes('SCINTILLATING LEGIONS')),
+      `Scintillating Legions: Changehost of Deceit allied daemons (up to ${cap} pts)`
+    );
+  }
+
+  // 6. Blood Legions: WE detachment Khorne Daemonkin
+  const hasBloodLegions = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('BLOOD LEGIONS') || d.keywords.includes('BLOOD LEGIONS'));
+  });
+  if (list.detachments.includes('Khorne Daemonkin') || (faction.id === 'WE' && hasBloodLegions)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'blood-legions',
+      'Blood Legions',
+      'Blood',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('BLOOD LEGIONS') || d.keywords.includes('BLOOD LEGIONS')),
+      `Blood Legions: Khorne Daemonkin allied daemons (up to ${cap} pts)`
+    );
+  }
+
+  // 7. Shadow Legion: CD detachment Shadow Legion
+  const hasShadowLegion = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('HERETIC ASTARTES') || d.keywords.includes('HERETIC ASTARTES'));
+  });
+  if (list.detachments.includes('Shadow Legion') || (faction.id === 'CD' && hasShadowLegion)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'shadow-legion',
+      'Shadow Legion',
+      'Shadow',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('HERETIC ASTARTES') || d.keywords.includes('HERETIC ASTARTES')),
+      `Shadow Legion: Heretic Astartes units in Shadow Legion (up to ${cap} pts)`
+    );
+  }
+
+  // 8. Drukhari: Reaper's Wager (Harlequins) or Corsairs and Travelling Players
+  if (faction.id === 'DRU') {
+    if (list.detachments.some((d) => /Reaper/i.test(d))) {
+      const cap = [500, 1000, 1500][tier];
+      add(
+        'dru-harlequins',
+        'Harlequins',
+        'Harlies',
+        cap,
+        (_u, d) => !!d && (d.factionKeywords.includes('HARLEQUINS') || d.keywords.includes('HARLEQUINS')),
+        `Harlequins: Reaper's Wager allied Harlequins (up to ${cap} pts)`
+      );
+    } else {
+      const cap = [250, 500, 750][tier];
+      add(
+        'dru-travelling-players',
+        'Travelling Players',
+        'Players',
+        cap,
+        (_u, d) => !!d && (d.factionKeywords.includes('HARLEQUINS') || d.keywords.includes('HARLEQUINS') || d.factionKeywords.includes('ANHRATHE') || d.keywords.includes('ANHRATHE')),
+        `Corsairs and Travelling Players: Harlequins and Anhrathe units (up to ${cap} pts)`
+      );
+    }
+  }
+
+  // 9. Brood Brothers: GC detachment Brood Brother Auxilia
+  const hasBroodBrothers = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('ASTRA MILITARUM') || d.keywords.includes('ASTRA MILITARUM'));
+  });
+  if (list.detachments.includes('Brood Brother Auxilia') || (faction.id === 'GC' && hasBroodBrothers)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'brood-brothers',
+      'Brood Brothers',
+      'Brood',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('ASTRA MILITARUM') || d.keywords.includes('ASTRA MILITARUM')),
+      `Brood Brothers: Astra Militarum units in Brood Brother Auxilia (up to ${cap} pts)`
+    );
+  }
+
+  // 10. Tyranids: GC detachment Final Day
+  const hasTyranids = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('TYRANIDS') || d.keywords.includes('TYRANIDS'));
+  });
+  if (list.detachments.includes('Final Day') || (faction.id === 'GC' && hasTyranids)) {
+    const cap = [500, 1000, 1500][tier];
+    add(
+      'final-day-tyranids',
+      'Tyranids',
+      'Nids',
+      cap,
+      (_u, d) => !!d && (d.factionKeywords.includes('TYRANIDS') || d.keywords.includes('TYRANIDS')),
+      `Tyranids: Vanguard Invader units in Final Day (up to ${cap} pts)`
+    );
+  }
+
+  // 11. Mechanicus Allies: QI detachment Questor Forgepact
+  const hasMechanicus = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('ADEPTUS MECHANICUS') || d.keywords.includes('ADEPTUS MECHANICUS'));
+  });
+  if ((faction.id === 'QI' && list.detachments.includes('Questor Forgepact')) || hasMechanicus) {
+    add(
+      'mechanicus-allies',
+      'Mechanicus Allies',
+      'AdMech',
+      500,
+      (_u, d) => !!d && (d.factionKeywords.includes('ADEPTUS MECHANICUS') || d.keywords.includes('ADEPTUS MECHANICUS')),
+      `Mechanicus Allies: Adeptus Mechanicus units in Questor Forgepact (up to 500 pts)`
+    );
+  }
+
+  // 12. Wretched Thralls: QT detachment Iconoclast Fiefdom
+  const hasDamned = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('DAMNED') || d.keywords.includes('DAMNED'));
+  });
+  if ((faction.id === 'QT' && list.detachments.includes('Iconoclast Fiefdom')) || hasDamned) {
+    add(
+      'wretched-thralls',
+      'Wretched Thralls',
+      'Damned',
+      500,
+      (_u, d) => !!d && (d.factionKeywords.includes('DAMNED') || d.keywords.includes('DAMNED')),
+      `Wretched Thralls: Damned units in Iconoclast Fiefdom (up to 500 pts)`
+    );
+  }
+
+  // 13. Deathwatch Allies: SM detachment Deathwatch Support
+  const hasDeathwatch = list.units.some((u) => {
+    const d = sheetOf(u);
+    return d && (d.factionKeywords.includes('DEATHWATCH') || d.keywords.includes('DEATHWATCH'));
+  });
+  if ((faction.id === 'SM' && list.detachments.includes('Deathwatch Support')) || (faction.id === 'SM' && hasDeathwatch)) {
+    add(
+      'deathwatch-allies',
+      'Deathwatch Allies',
+      'Deathwatch',
+      500,
+      (_u, d) => !!d && (d.factionKeywords.includes('DEATHWATCH') || d.keywords.includes('DEATHWATCH')),
+      `Deathwatch Allies: Deathwatch units in Deathwatch Support (up to 500 pts)`
+    );
+  }
+
+  // 14. Dynamic fallback for any other detachment rules with points caps
+  for (const det of faction.detachments ?? []) {
+    if (!list.detachments.includes(det.name)) continue;
+    for (const rule of det.rules ?? []) {
+      const txt = rule.text ?? '';
+      const capsMatch = [...txt.matchAll(/(Incursion|Strike Force|Onslaught): Up to (\d+) pts/gi)];
+      const flatMatch = /(?:cannot exceed|up to) (\d+)\s*(?:points|pts)/i.exec(txt);
+      if (!capsMatch.length && !flatMatch) continue;
+
+      const kwMatch = /(?:include|include any|include the)\s+([A-Za-z0-9' -]+?)\s+units/i.exec(txt);
+      const kw = kwMatch ? kwMatch[1].trim() : det.name;
+      const id = `det-cap-${det.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      if (items.some((it) => it.id === id || it.label.toLowerCase() === kw.toLowerCase())) continue;
+
+      let cap = 500;
+      if (capsMatch.length) {
+        const caps = capsMatch.map((m) => +m[2]);
+        cap = caps[tier >= caps.length ? caps.length - 1 : tier];
+      } else if (flatMatch) {
+        cap = +flatMatch[1];
+      }
+
+      add(
+        id,
+        rule.name || det.name,
+        kw.split(' ')[0],
+        cap,
+        (_u, d) => !!d && (d.factionKeywords.some((k) => k.toUpperCase().includes(kw.toUpperCase())) || d.keywords.some((k) => k.toUpperCase().includes(kw.toUpperCase()))),
+        `${det.name}: ${rule.name} (up to ${cap} pts)`
+      );
+    }
+  }
+
+  return items;
+}

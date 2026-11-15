@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
 import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
 import { RuleText } from './RuleText';
-import { ALLIES, detachmentAllyOf } from '../engine/allies';
+import { ALLIES, detachmentAllyOf, subPointsList } from '../engine/allies';
 import { Em } from './Em';
 import { dispositionById, dispositionId, RULES } from '../engine/config';
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData, SubfactionData, WargearOption, WargearPick } from '../engine/types';
@@ -498,6 +498,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const pts = listPoints(list, faction ?? undefined);
   const taxes = useMemo(() => (faction ? dupTaxes(list, faction) : new Map<string, number>()), [list, faction]);
   const ptsOf = (u: ArmyUnitEntry) => unitPoints(u) + (taxes.get(u.uid) ?? 0) + (faction ? extremisPoints(u, list, faction) : 0);
+  const subPoints = useMemo(() => subPointsList(list, faction, size.points, ptsOf), [list, faction, size.points]);
   const sheetOf = (name: string) => faction?.datasheets.find((d) => d.name === name);
   const factionName = index?.factions.find((f) => f.id === list.factionId)?.name ?? faction?.name ?? list.factionId;
   const subs = faction?.subfactions;
@@ -1688,6 +1689,20 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>
         </div>
+        {subPoints.length > 0 && (
+          <div className="ab-sub-totals" aria-label="Allied and detachment point caps">
+            {subPoints.map((sp) => (
+              <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
+                <span className="ab-sub-name-full">{sp.label}:</span>
+                <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
+                <span className="ab-sub-val">
+                  <b>{sp.spent}</b>/{sp.cap}
+                  <small> {sp.unit ?? 'pts'}</small>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
         <button type="button" className="ab-icon" aria-label="Share army list" onClick={share}>
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

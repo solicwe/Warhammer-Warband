@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList, chapterRules, effectiveKeywords, enhancementOptions } from './army';
+import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList, chapterRules, effectiveKeywords, enhancementOptions, subPointsList } from './army';
 import { sectionOf, unitKind } from '../ui/ArmyBuilder';
 import { effectsFor, ocOf, activeRules } from '../rules-engine/effects';
 import type { ArmyList, FactionData, GameState, UnitState } from './types';
@@ -291,5 +291,113 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
 
     expect(rtOutriders.keywords).toContain('RAVENWING');
     expect(rtOutriders.models[0].keywords).toContain('RAVENWING');
+  });
+
+  it('tracks separate ally and detachment point caps across all factions and detachments', () => {
+    const CSM = loadFaction('CSM');
+    const DG = loadFaction('DG');
+    const DRU = loadFaction('DRU');
+    const GC = loadFaction('GC');
+    const QI = loadFaction('QI');
+    const QT = loadFaction('QT');
+    const SM = loadFaction('SM');
+    const TS = loadFaction('TS');
+    const WE = loadFaction('WE');
+    const EC = loadFaction('EC');
+    const CD = loadFaction('CD');
+    const NEC = loadFaction('NEC');
+
+    // 1. CSM at 2000 pts (Strike Force)
+    const csmList: ArmyList = { name: 'CSM', factionId: 'CSM', battleSize: 'strike_force', detachments: ['Veterans of the Long War'], units: [] };
+    const csmSub = subPointsList(csmList, CSM, 2000);
+    expect(csmSub.some((s) => s.id === 'daemonic-pact' && s.cap === 500 && s.spent === 0)).toBe(true);
+    expect(csmSub.some((s) => s.id === 'cult-marines' && s.cap === 500 && s.spent === 0)).toBe(true);
+
+    // CSM at 1000 pts (Incursion)
+    const csmIncursionSub = subPointsList({ ...csmList, battleSize: 'incursion' }, CSM, 1000);
+    expect(csmIncursionSub.find((s) => s.id === 'daemonic-pact')?.cap).toBe(250);
+    expect(csmIncursionSub.find((s) => s.id === 'cult-marines')?.cap).toBe(250);
+
+    // Adding Cult Marines: Rubric Marines (105 pts)
+    const csmWithCult: ArmyList = {
+      ...csmList,
+      units: [{ uid: 'c1', datasheet: 'Rubric Marines', models: 5, pts: 105 }],
+    };
+    const csmWithCultSub = subPointsList(csmWithCult, CSM, 2000);
+    const cultItem = csmWithCultSub.find((s) => s.id === 'cult-marines')!;
+    expect(cultItem.spent).toBe(105);
+    expect(cultItem.over).toBe(false);
+
+    // 2. Death Guard with Tallyband Summoners (Plague Legions)
+    const dgList: ArmyList = { name: 'DG', factionId: 'DG', battleSize: 'strike_force', detachments: ['Tallyband Summoners'], units: [] };
+    const dgSub = subPointsList(dgList, DG, 2000);
+    expect(dgSub.find((s) => s.id === 'plague-legions')?.cap).toBe(1000);
+    expect(dgSub.find((s) => s.id === 'plague-legions')?.spent).toBe(0);
+
+    const dgWithDaemons: ArmyList = {
+      ...dgList,
+      units: [{ uid: 'p1', datasheet: 'Plaguebearers', models: 10, pts: 110 }],
+    };
+    const dgWithDaemonsSub = subPointsList(dgWithDaemons, DG, 2000);
+    expect(dgWithDaemonsSub.find((s) => s.id === 'plague-legions')?.spent).toBe(110);
+
+    // 3. Drukhari: Travelling Players vs Reaper's Wager
+    const druDefault: ArmyList = { name: 'DRU', factionId: 'DRU', battleSize: 'strike_force', detachments: ['Skysplinter Assassin'], units: [] };
+    const druDefaultSub = subPointsList(druDefault, DRU, 2000);
+    expect(druDefaultSub.find((s) => s.id === 'dru-travelling-players')?.cap).toBe(500);
+
+    const druReaper: ArmyList = { name: 'DRU', factionId: 'DRU', battleSize: 'strike_force', detachments: ["Reaper’s Wager"], units: [] };
+    const druReaperSub = subPointsList(druReaper, DRU, 2000);
+    expect(druReaperSub.find((s) => s.id === 'dru-harlequins')?.cap).toBe(1000);
+
+    // 4. Genestealer Cults: Brood Brother Auxilia & Final Day
+    const gcBrood: ArmyList = { name: 'GC', factionId: 'GC', battleSize: 'strike_force', detachments: ['Brood Brother Auxilia'], units: [] };
+    const gcBroodSub = subPointsList(gcBrood, GC, 2000);
+    expect(gcBroodSub.find((s) => s.id === 'brood-brothers')?.cap).toBe(1000);
+
+    const gcFinalDay: ArmyList = { name: 'GC', factionId: 'GC', battleSize: 'strike_force', detachments: ['Final Day'], units: [] };
+    const gcFinalDaySub = subPointsList(gcFinalDay, GC, 2000);
+    expect(gcFinalDaySub.find((s) => s.id === 'final-day-tyranids')?.cap).toBe(1000);
+
+    // 5. Imperial Knights: Questor Forgepact
+    const qiForgepact: ArmyList = { name: 'QI', factionId: 'QI', battleSize: 'strike_force', detachments: ['Questor Forgepact'], units: [] };
+    const qiSub = subPointsList(qiForgepact, QI, 2000);
+    expect(qiSub.find((s) => s.id === 'mechanicus-allies')?.cap).toBe(500);
+
+    // 6. Chaos Knights: Iconoclast Fiefdom
+    const qtFiefdom: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strike_force', detachments: ['Iconoclast Fiefdom'], units: [] };
+    const qtSub = subPointsList(qtFiefdom, QT, 2000);
+    expect(qtSub.find((s) => s.id === 'daemonic-pact')?.cap).toBe(500);
+    expect(qtSub.find((s) => s.id === 'wretched-thralls')?.cap).toBe(500);
+
+    // 7. Space Marines: Deathwatch Support
+    const smDW: ArmyList = { name: 'SM', factionId: 'SM', battleSize: 'strike_force', detachments: ['Deathwatch Support'], units: [] };
+    const smDWSub = subPointsList(smDW, SM, 2000);
+    expect(smDWSub.find((s) => s.id === 'deathwatch-allies')?.cap).toBe(500);
+
+    // 8. Thousand Sons: Changehost of Deceit
+    const tsChangehost: ArmyList = { name: 'TS', factionId: 'TS', battleSize: 'strike_force', detachments: ['Changehost of Deceit'], units: [] };
+    const tsSub = subPointsList(tsChangehost, TS, 2000);
+    expect(tsSub.find((s) => s.id === 'scintillating-legions')?.cap).toBe(1000);
+
+    // 9. World Eaters: Khorne Daemonkin
+    const weDaemonkin: ArmyList = { name: 'WE', factionId: 'WE', battleSize: 'strike_force', detachments: ['Khorne Daemonkin'], units: [] };
+    const weSub = subPointsList(weDaemonkin, WE, 2000);
+    expect(weSub.find((s) => s.id === 'blood-legions')?.cap).toBe(1000);
+
+    // 10. Emperor's Children: Carnival of Excess
+    const ecCarnival: ArmyList = { name: 'EC', factionId: 'EC', battleSize: 'strike_force', detachments: ['Carnival of Excess'], units: [] };
+    const ecSub = subPointsList(ecCarnival, EC, 2000);
+    expect(ecSub.find((s) => s.id === 'legions-of-excess')?.cap).toBe(1000);
+
+    // 11. Chaos Daemons: Shadow Legion
+    const cdShadow: ArmyList = { name: 'CD', factionId: 'CD', battleSize: 'strike_force', detachments: ['Shadow Legion'], units: [] };
+    const cdSub = subPointsList(cdShadow, CD, 2000);
+    expect(cdSub.find((s) => s.id === 'shadow-legion')?.cap).toBe(1000);
+
+    // 12. Non-ally faction (Necrons Awakened Dynasty): returns empty array
+    const necList: ArmyList = { name: 'NEC', factionId: 'NEC', battleSize: 'strike_force', detachments: ['Awakened Dynasty'], units: [] };
+    const necSub = subPointsList(necList, NEC, 2000);
+    expect(necSub).toHaveLength(0);
   });
 });

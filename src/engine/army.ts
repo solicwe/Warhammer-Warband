@@ -1,6 +1,7 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
-import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf } from './allies';
+import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf, subPointsList, type SubPointsItem } from './allies';
+export { subPointsList, type SubPointsItem } from './allies';
 import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';
 
@@ -1691,6 +1692,15 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (allies.some((u) => u.warlord) && new RegExp(`No ${k} models from your army can be your WARLORD`, 'i').test(allyRule!.text)) errs.push(`${k} models cannot be your Warlord`);
   }
   errs.push(...allyErrors(list, faction, size.points, unitPoints));
+  const subPts = subPointsList(list, faction, size.points, unitPoints);
+  for (const sp of subPts) {
+    if (sp.over && sp.spent > 0) {
+      const alreadyHas = errs.some((e) => e.includes(sp.label) || (sp.shortLabel && e.includes(sp.shortLabel)));
+      if (!alreadyHas) {
+        errs.push(`${sp.label}: ${sp.spent} pts of allied units — at most ${sp.cap} pts at this battle size`);
+      }
+    }
+  }
   // "This detachment has the MUTANT tag and cannot be taken with another MUTANT detachment"
   const tags = faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.rules.map((r) => /has the (\w+) tag/.exec(r.text)?.[1]).filter(Boolean).map((tag) => ({ tag: tag!, d: d.name })));
   for (const tg of new Set(tags.map((x) => x.tag))) if (tags.filter((x) => x.tag === tg).length > 1) errs.push(`Only one ${tg} Detachment: ${tags.filter((x) => x.tag === tg).map((x) => x.d).join(', ')}`);
