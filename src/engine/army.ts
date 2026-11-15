@@ -982,11 +982,6 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
         if (!m.keywords.includes('BATTLELINE')) m.keywords = [...m.keywords, 'BATTLELINE'];
       }
     }
-    for (const m of models) {
-      if (m.source === sheet.name) {
-        m.profile = { ...m.profile, OC: effectiveModelOc(sheet, m.profile, list, faction) };
-      }
-    }
     for (const j of joiners) {
       const jSheet = sheetOf(j);
       if (jSheet && isBattlelineUnit(jSheet, list, faction)) {

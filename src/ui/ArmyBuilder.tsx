@@ -1253,6 +1253,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const bodySheet = body ? sheetOf(body.datasheet) : undefined;
     const bodySupport = body && bodySheet && !supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && supportIn(list, sheetOf(c.datasheet)))
       && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
+    const bodyLeader = body && bodySheet && supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && !supportIn(list, sheetOf(c.datasheet)))
+      && faction.datasheets.some((d) => allowed(d) && !supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
     const squadsFor = sheet?.leads.length && !body ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
     const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
@@ -1465,6 +1467,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           {canLeader && <button type="button" onClick={() => setPop({ ...pop, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader</button>}
           {canSupport && <button type="button" onClick={() => setPop({ ...pop, mode: 'support' })}><Icon name="plus" size={22} />Add Support</button>}
           {bodySupport && <button type="button" onClick={() => setPop({ ...pop, uid: body!.uid, mode: 'support' })}><Icon name="plus" size={22} />Add Support <span className="ab-pop-val">{body!.datasheet}</span></button>}
+          {bodyLeader && <button type="button" onClick={() => setPop({ ...pop, uid: body!.uid, mode: 'leader' })}><Icon name="plus" size={22} />Add Leader <span className="ab-pop-val">{body!.datasheet}</span></button>}
           {body && (
             <button type="button" onClick={() => { setUnit(u.uid, { attachTo: undefined }); setNote(`${u.datasheet} left ${body.datasheet}`); close(); }}>
               <Icon name="leave" size={22} />Leave Squad

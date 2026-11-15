@@ -1046,23 +1046,28 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const existing = m.get(label);
       if (existing) {
         existing.tags = [...new Set([...existing.tags, ...tags])];
+        if (existing.target === 'Every unit' && target !== 'Every unit') {
+          existing.target = target;
+        }
       } else {
         m.set(label, { target, tags });
       }
     };
     const formatTarget = (e: any, bearers?: any[]) => {
+      if (e?.units && e.units.length > 0) {
+        const clean = (e.units as string[]).map((u: string) => {
+          return u
+            .split('|')
+            .map((part) => part.replace(/^name:/, '').trim())
+            .join(' / ');
+        }).join(', ');
+        if (clean) return clean;
+      }
       if (bearers && bearers.length > 0) {
         const names = [...new Set(bearers.map((m: any) => m.name || m.keywords?.find((k: string) => k === 'WARBOSS' || k === 'CHARACTER') || 'Character'))];
         return names.join(', ');
       }
-      if (!e?.units || e.units.length === 0) return 'Every unit';
-      const clean = (e.units as string[]).map((u: string) => {
-        return u
-          .split('|')
-          .map((part) => part.replace(/^name:/, '').trim())
-          .join(' / ');
-      }).join(', ');
-      return clean || 'Every unit';
+      return 'Every unit';
     };
     for (const u of s.units) {
       if (!onBoard(u)) continue;

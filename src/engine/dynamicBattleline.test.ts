@@ -65,12 +65,12 @@ describe('Dynamic Detachment Battleline System', () => {
     const errs = validateList(list, AM, size);
     expect(errs.filter((e) => e.includes('maximum'))).toEqual([]);
 
-    // 7. buildUnits runtime creates unit and models with BATTLELINE and OC 2
+    // 7. buildUnits runtime creates unit and models with BATTLELINE and effectiveModelOc 2
     const runtimeUnits = buildUnits(list, AM, 0);
     const runtimeScion = runtimeUnits.find((u) => u.name === 'Tempestus Scions')!;
     expect(runtimeScion.keywords).toContain('BATTLELINE');
     expect(runtimeScion.models[0].keywords).toContain('BATTLELINE');
-    expect(runtimeScion.models[0].profile.OC).toBe(2);
+    expect(effectiveModelOc(scions, runtimeScion.models[0].profile, list, AM)).toBe(2);
   });
 
   it('Adeptus Custodes Null Maiden Vigil: grants Prosecutor Squad BATTLELINE', () => {

@@ -636,7 +636,10 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
     }
     for (const g of grantsOf(s, h)) {
       if (!g.rule.effects?.length) continue;
-      ruleEffects(s, u, h, g.rule.effects, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
+      const effs = g.units || g.models
+        ? g.rule.effects.map((e) => (e.units ? e : { ...e, units: g.units ?? (g.models ? [g.models] : undefined) }))
+        : g.rule.effects;
+      ruleEffects(s, u, h, effs, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }
   }
   for (const t of u.timed ?? []) out.push({ e: t.e, label: t.label, holder: u, bearers: t.models ? u.models.filter((m) => !m.dead && t.models!.includes(m.id)) : undefined });
@@ -981,6 +984,13 @@ export function cond(c: string, x: Ctx): boolean {
       // "if a model with this ability is your WARLORD": the bearer itself, not a Warboss leading the Warlord's unit
       const H = x.holder ?? A;
       return !!H.isWarlordUnit && (!H.warlordSource || !x.bearers?.length || x.bearers.some((m) => m.source === H.warlordSource));
+    }
+    case 'warlordTempestusOfficer': {
+      const wlUnit = s.units.find((u) => u.owner === A.owner && u.isWarlordUnit);
+      if (!wlUnit) return false;
+      const wlModels = wlUnit.models.filter((m) => !wlUnit.warlordSource || m.source === wlUnit.warlordSource);
+      const isMTO = (kws: string[]) => kws.includes('MILITARUM TEMPESTUS') && kws.includes('OFFICER');
+      return isMTO(wlUnit.keywords) || wlModels.some((m) => isMTO(m.keywords));
     }
     case 'notCharacterModel': return !!x.m && !x.m.isCharacter && !x.m.keywords.includes('CHARACTER');
     case 'twoMeleeWeapons': return !!x.m && x.m.weapons.filter((w) => w.profiles[0].range === 'Melee').length >= 2;

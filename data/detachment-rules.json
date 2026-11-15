@@ -5006,6 +5006,9 @@
           "units": [
             "TEMPESTUS SCIONS"
           ],
+          "if": [
+            "warlordTempestusOfficer"
+          ],
           "addKeywords": [
             "BATTLELINE"
           ],
@@ -5017,12 +5020,12 @@
           ],
           "attack": "ranged",
           "if": [
+            "warlordTempestusOfficer",
             "setUpThisTurn"
           ],
           "hit": 1
         }
-      ],
-      "manual": "TEMPESTUS SCIONS get BATTLELINE and +1 OC without checking the WARLORD"
+      ]
     },
     "Grizzled Company": {
       "auto": "full",
@@ -9518,6 +9521,34 @@
       "armyRule": true,
       "info": true,
       "manual": "Army building: Scintillating Legions only as allies"
+    },
+    "Fire Zone Purge": {
+      "auto": "full",
+      "effects": [
+        {
+          "units": [
+            "TEMPESTUS SCIONS"
+          ],
+          "if": [
+            "warlordTempestusOfficer"
+          ],
+          "addKeywords": [
+            "BATTLELINE"
+          ],
+          "oc": 1
+        },
+        {
+          "units": [
+            "MILITARUM TEMPESTUS"
+          ],
+          "attack": "ranged",
+          "if": [
+            "warlordTempestusOfficer",
+            "setUpThisTurn"
+          ],
+          "hit": 1
+        }
+      ]
     }
   }
 }
