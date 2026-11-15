@@ -183,10 +183,9 @@ export function subPointsList(
     }
   }
 
-  // 2. Cult of the Dark Gods: CSM cult Legionaries
-  const cultNames = ['Khorne Berzerkers', 'Rubric Marines', 'Plague Marines', 'Noise Marines'];
-  const hasCult = list.units.some((u) => cultNames.includes(u.datasheet));
-  if (faction.id === 'CSM' || hasCult) {
+  // 2. Cult of the Dark Gods: CSM cult Legionaries (only in Chaos Space Marines armies)
+  if (faction.id === 'CSM') {
+    const cultNames = ['Khorne Berzerkers', 'Rubric Marines', 'Plague Marines', 'Noise Marines'];
     const cap = [250, 500, 750][tier];
     add(
       'cult-marines',
