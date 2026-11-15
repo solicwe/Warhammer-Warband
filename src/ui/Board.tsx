@@ -1417,6 +1417,34 @@ function BoardImpl(props: BoardProps) {
       .flatMap((u) => alive(u).map((m) => ({ id: m.id, m })));
   }, [draftUnit, enemyOfDraft, s.units]);
 
+  const squadNumMap = useMemo(() => {
+    const map = new Map<string, number | null>();
+    const counts = new Map<string, string[]>();
+    for (const u of s.units) {
+      const key = `${u.owner}|${u.name}`;
+      const arr = counts.get(key) ?? [];
+      arr.push(u.id);
+      counts.set(key, arr);
+    }
+    for (const ids of counts.values()) {
+      if (ids.length > 1) {
+        ids.forEach((id, idx) => map.set(id, idx + 1));
+      }
+    }
+    return map;
+  }, [s.units]);
+
+  const hiddenModelIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const u of s.units) {
+      if (!onBoard(u)) continue;
+      for (const m of alive(u)) {
+        if (isHidden(s, u, m)) set.add(m.id);
+      }
+    }
+    return set;
+  }, [s.units, s.terrain]);
+
   return (
     <>
     <svg
@@ -1826,8 +1854,7 @@ function BoardImpl(props: BoardProps) {
       ))}
       {units.map((u) => {
         const isDraft = !!(localDraft ?? draft) && draftUnit === u.id;
-        const sameNameSquads = s.units.filter((x) => x.owner === u.owner && x.name === u.name);
-        const squadNum = sameNameSquads.length > 1 ? sameNameSquads.findIndex((x) => x.id === u.id) + 1 : null;
+        const squadNum = squadNumMap.get(u.id) ?? null;
         const isSel = props.selected === u.id;
         const isTarget = props.targets?.includes(u.id) || props.marked?.includes(u.id);
         const isPicked = props.picked?.includes(u.id);
@@ -1872,7 +1899,7 @@ function BoardImpl(props: BoardProps) {
                     strokeWidth={isBad ? 0.11 : 0.08}
                     strokeDasharray={isBad ? '0.35 0.18' : undefined}
                   />
-                  {maxFor && (
+                  {maxFor && (solo.includes(m.id) || ms.length <= 4 || ms.indexOf(m) === 0) && (
                     <circle
                       cx={p[0].x}
                       cy={p[0].y}
@@ -1901,7 +1928,7 @@ function BoardImpl(props: BoardProps) {
               const disp = getModelDisplayWounds(u, m, fx, now);
               const isEnemy = u.owner !== props.viewer;
               const isUntargetable = isEnemy && untargetableModelIds.has(m.id);
-              const isModelHidden = isHidden(s, u, m);
+              const isModelHidden = isDraft ? isHidden(s, u, m) : hiddenModelIds.has(m.id);
               return (
                 <ModelToken
                   key={m.id}

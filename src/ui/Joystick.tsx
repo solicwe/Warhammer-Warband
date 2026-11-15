@@ -34,10 +34,15 @@ export function Joystick({ onMove, onEnd, size = 116, disabled }: Props) {
     vec.current = { x: x / R, y: y / R };
   };
   const loop = (t: number) => {
-    const dt = last.current ? Math.min(0.05, (t - last.current) / 1000) : 0;
-    last.current = t;
-    // a little dead zone in the middle, so resting the thumb doesn't creep the unit
-    if (dt > 0 && Math.hypot(vec.current.x, vec.current.y) > 0.15) cb.current.onMove(vec.current.x, vec.current.y, dt);
+    const elapsed = t - last.current;
+    if (elapsed >= 16) {
+      const dt = last.current ? Math.min(0.05, elapsed / 1000) : 0;
+      last.current = t;
+      // a little dead zone in the middle, so resting the thumb doesn't creep the unit
+      if (dt > 0 && Math.hypot(vec.current.x, vec.current.y) > 0.15) {
+        cb.current.onMove(vec.current.x, vec.current.y, dt);
+      }
+    }
     raf.current = requestAnimationFrame(loop);
   };
   const release = () => {

@@ -3814,42 +3814,4 @@ select option {
   background: var(--accent);
 }
 
-.move-confirm-pill {
-  position: absolute;
-  z-index: 50;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1.5px solid var(--accent);
-  border-radius: 999px;
-  padding: 4px 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-  pointer-events: auto;
-  transform: translate(-50%, -120%);
-}
 
-.move-confirm-pill button {
-  min-height: 40px;
-  min-width: 40px;
-  border-radius: 999px;
-  border: none;
-  font-family: var(--font-cond);
-  font-weight: 700;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 12px;
-  cursor: pointer;
-}
-
-.move-confirm-pill .btn-confirm {
-  background: var(--good);
-  color: #ffffff;
-}
-
-.move-confirm-pill .btn-cancel {
-  background: #334155;
-  color: #cbd5e1;
-}

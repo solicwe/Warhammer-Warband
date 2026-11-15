@@ -987,7 +987,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     const L = Math.hypot(o.x, o.y);
     if (L > max) o = { x: (o.x / L) * max, y: (o.y / L) * max };
     joyOff.current = o;
-    const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, walkDraft(m.id, [{ x: m.x, y: m.y }, { x: m.x + o.x, y: m.y + o.y }])]));
+    const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x + o.x, y: m.y + o.y }]]));
     setDraft(paths);
     setCheck(null);
   };
@@ -4077,30 +4077,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
 
 
-        {/* Mobile Confirm Move / Cancel Floating Pill */}
-        {mode && draft && (
-          <div className="move-confirm-pill" style={{ bottom: 16, left: '50%' }}>
-            <button
-              className="btn-confirm"
-              onClick={() => {
-                if (mode.k === 'move') confirmMove(mode.kind);
-                else if (mode.k === 'charge') confirmMove('charge', () => { setSel(null); setMode(null); });
-                else if (mode.k === 'pile') confirmMove(mode.kind);
-              }}
-            >
-              Confirm Move
-            </button>
-            <button
-              className="btn-cancel"
-              onClick={() => {
-                setMode(null);
-                setDraft(null);
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
+
       </div>
       <aside className={`game-side draggable-drawer ${(reporting || rolling) && actingBot === null ? 'tucked' : ''} ${drawerMin ? 'mini' : ''} ${mode ? 'moving' : ''}`}>
         <button className="drawer-handle" aria-label={drawerMin ? 'Show the panel' : 'Fold the panel down'} aria-expanded={!drawerMin} onClick={() => setDrawerMin((v) => !v)}>
