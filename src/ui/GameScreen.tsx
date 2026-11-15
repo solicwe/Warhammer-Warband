@@ -239,7 +239,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         }
       });
       setMode(null);
-      if (at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
+      if (!spectate && at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
     }
   }, [fastShooting, s.attack]);
   const [shake, setShake] = useState(0);
@@ -731,6 +731,11 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     if (tape.on) {
       const m = U(unitId).models.find((x) => x.id === modelId && !x.dead) ?? alive(U(unitId))[0];
       if (m) measureTap({ x: m.x, y: m.y }, { u: unitId, m: m.id });
+      return;
+    }
+    if (spectate || replay) {
+      setSel(sel === unitId ? null : unitId);
+      if (sel !== unitId) setFocusUnit(unitId);
       return;
     }
     if (actPick) {
@@ -1371,7 +1376,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       if (at.kind === 'fight') { markFought(g, unitById(g, attacker.id)); openCounteroffensive(g, attacker.owner); }
     });
     setMode(null);
-    if (at.kind === 'shoot' && !unfiredWeaponNames(attacker).length) setSel(null);
+    if (!spectate && at.kind === 'shoot' && !unfiredWeaponNames(attacker).length) setSel(null);
   };
 
   const onReroll = (stage: 'hit' | 'wound' | 'save', i: number) => {
@@ -3782,13 +3787,28 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       </div>
     );
     if (spectate) return (
-      <div className="row">
-        {/* idle and bot-vs-bot: what was just done, not only who is playing */}
-        <div className="bot-act spec grow"><span className={`bot-dot s${actingBot ?? 0}`} /><span className="spec-text"><b>{actingBot !== null ? pName(s, actingBot) : 'Between turns'}</b>{s.log.length ? <span>{s.log[s.log.length - 1].text}</span> : null}</span></div>
-        <div className="seg spec-speed" role="radiogroup" aria-label="Speed">
-          <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
-          <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
-          <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+        {selUnit && (
+          <div style={{ position: 'relative' }}>
+            {unitCard(selUnit)}
+            <button
+              className="btn icon-only small"
+              onClick={(e) => { e.stopPropagation(); setSel(null); }}
+              style={{ position: 'absolute', top: 4, right: 4, padding: '2px 6px', fontSize: 11, background: 'rgba(0,0,0,0.4)', borderRadius: 4, zIndex: 2 }}
+              title="Close inspection"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <div className="row">
+          {/* idle and bot-vs-bot: what was just done, not only who is playing */}
+          <div className="bot-act spec grow"><span className={`bot-dot s${actingBot ?? 0}`} /><span className="spec-text"><b>{actingBot !== null ? pName(s, actingBot) : 'Between turns'}</b>{s.log.length ? <span>{s.log[s.log.length - 1].text}</span> : null}</span></div>
+          <div className="seg spec-speed" role="radiogroup" aria-label="Speed">
+            <button role="radio" aria-checked={speed === 0} className={speed === 0 ? 'on' : ''} onClick={() => setSpeed(0)}>Pause</button>
+            <button role="radio" aria-checked={speed === 1} className={speed === 1 ? 'on' : ''} onClick={() => setSpeed(1)}>Normal</button>
+            <button role="radio" aria-checked={speed === 2} className={speed === 2 ? 'on' : ''} onClick={() => setSpeed(2)}>Fast</button>
+          </div>
         </div>
       </div>
     );
@@ -4136,7 +4156,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               }
             });
             setMode(null);
-            if (at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
+            if (!spectate && at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
           }}
           onClose={onTrayClose}
           onPick={(i) => act((g) => toggleRerollPick(g, i))}

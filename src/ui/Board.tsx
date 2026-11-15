@@ -1748,42 +1748,39 @@ function BoardImpl(props: BoardProps) {
             {o.warded != null && <g><circle cx={o.x + 1.15} cy={o.y + 0.75} r={0.55} fill="rgba(12,13,16,0.9)" stroke={COLORS[o.warded]} strokeWidth={0.08} /><text x={o.x + 1.15} y={o.y + 0.95} fontSize={0.62} textAnchor="middle" fill={COLORS[o.warded]} fontWeight={900}>W</text></g>}
             {isTemptingTarget && <g pointerEvents="none"><circle cx={o.x - 1.15} cy={o.y - 0.75} r={0.62} fill="#ea580c" stroke="#fff" strokeWidth={0.08} /><text x={o.x - 1.15} y={o.y - 0.61} fontSize={0.34} textAnchor="middle" fill="#fff" fontWeight={900}>5VP</text></g>}
             
-            <g transform={`translate(${cx} ${bannerY})`}>
-              <rect x={-2.1} y={-0.5} width={4.2} height={0.95} rx={0.45} fill="rgba(12,13,16,0.85)" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.06} />
-              <text x={-1.85} y={0.2} fontSize={0.55} fill="#f5b83d" fontWeight={800}>{label}</text>
-              <text x={1.95} y={0.2} fontSize={0.55} textAnchor="end" fontWeight={800}>
-                <tspan fill={COLORS[0]}>{a}</tspan><tspan fill="#aaa"> : </tspan><tspan fill={COLORS[1]}>{b}</tspan>
-              </text>
-              {isTemptingTarget ? (
-                <g transform="translate(0 0.95)">
-                  <rect x={-2.6} y={-0.38} width={5.2} height={0.76} rx={0.3} fill="rgba(234,88,12,0.95)" stroke="#fff" strokeWidth={0.08} />
-                  <text x={0} y={0.16} fontSize={0.35} textAnchor="middle" fill="#fff" fontWeight={900} letterSpacing={0.02}>
-                    TEMPTING TARGET (5VP)
+            {(() => {
+              const subTag = isTemptingTarget
+                ? { text: 'TEMPTING TARGET (5VP)', fill: 'rgba(234,88,12,0.95)', stroke: '#fff', textFill: '#fff', letterSpacing: 0.02 }
+                : pendingAction
+                ? { text: `ACTION: ${pendingActionDef?.name?.toUpperCase() ?? 'IN PROGRESS'}`, fill: 'rgba(14,16,20,0.92)', stroke: pendingTheme!.primary, textFill: pendingTheme!.primary, letterSpacing: 0 }
+                : isContested
+                ? { text: 'CONTESTED', fill: 'rgba(14,16,20,0.92)', stroke: '#f59e0b', textFill: '#f59e0b', letterSpacing: 0 }
+                : isCompleted && !effects.some((eff) => /SECURED|CLEANSED|CONSECRATED/.test(eff.title) && eff.title.includes(isSecured ? 'SECURED' : isCleansed ? 'CLEANSED' : 'CONSECRATED'))
+                ? { text: isSecured ? 'SECURED' : isCleansed ? 'CLEANSED' : isConsecrated ? 'CONSECRATED' : 'COMPLETED', fill: 'rgba(14,16,20,0.92)', stroke: '#10b981', textFill: '#10b981', letterSpacing: 0 }
+                : null;
+
+              const actW = subTag ? Math.max(4.2, Math.min(8.2, subTag.text.length * 0.22 + 0.9)) : 0;
+              const actFontSize = subTag ? (subTag.text.length > 24 ? 0.28 : subTag.text.length > 16 ? 0.32 : 0.36) : 0.36;
+              const subTagY = top > 2.0 ? -0.85 : 0.85;
+
+              return (
+                <g transform={`translate(${cx} ${bannerY})`}>
+                  <rect x={-2.1} y={-0.5} width={4.2} height={0.95} rx={0.45} fill="rgba(12,13,16,0.85)" stroke={ctrl === null ? '#f5b83d' : COLORS[ctrl]} strokeWidth={0.06} />
+                  <text x={-1.85} y={0.2} fontSize={0.55} fill="#f5b83d" fontWeight={800}>{label}</text>
+                  <text x={1.95} y={0.2} fontSize={0.55} textAnchor="end" fontWeight={800}>
+                    <tspan fill={COLORS[0]}>{a}</tspan><tspan fill="#aaa"> : </tspan><tspan fill={COLORS[1]}>{b}</tspan>
                   </text>
+                  {subTag && (
+                    <g transform={`translate(0 ${subTagY})`}>
+                      <rect x={-actW / 2} y={-0.38} width={actW} height={0.76} rx={0.3} fill={subTag.fill} stroke={subTag.stroke} strokeWidth={0.07} />
+                      <text x={0} y={0.16} fontSize={actFontSize} textAnchor="middle" fill={subTag.textFill} fontWeight={900} letterSpacing={subTag.letterSpacing}>
+                        {subTag.text}
+                      </text>
+                    </g>
+                  )}
                 </g>
-              ) : pendingAction ? (
-                <g transform="translate(0 0.95)">
-                  <rect x={-2.4} y={-0.38} width={4.8} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke={pendingTheme!.primary} strokeWidth={0.07} />
-                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill={pendingTheme!.primary} fontWeight={800}>
-                    ACTION: {pendingActionDef?.name?.toUpperCase() ?? 'IN PROGRESS'}
-                  </text>
-                </g>
-              ) : isContested ? (
-                <g transform="translate(0 0.95)">
-                  <rect x={-2.1} y={-0.38} width={4.2} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke="#f59e0b" strokeWidth={0.07} />
-                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill="#f59e0b" fontWeight={800}>
-                    CONTESTED
-                  </text>
-                </g>
-              ) : isCompleted && !effects.some((eff) => /SECURED|CLEANSED|CONSECRATED/.test(eff.title) && eff.title.includes(isSecured ? 'SECURED' : isCleansed ? 'CLEANSED' : 'CONSECRATED')) ? (
-                <g transform="translate(0 0.95)">
-                  <rect x={-2.2} y={-0.38} width={4.4} height={0.76} rx={0.3} fill="rgba(14,16,20,0.92)" stroke="#10b981" strokeWidth={0.07} />
-                  <text x={0} y={0.16} fontSize={0.36} textAnchor="middle" fill="#10b981" fontWeight={800}>
-                    {isSecured ? 'SECURED' : isCleansed ? 'CLEANSED' : isConsecrated ? 'CONSECRATED' : 'COMPLETED'}
-                  </text>
-                </g>
-              ) : null}
-            </g>
+              );
+            })()}
 
             {/* Detachment territory effects: one short chip (the rings show the areas; the full text is the tooltip) */}
             {effects.length > 0 && (() => {
@@ -1987,148 +1984,249 @@ function BoardImpl(props: BoardProps) {
                 />
               );
             })}
-            {(isSel || isPicked || isDraft || vb.w < 30) && pts.length > 0 && (() => {
-              const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
-              const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
-              return (
-                <text x={cx} y={minY - 0.35} fontSize={Math.min(0.56, fs * 0.85)} textAnchor="middle" fill={isTarget ? '#fde68a' : '#fff'} stroke="#000" strokeWidth={0.12} paintOrder="stroke" pointerEvents="none" fontWeight={700}>
-                  {baseName}{squadSuffix}{u.battleShocked ? ' !' : ''}
-                </text>
-              );
+            {pts.length > 0 && (() => {
+              let curY = minY;
+              const elements: React.ReactNode[] = [];
+
+              // 1. Unit Name
+              const showName = isSel || isPicked || isDraft || vb.w < 30;
+              if (showName) {
+                curY -= 0.35;
+                const squadSuffix = squadNum !== null ? ` #${squadNum}` : '';
+                const baseName = u.name.length > 18 ? u.name.slice(0, 17) + '…' : u.name;
+                elements.push(
+                  <text
+                    key="name"
+                    x={cx}
+                    y={curY}
+                    fontSize={Math.min(0.56, fs * 0.85)}
+                    textAnchor="middle"
+                    fill={isTarget ? '#fde68a' : '#fff'}
+                    stroke="#000"
+                    strokeWidth={0.12}
+                    paintOrder="stroke"
+                    pointerEvents="none"
+                    fontWeight={700}
+                  >
+                    {baseName}{squadSuffix}{u.battleShocked ? ' !' : ''}
+                  </text>
+                );
+              }
+
+              // 2. Unit Number (Heroic order / index)
+              if (unitNumber !== undefined) {
+                curY -= 0.52;
+                elements.push(
+                  <g key="unitNum" transform={`translate(${cx} ${curY})`} pointerEvents="none">
+                    <circle r={0.42} fill="#f5d48a" stroke="#111" strokeWidth={0.09} />
+                    <text y={0.14} fontSize={0.46} textAnchor="middle" fill="#111" fontWeight={900}>{unitNumber}</text>
+                  </g>
+                );
+              }
+
+              // 3. Distance / Target Badges (props.badges)
+              const uBadges = props.badges?.[u.id];
+              if (uBadges && uBadges.length > 0) {
+                curY -= 0.44;
+                const bCount = Math.min(uBadges.length, 3);
+                elements.push(
+                  <g key="badges" transform={`translate(${cx} ${curY})`} pointerEvents="none">
+                    {uBadges.slice(0, 3).map((b, i) => {
+                      const bOffset = (i - (bCount - 1) / 2) * 2.6;
+                      const bText = b.length > 15 ? b.slice(0, 14) + '…' : b;
+                      const pillW = Math.max(1.6, Math.min(2.5, bText.length * 0.16 + 0.5));
+                      return (
+                        <g key={i} transform={`translate(${bOffset} 0)`}>
+                          <rect
+                            x={-pillW / 2}
+                            y={-0.20}
+                            width={pillW}
+                            height={0.40}
+                            rx={0.20}
+                            fill="rgba(18, 20, 23, 0.92)"
+                            stroke="#F59E0B"
+                            strokeWidth={0.04}
+                          />
+                          <text
+                            y={0.07}
+                            fontSize={0.24}
+                            textAnchor="middle"
+                            fill="#FDE68A"
+                            fontWeight={800}
+                          >
+                            {bText}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </g>
+                );
+              }
+
+              // 4. Tactical Tags (Stealth, Cover, Lone Op)
+              if ((isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover || isInfBeastOp)) {
+                const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
+                if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#38bdf8', bg: '#090d16', icon: 'stealth' });
+                if (hasCover) tacticalTags.push({ text: 'Cover −1 BS', color: '#4ade80', border: '#4ade80', bg: '#090d16', icon: 'shield' });
+                if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#34d399', border: '#34d399', bg: '#090d16', icon: 'stealth' });
+                else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#fbbf24', bg: '#090d16', icon: 'radar' });
+                if (tacticalTags.length > 0) {
+                  curY -= 0.50;
+                  const tCount = tacticalTags.length;
+                  const pillW = 2.9;
+                  const pillSpacing = pillW + 0.35;
+                  elements.push(
+                    <g key="tacticalTags" transform={`translate(${cx} ${curY})`} pointerEvents="none">
+                      {tacticalTags.map((tag, i) => {
+                        const off = (i - (tCount - 1) / 2) * pillSpacing;
+                        return (
+                          <g key={tag.text} transform={`translate(${off} 0)`}>
+                            <rect
+                              x={-pillW / 2}
+                              y={-0.23}
+                              width={pillW}
+                              height={0.46}
+                              rx={0.23}
+                              fill="#090d16"
+                              stroke={tag.border}
+                              strokeWidth={0.06}
+                            />
+                            <SvgIcon name={tag.icon} x={-pillW / 2 + 0.35} y={0} size={0.30} color={tag.color} />
+                            <text
+                              x={0.16}
+                              y={0.07}
+                              fontSize={0.23}
+                              textAnchor="middle"
+                              fill={tag.color}
+                              fontWeight={900}
+                              stroke="#000"
+                              strokeWidth={0.03}
+                              paintOrder="stroke"
+                            >
+                              {tag.text}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                }
+              }
+
+              // 5. BATTLE-SHOCKED (Compact pill)
+              if (u.battleShocked) {
+                curY -= 0.48;
+                elements.push(
+                  <g key="battleShocked" transform={`translate(${cx} ${curY})`} pointerEvents="none">
+                    <rect x={-1.7} y={-0.22} width={3.4} height={0.44} rx={0.22} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.05} />
+                    <SvgIcon name="charge" x={-1.25} y={0} size={0.32} color="#f5f3ff" />
+                    <text x={0.12} y={0.08} fontSize={0.25} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>BATTLE-SHOCKED</text>
+                  </g>
+                );
+              }
+
+              // 6. Oath Target / Mark of Chaos
+              if (s.players[1 - u.owner].oathTarget === u.id) {
+                curY -= 0.48;
+                elements.push(
+                  <g key="oathTarget" transform={`translate(${cx} ${curY})`} pointerEvents="none">
+                    <rect x={-1.7} y={-0.22} width={3.4} height={0.44} rx={0.18} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.05} />
+                    <path d="M -1.25 0.12 L -1.0 -0.12 L -0.75 0.12 Z" fill="#f5d48a" />
+                    <text x={0.15} y={0.08} fontSize={0.27} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.03}>{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</text>
+                  </g>
+                );
+              }
+
+              // 7. Aura Badges (Flow of Magic, Shadow of Chaos)
+              let auraNode: React.ReactNode = null;
+              if (unitInFlow) {
+                auraNode = (
+                  <g transform={`translate(${cx} 0)`} className="flow-magic-aura">
+                    <rect x={-2.2} y={-0.22} width={4.4} height={0.44} rx={0.22} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.05} />
+                    <text y={0.08} fontSize={0.24} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.03}>IN FLOW OF MAGIC (+1 W)</text>
+                  </g>
+                );
+              } else if (hasFlowOfMagic && hasPsychicWep) {
+                auraNode = (
+                  <g transform={`translate(${cx} 0)`}>
+                    <rect x={-2.0} y={-0.22} width={4.0} height={0.44} rx={0.22} fill="rgba(15, 23, 42, 0.9)" stroke="#0284c7" strokeWidth={0.05} />
+                    <text y={0.08} fontSize={0.23} textAnchor="middle" fill="#7dd3fc" fontWeight={800} letterSpacing={0.02}>PSYCHIC (RE-ROLL 1s)</text>
+                  </g>
+                );
+              } else if (unitInShadow) {
+                auraNode = (
+                  <g transform={`translate(${cx} 0)`} className="shadow-chaos-aura">
+                    <rect x={-2.2} y={-0.22} width={4.4} height={0.44} rx={0.22} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.05} />
+                    <text y={0.08} fontSize={0.24} textAnchor="middle" fill="#e9d5ff" fontWeight={800} letterSpacing={0.03}>IN SHADOW OF CHAOS</text>
+                  </g>
+                );
+              } else if (enemyInShadow) {
+                auraNode = (
+                  <g transform={`translate(${cx} 0)`} className="shadow-chaos-aura">
+                    <rect x={-2.1} y={-0.22} width={4.2} height={0.44} rx={0.22} fill="rgba(88, 28, 135, 0.92)" stroke="#a855f7" strokeWidth={0.05} />
+                    <text y={0.08} fontSize={0.23} textAnchor="middle" fill="#f3e8ff" fontWeight={800} letterSpacing={0.02}>SHADOW OF CHAOS (-1 BS)</text>
+                  </g>
+                );
+              }
+              if (auraNode) {
+                curY -= 0.48;
+                elements.push(
+                  <g key="aura" transform={`translate(0 ${curY})`} pointerEvents="none">
+                    {auraNode}
+                  </g>
+                );
+              }
+
+              // 8. Quick Actions
+              if (props.quickActions?.unitId === u.id) {
+                const qa = props.quickActions.actions.filter((a) => a.label !== 'Advance' && a.label !== 'Hold');
+                if (qa.length > 0) {
+                  curY -= 0.65;
+                  const btnW = 2.1;
+                  const gap = 0.22;
+                  elements.push(
+                    <g key="quickActions" transform={`translate(${cx} ${curY})`} pointerEvents="auto">
+                      {qa.map((act, i) => {
+                        const offX = (i - (qa.length - 1) / 2) * (btnW + gap);
+                        return (
+                          <g
+                            key={act.label}
+                            transform={`translate(${offX} 0)`}
+                            style={{ cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              act.onClick();
+                            }}
+                          >
+                            <rect
+                              x={-btnW / 2}
+                              y={-0.34}
+                              width={btnW}
+                              height={0.68}
+                              rx={0.34}
+                              fill={act.primary ? '#d99b26' : '#121417'}
+                              stroke={act.primary ? '#f59e0b' : 'rgba(217, 155, 38, 0.45)'}
+                              strokeWidth={0.06}
+                            />
+                            <text
+                              y={0.11}
+                              fontSize={0.32}
+                              textAnchor="middle"
+                              fill={act.primary ? '#0f172a' : '#f1f5f9'}
+                              fontWeight={800}
+                            >
+                              {act.label}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                }
+              }
+
+              return <>{elements}</>;
             })()}
-            {props.badges?.[u.id]?.length && pts.length > 0 ? (() => {
-              const uBadges = props.badges![u.id]!;
-              const bCount = Math.min(uBadges.length, 3);
-              return (
-                <g transform={`translate(${cx} ${minY - 0.95})`} pointerEvents="none">
-                  {uBadges.slice(0, 3).map((b, i) => {
-                    const bOffset = (i - (bCount - 1) / 2) * 2.6;
-                    const bText = b.length > 15 ? b.slice(0, 14) + '…' : b;
-                    const pillW = Math.max(1.6, Math.min(2.5, bText.length * 0.16 + 0.5));
-                    return (
-                      <g key={i} transform={`translate(${bOffset} 0)`}>
-                        <rect
-                          x={-pillW / 2}
-                          y={-0.22}
-                          width={pillW}
-                          height={0.44}
-                          rx={0.22}
-                          fill="rgba(18, 20, 23, 0.92)"
-                          stroke="#F59E0B"
-                          strokeWidth={0.04}
-                        />
-                        <text
-                          y={0.08}
-                          fontSize={0.24}
-                          textAnchor="middle"
-                          fill="#FDE68A"
-                          fontWeight={800}
-                        >
-                          {bText}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </g>
-              );
-            })() : null}
-            {props.quickActions?.unitId === u.id && pts.length > 0 && (() => {
-              const qa = props.quickActions.actions.filter((a) => a.label !== 'Advance' && a.label !== 'Hold');
-              if (!qa.length) return null;
-              const btnW = 2.1;
-              const gap = 0.22;
-              const qaY = minY - (props.badges?.[u.id]?.length ? 2.3 : (hasStealth || hasLoneOp || hasCover) ? 2.0 : 1.4);
-              return (
-                <g transform={`translate(${cx} ${qaY})`} pointerEvents="auto">
-                  {qa.map((act, i) => {
-                    const offX = (i - (qa.length - 1) / 2) * (btnW + gap);
-                    return (
-                      <g
-                        key={act.label}
-                        transform={`translate(${offX} 0)`}
-                        style={{ cursor: 'pointer' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          act.onClick();
-                        }}
-                      >
-                        <rect
-                          x={-btnW / 2}
-                          y={-0.34}
-                          width={btnW}
-                          height={0.68}
-                          rx={0.34}
-                          fill={act.primary ? '#d99b26' : '#121417'}
-                          stroke={act.primary ? '#f59e0b' : 'rgba(217, 155, 38, 0.45)'}
-                          strokeWidth={0.06}
-                        />
-                        <text
-                          y={0.11}
-                          fontSize={0.32}
-                          textAnchor="middle"
-                          fill={act.primary ? '#0f172a' : '#f1f5f9'}
-                          fontWeight={800}
-                        >
-                          {act.label}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </g>
-              );
-            })()}
-            {(isSel || isPicked || isTarget) && (hasStealth || hasLoneOp || hasCover || isInfBeastOp) && pts.length > 0 && (() => {
-              const tacticalTags: { text: string; color: string; border: string; bg: string; icon: 'stealth' | 'shield' | 'radar' }[] = [];
-              if (hasStealth) tacticalTags.push({ text: 'Stealth −1 Hit', color: '#38bdf8', border: '#38bdf8', bg: '#090d16', icon: 'stealth' });
-              if (hasCover) tacticalTags.push({ text: 'Cover −1 BS', color: '#4ade80', border: '#4ade80', bg: '#090d16', icon: 'shield' });
-              if (isInfBeastOp) tacticalTags.push({ text: 'Lone Op 15" (Beast)', color: '#34d399', border: '#34d399', bg: '#090d16', icon: 'stealth' });
-              else if (hasLoneOp) tacticalTags.push({ text: 'Lone Op 12"', color: '#fbbf24', border: '#fbbf24', bg: '#090d16', icon: 'radar' });
-              const tCount = tacticalTags.length;
-              const tagY = props.badges?.[u.id]?.length ? minY - 1.55 : minY - 0.95;
-              const pillW = 2.9;
-              const pillSpacing = pillW + 0.35;
-              return (
-                <g transform={`translate(${cx} ${tagY})`} pointerEvents="none">
-                  {tacticalTags.map((tag, i) => {
-                    const off = (i - (tCount - 1) / 2) * pillSpacing;
-                    return (
-                      <g key={tag.text} transform={`translate(${off} 0)`}>
-                        <rect
-                          x={-pillW / 2}
-                          y={-0.25}
-                          width={pillW}
-                          height={0.5}
-                          rx={0.25}
-                          fill="#090d16"
-                          stroke={tag.border}
-                          strokeWidth={0.07}
-                        />
-                        <SvgIcon name={tag.icon} x={-pillW / 2 + 0.35} y={0} size={0.32} color={tag.color} />
-                        <text
-                          x={0.16}
-                          y={0.08}
-                          fontSize={0.24}
-                          textAnchor="middle"
-                          fill={tag.color}
-                          fontWeight={900}
-                          stroke="#000"
-                          strokeWidth={0.03}
-                          paintOrder="stroke"
-                        >
-                          {tag.text}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </g>
-              );
-            })()}
-            {unitNumber !== undefined && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - 0.65})`} pointerEvents="none">
-                <circle r={0.55} fill="#f5d48a" stroke="#111" strokeWidth={0.12} />
-                <text y={0.2} fontSize={0.62} textAnchor="middle" fill="#111" fontWeight={900}>{unitNumber}</text>
-              </g>
-            )}
             {u.transport && pts.length > 0 && (() => {
               const pax = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
               if (!pax.length) return null;
@@ -2153,56 +2251,6 @@ function BoardImpl(props: BoardProps) {
                 </text>
               );
             })() : null}
-            {u.battleShocked && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85)})`} pointerEvents="none">
-                <rect x={-2.4} y={-0.32} width={4.8} height={0.64} rx={0.32} fill="#4c1d95" stroke="#e9d5ff" strokeWidth={0.06} />
-                <SvgIcon name="charge" x={-1.8} y={0} size={0.45} color="#f5f3ff" />
-                <text x={0.2} y={0.12} fontSize={0.36} textAnchor="middle" fill="#f5f3ff" fontWeight={900}>BATTLE-SHOCKED</text>
-              </g>
-            )}
-            {s.players[1 - u.owner].oathTarget === u.id && pts.length > 0 && (
-              <g transform={`translate(${cx} ${minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85) - (u.battleShocked ? 0.75 : 0)})`} pointerEvents="none">
-                <rect x={-1.8} y={-0.32} width={3.6} height={0.64} rx={0.18} fill="#7a0c0c" stroke="#f5d48a" strokeWidth={0.06} />
-                <path d="M -1.3 0.16 L -1.0 -0.16 L -0.7 0.16 Z" fill="#f5d48a" />
-                <text x={0.2} y={0.12} fontSize={0.38} textAnchor="middle" fill="#f5d48a" fontWeight={800} letterSpacing={0.04}>{markRuleLabel(s, u.owner === 0 ? 1 : 0)}</text>
-              </g>
-            )}
-            {pts.length > 0 && (() => {
-              const baseBadgeY = minY - (props.badges?.[u.id]?.length ? 1.45 : 0.85) - (u.battleShocked ? 0.75 : 0) - (s.players[1 - u.owner].oathTarget === u.id ? 0.75 : 0);
-              if (unitInFlow) {
-                return (
-                  <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="flow-magic-aura">
-                    <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(8, 47, 73, 0.92)" stroke="#22d3ee" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#67e8f9" fontWeight={800} letterSpacing={0.04}>IN FLOW OF MAGIC (+1 W)</text>
-                  </g>
-                );
-              }
-              if (hasFlowOfMagic && hasPsychicWep) {
-                return (
-                  <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none">
-                    <rect x={-2.2} y={-0.26} width={4.4} height={0.52} rx={0.26} fill="rgba(15, 23, 42, 0.9)" stroke="#0284c7" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#7dd3fc" fontWeight={800} letterSpacing={0.03}>PSYCHIC (RE-ROLL 1s)</text>
-                  </g>
-                );
-              }
-              if (unitInShadow) {
-                return (
-                  <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
-                    <rect x={-2.4} y={-0.28} width={4.8} height={0.56} rx={0.28} fill="rgba(59, 7, 100, 0.92)" stroke="#c084fc" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.28} textAnchor="middle" fill="#e9d5ff" fontWeight={800} letterSpacing={0.04}>IN SHADOW OF CHAOS</text>
-                  </g>
-                );
-              }
-              if (enemyInShadow) {
-                return (
-                  <g transform={`translate(${cx} ${baseBadgeY})`} pointerEvents="none" className="shadow-chaos-aura">
-                    <rect x={-2.3} y={-0.28} width={4.6} height={0.56} rx={0.28} fill="rgba(88, 28, 135, 0.92)" stroke="#a855f7" strokeWidth={0.05} />
-                    <text y={0.10} fontSize={0.26} textAnchor="middle" fill="#f3e8ff" fontWeight={800} letterSpacing={0.03}>SHADOW OF CHAOS (-1 BS)</text>
-                  </g>
-                );
-              }
-              return null;
-            })()}
             {isDraft && maxFor && ms.map((m) => {
               const p = (localDraft ?? draft)!.get(m.id);
               if (!p || p.length < 2) return null;
