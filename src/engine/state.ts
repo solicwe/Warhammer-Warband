@@ -200,7 +200,11 @@ export function spendStratagem(s: GameState, player: PlayerId, id: string, unit?
   const cp = stratCost(s, id, unit, cost);
   s.players[player].cp -= cp;
   s.players[player].stratagemsUsed.push(`${phaseKey(s)}:${id}`);
-  if (unit) unit.stratagemPhase = phaseKey(s);
+  if (unit) {
+    unit.stratagemPhase = phaseKey(s);
+    const stratName = def?.name ?? id;
+    (unit.activeStrats ??= []).push({ name: stratName, phaseKey: phaseKey(s) });
+  }
   if (id === 'insane-bravery') s.players[player].insaneBraveryUsed = true;
   // detachment stratagems are logged by name (with their effect) by the caller
   if (def) log(s, `${def.name} (−${cp}CP)${unit ? ' on ' + unit.name : ''}`, 'cp', player);

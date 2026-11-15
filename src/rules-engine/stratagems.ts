@@ -33,7 +33,7 @@ import { applyMortalWounds, buildShootPools, expectedDamage, onAttackFinished, o
 import { addTimed, cond, lastEnemyAct, unitFlags, type Effect } from './effects';
 import { afterReaction, armyPoints, autoCharge, setUnleashWrath, placeNear, reservesPoints, shootNow, findPlacement, ingressUnit, canEmbarkIn, chargeTargetOptions, declareCharge, disembarkUnit, embarkedIn, validateDisembark } from '../engine/game';
 import { baseDist, bodyAt, dist, gap, ptGap } from '../engine/geometry';
-import { alive, boardUnits, canUseStratagem, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance, type ReactCtx, type ReactOn, heroFx, playsItself } from '../engine/state';
+import { alive, boardUnits, canUseStratagem, phaseKey, engagedEnemies, log, onBoard, other, setReactHook, spendStratagem, stratCost, unitById, unitDistance, type ReactCtx, type ReactOn, heroFx, playsItself } from '../engine/state';
 import type { BuffKind, GameState, Phase, PlayerId, Pt, StratagemData, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -531,6 +531,7 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
     ? (rule.enemy.all ? stratEnemies(s, p, rule, u, use.ctx) : [stratEnemies(s, p, rule, u, use.ctx).find((e) => e.id === use.enemyId) ?? stratEnemies(s, p, rule, u, use.ctx)[0]].filter((e): e is UnitState => !!e))
     : u && u.owner !== p ? [u] : [];
   for (const x of own) {
+    (x.activeStrats ??= []).push({ name: st.name, phaseKey: phaseKey(s) });
     for (const k of buffs) x.buffs.push({ kind: k, until, label: st.name });
     const chars = rule.characterOnly ? alive(x).filter((m) => m.isCharacter || m.keywords.includes('CHARACTER')).map((m) => m.id) : undefined;
     for (const e of rule.effects ?? []) {
@@ -549,6 +550,7 @@ export function applyDetachmentStratagem(s: GameState, p: PlayerId, st: Stratage
   }
   // a charge already rolled (the reaction comes after the roll): the modifier changes that roll
   for (const e of enemies) for (const fx0 of rule.enemyEffects ?? []) if (fx0.chargeBonus && e.declaredCharge && e.chargeRoll != null && e.chargedTurn !== s.turn) e.chargeRoll = Math.max(0, e.chargeRoll + fx0.chargeBonus);
+  for (const e of enemies) (e.activeStrats ??= []).push({ name: st.name, phaseKey: phaseKey(s) });
   for (const e of enemies) for (const fx0 of rule.enemyEffects ?? []) addTimed(s, e, { e: fx0.incoming ? { ...fx0, incoming: { ...fx0.incoming, by: p } } : fx0, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, ...(rule.enemyMark ? { mark: rule.enemyMark } : {}) });
   if (rule.enemyMark && !(rule.enemyEffects ?? []).length) for (const e of enemies) addTimed(s, e, { e: {}, label: st.name, until: rule.enemyUntil ?? rule.until ?? 'phase', by: p, mark: rule.enemyMark });
   // one-off actions: on the own unit, or on the enemy unit for stratagems that pick one

@@ -304,6 +304,7 @@ export interface UnitState {
   fought: boolean;
   foughtFirstUntilTurn: number;
   stratagemPhase: string | null; // `${turn}:${phase}` when last targeted by own stratagem
+  activeStrats?: { name: string; phaseKey: string }[];
   oneShotUsed: string[];
   buffs: Buff[];
 }

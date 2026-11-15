@@ -61,7 +61,7 @@ Everything runs entirely client-side in the browser via deterministic state mach
 ### 6. Mobile-First UX/UI & 60 FPS Performance
 - **Thumb-Zone Ergonomics:** All primary actions (Next Phase, Dice Tray, Selected Unit Datasheet, Stratagem Docks) are anchored to a collapsible Bottom Sheet and Action Bar.
 - **Ultra-Compact Top HUD:** Minimalist 48px top header displaying Round, Phase, Score (VP), and CP counters, leaving $> 80\%$ of the screen dedicated to the board.
-- **Touch-Friendly Controls:** Double-tap zoom, one-finger smooth pan, and **Ghost Preview + Confirm Move** (`[✓ Confirm Move]` / `[✕ Cancel]`) to prevent accidental finger-slip movements.
+- **Touch-Friendly Controls:** Double-tap zoom, one-finger smooth pan, instant drag-and-tap unit movement with real-time ghost previews and collision validation.
 - **Performance Optimization:** DPR clamping ($\le 1.5$ on mobile), spatial bounding box LOS pre-checks, and async time-slicing ensure rock-solid 60 FPS gameplay on mobile devices.
 
 ### 7. Physical Tabletop Companion Mode
@@ -166,6 +166,15 @@ The built-in headless tournament trainer allows running thousands of automated A
 # Run headless tournament self-play benchmark
 npx vitest run src/ai/tournamentTrainer.test.ts
 ```
+
+---
+
+## Feedback & Community
+
+Feedback, rules questions, and bug reports are warmly welcome!
+- **Submit Feedback or Suggestions:** [Open a Feedback Issue](https://github.com/solicwe/Warhammer-Warband/issues/new?template=feedback.yml)
+- **Report a Bug or Rules Error:** [Submit a Bug Report](https://github.com/solicwe/Warhammer-Warband/issues/new?template=bug_report.yml)
+- **Browse All Issues:** [GitHub Issues](https://github.com/solicwe/Warhammer-Warband/issues)
 
 ---
 

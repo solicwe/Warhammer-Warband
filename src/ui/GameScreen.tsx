@@ -158,7 +158,7 @@ const BUFF_TAG: Partial<Record<BuffKind, [string, boolean]>> = {
   fightsFirst: ['Fights first', true], 'advanceCharge+1': ['+1 Adv/Charge', true],
 };
 
-export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, replayCount = 1, replayStates, onReplaySeek }: { initial: GameState; onExit: () => void; replay?: boolean; replayIndex?: number; replayCount?: number; replayStates?: GameState[]; onReplaySeek?: (index: number) => void }) {
+export function GameScreen({ initial, onExit, onWatchReplay, replay = false, replayIndex = 0, replayCount = 1, replayStates, onReplaySeek }: { initial: GameState; onExit: () => void; onWatchReplay?: (frames: GameState[]) => void; replay?: boolean; replayIndex?: number; replayCount?: number; replayStates?: GameState[]; onReplaySeek?: (index: number) => void }) {
   const replayFrames = useRef(replay ? [] : [structuredClone(initial)]);
   const recordReplayCommit = useCallback((next: GameState, undone: boolean) => {
     if (replay) return;
@@ -1025,10 +1025,18 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         }
       }
     }
-    const stratNames = new Set(s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))));
+    const stratNames = new Set([
+      ...s.players.flatMap((P) => P.detachments.flatMap((d) => d.stratagems.map((st) => st.name))),
+      ...RULES.coreStratagems.map((st) => st.name),
+    ]);
+    const currentPhaseKey = `${s.turn}:${s.phase}`;
     for (const u of s.units) {
       if (!onBoard(u)) continue;
-      const ls = new Set([...u.buffs.map((buff) => buff.label), ...(u.timed ?? []).map((x) => x.label)].filter((l): l is string => !!l && stratNames.has(l)));
+      const ls = new Set([
+        ...u.buffs.map((buff) => buff.label),
+        ...(u.timed ?? []).map((x) => x.label),
+        ...(u.activeStrats ?? []).filter((x) => x.phaseKey === currentPhaseKey).map((x) => x.name),
+      ].filter((l): l is string => !!l && stratNames.has(l)));
       for (const l of ls) (b[u.id] ??= []).push(l);
     }
     return b;
@@ -3766,6 +3774,9 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     if (s.phase === 'gameover') return (
       <div className="row">
         <div className="handoff grow">{s.winner === 'draw' ? 'The battle ends in a draw' : `${pName(s, s.winner as PlayerId)} wins`}</div>
+        {onWatchReplay && replayFrames.current.length > 0 && (
+          <button className="btn" onClick={() => onWatchReplay(replayFrames.current)}>Watch Replay</button>
+        )}
         <button className="btn" onClick={() => setFinalSeen(false)}>Result</button>
         <button className="btn primary" onClick={onExit}>Home</button>
       </div>
@@ -4565,6 +4576,9 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       {final && (
         <RoundSummary s={s} t={tally(s, null)} final onClose={() => setFinalSeen(true)}
           actions={<>
+            {onWatchReplay && replayFrames.current.length > 0 && (
+              <button className="btn" onClick={(e) => { e.stopPropagation(); onWatchReplay(replayFrames.current); }}>Watch Replay</button>
+            )}
             <button className="btn" onClick={(e) => { e.stopPropagation(); setFinalSeen(true); }}>See the board</button>
             <button className="btn primary" onClick={(e) => { e.stopPropagation(); onExit(); }}>Back to home</button>
           </>} />

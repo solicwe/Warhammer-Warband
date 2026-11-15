@@ -80,6 +80,7 @@ export default function App() {
     onReplaySeek={screen.replay ? (index) => setScreen((current) => current.kind === 'game' && current.replay
       ? { ...current, state: current.replay.states[index], replay: { ...current.replay, index } }
       : current) : undefined}
+    onWatchReplay={(frames) => setScreen({ kind: 'game', state: withAutoRules(frames[0]), replay: { states: frames.map(withAutoRules), index: 0 } })}
     onExit={() => {
       if (screen.replay) {
         setSaved(loadSaved());

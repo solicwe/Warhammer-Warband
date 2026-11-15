@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report a rules error, game glitch, or unexpected behavior.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please report any official rule discrepancy, LOS error, or unexpected UI glitch.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+      placeholder: What happened vs what should have happened according to official rules?
+    validations:
+      required: true
+  - type: input
+    id: faction_or_unit
+    attributes:
+      label: Faction / Unit / Stratagem
+      placeholder: e.g. Space Marines / Oath of Moment, Orks / 'Ere We Go
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Select Faction ...
+        2. In Phase ...
+        3. Tap ...
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device Environment
+      options:
+        - Mobile (iOS Safari)
+        - Mobile (Android Chrome)
+        - Desktop (Chrome / Edge)
+        - Desktop (Firefox / Safari)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Battle Seed
+      description: Attach screenshots or the battle seed / log JSON if available.
