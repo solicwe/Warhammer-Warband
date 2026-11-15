@@ -975,21 +975,12 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const marks = [...new Set([e, ...joiners].map((x) => x.mark ?? (sheetOf(x).abilities.some((a) => a.name === 'Daemonic Allegiance') ? 'NURGLE' : undefined)).filter((k): k is string => !!k))];
     if (marks.length) for (const m of models) m.keywords = [...new Set([...m.keywords, ...marks])];
 
-    // Detachment & Ability Battleline / Stat Boosts
-    const isBl = isBattlelineUnit(sheet, list, faction);
-    if (isBl) {
-      for (const m of models) {
-        if (!m.keywords.includes('BATTLELINE')) m.keywords = [...m.keywords, 'BATTLELINE'];
-      }
-    }
-    for (const j of joiners) {
-      const jSheet = sheetOf(j);
-      if (jSheet && isBattlelineUnit(jSheet, list, faction)) {
-        for (const m of models) {
-          if (m.source === jSheet.name && !m.keywords.includes('BATTLELINE')) {
-            m.keywords = [...m.keywords, 'BATTLELINE'];
-          }
-        }
+    // Propagate effective keywords (BATTLELINE, DEATHWING, RAVENWING, etc.) to models
+    for (const m of models) {
+      const sh = sheets.find((s) => s.name === m.source);
+      if (sh) {
+        const extra = effectiveKeywords(sh, list, faction).filter((k) => !m.keywords.includes(k));
+        if (extra.length) m.keywords = [...new Set([...m.keywords, ...extra])];
       }
     }
 
@@ -1294,8 +1285,9 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
 
   return allDetEnhancements.filter((e) => {
     if (!isChar && !e.upgrade) return false;
-    // Check if the enhancement specifically fits this datasheet/unit (e.g. ADEPTUS ASTARTES, PSYKER, CAPTAIN only)
-    const fit = enhancementFits(e.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
+    // Check if the enhancement specifically fits this datasheet/unit (e.g. ADEPTUS ASTARTES, PSYKER, CAPTAIN, DEATHWING only)
+    const effectiveKws = effectiveKeywords(sheet, list, faction);
+    const fit = enhancementFits(e.text, [...effectiveKws, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
     if (fit && !fit.ok) return false;
     return true;
   });
@@ -1505,7 +1497,7 @@ export function isBattlelineUnit(
   return false;
 }
 
-/** Returns the unit's effective keywords, adding BATTLELINE if granted by detachment or ability. */
+/** Returns the unit's effective keywords, adding BATTLELINE, DEATHWING, RAVENWING if granted by detachment, subfaction, or ability. */
 export function effectiveKeywords(
   sheet: DatasheetData | undefined,
   listOrDets?: ArmyList | string[] | null,
@@ -1516,6 +1508,48 @@ export function effectiveKeywords(
   if (isBattlelineUnit(sheet, listOrDets, faction) && !base.includes('BATTLELINE')) {
     base.push('BATTLELINE');
   }
+
+  // Dark Angels: The Deathwing & The Ravenwing
+  const isDarkAngels = (() => {
+    if (listOrDets && typeof listOrDets === 'object' && !Array.isArray(listOrDets)) {
+      if (listOrDets.subfaction === 'DARK ANGELS') return true;
+      if (listOrDets.detachments?.some((n) => ['Inner Circle Task Force', 'Wrath of the Rock', 'Darkflight Pursuit'].includes(n))) return true;
+    }
+    const dets = Array.isArray(listOrDets) ? listOrDets : (listOrDets?.detachments ?? []);
+    if (dets.some((n) => ['Inner Circle Task Force', 'Wrath of the Rock', 'Darkflight Pursuit'].includes(n))) return true;
+    if (faction && dets.some((n) => faction.detachments?.find((d) => d.name === n)?.subfaction === 'DARK ANGELS')) return true;
+    return false;
+  })();
+
+  if (isDarkAngels && (!sheet.subfaction || sheet.subfaction === 'DARK ANGELS')) {
+    const deathwingNames = [
+      'Bladeguard Ancient',
+      'Bladeguard Veteran Squad',
+      'Sternguard Veteran Squad',
+      'Vanguard Veteran Squad With Jump Packs',
+      'Vanguard Veteran Squad with Jump Packs',
+      'Land Raider',
+      'Land Raider Crusader',
+      'Land Raider Redeemer',
+      'Repulsor',
+      'Repulsor Executioner',
+    ];
+    const isDeathwing = base.includes('TERMINATOR')
+      || base.includes('DREADNOUGHT')
+      || deathwingNames.includes(sheet.name);
+
+    if (isDeathwing && !base.includes('DEATHWING')) {
+      base.push('DEATHWING');
+    }
+
+    const isRavenwing = base.includes('MOUNTED')
+      || (base.includes('VEHICLE') && base.includes('FLY'));
+
+    if (isRavenwing && !base.includes('RAVENWING')) {
+      base.push('RAVENWING');
+    }
+  }
+
   return base;
 }
 

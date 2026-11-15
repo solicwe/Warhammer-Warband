@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList } from './army';
+import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList, chapterRules, effectiveKeywords, enhancementOptions } from './army';
 import { sectionOf, unitKind } from '../ui/ArmyBuilder';
 import { effectsFor, ocOf, activeRules } from '../rules-engine/effects';
 import type { ArmyList, FactionData, GameState, UnitState } from './types';
@@ -218,5 +218,78 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     };
     const errs = validateList(listWith4Rhinos, SM, size);
     expect(errs.filter((e) => e.includes('maximum'))).toEqual([]);
+  });
+
+  it('Dark Angels: The Deathwing and The Ravenwing rules and dynamic keywords', () => {
+    // 1. Check army rules visibility via chapterRules
+    const daRules = chapterRules(SM.armyRules, 'DARK ANGELS');
+    const ultraRules = chapterRules(SM.armyRules, 'ULTRAMARINES');
+
+    expect(daRules.some((r) => r.name === 'The Deathwing')).toBe(true);
+    expect(daRules.some((r) => r.name === 'The Ravenwing')).toBe(true);
+    expect(ultraRules.some((r) => r.name === 'The Deathwing')).toBe(false);
+    expect(ultraRules.some((r) => r.name === 'The Ravenwing')).toBe(false);
+
+    // 2. Check effectiveKeywords for Dark Angels army list
+    const daList: ArmyList = {
+      name: 'Unforgiven Hunt',
+      factionId: 'SM',
+      subfaction: 'DARK ANGELS',
+      battleSize: 'incursion',
+      detachments: ['Inner Circle Task Force'],
+      units: [
+        { uid: 'u1', datasheet: 'Captain In Terminator Armour', models: 1, pts: 95, warlord: true },
+        { uid: 'u2', datasheet: 'Terminator Squad', models: 5, pts: 175 },
+        { uid: 'u3', datasheet: 'Bladeguard Veteran Squad', models: 3, pts: 80 },
+        { uid: 'u4', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 },
+        { uid: 'u5', datasheet: 'Land Raider', models: 1, pts: 240 },
+        { uid: 'u6', datasheet: 'Outrider Squad', models: 3, pts: 80 },
+        { uid: 'u7', datasheet: 'Storm Speeder Hailstrike', models: 1, pts: 115 },
+        { uid: 'u8', datasheet: 'Intercessor Squad', models: 5, pts: 80 },
+      ],
+    };
+
+    const termCaptain = SM.datasheets.find((d) => d.name === 'Captain In Terminator Armour')!;
+    const termSquad = SM.datasheets.find((d) => d.name === 'Terminator Squad')!;
+    const bladeguard = SM.datasheets.find((d) => d.name === 'Bladeguard Veteran Squad')!;
+    const dread = SM.datasheets.find((d) => d.name === 'Redemptor Dreadnought')!;
+    const landRaider = SM.datasheets.find((d) => d.name === 'Land Raider')!;
+    const outriders = SM.datasheets.find((d) => d.name === 'Outrider Squad')!;
+    const stormSpeeder = SM.datasheets.find((d) => d.name === 'Storm Speeder Hailstrike')!;
+    const intercessors = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!;
+
+    // Under Dark Angels:
+    expect(effectiveKeywords(termCaptain, daList, SM)).toContain('DEATHWING');
+    expect(effectiveKeywords(termSquad, daList, SM)).toContain('DEATHWING');
+    expect(effectiveKeywords(bladeguard, daList, SM)).toContain('DEATHWING');
+    expect(effectiveKeywords(dread, daList, SM)).toContain('DEATHWING');
+    expect(effectiveKeywords(landRaider, daList, SM)).toContain('DEATHWING');
+
+    expect(effectiveKeywords(outriders, daList, SM)).toContain('RAVENWING');
+    expect(effectiveKeywords(stormSpeeder, daList, SM)).toContain('RAVENWING');
+
+    // Intercessors do NOT gain Deathwing or Ravenwing
+    expect(effectiveKeywords(intercessors, daList, SM)).not.toContain('DEATHWING');
+    expect(effectiveKeywords(intercessors, daList, SM)).not.toContain('RAVENWING');
+
+    // Under Ultramarines: none of them gain Deathwing or Ravenwing
+    const ultraList: ArmyList = { ...daList, subfaction: 'ULTRAMARINES', detachments: ['Gladius Task Force'] };
+    expect(effectiveKeywords(termCaptain, ultraList, SM)).not.toContain('DEATHWING');
+    expect(effectiveKeywords(outriders, ultraList, SM)).not.toContain('RAVENWING');
+
+    // 3. Check enhancement availability: Captain in Terminator Armour can take Champion of the Deathwing under Dark Angels
+    const enhOpts = enhancementOptions(daList, SM, daList.units[0]);
+    expect(enhOpts.some((e) => e.name === 'Champion of the Deathwing')).toBe(true);
+
+    // 4. Check runtime buildUnits keyword propagation
+    const runtimeUnits = buildUnits(daList, SM, 0);
+    const rtTermCaptain = runtimeUnits.find((u) => u.name === 'Captain In Terminator Armour')!;
+    const rtOutriders = runtimeUnits.find((u) => u.name === 'Outrider Squad')!;
+
+    expect(rtTermCaptain.keywords).toContain('DEATHWING');
+    expect(rtTermCaptain.models[0].keywords).toContain('DEATHWING');
+
+    expect(rtOutriders.keywords).toContain('RAVENWING');
+    expect(rtOutriders.models[0].keywords).toContain('RAVENWING');
   });
 });

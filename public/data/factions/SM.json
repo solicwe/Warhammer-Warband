@@ -23,6 +23,14 @@
     {
       "name": "Special Move Types",
       "text": "SHOCK DISEMBARK MOVE. Set-up distance: 3\". Eligible if: As stated in the rule allowing this move type, if all of the following apply to your unit: embarked within a TRANSPORT model that is on the battlefield; did not embark within that TRANSPORT this phase. Effect: Your unit is set up as described in Set Up (Core Rules, 03.02). While moving: Set up each model in your unit wholly within the set-up distance of that TRANSPORT. After moving: Your unit is not eligible to declare a charge until the end of the turn.\n\nASSAULT DISEMBARK MOVE. Set-up distance: 3\". Eligible if: As stated in the rule allowing this move type, if all of the following apply to your unit: embarked within a TRANSPORT model that is on the battlefield; did not embark within that TRANSPORT this phase; that TRANSPORT has not made an advance/fall-back move this phase. Effect: Your unit is set up as described in Set Up (Core Rules, 03.02). While moving: Set up each model in your unit wholly within the set-up distance of that TRANSPORT."
+    },
+    {
+      "name": "The Deathwing",
+      "text": "If your Chapter is Dark Angels, the following ADEPTUS ASTARTES units gain the DEATHWING keyword:\n• TERMINATOR units\n• BLADEGUARD ANCIENT, BLADEGUARD VETERAN SQUAD, STERNGUARD VETERAN SQUAD, and VANGUARD VETERAN SQUAD WITH JUMP PACKS units\n• LAND RAIDER, LAND RAIDER CRUSADER, LAND RAIDER REDEEMER, REPULSOR, and REPULSOR EXECUTIONER units\n• DREADNOUGHT units"
+    },
+    {
+      "name": "The Ravenwing",
+      "text": "If your Chapter is Dark Angels, the following ADEPTUS ASTARTES units gain the RAVENWING keyword:\n• MOUNTED units\n• VEHICLE units with the FLY keyword"
     }
   ],
   "detachments": [

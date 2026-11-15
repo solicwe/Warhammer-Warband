@@ -879,7 +879,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const matchesSearch = (d: DatasheetData) => {
       if (!query) return true;
       if (d.name.toLowerCase().includes(query)) return true;
-      if (d.keywords?.some((k) => k.toLowerCase().includes(query))) return true;
+      const kws = effectiveKeywords(d, list, faction);
+      if (kws.some((k) => k.toLowerCase().includes(query))) return true;
       if (d.factionKeywords?.some((k) => k.toLowerCase().includes(query))) return true;
       if (d.role?.toLowerCase().includes(query)) return true;
       return false;
@@ -890,11 +891,11 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       .sort((a, b) => (a.allyName ?? '').localeCompare(b.allyName ?? '') || KINDS.indexOf(unitKind(a, list, faction)) - KINDS.indexOf(unitKind(b, list, faction)) || Number(!!b.subfaction) - Number(!!a.subfaction) || a.name.localeCompare(b.name));
 
     const availableKinds = Array.from(new Set(sheets.map((d) => unitKind(d, list, faction)))).sort((a, b) => KINDS.indexOf(a) - KINDS.indexOf(b));
-    const availableTags = factionTags.filter((tag) => sheets.some((d) => d.keywords.includes(tag)));
+    const availableTags = factionTags.filter((tag) => sheets.some((d) => effectiveKeywords(d, list, faction).includes(tag)));
 
     const visibleSheets = sheets.filter((d) => {
       if (filterMode === 'kind' && selectedKind) return unitKind(d, list, faction) === selectedKind;
-      if (filterMode === 'keyword' && selectedTag) return d.keywords.includes(selectedTag);
+      if (filterMode === 'keyword' && selectedTag) return effectiveKeywords(d, list, faction).includes(selectedTag);
       return true;
     });
 
