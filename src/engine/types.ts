@@ -137,6 +137,7 @@ export interface ArmyUnitEntry {
   comp?: Record<string, number>; // models per loadout line, for units whose loadouts are separate lines (Deathwatch Veterans)
   split?: boolean; // split into two units at Declare Battle Formations (Combat Squads …)
   embarkIn?: string; // uid of the TRANSPORT this unit starts the battle embarked within
+  reserve?: 'reserves' | 'deepstrike'; // whether unit is designated to start in Strategic Reserves or Deep Strike
   customName?: string;
 }
 
@@ -240,6 +241,7 @@ export interface UnitState {
   pts: number;
   status: 'pending' | 'reserves' | 'board' | 'destroyed' | 'embarked';
   embarkedIn: string | null;
+  reserve?: 'reserves' | 'deepstrike'; // pre-declared in builder to start in Reserves or Deep Strike
   /** Seeker of the Unfound: the objective picked when the unit was first set up */
   seekerObjective?: string;
   /** If the unit is within range of multiple objectives, which one it is contesting/controlling */

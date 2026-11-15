@@ -23,6 +23,7 @@ const ICONS = {
   objective: <><ellipse {...S} cx="12" cy="18.5" rx="7.5" ry="2.6" /><path {...S} d="M10 18.5V3.5" /><path {...S} d="M10 4h8.5l-2.2 3 2.2 3H10" /></>,
   transport: <><path {...S} d="M3.5 14.5l1.5-4h5.5l1.5-3h5l1 3h2.5l.5 4" /><rect {...S} x="2.5" y="14.5" width="19" height="5" rx="2.5" /><circle {...F} cx="7" cy="17" r="1.1" /><circle {...F} cx="12" cy="17" r="1.1" /><circle {...F} cx="17" cy="17" r="1.1" /></>,
   reserves: <><ellipse {...S} cx="12" cy="18.5" rx="8" ry="2.5" strokeDasharray="2 2" /><path {...S} d="M12 3v11.5" /><path {...S} d="M8 10.5l4 4 4-4" /></>,
+  deepstrike: <><ellipse {...S} cx="12" cy="19" rx="7" ry="2.2" strokeDasharray="1.5 1.5" /><path {...S} d="M12 2v13.5" /><path {...S} d="M7.5 10.5l4.5 5 4.5-5" /><circle {...F} cx="12" cy="19" r="1.3" /></>,
   ruler: <><rect {...S} x="2" y="8" width="20" height="8" rx="1.5" /><path {...S} d="M6 8v3M10 8v4M14 8v3M18 8v4" /></>,
   // army builder
   leader: <><path {...S} d="M4 17L3 7.5l5 3.5 4-7 4 7 5-3.5-1 9.5z" /><path {...S} d="M4.5 20.5h15" /><circle {...F} cx="12" cy="13.5" r="1.4" /></>,

@@ -1024,6 +1024,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       pts: [e, ...joiners].reduce((a, j) => a + unitPoints(j) + (tax.get(j.uid) ?? 0) + extremisPoints(j, list, faction), 0),
       status: 'pending',
       embarkedIn: null,
+      reserve: e.reserve || joiners.find((j) => j.reserve)?.reserve,
       transport: parseTransport(sheet.transport),
       weaponsFired: [],
       cantCharge: false,
@@ -1300,14 +1301,15 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
  */
 export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string } | null {
   // "(One per army) ADEPTUS CUSTODES INFANTRY/MOUNTED unit only (excluding TERMINATOR units)."
-  const t = text.trim().replace(/^\([^)]*\)\s*/, '');
-  // keywords in capitals, or a datasheet's name ("Big Mek with Shokk Attack Gun model only")
-  const m = /^([A-Za-z][A-Za-z’'\- ]+(?:(?:,| or| OR|\/) ?[A-Za-z][A-Za-z’'\- ]+)*) (?:model|unit)s? only(?: \(excluding ([A-Za-z][A-Za-z’'\-/ ]+?) (?:model|unit)s?\))?/.exec(t);
+  const t = text.replace(/^[–—]\s*/, '').replace(/^\([^)]+\)\s*/, '').replace(/\s+/g, ' ').trim();
+  // keywords in capitals, or a datasheet's name ("Big Mek with Shokk Attack Gun model only", "Great Unclean One only")
+  // Supports accents e.g. Kâhl, and (excluding ...) before or after "only"
+  const m = /^([\p{L}][\p{L}’'\- /]+?(?:(?:,| or| OR) [\p{L}][\p{L}’'\- /]+?)*)(?:\s+(?:model|unit)s?)?(?:\s+\(excluding\s+([\p{L}][\p{L}’'\-/ ]+?)(?:\s+(?:model|unit)s?)?\))?\s+only(?:[ ,]\s*\(excluding\s+([\p{L}][\p{L}’'\-/ ]+?)(?:\s+(?:model|unit)s?)?\))?/iu.exec(t);
   if (!m) return null;
-  m[1] = m[1].toUpperCase();
-  if (m[2]) m[2] = m[2].toUpperCase();
+  const target = m[1].toUpperCase();
+  const excludedStr = (m[2] || m[3] || '').toUpperCase();
   // "ADEPTUS CUSTODES INFANTRY/MOUNTED": the words before the last one go with each alternative
-  const alts = m[1].split(/,| OR /).map((k) => k.trim()).filter(Boolean).flatMap((k) => {
+  const alts = target.split(/,| OR /).map((k) => k.trim()).filter(Boolean).flatMap((k) => {
     if (!k.includes('/')) return [k];
     const parts = k.split('/');
     const head = parts[0].split(/\s+/);
@@ -1318,7 +1320,7 @@ export function enhancementFits(text: string, keywords: string[]): { ok: boolean
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
   const words = new Set(keywords.flatMap((k) => safeUpper(k).split(/\s+/)));
   const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w));
-  if (m[2] && m[2].split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${m[2]})` };
+  if (excludedStr && excludedStr.split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${excludedStr})` };
   return { ok: alts.some(has), need: alts.join(' / ') };
 }
 
@@ -1730,8 +1732,24 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
       errs.push(`${u.datasheet} is not a CHARACTER and cannot take Enhancements`);
     }
     if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" is not in the selected Detachments`);
+    if (sheet && enhObj?.text) {
+      const fit = enhancementFits(enhObj.text, [...effectiveKeywords(sheet, list, faction), ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]);
+      if (fit && !fit.ok) {
+        errs.push(`${u.datasheet} cannot take Enhancement "${n}" (${fit.need} only)`);
+      }
+    }
   }
   if (enhCount > (size as { enhancements?: number }).enhancements!) errs.push(`Too many Enhancements: ${enhCount}/${(size as { enhancements?: number }).enhancements}`);
+  const resUnits = list.units.filter((u) => u.reserve && !u.attachTo);
+  if (resUnits.length > 0) {
+    const resSpent = resUnits.reduce((a, u) => a + unitPoints(u), 0);
+    const resCap = Math.floor(size.points * 0.5);
+    const stratUnits = resUnits.filter((u) => u.reserve === 'reserves');
+    const stratSpent = stratUnits.reduce((a, u) => a + unitPoints(u), 0);
+    const stratCap = Math.floor(size.points * 0.25);
+    if (stratSpent > stratCap) errs.push(`Strategic Reserves: ${stratSpent} pts — at most ${stratCap} pts (25% of army limit) can be in Strategic Reserves`);
+    if (resSpent > resCap) errs.push(`Reserves: ${resSpent} pts — at most ${resCap} pts (50% of army limit) can start in Reserves`);
+  }
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     if (sheet && (u.wargear?.length || u.addons?.length)) errs.push(...wargearProblems(sheet, u));

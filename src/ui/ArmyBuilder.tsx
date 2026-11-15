@@ -607,6 +607,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       u.warlord && 'Warlord', leads && !inGroup && `${supportIn(list, sheet) ? 'Support for' : 'Leading'} ${leads.datasheet}`, leads && inGroup && (supportIn(list, sheet) ? 'Support' : 'Leader'), u.split && 'Split in two',
       rides && (inGroup ? 'Embarked' : `Starts embarked in ${rides.datasheet}`),
       load && (carried.length ? `Carrying ${carried.join(', ')} (${load.used}/${load.capacity})` : `Empty (0/${load.capacity})`),
+      u.reserve === 'deepstrike' && 'Deep Strike',
+      u.reserve === 'reserves' && 'Strategic Reserves',
     ].filter(Boolean).join(' · ');
     const wg = wargearSummary(sheet, u);
     const wrong = sheet && !allowed(sheet);
@@ -621,6 +623,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               {u.datasheet} <span className="ab-count">({u.models})</span>
               {isEpic && <span className="ab-badge-epic">Epic Hero</span>}
               {isAircraft && <span className="ab-badge-aircraft">Aircraft</span>}
+              {u.reserve === 'deepstrike' && <span className="ab-badge-res">Deep Strike</span>}
+              {u.reserve === 'reserves' && <span className="ab-badge-res">Reserves</span>}
             </span>
             <span className="ab-pts">
               {ptsOf(u)} pts{taxes.get(u.uid) ? <span className="tiny muted"> (duplicate +{taxes.get(u.uid)})</span> : null}
@@ -1127,7 +1131,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   {enh.map((o) => {
                     const on = u.enhancement === o.name;
                     const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                    const fit = sheet ? enhancementFits(o.text, [...sheet.keywords, ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
+                    const fit = sheet ? enhancementFits(o.text, [...effectiveKeywords(sheet, list, faction), ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
                     if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
                     return (
                       <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}
@@ -1227,6 +1231,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const body = u.attachTo ? list.units.find((b) => b.uid === u.attachTo) : undefined;
     const joined = list.units.filter((c) => c.attachTo === u.uid).map((c) => ({ c, d: sheetOf(c.datasheet) }));
     const rider = body ?? u; // a Leader rides with the unit it leads
+    const riderSheet = sheetOf(rider.datasheet);
+    const unitHasDs = (s?: DatasheetData | null) => !!s && ((s.abilities || []).some((a) => /deep strike/i.test(a.name)) || s.keywords.some((k) => /deep strike/i.test(k)));
+    const hasDs = unitHasDs(sheet) || unitHasDs(riderSheet);
     const rideIn = rider.embarkIn ? list.units.find((t) => t.uid === rider.embarkIn) : undefined;
     const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
     // transports this unit could ride (a full one still shows, in red) / units this transport could carry
@@ -1535,6 +1542,38 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
             </button>
           ))}
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
+          {!rider.embarkIn && (
+            <>
+              {hasDs && (
+                <button
+                  type="button"
+                  className={rider.reserve === 'deepstrike' ? 'on' : ''}
+                  onClick={() => {
+                    const next = rider.reserve === 'deepstrike' ? undefined : 'deepstrike';
+                    setUnit(rider.uid, { reserve: next });
+                    setNote(next ? `${rider.datasheet} set to Deep Strike` : `${rider.datasheet} removed from Reserves`);
+                    close();
+                  }}
+                >
+                  <Icon name={rider.reserve === 'deepstrike' ? 'check' : 'deepstrike'} size={22} />
+                  Deep Strike {rider.reserve === 'deepstrike' && <span className="ab-pop-val">Selected</span>}
+                </button>
+              )}
+              <button
+                type="button"
+                className={rider.reserve === 'reserves' ? 'on' : ''}
+                onClick={() => {
+                  const next = rider.reserve === 'reserves' ? undefined : 'reserves';
+                  setUnit(rider.uid, { reserve: next });
+                  setNote(next ? `${rider.datasheet} set to Strategic Reserves` : `${rider.datasheet} removed from Reserves`);
+                  close();
+                }}
+              >
+                <Icon name={rider.reserve === 'reserves' ? 'check' : 'reserves'} size={22} />
+                Strategic Reserves {rider.reserve === 'reserves' && <span className="ab-pop-val">Selected</span>}
+              </button>
+            </>
+          )}
           {isChar && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>
               <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'Make Warlord'}
@@ -1695,9 +1734,10 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
                 <span className="ab-sub-name-full">{sp.label}:</span>
                 <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
+                {subPoints.length > 1 && <span className="ab-sub-name-tiny">{sp.tinyLabel ?? sp.shortLabel?.[0]}:</span>}
                 <span className="ab-sub-val">
                   <b>{sp.spent}</b>/{sp.cap}
-                  <small> {sp.unit ?? 'pts'}</small>
+                  <small className="ab-sub-unit"> {sp.unit ?? 'pts'}</small>
                 </span>
               </div>
             ))}

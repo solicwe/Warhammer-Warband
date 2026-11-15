@@ -400,4 +400,62 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     const necSub = subPointsList(necList, NEC, 2000);
     expect(necSub).toHaveLength(0);
   });
+
+  it('correctly filters enhancements for Great Unclean One vs Malignant Plaguecaster in Death Guard', () => {
+    const DG = loadFaction('DG');
+    const guo = DG.datasheets.find((d) => d.name === 'Great Unclean One')!;
+    const plaguecaster = DG.datasheets.find((d) => d.name === 'Malignant Plaguecaster')!;
+    expect(guo).toBeDefined();
+    expect(plaguecaster).toBeDefined();
+
+    const dgList: ArmyList = {
+      name: 'DG Tallyband',
+      factionId: 'DG',
+      battleSize: 'strike_force',
+      detachments: ['Tallyband Summoners'],
+      units: [
+        { uid: 'u1', datasheet: 'Great Unclean One', models: 1, pts: 230 },
+        { uid: 'u2', datasheet: 'Malignant Plaguecaster', models: 1, pts: 65 },
+      ],
+    };
+
+    const guoOpts = enhancementOptions(dgList, DG, dgList.units[0]);
+    const plaguecasterOpts = enhancementOptions(dgList, DG, dgList.units[1]);
+
+    // Great Unclean One should have Entropic Knell, NOT Tome of Bounteous Blessings
+    expect(guoOpts.some((e) => e.name === 'Entropic Knell')).toBe(true);
+    expect(guoOpts.some((e) => e.name === 'Tome of Bounteous Blessings')).toBe(false);
+
+    // Malignant Plaguecaster should have Tome of Bounteous Blessings, NOT Entropic Knell
+    expect(plaguecasterOpts.some((e) => e.name === 'Tome of Bounteous Blessings')).toBe(true);
+    expect(plaguecasterOpts.some((e) => e.name === 'Entropic Knell')).toBe(false);
+  });
+
+  it('tracks reserves points and passes pre-declared reserve status into UnitState', () => {
+    const list: ArmyList = {
+      name: 'SM Strike',
+      factionId: 'SM',
+      battleSize: 'strike_force',
+      detachments: ['Gladius Task Force'],
+      units: [
+        { uid: 'u1', datasheet: 'Terminator Squad', models: 5, pts: 175, reserve: 'deepstrike' },
+        { uid: 'u2', datasheet: 'Intercessor Squad', models: 5, pts: 80, reserve: 'reserves' },
+        { uid: 'u3', datasheet: 'Captain In Terminator Armour', models: 1, pts: 95 },
+      ],
+    };
+
+    const sub = subPointsList(list, SM, 2000);
+    const resTracker = sub.find((s) => s.id === 'army-reserves');
+    expect(resTracker).toBeDefined();
+    expect(resTracker?.spent).toBe(255); // 175 + 80
+    expect(resTracker?.cap).toBe(1000); // 50% of 2000
+    expect(resTracker?.over).toBe(false);
+    expect(resTracker?.tinyLabel).toBe('Res');
+
+    const built = buildUnits(list, SM, 0);
+    const termies = built.find((u) => u.name === 'Terminator Squad');
+    const intercessors = built.find((u) => u.name === 'Intercessor Squad');
+    expect(termies?.reserve).toBe('deepstrike');
+    expect(intercessors?.reserve).toBe('reserves');
+  });
 });

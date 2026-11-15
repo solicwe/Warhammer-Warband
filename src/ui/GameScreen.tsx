@@ -1959,7 +1959,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
                         {dispName}
                       </span>
                       <span className="muted" style={{ fontSize: 12, color: 'var(--text-2)', flexShrink: 0 }}>
-                        {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}
+                        {x.pts} pts{x.core.deepStrike ? ' · Deep Strike' : ''}{x.reserve ? (x.reserve === 'deepstrike' ? ' · (Pre-set Deep Strike)' : ' · (Pre-set Reserves)') : ''}
                       </span>
                     </span>
                     {isSelected ? (
@@ -2344,6 +2344,22 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
 
   const [detPick, setDetPick] = useState<string[]>([]);
   const [resPick, setResPick] = useState<string[]>([]); // units being declared into Reserves before deployment
+  const [initResPlayers, setInitResPlayers] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (s.phase === 'deploy') {
+      const p = s.deployTurn;
+      if (!bots.includes(p) && !(s.autoDeploy ?? []).includes(p) && !(s.reservesDeclared ?? []).includes(p) && !initResPlayers.includes(p)) {
+        setInitResPlayers((cur) => [...cur, p]);
+        const pre = s.units.filter((u) => u.owner === p && u.status === 'pending' && u.reserve).map((u) => u.id);
+        if (pre.length > 0) {
+          setResPick(pre);
+        }
+      }
+    } else if (initResPlayers.length > 0) {
+      setInitResPlayers([]);
+    }
+  }, [s.phase, s.deployTurn, s.reservesDeclared, s.units, initResPlayers, bots, s.autoDeploy]);
   const AUTO_LABEL: Record<string, React.ReactNode> = { full: <><Icon name="check" size={13} /> Automated</>, partial: <><Icon name="partial" size={13} /> Mostly automated</>, manual: <><Icon name="hand" size={13} /> Manual</>, none: <><Icon name="hand" size={13} /> Not supported (read the rule)</> };
   /** Detachment rules of player p: what the app applies, and "pick one" choices such as Combat Doctrines. */
   const detPanel = (p: PlayerId) => {

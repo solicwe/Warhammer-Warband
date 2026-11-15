@@ -105,6 +105,7 @@ export interface SubPointsItem {
   id: string;
   label: string;
   shortLabel?: string;
+  tinyLabel?: string;
   spent: number;
   cap: number;
   over: boolean;
@@ -119,7 +120,7 @@ const defaultUnitPoints = (u: ArmyUnitEntry): number => {
   return (u.pts ?? 0) + enhPts + (u.wargearPts ?? 0);
 };
 
-/** Returns separate points caps (allied daemons, cult marines, detachment allies) actively tracked for an army. */
+/** Returns separate points caps (allied daemons, cult marines, detachment allies, reserves) actively tracked for an army. */
 export function subPointsList(
   list: ArmyList,
   faction: FactionData | null | undefined,
@@ -135,6 +136,7 @@ export function subPointsList(
     id: string,
     label: string,
     shortLabel: string,
+    tinyLabel: string,
     cap: number,
     predicate: (u: ArmyUnitEntry, d?: DatasheetData) => boolean,
     title?: string,
@@ -145,6 +147,7 @@ export function subPointsList(
       id,
       label,
       shortLabel,
+      tinyLabel,
       spent,
       cap,
       over: spent > cap,
@@ -165,6 +168,7 @@ export function subPointsList(
         'daemonic-pact',
         'Daemonic Pact',
         'Daemons',
+        'D',
         cap,
         (_u, d) => !!d && (d.ally === 'CD' || (d.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD')),
         `Daemonic Pact: Allied Legiones Daemonica units (up to ${cap} pts)`
@@ -181,6 +185,7 @@ export function subPointsList(
       'cult-marines',
       'Cult of the Dark Gods',
       'Cult',
+      'C',
       cap,
       (u) => cultNames.includes(u.datasheet),
       `Cult of the Dark Gods: Cult Legionaries in Heretic Astartes (up to ${cap} pts)`
@@ -198,6 +203,7 @@ export function subPointsList(
       'plague-legions',
       'Plague Legions',
       'Plague',
+      'PL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('PLAGUE LEGIONS') || d.keywords.includes('PLAGUE LEGIONS')),
       `Plague Legions: Tallyband Summoners allied daemons (up to ${cap} pts)`
@@ -215,6 +221,7 @@ export function subPointsList(
       'legions-of-excess',
       'Legions of Excess',
       'Excess',
+      'LE',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('LEGIONS OF EXCESS') || d.keywords.includes('LEGIONS OF EXCESS')),
       `Legions of Excess: Carnival of Excess allied daemons (up to ${cap} pts)`
@@ -232,6 +239,7 @@ export function subPointsList(
       'scintillating-legions',
       'Scintillating Legions',
       'Scintillating',
+      'SL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('SCINTILLATING LEGIONS') || d.keywords.includes('SCINTILLATING LEGIONS')),
       `Scintillating Legions: Changehost of Deceit allied daemons (up to ${cap} pts)`
@@ -249,6 +257,7 @@ export function subPointsList(
       'blood-legions',
       'Blood Legions',
       'Blood',
+      'BL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('BLOOD LEGIONS') || d.keywords.includes('BLOOD LEGIONS')),
       `Blood Legions: Khorne Daemonkin allied daemons (up to ${cap} pts)`
@@ -266,6 +275,7 @@ export function subPointsList(
       'shadow-legion',
       'Shadow Legion',
       'Shadow',
+      'S',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('HERETIC ASTARTES') || d.keywords.includes('HERETIC ASTARTES')),
       `Shadow Legion: Heretic Astartes units in Shadow Legion (up to ${cap} pts)`
@@ -280,6 +290,7 @@ export function subPointsList(
         'dru-harlequins',
         'Harlequins',
         'Harlies',
+        'H',
         cap,
         (_u, d) => !!d && (d.factionKeywords.includes('HARLEQUINS') || d.keywords.includes('HARLEQUINS')),
         `Harlequins: Reaper's Wager allied Harlequins (up to ${cap} pts)`
@@ -290,6 +301,7 @@ export function subPointsList(
         'dru-travelling-players',
         'Travelling Players',
         'Players',
+        'TP',
         cap,
         (_u, d) => !!d && (d.factionKeywords.includes('HARLEQUINS') || d.keywords.includes('HARLEQUINS') || d.factionKeywords.includes('ANHRATHE') || d.keywords.includes('ANHRATHE')),
         `Corsairs and Travelling Players: Harlequins and Anhrathe units (up to ${cap} pts)`
@@ -308,6 +320,7 @@ export function subPointsList(
       'brood-brothers',
       'Brood Brothers',
       'Brood',
+      'BB',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('ASTRA MILITARUM') || d.keywords.includes('ASTRA MILITARUM')),
       `Brood Brothers: Astra Militarum units in Brood Brother Auxilia (up to ${cap} pts)`
@@ -325,6 +338,7 @@ export function subPointsList(
       'final-day-tyranids',
       'Tyranids',
       'Nids',
+      'TY',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('TYRANIDS') || d.keywords.includes('TYRANIDS')),
       `Tyranids: Vanguard Invader units in Final Day (up to ${cap} pts)`
@@ -341,6 +355,7 @@ export function subPointsList(
       'mechanicus-allies',
       'Mechanicus Allies',
       'AdMech',
+      'AM',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('ADEPTUS MECHANICUS') || d.keywords.includes('ADEPTUS MECHANICUS')),
       `Mechanicus Allies: Adeptus Mechanicus units in Questor Forgepact (up to 500 pts)`
@@ -357,6 +372,7 @@ export function subPointsList(
       'wretched-thralls',
       'Wretched Thralls',
       'Damned',
+      'DH',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('DAMNED') || d.keywords.includes('DAMNED')),
       `Wretched Thralls: Damned units in Iconoclast Fiefdom (up to 500 pts)`
@@ -373,6 +389,7 @@ export function subPointsList(
       'deathwatch-allies',
       'Deathwatch Allies',
       'Deathwatch',
+      'DW',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('DEATHWATCH') || d.keywords.includes('DEATHWATCH')),
       `Deathwatch Allies: Deathwatch units in Deathwatch Support (up to 500 pts)`
@@ -405,11 +422,34 @@ export function subPointsList(
         id,
         rule.name || det.name,
         kw.split(' ')[0],
+        kw.slice(0, 2).toUpperCase(),
         cap,
         (_u, d) => !!d && (d.factionKeywords.some((k) => k.toUpperCase().includes(kw.toUpperCase())) || d.keywords.some((k) => k.toUpperCase().includes(kw.toUpperCase()))),
         `${det.name}: ${rule.name} (up to ${cap} pts)`
       );
     }
+  }
+
+  // 15. Strategic Reserves / Deep Strike: when any units in the list are designated for reserves
+  const resUnits = list.units.filter((u) => u.reserve && !u.attachTo);
+  if (resUnits.length > 0) {
+    const resSpent = resUnits.reduce((sum, u) => sum + unitPoints(u), 0);
+    const resCap = Math.floor(sizePoints * 0.5);
+    const stratUnits = resUnits.filter((u) => u.reserve === 'reserves');
+    const stratSpent = stratUnits.reduce((sum, u) => sum + unitPoints(u), 0);
+    const stratCap = Math.floor(sizePoints * 0.25);
+    const isOver = resSpent > resCap || stratSpent > stratCap;
+    items.push({
+      id: 'army-reserves',
+      label: 'Reserves',
+      shortLabel: 'Reserves',
+      tinyLabel: 'Res',
+      spent: resSpent,
+      cap: resCap,
+      over: isOver,
+      unit: 'pts',
+      title: `Reserves: ${resSpent}/${resCap} pts (Strategic Reserves: ${stratSpent}/${stratCap} pts limit)`,
+    });
   }
 
   return items;
