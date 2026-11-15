@@ -21,6 +21,10 @@ import {
 } from './botEval';
 import { getArchetypeForPlayer, ARCHETYPE_PROFILES, isScreeningUnit, needsDeepStrikeScreening } from './factionArchetypes';
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
+import {
+  determineMoveStance, getThreatGrid, isInForbiddenFootprintZone, pushOutOfFootprint,
+  packModelsIntoSafeSlots, congaLineObjectivePaths, grandmasterArrival,
+} from './grandmasterPositioning';
 
 export type Paths = Map<string, Pt[]>;
 
@@ -132,13 +136,79 @@ export function movesTowards(s: GameState, u: UnitState, kind: MoveKind, max: nu
   const want = opt.count ?? (isFastPlanning(s, u) ? 1 : 2);
   let below = Infinity;
   const step = Math.max(0.35, L / 8);
+
+  const grid = getThreatGrid(s, u.owner);
+  const topThreats = grid.topRangedFoes.map((f) => f.u);
+  const stance = determineMoveStance(s, u, topThreats);
+  const ruins = s.terrain.filter((t) => t.category !== 'exposed' && t.poly?.length >= 3);
+
+  // Check if aim is near an objective with a ruin nearby for conga-line toe-in
+  const objNear = s.objectives.find((o) => dist(o, aim) <= 3.5);
+  const nearbyRuin = objNear ? s.terrain.find((t) => t.category !== 'exposed' && t.poly && dist(polyCentroid(t.poly), objNear) <= 12) : null;
+
   for (let len = L; len >= 0.45 && out.length < want; len -= step) {
     if (len > below) continue;
     const p = pointAt(route, len);
     const d = { x: p.x - lead.x, y: p.y - lead.y };
     const mid = { x: c.x + d.x, y: c.y + d.y };
-    const tries = ms.length === 1 ? [() => shiftPaths(s, u, kind, max, d, fly), () => trailPaths(s, u, kind, max, d, fly)]
-      : [() => shiftPaths(s, u, kind, max, d, fly), () => formPaths(s, u, kind, max, mid, d.y < 0, fly), () => formPaths(s, u, kind, max, mid, d.y >= 0, fly), () => trailPaths(s, u, kind, max, d, fly)];
+
+    const tries: (() => Paths | null)[] = [];
+
+    if (ms.length === 1) {
+      tries.push(
+        () => shiftPaths(s, u, kind, max, d, fly),
+        () => trailPaths(s, u, kind, max, d, fly),
+      );
+    } else {
+      // 1. Conga-Line Objective Toe-In
+      if (objNear && nearbyRuin) {
+        tries.push(() => congaLineObjectivePaths(s, u, objNear, nearbyRuin, max, fly, grid.topRangedFoes));
+      }
+      // 2. Breadth-First Wall-Hugging & Coherency Slot Packing
+      tries.push(() => packModelsIntoSafeSlots(s, u, p, stance, max, fly, grid.topRangedFoes));
+
+      // 3. shiftPaths (filter out if violates ForbiddenFootprintZone in STANCE_STAGE_HIDDEN)
+      tries.push(() => {
+        const paths = shiftPaths(s, u, kind, max, d, fly);
+        if (!paths) return null;
+        if (stance === 'STANCE_STAGE_HIDDEN') {
+          for (const [id, path] of paths) {
+            const m = ms.find((x) => x.id === id);
+            if (m && isInForbiddenFootprintZone(m, path[path.length - 1], ruins, 0.15)) return null;
+          }
+        }
+        return paths;
+      });
+
+      // 4. formPaths (filter out if violates ForbiddenFootprintZone in STANCE_STAGE_HIDDEN)
+      tries.push(() => {
+        const paths = formPaths(s, u, kind, max, mid, d.y < 0, fly);
+        if (!paths) return null;
+        if (stance === 'STANCE_STAGE_HIDDEN') {
+          for (const [id, path] of paths) {
+            const m = ms.find((x) => x.id === id);
+            if (m && isInForbiddenFootprintZone(m, path[path.length - 1], ruins, 0.15)) return null;
+          }
+        }
+        return paths;
+      });
+
+      tries.push(() => {
+        const paths = formPaths(s, u, kind, max, mid, d.y >= 0, fly);
+        if (!paths) return null;
+        if (stance === 'STANCE_STAGE_HIDDEN') {
+          for (const [id, path] of paths) {
+            const m = ms.find((x) => x.id === id);
+            if (m && isInForbiddenFootprintZone(m, path[path.length - 1], ruins, 0.15)) return null;
+          }
+        }
+        return paths;
+      });
+
+      // 5. trailPaths as fallback
+      tries.push(() => trailPaths(s, u, kind, max, d, fly));
+    }
+
     for (const t of tries) {
       const paths = t();
       if (paths && validateMove(s, u, kind, paths, vopt).ok) { out.push(paths); below = len * 0.55; break; }
@@ -831,9 +901,14 @@ function aimsFor(s: GameState, u: UnitState, max: number, ctx: Ctx): Pt[] {
   const foes = [...ctx.foes].sort((a, b) => unitDistance(u, a.u) - unitDistance(u, b.u));
   for (const f of foes.slice(0, 3)) pts.push(nearestModel(f.u));
   if (ctx.target && !foes.slice(0, 3).some((f) => f.u === ctx.target)) pts.push(nearestModel(ctx.target));
-  const cover = s.terrain.filter((t) => t.category !== 'exposed' && dist(polyCentroid(t.poly), c) <= max + 3)
+  const leadModel = leaderOf(u);
+  const cover = s.terrain.filter((t) => t.category !== 'exposed' && t.poly && dist(polyCentroid(t.poly), c) <= max + 3)
     .sort((a, b) => dist(polyCentroid(a.poly), c) - dist(polyCentroid(b.poly), c)).slice(0, 2);
-  for (const t of cover) pts.push(polyCentroid(t.poly));
+  for (const t of cover) {
+    pts.push(polyCentroid(t.poly));
+    const shadowPt = pushOutOfFootprint(polyCentroid(t.poly), leadModel.r, s.terrain, 0.4);
+    pts.push(shadowPt);
+  }
   // where the secondary cards want units: their objectives, areas and circles
   const P = s.players[u.owner];
   if (P.secMode !== 'none') {
@@ -854,9 +929,11 @@ export interface Plan { kind: MoveKind | 'stationary'; paths?: Paths; score: num
 
 /** The best move of `kind` (or staying put) for the unit, with up to `max` inches per model. */
 export function bestMove(s: GameState, u: UnitState, kind: MoveKind, max: number, ctx: Ctx, opt: MoveOpts & { aims?: Pt[]; noStay?: boolean } = {}): Plan {
+  const startTime = performance.now();
   let best: Plan = opt.noStay ? { kind: 'stationary', score: -Infinity } : { kind: 'stationary', score: scoreSpot(s, u, 'stationary', null, ctx) };
   const byAim: { aim: Pt; score: number }[] = [];
   for (const aim of opt.aims ?? (isFastPlanning(s, u) ? aimsFor(s, u, max, ctx).slice(0, ctx.big ? 5 : 7) : aimsFor(s, u, max, ctx))) {
+    if (byAim.length >= 2 && performance.now() - startTime > 15) break; // Time budget guard
     let top = -Infinity;
     for (const paths of movesTowards(s, u, kind, max, aim, opt)) {
       const moved = Math.max(0, ...[...paths.values()].map(pathLength));
@@ -892,6 +969,8 @@ export function bestFallBack(s: GameState, u: UnitState, max: number, ctx: Ctx, 
 
 /** The best place to arrive from Reserves: by objectives that need bodies, or where it can shoot or charge right away. */
 export function bestArrival(s: GameState, u: UnitState, how: 'ingress' | 'deepStrike'): Spot | null {
+  const gm = grandmasterArrival(s, u, how);
+  if (gm && validatePlacement(s, u, gm, how).ok) return gm;
   const ctx = ctxFor(s, u);
   const near: Pt[] = [];
   const ring: Pt[] = []; // tried as they are (one placement check each), not searched around like `near`
