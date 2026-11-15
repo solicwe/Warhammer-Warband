@@ -1574,7 +1574,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               </button>
             </>
           )}
-          {isChar && (
+          {isChar && !sheet?.ally && !(sheet?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD') && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>
               <Icon name={u.warlord ? 'check' : 'leader'} size={22} />{u.warlord ? 'Warlord' : 'Make Warlord'}
             </button>
@@ -1734,7 +1734,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
                 <span className="ab-sub-name-full">{sp.label}:</span>
                 <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
-                {subPoints.length > 1 && <span className="ab-sub-name-tiny">{sp.tinyLabel ?? sp.shortLabel?.[0]}:</span>}
+                <span className="ab-sub-name-tiny">{sp.tinyLabel ?? sp.shortLabel?.[0] ?? ''}:</span>
                 <span className="ab-sub-val">
                   <b>{sp.spent}</b>/{sp.cap}
                   <small className="ab-sub-unit"> {sp.unit ?? 'pts'}</small>

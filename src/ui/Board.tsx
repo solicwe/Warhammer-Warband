@@ -52,6 +52,7 @@ export interface BoardProps {
   /** players whose moves are replayed as an animation */
   animateMoves?: PlayerId[];
   bad?: string[];
+  errors?: string[];
   targets?: string[];
   marked?: string[];
   picked?: string[];
@@ -304,8 +305,24 @@ interface ModelTokenProps {
   riled: boolean;
   isNoLos?: boolean;
   flinch?: Pt;
-  disp: { wounds: number; low: boolean; fading?: number };
-  onPointerDown: (e: React.PointerEvent) => void;
+  wounds: number;
+  low: boolean;
+  fading?: number;
+  onPointerDown: (e: React.PointerEvent, unitId: string, modelId: string) => void;
+}
+
+function getModelErrorLabel(m: ModelState, errors?: string[]): string {
+  if (!errors || !errors.length) return 'Illegal Position';
+  const err = errors.find((e) => e.startsWith(m.name) || e.includes(m.name)) || errors[0];
+  if (err.includes('ends on a wall') || err.includes('cannot move through a terrain wall')) return 'Ends on wall';
+  if (err.includes('overlaps another model')) return 'Overlaps model';
+  if (err.includes('must stay engaged')) return 'Must stay engaged';
+  if (err.includes('is in base contact')) return 'In base contact';
+  if (err.includes('protruding through')) return 'Hits terrain wall';
+  if (err.includes('off the battlefield')) return 'Off board';
+  if (err.includes('Must end engaged')) return 'Must engage';
+  if (err.includes('Engagement Range')) return 'Engagement Range';
+  return 'Illegal Position';
 }
 
 const ModelToken = memo(function ModelToken({
@@ -334,14 +351,16 @@ const ModelToken = memo(function ModelToken({
   riled,
   isNoLos,
   flinch,
-  disp,
+  wounds,
+  low,
+  fading,
   onPointerDown,
 }: ModelTokenProps) {
   const pr = m.hl ? (m.hw ?? m.r) : m.r;
   return (
     <g
       data-unit={u.id}
-      onPointerDown={onPointerDown}
+      onPointerDown={(e) => onPointerDown(e, u.id, m.id)}
       style={{
         cursor: isDraft ? 'grab' : 'pointer',
         ...(isNoLos
@@ -353,7 +372,7 @@ const ModelToken = memo(function ModelToken({
             : {}),
       }}
       transform={flinch ? `translate(${flinch.x.toFixed(3)} ${flinch.y.toFixed(3)})` : undefined}
-      opacity={disp.fading !== undefined ? disp.fading : 1}
+      opacity={fading !== undefined ? fading : 1}
     >
       <BaseShape m={m} p={p} grow={Math.max(0, 0.35 - m.r) + 0.35} fill="transparent" />
       {acting && <BaseShape m={m} p={p} grow={0.35} fill="none" stroke={col} strokeWidth={0.22} opacity={0.75} className="fx-glow" pointerEvents="none" />}
@@ -416,13 +435,13 @@ const ModelToken = memo(function ModelToken({
           </g>
         );
       })()}
-      {((m.profile.W > 1 && disp.wounds < m.profile.W) || (m.dead && disp.wounds > 0)) && (() => {
+      {((m.profile.W > 1 && wounds < m.profile.W) || (m.dead && wounds > 0)) && (() => {
         const fsz = Math.max(0.48, Math.min(0.85, m.r * 0.55));
         const by = p.y + m.r * 0.98;
         return (
           <g pointerEvents="none">
-            <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={disp.low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
-            <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={disp.low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{disp.wounds}</text>
+            <rect x={p.x - fsz * 0.62} y={by - fsz * 0.72} width={fsz * 1.24} height={fsz * 0.98} rx={fsz * 0.3} fill="rgba(0,0,0,0.78)" stroke={low ? '#f87171' : '#fde68a'} strokeWidth={0.06} />
+            <text x={p.x} y={by + fsz * 0.1} fontSize={fsz} textAnchor="middle" fill={low ? '#fca5a5' : '#fff7d6'} stroke="#000" strokeWidth={fsz * 0.22} paintOrder="stroke" fontWeight={900}>{wounds}</text>
           </g>
         );
       })()}
@@ -469,9 +488,9 @@ const ModelToken = memo(function ModelToken({
     prev.p.y === next.p.y &&
     // a hull turned in place (the turn/pivot buttons) moves nowhere, so its facing must be compared too
     prev.m.rot === next.m.rot &&
-    prev.disp.wounds === next.disp.wounds &&
-    prev.disp.low === next.disp.low &&
-    prev.disp.fading === next.disp.fading &&
+    prev.wounds === next.wounds &&
+    prev.low === next.low &&
+    prev.fading === next.fading &&
     prev.isSel === next.isSel &&
     prev.isTarget === next.isTarget &&
     prev.isPicked === next.isPicked &&
@@ -884,6 +903,10 @@ function BoardImpl(props: BoardProps) {
   // tokens call the latest handler through a ref, so their memo can ignore the (always new) closure
   const startDragRef = useRef(startModelDrag);
   startDragRef.current = startModelDrag;
+
+  const handlePointerDownModel = useCallback((e: React.PointerEvent, unitId: string, modelId: string) => {
+    startDragRef.current(e, unitId, modelId);
+  }, []);
 
   const dsDrag = useRef<{ pointerId: number; unitId: string; pos: Pt; moved: boolean } | null>(null);
   const [liveMarkerPos, setLiveMarkerPos] = useState<{ unitId: string; pt: Pt } | null>(null);
@@ -1368,7 +1391,7 @@ function BoardImpl(props: BoardProps) {
     const selectedUnit = props.selected ? s.units.find((x) => x.id === props.selected) : null;
     const selAlive = selectedUnit && selectedUnit.owner === props.viewer ? alive(selectedUnit) : null;
     const isTargetingActive = s.phase === 'shooting' || (props.targets && props.targets.length > 0);
-    if (!isTargetingActive || drag.current) return set;
+    if (!isTargetingActive || drag.current || localDraft || props.draft) return set;
 
     const friendlyUnits = s.units.filter((fu) => fu.owner === props.viewer && onBoard(fu));
     const friendlyModels = friendlyUnits.flatMap((fu) => alive(fu));
@@ -1957,8 +1980,10 @@ function BoardImpl(props: BoardProps) {
                   riled={riled ?? false}
                   isNoLos={props.noLos?.includes(m.id)}
                   flinch={flinch ?? undefined}
-                  disp={disp}
-                  onPointerDown={(e) => startDragRef.current(e, u.id, m.id)}
+                  wounds={disp.wounds}
+                  low={disp.low}
+                  fading={disp.fading}
+                  onPointerDown={handlePointerDownModel}
                 />
               );
             })}
@@ -2190,7 +2215,7 @@ function BoardImpl(props: BoardProps) {
               const label = isBad
                 ? exceeds
                   ? `Exceeds: ${used.toFixed(1)}" > ${maxAllowed.toFixed(0)}"`
-                  : `Illegal Position`
+                  : getModelErrorLabel(m, props.errors)
                 : `${used.toFixed(1)}" / ${maxAllowed.toFixed(0)}"`;
               const badgeBg = isBad ? 'rgba(127,29,29,0.92)' : 'rgba(6,78,59,0.92)';
               const badgeBorder = isBad ? '#ef4444' : '#10b981';

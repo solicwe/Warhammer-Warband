@@ -975,7 +975,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
       const step = 10 * Math.pow(push, 1.6) * dt;
       const d = draftRef.current;
       setDraft(new Map([...d].map(([id, p]) => { const q = p[p.length - 1]; return [id, [{ x: q.x + (x / push) * step, y: q.y + (y / push) * step }]]; })));
-      setCheck(null);
+      if (check) setCheck(null);
       return;
     }
     if (!modeUnit || !draftKind) return;
@@ -989,7 +989,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     joyOff.current = o;
     const paths: Paths = new Map(alive(modeUnit).map((m) => [m.id, [{ x: m.x, y: m.y }, { x: m.x + o.x, y: m.y + o.y }]]));
     setDraft(paths);
-    setCheck(null);
+    if (check) setCheck(null);
   };
   // the last committed move can be reopened ("move further / fix it") while nothing else has happened since
   const [lastMove, setLastMove] = useState<{ mode: Mode; paths: Paths; after: GameState; label: string } | null>(null);
@@ -4020,6 +4020,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
             walk={mode?.k === 'place' ? undefined : walkDraft}
             animateMoves={replay ? [0, 1] : bots.length ? bots : undefined}
             bad={check?.bad}
+            errors={check?.errors}
             targets={targets}
             marked={destinyRuinTargets}
             picked={picked}

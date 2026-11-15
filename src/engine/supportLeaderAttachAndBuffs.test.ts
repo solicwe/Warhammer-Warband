@@ -390,6 +390,19 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     const ecSub = subPointsList(ecCarnival, EC, 2000);
     expect(ecSub.find((s) => s.id === 'legions-of-excess')?.cap).toBe(1000);
 
+    // 10b. Chaos factions have Daemonic Pact by default (even with 0 units)
+    const qtList: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strike_force', detachments: ['Traitoris Lance'], units: [] };
+    expect(subPointsList(qtList, QT, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(true);
+
+    const tsDefault: ArmyList = { name: 'TS', factionId: 'TS', battleSize: 'strike_force', detachments: ['Cult of Magic'], units: [] };
+    expect(subPointsList(tsDefault, TS, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(true);
+
+    const weDefault: ArmyList = { name: 'WE', factionId: 'WE', battleSize: 'strike_force', detachments: ['Berzerker Warband'], units: [] };
+    expect(subPointsList(weDefault, WE, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(true);
+
+    const dgDefault: ArmyList = { name: 'DG', factionId: 'DG', battleSize: 'strike_force', detachments: ['Plague Company'], units: [] };
+    expect(subPointsList(dgDefault, DG, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(true);
+
     // 11. Chaos Daemons: Shadow Legion
     const cdShadow: ArmyList = { name: 'CD', factionId: 'CD', battleSize: 'strike_force', detachments: ['Shadow Legion'], units: [] };
     const cdSub = subPointsList(cdShadow, CD, 2000);
@@ -457,5 +470,27 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     const intercessors = built.find((u) => u.name === 'Intercessor Squad');
     expect(termies?.reserve).toBe('deepstrike');
     expect(intercessors?.reserve).toBe('reserves');
+  });
+
+  it('prevents allied Daemonic Pact units from taking Enhancements or being Warlord', () => {
+    const CSM = loadFaction('CSM');
+    const csmListWithDaemon: ArmyList = {
+      name: 'CSM Daemons',
+      factionId: 'CSM',
+      battleSize: 'strike_force',
+      detachments: ['Veterans of the Long War'],
+      units: [
+        { uid: 'd1', datasheet: 'Bloodmaster', models: 1, pts: 65, warlord: true, enhancement: 'Warmaster’s Gift' },
+        { uid: 'c1', datasheet: 'Chaos Lord', models: 1, pts: 90 },
+      ],
+    };
+
+    // Bloodmaster (Legiones Daemonica) should have 0 enhancement options in CSM
+    const enhOpts = enhancementOptions(csmListWithDaemon, CSM, csmListWithDaemon.units[0]);
+    expect(enhOpts).toHaveLength(0);
+
+    const errs = validateList(csmListWithDaemon, CSM, { points: 2000, dp: 200, unitLimit: 3, enhancements: 3 });
+    expect(errs.some((e) => e.includes('cannot be your Warlord'))).toBe(true);
+    expect(errs.some((e) => e.includes('cannot take Enhancements'))).toBe(true);
   });
 });

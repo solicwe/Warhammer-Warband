@@ -18,7 +18,7 @@ export const ALLIES: AllySource[] = [
   { id: 'TL', rule: 'Titanic Support', army: (id, g) => g === 'Imperium' && id !== 'TL', unit: () => true },
   { id: 'AoI', rule: 'Assigned Agents', army: (id, g) => g === 'Imperium' && id !== 'AoI', unit: () => true },
   { id: 'QT', rule: 'Dreadblades', army: (id, g) => g === 'Chaos' && id !== 'QT', unit: (d) => has(d, 'TITANIC') || has(d, 'WAR DOG') },
-  { id: 'CD', rule: 'Daemonic Pact', army: (id) => id === 'CSM' || id === 'QT', unit: (d) => d.factionKeywords.includes('LEGIONES DAEMONICA') },
+  { id: 'CD', rule: 'Daemonic Pact', army: (id) => ['CSM', 'QT', 'DG', 'TS', 'WE', 'EC'].includes(id), unit: (d) => d.factionKeywords.includes('LEGIONES DAEMONICA') },
 ];
 
 /** Units from another book that only one detachment of the army allows (up to 500 pts): Mechanicus Allies, Wretched Thralls. */
@@ -156,23 +156,30 @@ export function subPointsList(
     });
   };
 
-  // 1. Daemonic Pact: CSM and QT, or any army having allied Legiones Daemonica units (not pure CD)
+  // 1. Daemonic Pact: CSM, QT, DG, TS, WE, EC, or any army having allied Legiones Daemonica units (not pure CD)
+  const isHereticOrKnights = ['CSM', 'QT', 'DG', 'TS', 'WE', 'EC'].includes(faction.id);
   const hasDaemons = list.units.some((u) => {
     const d = sheetOf(u);
     return d?.ally === 'CD' || (d?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD');
   });
-  if (faction.id === 'CSM' || faction.id === 'QT' || hasDaemons) {
+  if (isHereticOrKnights || hasDaemons) {
     if (faction.id !== 'CD') {
-      const cap = [250, 500, 750][tier];
-      add(
-        'daemonic-pact',
-        'Daemonic Pact',
-        'Daemons',
-        'D',
-        cap,
-        (_u, d) => !!d && (d.ally === 'CD' || (d.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD')),
-        `Daemonic Pact: Allied Legiones Daemonica units (up to ${cap} pts)`
-      );
+      const isDGTallyband = faction.id === 'DG' && list.detachments.includes('Tallyband Summoners');
+      const isTSChangehost = faction.id === 'TS' && list.detachments.includes('Changehost of Deceit');
+      const isWEKhorne = faction.id === 'WE' && list.detachments.includes('Khorne Daemonkin');
+      const isECCarnival = faction.id === 'EC' && list.detachments.includes('Carnival of Excess');
+      if (!isDGTallyband && !isTSChangehost && !isWEKhorne && !isECCarnival) {
+        const cap = [250, 500, 750][tier];
+        add(
+          'daemonic-pact',
+          'Daemonic Pact',
+          'Daemons',
+          'D',
+          cap,
+          (_u, d) => !!d && (d.ally === 'CD' || (d.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD')),
+          `Daemonic Pact: Allied Legiones Daemonica units (up to ${cap} pts)`
+        );
+      }
     }
   }
 

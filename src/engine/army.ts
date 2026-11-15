@@ -1262,7 +1262,8 @@ export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
-  if (!sheet || sheet.ally) return [];
+  const isAlliedDaemon = !!sheet && sheet.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD' && !list.detachments.includes('Tallyband Summoners');
+  if (!sheet || sheet.ally || isAlliedDaemon) return [];
 
   // Officio Assassinorum in Veiled Blade Elimination Force can take enhancements despite EPIC HERO
   const isOfficioVeiled = faction.id === 'AoI' && list.detachments.includes('Veiled Blade Elimination Force') && sheet.keywords.includes('OFFICIO ASSASSINORUM');
@@ -1678,6 +1679,9 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     // Force of Untamed Destruction (Murderfang): "This model cannot be your WARLORD"
     if (u.warlord && sheet?.abilities.some((ab) => /cannot be (?:selected to be )?your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
     if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
+    if (u.warlord && (sheet?.ally || (sheet?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD'))) {
+      errs.push(`${u.datasheet} is an allied unit and cannot be your Warlord`);
+    }
   }
   // allied units (Scintillating Legions in a Thousand Sons army): only with a detachment that allows them, up to a points cap, never the Warlord
   const allyRule = faction.detachments.filter((d) => list.detachments.includes(d.name)).flatMap((d) => d.rules).find((r) => /You can include (.+?) units in your army, even though/.test(r.text));
@@ -1722,6 +1726,10 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const isAllowedEpic = list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM');
     if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic) {
       errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
+    }
+    const isAlliedDaemon = !!sheet && sheet.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD' && !list.detachments.includes('Tallyband Summoners');
+    if (sheet?.ally || isAlliedDaemon) {
+      errs.push(`${u.datasheet} is an allied unit and cannot take Enhancements`);
     }
     const isChar = sheet?.keywords.includes('CHARACTER')
       || (list.detachments.includes('Houndpack Lance') && sheet?.keywords.includes('WAR DOG'))

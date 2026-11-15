@@ -13,7 +13,9 @@ interface Props {
 
 export function Joystick({ onMove, onEnd, size = 116, disabled }: Props) {
   const base = useRef<HTMLDivElement>(null);
-  const [knob, setKnob] = useState({ x: 0, y: 0 });
+  const baseRect = useRef<DOMRect | null>(null);
+  const knobRef = useRef<HTMLSpanElement>(null);
+  const [heldState, setHeldState] = useState(false);
   const vec = useRef({ x: 0, y: 0 });
   const held = useRef<number | null>(null);
   const raf = useRef(0);
@@ -26,11 +28,13 @@ export function Joystick({ onMove, onEnd, size = 116, disabled }: Props) {
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
   const aim = (e: React.PointerEvent) => {
-    const r = base.current!.getBoundingClientRect();
+    const r = baseRect.current ?? base.current!.getBoundingClientRect();
     let x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
     const L = Math.hypot(x, y);
     if (L > R) { x *= R / L; y *= R / L; }
-    setKnob({ x, y });
+    if (knobRef.current) {
+      knobRef.current.style.transform = `translate(${x}px, ${y}px)`;
+    }
     vec.current = { x: x / R, y: y / R };
   };
   const loop = (t: number) => {
@@ -48,23 +52,28 @@ export function Joystick({ onMove, onEnd, size = 116, disabled }: Props) {
   const release = () => {
     if (held.current === null) return;
     held.current = null;
+    baseRect.current = null;
     cancelAnimationFrame(raf.current);
     vec.current = { x: 0, y: 0 };
-    setKnob({ x: 0, y: 0 });
+    if (knobRef.current) {
+      knobRef.current.style.transform = 'translate(0px, 0px)';
+    }
+    setHeldState(false);
     cb.current.onEnd();
   };
 
   return (
     <div
       ref={base}
-      className={`joystick ${disabled ? 'off' : ''} ${held.current !== null ? 'held' : ''}`}
+      className={`joystick ${disabled ? 'off' : ''} ${heldState ? 'held' : ''}`}
       style={{ width: size, height: size }}
       role="slider"
       aria-label="Move joystick: hold and push the way the unit should go"
-      aria-valuenow={Math.round(Math.hypot(knob.x, knob.y))}
       onPointerDown={(e) => {
         if (disabled) return;
         held.current = e.pointerId;
+        baseRect.current = base.current!.getBoundingClientRect();
+        setHeldState(true);
         (e.target as Element).setPointerCapture?.(e.pointerId);
         aim(e);
         last.current = 0;
@@ -77,7 +86,7 @@ export function Joystick({ onMove, onEnd, size = 116, disabled }: Props) {
       onLostPointerCapture={release}
     >
       <span className="joystick-ring" aria-hidden="true" />
-      <span className="joystick-knob" aria-hidden="true" style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }} />
+      <span ref={knobRef} className="joystick-knob" aria-hidden="true" style={{ transform: 'translate(0px, 0px)' }} />
     </div>
   );
 }
