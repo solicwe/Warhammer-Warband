@@ -55,3 +55,50 @@ it('allows a charge roll to reach engagement range when bases remain up to 1" ap
   expect(autoCharge(s, a, [t.id])).toBe(true);
   expect(unitDistance(a, t)).toBeLessThanOrEqual(1.01);
 });
+
+it('supports FLY during a charge across a terrain wall', () => {
+  const s: GameState = createGame({
+    lists: [list('SM', [['Assault Intercessor Squad', 1, 100]]), list('ORK', [['Boyz', 1, 90]])],
+    factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
+    dispositions: ['take-and-hold', 'take-and-hold'], seed: 22,
+  });
+  // Dense terrain wall between x=20 and x=25 at x=22.5
+  s.terrain = [{
+    id: 'ruin1',
+    kind: 'ruin',
+    label: 'Ruin',
+    category: 'dense',
+    height: 4,
+    walls: [{ a: { x: 22.5, y: 15 }, b: { x: 22.5, y: 25 } }],
+    poly: [{ x: 21, y: 15 }, { x: 24, y: 15 }, { x: 24, y: 25 }, { x: 21, y: 25 }],
+    obstacles: [],
+  }];
+  for (const u of s.units) u.status = 'reserves';
+  s.round = 2; s.turn = 3; s.active = 0; s.phase = 'charge';
+  const a = s.units.find((u) => u.owner === 0)!, t = s.units.find((u) => u.owner === 1)!;
+  placeUnit(s, t, formationAt(t, { x: 20, y: 20 }));
+  placeUnit(s, a, formationAt(a, { x: 25, y: 20 }));
+  for (const m of a.models.slice(1)) m.dead = true;
+  for (const m of t.models.slice(1)) m.dead = true;
+  const attacker = alive(a)[0], target = alive(t)[0];
+  attacker.x = 25;
+  attacker.y = 20;
+  target.x = 20;
+  target.y = 20;
+  // Give attacker MONSTER and FLY so normal ground movement would be blocked by the dense wall
+  a.keywords = ['MONSTER', 'FLY'];
+  attacker.keywords = ['MONSTER', 'FLY'];
+  a.declaredCharge = true;
+  a.chargeRoll = 4;
+  a.chargeFly = true;
+
+  expect(autoCharge(s, a, [t.id])).toBe(true);
+  expect(unitDistance(a, t)).toBeLessThanOrEqual(1.01);
+
+  // Without FLY, a Monster cannot pass through the dense wall in a short direct move
+  a.chargeFly = false;
+  attacker.x = 25;
+  attacker.y = 20;
+  a.chargeRoll = 4; // Not enough distance to route all the way around the 10" wall (y: 15 to 25)
+  expect(autoCharge(s, a, [t.id])).toBe(false);
+});

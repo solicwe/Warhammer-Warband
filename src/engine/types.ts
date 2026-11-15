@@ -298,6 +298,7 @@ export interface UnitState {
   selectedToShoot: boolean;
   declaredCharge: boolean;
   chargeRoll: number | null;
+  chargeFly?: boolean;
   chargedTurn: number;
   chargeTargets: string[];
   fought: boolean;

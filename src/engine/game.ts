@@ -636,7 +636,7 @@ export function maxMoveDistance(s: GameState, u: UnitState, kind: MoveKind, m: M
   else if (kind === 'pileIn' || kind === 'consolidate') max = pileDistance(s, u, kind);
   else if (kind === 'scout') max = scoutsOf(s, u);
   else if (kind === 'extra' || kind === 'surge') max = u.extraMove?.max ?? 0;
-  if (opt.fly && ['normal', 'advance', 'fallback', 'charge'].includes(kind) && !u.core.hover) max -= RULES.flyTakeToSkiesPenalty;
+  if (opt.fly && ['normal', 'advance', 'fallback'].includes(kind) && !u.core.hover) max -= RULES.flyTakeToSkiesPenalty;
   return Math.max(0, max);
 }
 
@@ -1802,6 +1802,7 @@ export function chargeEligibility(s: GameState, u: UnitState): string | null {
 
 export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: number) {
   u.declaredCharge = true;
+  u.chargeFly = fly;
   s.lastAct = { unitId: u.id, owner: u.owner, kind: 'charge', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
@@ -2669,11 +2670,12 @@ const stayPaths = (u: UnitState) => new Map(alive(u).map((m) => [m.id, [{ x: m.x
 export function autoCharge(s: GameState, u: UnitState, targetIds: string[]): boolean {
   const targets = targetIds.map((id) => unitById(s, id));
   const reach = chargeReach(s, u, targets);
+  const fly = !!u.chargeFly;
   let paths = new Map([...stayPaths(u), ...autoApproach(s, u, targets, reach)]);
-  if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) {
+  if (!validateMove(s, u, 'charge', paths, { targets: targetIds, fly }).ok) {
     // straight lines that cross a wall or end on another model: route and settle them as a dragged charge is
-    paths = settleMove(s, u, 'charge', paths, { targets: targetIds, maxFor: () => reach });
-    if (!validateMove(s, u, 'charge', paths, { targets: targetIds }).ok) return false;
+    paths = settleMove(s, u, 'charge', paths, { targets: targetIds, fly, maxFor: () => reach });
+    if (!validateMove(s, u, 'charge', paths, { targets: targetIds, fly }).ok) return false;
   }
   commitCharge(s, u, paths, targetIds);
   return true;

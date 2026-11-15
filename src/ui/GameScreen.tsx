@@ -84,7 +84,7 @@ type Mode =
   | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean | 'free'; transportId?: string }
   | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'extra' | 'surge'; fly: boolean }
   | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean; skip?: string[] }
-  | { k: 'charge'; unitId: string; targets: string[]; heroic?: 'leap' | 'fray' }
+  | { k: 'charge'; unitId: string; targets: string[]; fly?: boolean; heroic?: 'leap' | 'fray' }
   | { k: 'pile'; unitId: string; kind: 'pileIn' | 'consolidate'; overrun?: boolean }
   | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean; profile?: Record<string, number> }
   | { k: 'explosives'; unitId: string; target: string | null }
@@ -908,20 +908,20 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
     return Infinity;
   };
   const draftKind: MoveKind | null = mode?.k === 'move' ? mode.kind : mode?.k === 'charge' ? 'charge' : mode?.k === 'pile' ? mode.kind : null;
-  const draftOpts = mode?.k === 'move' ? { fly: mode.fly } : mode?.k === 'charge' ? { targets: mode.targets } : {};
+  const draftOpts = mode?.k === 'move' ? { fly: mode.fly } : mode?.k === 'charge' ? { targets: mode.targets, fly: mode.fly } : {};
   /** While dragging: a model walks its route — a wall it can't cross is gone around (the detour counts against its
    *  move) or it stops where it can't go on; it never jumps through. */
   const walkDraft = (id: string, path: Pt[]): Pt[] => {
     if (!modeUnit || !draftKind || path.length < 2) return path;
     const m = modeUnit.models.find((x) => x.id === id);
     if (!m) return path;
-    const opt = { fly: mode?.k === 'move' ? mode.fly : undefined };
+    const opt = { fly: (mode?.k === 'move' || mode?.k === 'charge') ? mode.fly : undefined };
     if (!pathBlocked(s, modeUnit, draftKind, m, path, opt)) return path;
     return routeAround(s, modeUnit, draftKind, m, path[0], path[path.length - 1], maxFor(id), opt) ?? [path[0], path[0]];
   };
   /** After a drag: route around what can't be crossed and slide overlapping models back to base contact. */
   const settleDraft = (d: Paths): Paths => (modeUnit && draftKind
-    ? settleMove(s, modeUnit, draftKind, d, { fly: mode?.k === 'move' ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
+    ? settleMove(s, modeUnit, draftKind, d, { fly: (mode?.k === 'move' || mode?.k === 'charge') ? mode.fly : undefined, targets: mode?.k === 'charge' ? mode.targets : undefined, maxFor: (m) => maxFor(m.id) })
     : d);
   const onDragEnd = (d: Paths) => {
     if (mode?.k === 'place' && modeUnit && mode.how !== 'disembark') {
@@ -1198,7 +1198,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         primary: true,
         onClick: () => {
           act((g) => autoDeclareCharge(g, unitById(g, selUnit.id), fly));
-          setMode({ k: 'charge', unitId: selUnit.id, targets: [] }, startPaths(selUnit));
+          setMode({ k: 'charge', unitId: selUnit.id, targets: [], fly }, startPaths(selUnit));
         },
       });
     } else if (s.phase === 'fight' && onBoard(selUnit) && !selUnit.fought && (isEngaged(s, selUnit) || selUnit.chargedTurn === s.turn)) {
@@ -1271,7 +1271,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
   const confirmMove = (kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'extra' | 'surge' | 'charge' | 'pileIn' | 'consolidate', after?: () => void) => {
     if (!mode || !draft) return;
     const u = U(mode.unitId);
-    const opts = mode.k === 'move' ? { fly: mode.fly } : mode.k === 'charge' ? { targets: mode.targets } : {};
+    const opts = mode.k === 'move' ? { fly: mode.fly } : mode.k === 'charge' ? { targets: mode.targets, fly: mode.fly } : {};
     const d = settleDraft(draft);
     const chk = validateMove(s, u, kind, d, opts);
     if (!chk.ok) { setDraft(d); setCheck(chk); return; }
@@ -3319,7 +3319,14 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
         <>
           <div className="big-result">Charge roll: {roll}"</div>
           {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${Math.max(0, nearest - RULES.engagementRange).toFixed(1)}" to reach Engagement Range` : ''}</div>}
-          {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', finish), <button className="btn small" onClick={() => { const add = autoApproach(s, modeUnit, mode.targets.map(U), roll); setDraft(mergePaths(startPaths(modeUnit), add)); setCheck(null); }}>Auto</button>)}
+          {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', finish), <button className="btn small" onClick={() => {
+            const add = autoApproach(s, modeUnit, mode.targets.map(U), roll);
+            let pth = mergePaths(startPaths(modeUnit), add);
+            pth = settleMove(s, modeUnit, 'charge', pth, { targets: mode.targets, fly: mode.fly, maxFor: () => roll });
+            setDraft(pth);
+            const chk = validateMove(s, modeUnit, 'charge', pth, { targets: mode.targets, fly: mode.fly });
+            setCheck(chk.ok ? null : chk);
+          }}>Auto</button>)}
           {check && !check.ok && <div className="tiny muted">Doesn't fit? Tap Auto, or "Cancel charge" (counts as a failed charge), then End Charge → Fight</div>}
           <div className="row">
             {canDetReroll(s, modeUnit, 'charge') && <button className="btn small" onClick={() => { act((g) => detReroll(g, unitById(g, modeUnit.id), 'charge', false, mode.heroic === 'fray' ? 6 : undefined)); setModeRaw({ ...mode, targets: [] }); setDraft(startPaths(modeUnit)); }}>Re-roll charge (Detachment, free)</button>}
@@ -3390,7 +3397,7 @@ export function GameScreen({ initial, onExit, replay = false, replayIndex = 0, r
           <>
             {why ? <div className="muted small" style={{ marginBottom: 6 }}>Cannot charge: {why}</div> : (
               <div className="row sticky-action-bar">
-                <button className="btn primary" data-coach="charge" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [] }, startPaths(u)); }}>Declare charge (2D6)</button>
+                <button className="btn primary" data-coach="charge" onClick={() => { act((g) => autoDeclareCharge(g, unitById(g, u.id), fly)); setMode({ k: 'charge', unitId: u.id, targets: [], fly }, startPaths(u)); }}>Declare charge (2D6)</button>
                 {hasKw(u, 'FLY') && <button className={`btn small ${fly ? 'on' : ''}`} onClick={() => setFly(!fly)}>Fly (−2")</button>}
               </div>
             )}
