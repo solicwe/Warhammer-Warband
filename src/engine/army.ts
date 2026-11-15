@@ -1423,8 +1423,8 @@ export function isBattlelineUnit(
   faction?: FactionData | null,
 ): boolean {
   if (!sheet) return false;
+  if (sheet.role === 'Dedicated Transports' || sheet.keywords.includes('DEDICATED TRANSPORT')) return false;
   if (sheet.keywords.includes('BATTLELINE') || sheet.role === 'Battleline') return true;
-  if (sheet.maxPerArmy === 6) return true;
   if (sheet.name === 'Belisarius Cawl') return true; // Mantra of Discipline gives BATTLELINE
 
   const dets = Array.isArray(listOrDets)
@@ -1574,10 +1574,11 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const sheet = faction.datasheets.find((d) => d.name === name);
     if (!sheet) continue;
     const isEpicHero = sheet.keywords.includes('EPIC HERO') || sheet.maxPerArmy === 1;
-    const isBattleline = isBattlelineUnit(sheet, list, faction)
+    const isBattlelineOrTransport = isBattlelineUnit(sheet, list, faction)
+      || sheet.role === 'Dedicated Transports'
       || sheet.keywords.includes('DEDICATED TRANSPORT')
       || sheet.maxPerArmy === 6;
-    const limit = isEpicHero ? 1 : isBattleline ? size.unitLimit * 2 : size.unitLimit;
+    const limit = isEpicHero ? 1 : isBattlelineOrTransport ? size.unitLimit * 2 : size.unitLimit;
     if (n > limit) errs.push(`${name}: maximum ${limit} per army`);
   }
   // Bridgehead Strike: Scions need a Militarum Tempestus Officer Warlord for Battleline

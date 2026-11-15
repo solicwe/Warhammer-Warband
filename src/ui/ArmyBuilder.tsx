@@ -45,8 +45,8 @@ export function sectionOf(
   if (d?.ally || (d && detachmentAllyOf(factionId, d))) return 'allies';
   if (!d || NON_CHARACTERS.has(d.name)) return 'others';
   if (d.keywords.includes('CHARACTER') || d.keywords.includes('EPIC HERO')) return 'characters';
-  if (isBattlelineUnit(d, listOrDets, faction)) return 'battleline';
   if (d.role === 'Dedicated Transports' || d.keywords.includes('DEDICATED TRANSPORT')) return 'transports';
+  if (isBattlelineUnit(d, listOrDets, faction)) return 'battleline';
   return 'others';
 }
 

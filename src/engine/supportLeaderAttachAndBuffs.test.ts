@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import { canLeaderAttach, supportIn, buildUnits } from './army';
+import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList } from './army';
+import { sectionOf, unitKind } from '../ui/ArmyBuilder';
 import { effectsFor, ocOf, activeRules } from '../rules-engine/effects';
 import type { ArmyList, FactionData, GameState, UnitState } from './types';
 
@@ -9,6 +10,7 @@ const loadFaction = (id: string): FactionData =>
 
 const AM = loadFaction('AM');
 const ORK = loadFaction('ORK');
+const SM = loadFaction('SM');
 
 describe('Support / Leader Attachments and Detachment Buff Targets', () => {
   it('allows Support character attached to squad to identify available Leaders', () => {
@@ -157,5 +159,64 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     expect(ardAsNails).toBeDefined();
     // The effect should carry the grant target units
     expect(ardAsNails?.e.units).toEqual(['WARBOSS']);
+  });
+
+  it('Space Marine Dedicated Transports (Rhino, Impulsor, Drop Pod) are in Dedicated Transports, not Battleline', () => {
+    const rhino = SM.datasheets.find((d) => d.name === 'Rhino')!;
+    const impulsor = SM.datasheets.find((d) => d.name === 'Impulsor')!;
+    const dropPod = SM.datasheets.find((d) => d.name === 'Drop Pod')!;
+    const intercessors = SM.datasheets.find((d) => d.name === 'Intercessor Squad')!;
+
+    const list: ArmyList = {
+      name: 'Gladius Task Force',
+      factionId: 'SM',
+      battleSize: 'incursion',
+      detachments: ['Gladius Task Force'],
+      units: [
+        { uid: 'u1', datasheet: 'Captain', models: 1, pts: 80, warlord: true },
+        { uid: 'u2', datasheet: 'Intercessor Squad', models: 5, pts: 80 },
+        { uid: 't1', datasheet: 'Rhino', models: 1, pts: 75, embarkIn: undefined },
+        { uid: 't2', datasheet: 'Impulsor', models: 1, pts: 80, embarkIn: undefined },
+        { uid: 't3', datasheet: 'Drop Pod', models: 1, pts: 70, embarkIn: undefined },
+      ],
+    };
+
+    // 1. isBattlelineUnit must be false for Dedicated Transports
+    expect(isBattlelineUnit(rhino, list, SM)).toBe(false);
+    expect(isBattlelineUnit(impulsor, list, SM)).toBe(false);
+    expect(isBattlelineUnit(dropPod, list, SM)).toBe(false);
+
+    // 2. Intercessors must be true
+    expect(isBattlelineUnit(intercessors, list, SM)).toBe(true);
+
+    // 3. sectionOf must return 'transports' for Dedicated Transports, and 'battleline' for Intercessors
+    expect(sectionOf(rhino, 'SM', list, SM)).toBe('transports');
+    expect(sectionOf(impulsor, 'SM', list, SM)).toBe('transports');
+    expect(sectionOf(dropPod, 'SM', list, SM)).toBe('transports');
+    expect(sectionOf(intercessors, 'SM', list, SM)).toBe('battleline');
+
+    // 4. unitKind must return 'Vehicle' for Transports, and 'Battleline' for Intercessors
+    expect(unitKind(rhino, list, SM)).toBe('Vehicle');
+    expect(unitKind(impulsor, list, SM)).toBe('Vehicle');
+    expect(unitKind(dropPod, list, SM)).toBe('Vehicle');
+    expect(unitKind(intercessors, list, SM)).toBe('Battleline');
+
+    // 5. validateList allows up to 6 Dedicated Transports per army (Rule of 6) without 'maximum 3 per army' error
+    const size = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+    const listWith4Rhinos: ArmyList = {
+      name: 'Rhino Rush',
+      factionId: 'SM',
+      battleSize: 'strike',
+      detachments: ['Gladius Task Force'],
+      units: [
+        { uid: 'u1', datasheet: 'Captain', models: 1, pts: 80, warlord: true },
+        { uid: 't1', datasheet: 'Rhino', models: 1, pts: 75 },
+        { uid: 't2', datasheet: 'Rhino', models: 1, pts: 75 },
+        { uid: 't3', datasheet: 'Rhino', models: 1, pts: 75 },
+        { uid: 't4', datasheet: 'Rhino', models: 1, pts: 75 },
+      ],
+    };
+    const errs = validateList(listWith4Rhinos, SM, size);
+    expect(errs.filter((e) => e.includes('maximum'))).toEqual([]);
   });
 });
