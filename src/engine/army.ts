@@ -1429,12 +1429,16 @@ export function isBattlelineUnit(
 
   if (!dets.length) return false;
 
-  const name = sheet.name;
+  const n = sheet.name.toLowerCase();
   const kw = sheet.keywords;
+  const hasDet = (detName: string) => {
+    const target = detName.toLowerCase().replace(/’/g, "'");
+    return dets.some((d) => d.toLowerCase().replace(/’/g, "'") === target);
+  };
 
   // 1. AM: Bridgehead Strike -> Fire Zone Purge:
   // "If a friendly MILITARUM TEMPESTUS OFFICER model is your WARLORD, friendly TEMPESTUS SCIONS units have: BATTLELINE. +1 OC."
-  if (dets.includes('Bridgehead Strike') && name === 'Tempestus Scions') {
+  if (hasDet('Bridgehead Strike') && n === 'tempestus scions') {
     if (listOrDets && typeof listOrDets === 'object' && !Array.isArray(listOrDets) && faction) {
       const warlordEntry = listOrDets.units.find((u) => u.warlord);
       if (warlordEntry) {
@@ -1448,55 +1452,55 @@ export function isBattlelineUnit(
   }
 
   // 2. AC: Null Maiden Vigil -> Silent Sisterhood: Prosecutor Squad has BATTLELINE
-  if (dets.includes('Null Maiden Vigil') && (name === 'Prosecutor Squad' || name === 'Prosecutors')) return true;
+  if (hasDet('Null Maiden Vigil') && (n === 'prosecutor squad' || n === 'prosecutors')) return true;
 
   // 3. AE: Windrider Host -> Ride the Wind: Windriders gain BATTLELINE
-  if (dets.includes('Windrider Host') && name === 'Windriders') return true;
+  if (hasDet('Windrider Host') && n === 'windriders') return true;
 
   // 4. AE: Spirit Conclave -> Shepherds of the Dead: Wraithblades and Wraithguard gain BATTLELINE
-  if (dets.includes('Spirit Conclave') && (name === 'Wraithblades' || name === 'Wraithguard')) return true;
+  if (hasDet('Spirit Conclave') && (n === 'wraithblades' || n === 'wraithguard')) return true;
 
   // 5. AE: Ghosts of the Webway / Serpent’s Brood -> Acrobatic Onslaught / Boons of the Brood: Troupe gain BATTLELINE
-  if ((dets.includes('Ghosts of the Webway') || dets.includes('Serpent’s Brood') || dets.includes("Serpent's Brood")) && name === 'Troupe') return true;
+  if ((hasDet('Ghosts of the Webway') || hasDet('Serpent’s Brood')) && n === 'troupe') return true;
 
   // 6. CSM: Chaos Cult -> KEYWORDS: Traitor Guardsmen Squad gain BATTLELINE
-  if (dets.includes('Chaos Cult') && (name === 'Traitor Guardsmen Squad' || name === 'Traitor Guardsmen Squads')) return true;
+  if (hasDet('Chaos Cult') && (n === 'traitor guardsmen squad' || n === 'traitor guardsmen squads')) return true;
 
   // 7. DG: Shamblerot Vectorium -> Numberless Horde: Poxwalkers gain BATTLELINE
-  if (dets.includes('Shamblerot Vectorium') && name === 'Poxwalkers') return true;
+  if (hasDet('Shamblerot Vectorium') && n === 'poxwalkers') return true;
 
   // 8. LoV: Dêlve Assault Shift -> Fury From The Dêlve: Cthonian Beserks gain BATTLELINE
-  if ((dets.includes('Dêlve Assault Shift') || dets.includes('Delve Assault Shift')) && (name === 'Cthonian Beserks' || name === 'Cthonian Berserks')) return true;
+  if ((hasDet('Dêlve Assault Shift') || hasDet('Delve Assault Shift')) && (n === 'cthonian beserks' || n === 'cthonian berserks')) return true;
 
   // 9. ORK: Kult of Speed -> Adrenaline Junkies: Warbikers have BATTLELINE
-  if (dets.includes('Kult of Speed') && name === 'Warbikers') return true;
+  if (hasDet('Kult of Speed') && n === 'warbikers') return true;
 
   // 10. ORK: Taktikal Brigade -> Suspiciously Well Organised: Stormboyz have BATTLELINE
-  if (dets.includes('Taktikal Brigade') && name === 'Stormboyz') return true;
+  if (hasDet('Taktikal Brigade') && n === 'stormboyz') return true;
 
   // 11. ORK: Runt Swarm -> Sneaky Little Gitz: Gretchin have BATTLELINE
-  if (dets.includes('Runt Swarm') && name === 'Gretchin') return true;
+  if (hasDet('Runt Swarm') && n === 'gretchin') return true;
 
   // 12. QI: Spearhead-At-Arms -> Knightly Teachings: Armiger models gain BATTLELINE
-  if (dets.includes('Spearhead-At-Arms') && kw.includes('ARMIGER')) return true;
+  if (hasDet('Spearhead-At-Arms') && kw.includes('ARMIGER')) return true;
 
   // 13. QT: Houndpack Lance -> Marked Prey: War Dog units have BATTLELINE
-  if (dets.includes('Houndpack Lance') && kw.includes('WAR DOG')) return true;
+  if (hasDet('Houndpack Lance') && kw.includes('WAR DOG')) return true;
 
   // 14. SM: Darkflight Pursuit -> Black-winged Vengeance: Outrider Squad units have BATTLELINE
-  if (dets.includes('Darkflight Pursuit') && name === 'Outrider Squad') return true;
+  if (hasDet('Darkflight Pursuit') && n === 'outrider squad') return true;
 
   // 15. TAU: Kroot Hunting Pack -> KEYWORDS: Kroot Carnivores have BATTLELINE
-  if (dets.includes('Kroot Hunting Pack') && (name === 'Kroot Carnivores' || name === 'Kroot Carnivore')) return true;
+  if (hasDet('Kroot Hunting Pack') && (n === 'kroot carnivores' || n === 'kroot carnivore')) return true;
 
   // 16. TS: Warpmeld Pact / Servants of Change -> Warpmeld Sacrifice / All-Seeing Mutant Hordes: Tzaangors have BATTLELINE
-  if ((dets.includes('Warpmeld Pact') || dets.includes('Servants of Change')) && name === 'Tzaangors') return true;
+  if ((hasDet('Warpmeld Pact') || hasDet('Servants of Change')) && n === 'tzaangors') return true;
 
   // 17. TYR: Warrior Bioform Onslaught -> Leader-beasts: Tyranid Warriors have BATTLELINE
-  if (dets.includes('Warrior Bioform Onslaught') && (name === 'Tyranid Warriors with Ranged Bio-weapons' || name === 'Tyranid Warriors with Melee Bio-weapons')) return true;
+  if (hasDet('Warrior Bioform Onslaught') && (n === 'tyranid warriors with ranged bio-weapons' || n === 'tyranid warriors with melee bio-weapons')) return true;
 
   // 18. WE: Cult of Blood -> Idols of Khorne: Jakhals and Goremongers gain BATTLELINE
-  if (dets.includes('Cult of Blood') && (name === 'Jakhals' || name === 'Goremongers')) return true;
+  if (hasDet('Cult of Blood') && (n === 'jakhals' || n === 'goremongers')) return true;
 
   return false;
 }

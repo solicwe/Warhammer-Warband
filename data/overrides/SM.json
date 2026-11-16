@@ -103,6 +103,169 @@
      ]
     }
    ]
+  },
+  {
+   "name": "Wulfen",
+   "models": [
+    {
+     "name": "Wulfen",
+     "M": 9,
+     "T": 6,
+     "Sv": 4,
+     "InSv": null,
+     "W": 2,
+     "Ld": 7,
+     "OC": 0,
+     "base": {
+      "w": 40,
+      "h": 40,
+      "text": "40mm"
+     }
+    }
+   ],
+   "composition": [
+    {
+     "name": "Wulfen",
+     "min": 5,
+     "max": 10,
+     "text": "5-10 Wulfen"
+    }
+   ],
+   "loadout": {
+    "*": [
+     "Wulfen weapons",
+     "Death totem"
+    ]
+   },
+   "loadoutText": "Each model is equipped with: Death Totem; 1 Wulfen Weapons.",
+   "options": [
+    "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher."
+   ],
+   "wargearOptions": [
+    {
+     "text": "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher.",
+     "scope": "any",
+     "who": "*",
+     "replace": [
+      "Death totem"
+     ],
+     "choices": [
+      [
+       "Stormfrag auto-launcher"
+      ]
+     ]
+    }
+   ],
+   "abilities": [
+    {
+     "name": "Death Totem",
+     "type": "Wargear",
+     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+    }
+   ]
+  },
+  {
+   "name": "Wulfen with Storm Shields",
+   "models": [
+    {
+     "name": "Wulfen with Storm Shield",
+     "M": 9,
+     "T": 6,
+     "Sv": 4,
+     "InSv": 4,
+     "W": 2,
+     "Ld": 7,
+     "OC": 0,
+     "base": {
+      "w": 40,
+      "h": 40,
+      "text": "40mm"
+     }
+    }
+   ],
+   "composition": [
+    {
+     "name": "Wulfen with Storm Shield",
+     "min": 5,
+     "max": 10,
+     "text": "5-10 Wulfen with Storm Shield"
+    }
+   ],
+   "loadout": {
+    "*": [
+     "Thunder hammer",
+     "Stormfrag auto-launcher"
+    ]
+   },
+   "loadoutText": "Every model is equipped with: 1 Stormfrag Auto-launcher; 1 Thunder Hammer.",
+   "options": [
+    "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem."
+   ],
+   "wargearOptions": [
+    {
+     "text": "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem.",
+     "scope": "any",
+     "who": "*",
+     "replace": [
+      "Stormfrag auto-launcher"
+     ],
+     "choices": [
+      [
+       "Death totem"
+      ]
+     ]
+    }
+   ],
+   "abilities": [
+    {
+     "name": "Death Totem",
+     "type": "Wargear",
+     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+    }
+   ]
+  },
+  {
+   "name": "Wulfen Dreadnought",
+   "composition": [
+    {
+     "name": "Wulfen Dreadnought",
+     "min": 1,
+     "max": 1,
+     "text": "1 Wulfen Dreadnought"
+    }
+   ],
+   "options": [
+    "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+    "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield."
+   ],
+   "wargearOptions": [
+    {
+     "text": "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+     "scope": "one",
+     "who": "Wulfen Dreadnought",
+     "replace": [
+      "Storm Bolter"
+     ],
+     "choices": [
+      [
+       "Heavy Flamer"
+      ]
+     ]
+    },
+    {
+     "text": "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield.",
+     "scope": "one",
+     "who": "Wulfen Dreadnought",
+     "replace": [
+      "Fenrisian Great Axe"
+     ],
+     "choices": [
+      [
+       "Blizzard Shield"
+      ]
+     ]
+    }
+   ]
   }
  ]
 }

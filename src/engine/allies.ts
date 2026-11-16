@@ -356,7 +356,7 @@ export function subPointsList(
     const d = sheetOf(u);
     return d && (d.factionKeywords.includes('ADEPTUS MECHANICUS') || d.keywords.includes('ADEPTUS MECHANICUS'));
   });
-  if ((faction.id === 'QI' && list.detachments.includes('Questor Forgepact')) || hasMechanicus) {
+  if ((faction.id === 'QI' && list.detachments.includes('Questor Forgepact')) || (faction.id === 'QI' && hasMechanicus)) {
     add(
       'mechanicus-allies',
       'Mechanicus Allies',
@@ -373,7 +373,7 @@ export function subPointsList(
     const d = sheetOf(u);
     return d && (d.factionKeywords.includes('DAMNED') || d.keywords.includes('DAMNED'));
   });
-  if ((faction.id === 'QT' && list.detachments.includes('Iconoclast Fiefdom')) || hasDamned) {
+  if ((faction.id === 'QT' && list.detachments.includes('Iconoclast Fiefdom')) || (faction.id === 'QT' && hasDamned)) {
     add(
       'wretched-thralls',
       'Wretched Thralls',

@@ -29922,22 +29922,7 @@
       "subfaction": "SPACE WOLVES",
       "models": [
         {
-          "name": "Wulfen w/Auto-launcher",
-          "M": 9,
-          "T": 6,
-          "Sv": 4,
-          "InSv": null,
-          "W": 2,
-          "Ld": 7,
-          "OC": 0,
-          "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
-          }
-        },
-        {
-          "name": "Wulfen w/Death Totem",
+          "name": "Wulfen",
           "M": 9,
           "T": 6,
           "Sv": 4,
@@ -29954,29 +29939,21 @@
       ],
       "composition": [
         {
-          "name": "Wulfen w/Auto-launcher",
-          "min": 0,
+          "name": "Wulfen",
+          "min": 5,
           "max": 10,
-          "text": "0-10 Wulfen w/Auto-launcher"
-        },
-        {
-          "name": "Wulfen w/Death Totem",
-          "min": 0,
-          "max": 10,
-          "text": "0-10 Wulfen w/Death Totem"
+          "text": "5-10 Wulfen"
         }
       ],
       "loadout": {
-        "Wulfen w/Auto-launcher": [
-          "wulfen weapons"
-        ],
-        "Wulfen w/Death Totem": [
-          "wulfen weapons"
+        "*": [
+          "Wulfen weapons",
+          "Death totem"
         ]
       },
-      "loadoutText": "Wulfen w/Auto-launcher: wulfen weapons. Wulfen w/Death Totem: wulfen weapons",
+      "loadoutText": "Each model is equipped with: Death Totem; 1 Wulfen Weapons.",
       "options": [
-        "Wulfen w/Auto-launcher: can be equipped with Stormfrag Auto-launcher"
+        "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher."
       ],
       "weapons": [
         {
@@ -30030,6 +30007,11 @@
           "name": "Curse of the Wulfen",
           "type": "Datasheet",
           "text": "While this unit is within 6\" of one or more friendly SPACE WOLVES CHARACTER models (excluding WULFEN models) or within 12\" of one or more friendly WOLF PRIEST models, if it is not battle-shocked, INFANTRY models in it have +1 OC and VEHICLE models in it have +3 OC."
+        },
+        {
+          "name": "Death Totem",
+          "type": "Wargear",
+          "text": "This unit’s melee attacks can re-roll hit rolls of 1."
         }
       ],
       "leads": [],
@@ -30051,13 +30033,15 @@
       ],
       "wargearOptions": [
         {
-          "text": "Wulfen w/Auto-launcher: can be equipped with Stormfrag Auto-launcher",
+          "text": "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher.",
           "scope": "any",
-          "who": "Wulfen w/Auto-launcher",
-          "replace": [],
+          "who": "*",
+          "replace": [
+            "Death totem"
+          ],
           "choices": [
             [
-              "Stormfrag Auto-launcher"
+              "Stormfrag auto-launcher"
             ]
           ]
         }
@@ -30106,9 +30090,9 @@
       "composition": [
         {
           "name": "Wulfen Dreadnought",
-          "min": 0,
-          "max": 0,
-          "text": "0 Wulfen Dreadnought"
+          "min": 1,
+          "max": 1,
+          "text": "1 Wulfen Dreadnought"
         }
       ],
       "loadout": {
@@ -30120,7 +30104,8 @@
       },
       "loadoutText": "Wulfen Dreadnought: fenrisian great axe, great wolf claw, storm bolter",
       "options": [
-        "Wulfen Dreadnought: Great Wolf Claw + Storm Bolter can be replaced with Heavy Flamer + Blizzard Shield / Storm Bolter + Blizzard Shield"
+        "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+        "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield."
       ],
       "weapons": [
         {
@@ -30260,20 +30245,27 @@
       ],
       "wargearOptions": [
         {
-          "text": "Wulfen Dreadnought: Great Wolf Claw + Storm Bolter can be replaced with Heavy Flamer + Blizzard Shield / Storm Bolter + Blizzard Shield",
+          "text": "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
           "scope": "one",
           "who": "Wulfen Dreadnought",
           "replace": [
-            "Great Wolf Claw",
             "Storm Bolter"
           ],
           "choices": [
             [
-              "Heavy Flamer",
-              "Blizzard Shield"
-            ],
+              "Heavy Flamer"
+            ]
+          ]
+        },
+        {
+          "text": "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield.",
+          "scope": "one",
+          "who": "Wulfen Dreadnought",
+          "replace": [
+            "Fenrisian Great Axe"
+          ],
+          "choices": [
             [
-              "Storm Bolter",
               "Blizzard Shield"
             ]
           ]
@@ -30303,22 +30295,7 @@
       "subfaction": "SPACE WOLVES",
       "models": [
         {
-          "name": "Wulfen w/Death Totem",
-          "M": 9,
-          "T": 6,
-          "Sv": 4,
-          "InSv": 4,
-          "W": 2,
-          "Ld": 7,
-          "OC": 0,
-          "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
-          }
-        },
-        {
-          "name": "Wulfen w/Auto-launcher",
+          "name": "Wulfen with Storm Shield",
           "M": 9,
           "T": 6,
           "Sv": 4,
@@ -30335,29 +30312,21 @@
       ],
       "composition": [
         {
-          "name": "Wulfen w/Death Totem",
-          "min": 0,
+          "name": "Wulfen with Storm Shield",
+          "min": 5,
           "max": 10,
-          "text": "0-10 Wulfen w/Death Totem"
-        },
-        {
-          "name": "Wulfen w/Auto-launcher",
-          "min": 0,
-          "max": 10,
-          "text": "0-10 Wulfen w/Auto-launcher"
+          "text": "5-10 Wulfen with Storm Shield"
         }
       ],
       "loadout": {
-        "Wulfen w/Death Totem": [
-          "thunder hammer"
-        ],
-        "Wulfen w/Auto-launcher": [
-          "thunder hammer"
+        "*": [
+          "Thunder hammer",
+          "Stormfrag auto-launcher"
         ]
       },
-      "loadoutText": "Wulfen w/Death Totem: thunder hammer. Wulfen w/Auto-launcher: thunder hammer",
+      "loadoutText": "Every model is equipped with: 1 Stormfrag Auto-launcher; 1 Thunder Hammer.",
       "options": [
-        "Wulfen w/Auto-launcher: can be equipped with Stormfrag Auto-launcher"
+        "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem."
       ],
       "weapons": [
         {
@@ -30424,6 +30393,11 @@
           "name": "Curse of the Wulfen",
           "type": "Datasheet",
           "text": "While this unit is within 6\" of one or more friendly SPACE WOLVES CHARACTER models (excluding WULFEN models) or within 12\" of one or more friendly WOLF PRIEST models, if it is not battle-shocked, INFANTRY models in it have +1 OC and VEHICLE models in it have +3 OC."
+        },
+        {
+          "name": "Death Totem",
+          "type": "Wargear",
+          "text": "This unit’s melee attacks can re-roll hit rolls of 1."
         }
       ],
       "leads": [],
@@ -30445,13 +30419,15 @@
       ],
       "wargearOptions": [
         {
-          "text": "Wulfen w/Auto-launcher: can be equipped with Stormfrag Auto-launcher",
+          "text": "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem.",
           "scope": "any",
-          "who": "Wulfen w/Auto-launcher",
-          "replace": [],
+          "who": "*",
+          "replace": [
+            "Stormfrag auto-launcher"
+          ],
           "choices": [
             [
-              "Stormfrag Auto-launcher"
+              "Death totem"
             ]
           ]
         }

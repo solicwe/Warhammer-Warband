@@ -148,4 +148,109 @@ describe('Dynamic Detachment Battleline System', () => {
     const errs = validateList(list, AM, size);
     expect(errs.some((e) => e.includes('MILITARUM TEMPESTUS OFFICER must be your Warlord'))).toBe(true);
   });
+
+  it('Tyranids Warrior Bioform Onslaught: grants BATTLELINE to Ranged and Melee Warriors', () => {
+    const TYR = loadFaction('TYR');
+    const ranged = TYR.datasheets.find((d) => d.name === 'Tyranid Warriors With Ranged Bio-weapons')!;
+    const melee = TYR.datasheets.find((d) => d.name === 'Tyranid Warriors With Melee Bio-weapons')!;
+
+    expect(ranged).toBeDefined();
+    expect(melee).toBeDefined();
+
+    // Default: not Battleline
+    expect(isBattlelineUnit(ranged, [])).toBe(false);
+    expect(isBattlelineUnit(melee, [])).toBe(false);
+
+    // With Warrior Bioform Onslaught detachment
+    expect(isBattlelineUnit(ranged, ['Warrior Bioform Onslaught'], TYR)).toBe(true);
+    expect(isBattlelineUnit(melee, ['Warrior Bioform Onslaught'], TYR)).toBe(true);
+    expect(sectionOf(ranged, 'TYR', ['Warrior Bioform Onslaught'], TYR)).toBe('battleline');
+    expect(sectionOf(melee, 'TYR', ['Warrior Bioform Onslaught'], TYR)).toBe('battleline');
+    expect(unitKind(ranged, ['Warrior Bioform Onslaught'], TYR)).toBe('Battleline');
+    expect(unitKind(melee, ['Warrior Bioform Onslaught'], TYR)).toBe('Battleline');
+  });
+
+  it('Wretched Thralls (DH) only shows for Chaos Knights (QT), not Chaos Space Marines (CSM)', async () => {
+    const { subPointsList } = await import('./allies');
+    const CSM = loadFaction('CSM');
+
+    // CSM list with a 50 pt Cultist Mob (has DAMNED keyword)
+    const csmList: ArmyList = {
+      name: 'CSM Marauders',
+      factionId: 'CSM',
+      battleSize: 'strikeForce',
+      detachments: ["Huron's Marauders"],
+      units: [
+        { uid: 'c1', datasheet: 'Cultist Mob', models: 10, pts: 50 },
+      ],
+    };
+    const csmSubs = subPointsList(csmList, CSM, 2000);
+    // Should NOT have wretched-thralls / DH in CSM
+    expect(csmSubs.some((s) => s.id === 'wretched-thralls')).toBe(false);
+
+    // Chaos Knights list with Iconoclast Fiefdom detachment
+    const qtList: ArmyList = {
+      name: 'Chaos Knights Fiefdom',
+      factionId: 'QT',
+      battleSize: 'strikeForce',
+      detachments: ['Iconoclast Fiefdom'],
+      units: [
+        { uid: 'q1', datasheet: 'Cultist Mob', models: 10, pts: 50 },
+      ],
+    };
+    const qtSubs = subPointsList(qtList, QT, 2000);
+    // SHOULD have wretched-thralls / DH in QT
+    expect(qtSubs.some((s) => s.id === 'wretched-thralls')).toBe(true);
+    expect(qtSubs.find((s) => s.id === 'wretched-thralls')?.spent).toBe(50);
+  });
+
+  it('Wulfen and Wulfen Dreadnought wargear options work correctly', async () => {
+    const { wargearMax, wargearProblems } = await import('./army');
+    const SM = loadFaction('SM');
+    const wulfen = SM.datasheets.find((d) => d.name === 'Wulfen')!;
+    const wulfenShields = SM.datasheets.find((d) => d.name === 'Wulfen with Storm Shields')!;
+    const dread = SM.datasheets.find((d) => d.name === 'Wulfen Dreadnought')!;
+
+    expect(wulfen).toBeDefined();
+    expect(wulfenShields).toBeDefined();
+    expect(dread).toBeDefined();
+
+    // Wulfen: can swap up to 5 Death totems for Stormfrag auto-launchers
+    const optWulfen = wulfen.wargearOptions![0];
+    expect(optWulfen.replace).toEqual(['Death totem']);
+    expect(optWulfen.choices).toEqual([['Stormfrag auto-launcher']]);
+    expect(wargearMax(wulfen, optWulfen, 5)).toBe(5);
+
+    // Wulfen with Storm Shields: can swap up to 5 Stormfrag auto-launchers for Death totems
+    const optShields = wulfenShields.wargearOptions![0];
+    expect(optShields.replace).toEqual(['Stormfrag auto-launcher']);
+    expect(optShields.choices).toEqual([['Death totem']]);
+    expect(wargearMax(wulfenShields, optShields, 5)).toBe(5);
+
+    // Wulfen Dreadnought:
+    // Option 0: Storm Bolter -> Heavy Flamer (max 1)
+    // Option 1: Fenrisian Great Axe -> Blizzard Shield (max 1)
+    expect(dread.wargearOptions?.length).toBe(2);
+    const [optFlamer, optBlizzard] = dread.wargearOptions!;
+    expect(optFlamer.replace).toEqual(['Storm Bolter']);
+    expect(optFlamer.choices).toEqual([['Heavy Flamer']]);
+    expect(optBlizzard.replace).toEqual(['Fenrisian Great Axe']);
+    expect(optBlizzard.choices).toEqual([['Blizzard Shield']]);
+
+    expect(wargearMax(dread, optFlamer, 1)).toBe(1);
+    expect(wargearMax(dread, optBlizzard, 1)).toBe(1);
+
+    // Legal dreadnought with Heavy Flamer and Blizzard Shield
+    const legalDread = {
+      uid: 'wd1',
+      datasheet: 'Wulfen Dreadnought',
+      models: 1,
+      pts: 140,
+      wargear: [
+        { opt: 0, choice: 0, count: 1 },
+        { opt: 1, choice: 0, count: 1 },
+      ],
+    };
+    expect(wargearProblems(dread, legalDread)).toEqual([]);
+  });
 });
