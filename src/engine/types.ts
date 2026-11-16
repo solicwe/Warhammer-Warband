@@ -484,6 +484,7 @@ export interface PlayerState {
     failed?: string[];
     by: Record<string, number>;
     done?: boolean;
+    reopened?: boolean; // the player asked for the Rituals again after shooting
     pending?: { unitId: string; modelId: string; ritualId: string; targetId: string; bonus: number; dice: number[] };
   };
   /** Hexwarp Thrallband: the areas in the Flow of Magic this phase */

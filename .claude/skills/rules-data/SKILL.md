@@ -39,6 +39,10 @@ skill is the checklist around them.
 
 ## Pitfalls seen before
 
+- A defensive stratagem worded "just after an enemy unit has selected its targets" (Wrath of the Doomed) was never
+  offered to a player: only `react: "targeted"` cards were, and that moment was sync-only. Now `reactionOffers` also asks
+  cards with `bot: "defend"` and that WHEN text, in their own phase; the attack stays open while the window is up
+  (`handleReact`, `botAttack`, `autoShoot`). The bot is not asked through this path.
 - A rule with `"status": "auto"` and no `effects` or `act` does nothing.
 - A field on a timed effect is not always read the same way as on an ability (keywords such as MOBILE are only
   applied from abilities; use `throughTerrain` for a timed effect).

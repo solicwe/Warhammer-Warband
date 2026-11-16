@@ -57,6 +57,7 @@ function botAttack(s: GameState, kind: 'shoot' | 'fight' | 'overwatch', attacker
   startAttack(s, kind, attackerId, targetId, pools);
   if (!s.attack) return true;
   const owner = unitById(s, targetId).owner;
+  if (s.window?.kind === 'stratReaction') { s.attack.defenderRolls = true; return false; } // the player is asked about a stratagem first
   if (!isBot(s, owner) && (s.bots?.length ?? 0) > 0 && s.defenderRolls !== false) { s.attack.defenderRolls = true; return false; }
   resolveAll(s);
   finishAttack(s);

@@ -95,10 +95,20 @@ export function ritualsPending(s: GameState, p: PlayerId): boolean {
   if (R.pending) return true;
   if (R.done) return false;
   // once a unit has been selected to shoot, the start of the phase is over
-  if (boardUnits(s, p).some((u) => u.selectedToShoot || u.weaponsFired.length > 0)) { R.done = true; return false; }
+  if (!R.reopened && boardUnits(s, p).some((u) => u.selectedToShoot || u.weaponsFired.length > 0)) { R.done = true; return false; }
   const cs = casters(s, p);
   return cs.some((c) => ritualsLeft(s, p, c).length > 0);
 }
+
+/** Rituals the player skipped or put off (the panel closed, or units already shot) can still be attempted this Shooting phase. */
+export function ritualsReopenable(s: GameState, p: PlayerId): boolean {
+  if (s.players[p]?.factionId !== 'TS' || s.phase !== 'shooting' || s.active !== p || s.window || s.attack) return false;
+  const R = ritualState(s, p);
+  if (R.pending || (!R.done && !R.reopened && !boardUnits(s, p).some((u) => u.selectedToShoot || u.weaponsFired.length > 0))) return false; // the panel is (or will be) open already
+  return casters(s, p).some((c) => ritualsLeft(s, p, c).length > 0);
+}
+
+export function reopenRituals(s: GameState, p: PlayerId) { const R = ritualState(s, p); R.done = false; R.reopened = true; }
 
 export function endRituals(s: GameState, p: PlayerId) { ritualState(s, p).done = true; }
 
@@ -245,7 +255,9 @@ function resolveRitual(s: GameState, c: Caster, r: Ritual, t: UnitState, result:
     t.psyHit = { key: `${s.turn}|${s.phase}`, by: p };
     const n = rollExpr(s, result >= 11 ? 'D3+3' : 'D3').total;
     log(s, `${r.name}: ${t.name} suffers ${n} mortal wounds`, 'roll', p);
-    applyMortalWounds(s, t, n, r.name);
+    const killed = applyMortalWounds(s, t, n, r.name);
+    // the player sees what the bolt did, as a card
+    pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${t.name}`, dice: [], result: `${n} mortal wounds · ${killed ? `${killed} model${killed > 1 ? 's' : ''} destroyed` : 'no model destroyed'}`, good: true });
   } else if (r.id === 'temporal-surge') {
     runActions(s, r.name, c.unit, [{ on: 'target', move: result >= 10 ? '6' : 'D6', noCharge: true }], t);
   }

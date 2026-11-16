@@ -79,6 +79,7 @@ export function autoShoot(s: GameState, attackerId: string, targetId: string, op
   if (r.error || !r.pools.length) return false;
   startAttack(s, overwatch ? 'overwatch' : 'shoot', attackerId, targetId, r.pools);
   if (!s.attack) return true;
+  if (s.window?.kind === 'stratReaction') return true; // the target's player is asked first; the attack waits open
   resolveAll(s);
   finishAttack(s);
   if (overwatch && s.window?.kind === 'fireOverwatch') closeWindow(s);

@@ -2,9 +2,10 @@
 // Thousand Sons Gift of Change, Deceptive Glamour, Deranged Ferocity, Through the Veil, Scouring Warpflame, Horrors.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildFightPools, killModel } from './attack';
+import { buildFightPools, killModel, startAttack } from './attack';
 import { d6 } from './dice';
 import { reactionOffers } from '../rules-engine/stratagems';
+import { reopenRituals, ritualsPending, ritualsReopenable } from '../factions/rituals';
 import { abilityOff, addTimed, effectsFor, unitFlags } from '../rules-engine/effects';
 import { actsOfUnit, resolvePickUnit, resolveRevivals } from '../rules-engine/activations';
 import { commitMove, createGame, formationAt, placeUnit, validatePlacement } from './game';
@@ -125,5 +126,37 @@ describe('Thousand Sons', () => {
     expect(s.window).toBeNull();
     expect((b.timed ?? []).length + (rub.timed ?? []).length + (a.timed ?? []).length).toBeGreaterThan(0);
     expect(actsOfUnit(s, rub).length).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('a player is asked about a stratagem when targeted', () => {
+  it('Wrath of the Doomed is offered in a window and the attack stays open', () => {
+    const s = game([['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Boyz', 10]], 'Brute Bosses');
+    const rub = put(s, 'p0-x0', { x: 20, y: 20 });
+    const boyz = put(s, 'p1-x0', { x: 20, y: 21.5 });
+    s.active = 1; s.phase = 'fight'; s.players[0].cp = 3;
+    const r = buildFightPools(s, boyz.id, rub.id, {});
+    expect(r.pools.length).toBeGreaterThan(0);
+    startAttack(s, 'fight', boyz.id, rub.id, r.pools);
+    expect(s.attack).toBeTruthy();
+    expect(s.window?.kind).toBe('stratReaction');
+    if (s.window?.kind === 'stratReaction') expect(s.window.offers.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Rituals after shooting', () => {
+  it('the Rituals can be reopened once a unit has shot', () => {
+    const s = game([['Magnus The Red', 1], ['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Boyz', 10]], 'Brute Bosses');
+    const mag = put(s, 'p0-x0', { x: 20, y: 20 });
+    const rub = put(s, 'p0-x1', { x: 24, y: 20 });
+    put(s, 'p1-x0', { x: 20, y: 30 });
+    s.active = 0; s.phase = 'shooting';
+    expect(ritualsPending(s, 0)).toBe(true);
+    rub.selectedToShoot = true;
+    expect(ritualsPending(s, 0)).toBe(false);
+    expect(ritualsReopenable(s, 0)).toBe(true);
+    reopenRituals(s, 0);
+    expect(ritualsPending(s, 0)).toBe(true);
+    expect(mag.id).toBeTruthy();
   });
 });

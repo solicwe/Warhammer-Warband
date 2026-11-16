@@ -46,7 +46,7 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, ritualsPending, ritualTargets } from '../factions/rituals';
+import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, reopenRituals, ritualsPending, ritualsReopenable, ritualTargets } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
@@ -195,6 +195,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
   const [coach, setCoachRaw] = useState(loadCoach);
   const setCoach = (c: ReturnType<typeof loadCoach>) => { setCoachRaw(c); saveCoach(c); };
   const [showMenu, setShowMenu] = useState(false);
+  const [pickedAct, setPickedAct] = useState<string | null>(null); // a mission action chosen but not yet confirmed (Plunder ...)
   const [showCards, setShowCards] = useState(false);
   const [cardSide, setCardSide] = useState<PlayerId | null>(null); // whose cards the card viewer shows
   const [showGoals, setShowGoals] = useState(true);
@@ -3217,13 +3218,28 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         </>
       );
     }
+    const actKey = (o: ReturnType<typeof actionOptions>[number]) => o.unitId + o.action + (o.objId ?? '') + (o.terrainId ?? '') + (o.targetId ?? '');
+    // a picked action waits for a second tap, so two units with the same name cannot be mixed up
+    const confirmAct = () => {
+      const o = actionOptions(s).find((x) => actKey(x) === pickedAct);
+      if (!o) return null;
+      return (
+        <div className="row" style={{ marginTop: 6, gap: 6 }}>
+          <span className="small grow">{o.label}</span>
+          <button className="btn primary small" onClick={() => { act((g) => startAction(g, o)); flash(`${o.name}: started`); setPickedAct(null); setSel(o.unitId); }}>Confirm</button>
+          <button className="btn small" onClick={() => setPickedAct(null)}>Cancel</button>
+        </div>
+      );
+    };
     const mine = boardUnits(s, s.active);
     const u = selUnit && mine.includes(selUnit) ? selUnit : null;
     const modes = u ? shootingModes(s, u) : [];
     const canExplode = u && !u.selectedToShoot && !isEngaged(s, u) && u.move !== 'advance' && u.move !== 'fallback' && (hasKw(u, 'GRENADES') || hasKw(u, 'EXPLOSIVES')) && !canUseStratagem(s, u.owner, 'explosives', u);
     return (
       <>
-
+        {!bots.includes(s.active) && ritualsReopenable(s, s.active) && (
+          <button className="btn small" style={{ marginBottom: 6 }} onClick={() => act((g) => reopenRituals(g, g.active))}>Rituals (psychic tests)</button>
+        )}
         {actionOptions(s).length > 0 && (
           <div style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: 8, padding: '8px 12px', margin: '6px 0' }}>
             <div style={{ fontWeight: 700, color: '#93c5fd', fontSize: '0.85rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -3234,23 +3250,17 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               <Icon name="objective" size={14} /> Pick the best actions for me
             </button>
             <div className="row wrap" style={{ gap: 6 }}>
-              {actionOptions(s).map((o) => {
-                const performer = s.units.find((x) => x.id === o.unitId);
-                return (
-                  <button
-                    key={o.unitId + o.action + (o.objId ?? '') + (o.terrainId ?? '') + (o.targetId ?? '')}
-                    className="btn small primary"
-                    onClick={() => {
-                      act((g) => startAction(g, o));
-                      flash(`${o.name}: started (${performer?.name ?? ''})`);
-                      setSel(o.unitId);
-                    }}
-                  >
-                    <b>{performer?.name}</b>: {o.label}
-                  </button>
-                );
-              })}
+              {actionOptions(s).map((o) => (
+                <button
+                  key={actKey(o)}
+                  className={`btn small ${pickedAct === actKey(o) ? 'primary' : ''}`}
+                  onClick={() => { setPickedAct(actKey(o)); setSel(o.unitId); }}
+                >
+                  {o.label}
+                </button>
+              ))}
             </div>
+            {confirmAct()}
           </div>
         )}
         {u && (
@@ -3312,8 +3322,9 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               <div className="action-box">
                 <div className="tiny"><b>Mission action</b> — instead of shooting (this unit cannot shoot or charge this turn)</div>
                 {actionOptions(s).filter((o) => o.unitId === u.id).map((o) => (
-                  <button key={o.action + (o.objId ?? '') + (o.terrainId ?? '') + (o.targetId ?? '')} className="btn small" onClick={() => { act((g) => startAction(g, o)); flash(`${o.name}: started`); }}>{o.label}</button>
+                  <button key={actKey(o)} className={`btn small ${pickedAct === actKey(o) ? 'primary' : ''}`} onClick={() => setPickedAct(actKey(o))}>{o.label}</button>
                 ))}
+                {confirmAct()}
               </div>
             )}
           </>
@@ -3600,7 +3611,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                 if (mode.epic) spendStratagem(g, gu.owner, 'epic-challenge', gu);
                 const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile });
                 startAttack(g, 'fight', gu.id, mode.target!, r.pools);
-                if (skip) {
+                if (skip && g.window?.kind !== 'stratReaction') { // a stratagem question for the target waits first
                   resolveAll(g);
                   finishAttack(g);
                   markFought(g, gu);
@@ -3610,6 +3621,8 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               setMode(null);
               if (skip) setSel(null);
             }}>Fight!</button>
+            {/* nothing to hit (out of reach, no model engaged): the unit can still be passed over so the phase moves on */}
+            {(!mode.target || !res?.pools.length) && <button className="btn small" onClick={() => { act((g) => markFought(g, unitById(g, u.id), false)); setMode(null); setSel(null); }}>Does not fight</button>}
           </div>
         </>
       );
@@ -3628,6 +3641,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               const tgt = eng.length === 1 ? eng[0] : (selUnit.chargeTargets?.length === 1 ? selUnit.chargeTargets[0] : null);
           setModeRaw({ k: 'fight', unitId: selUnit.id, target: tgt, epic: false });
             }}><Icon name="fight" /> Fight with {selUnit.name}</button>
+            {!isEngaged(s, selUnit) && <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit.id), false))}>Skip (does not fight)</button>}
           </div>
         )}
         {overrunReady && selUnit!.owner === cands.player && (

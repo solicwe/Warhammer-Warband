@@ -478,7 +478,7 @@ const COND_TH: Record<string, string> = {
   targetOfLast: 'must be the target of the enemy unit that just attacked', lostToLast: 'must have lost models to that attack', halvedByLast: 'must be Below Half-strength after that attack',
   '!engaged': 'must be unengaged', engaged: 'must be engaged', belowStarting: 'must be below Starting Strength', onObjective: 'must be within range of an objective', charged: 'must have charged this turn',
   killedThisPhase: 'must have destroyed an enemy unit this phase', disembarkedThisTurn: 'must have disembarked this turn', entrenched: 'must be ENTRENCHED',
-  onControlledObjective: 'must control an objective', hasEmbarkedBattleline: 'must have a BATTLELINE unit embarked', fellBackFromLast: 'the enemy unit must have Fallen Back from this unit',
+  inFlow: "every model must be wholly within your army's Flow of Magic (your deployment zone, plus No Man's Land or the enemy zone while you hold half its objectives)", onControlledObjective: 'must control an objective', hasEmbarkedBattleline: 'must have a BATTLELINE unit embarked', fellBackFromLast: 'the enemy unit must have Fallen Back from this unit',
 };
 const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must be within ${c.slice(9)}" of that enemy unit` : c);
 
@@ -709,7 +709,8 @@ function runSpecial(s: GameState, p: PlayerId, sp: Special, label: string, u: Un
 // ---------- reactions: the game offers a stratagem at its moment ----------
 
 /** Moments that cannot wait for a prompt (the dice are being rolled right now): only the bot or "use automatically" act. */
-const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'targeted', 'surgeStart']);
+// ('targeted' is not here: the attack stays open until the defending player answers, see handleReact)
+const SYNC_ONLY = new Set<ReactOn>(['deadlyDemise', 'deadlyDemiseSix', 'enemyFallBack', 'enemyDeadlyDemise', 'surgeStart']);
 
 export interface ReactOffer { st: StratagemData; rule: StratRule; units: UnitState[] }
 
@@ -718,7 +719,10 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
   const out: ReactOffer[] = [];
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {
     const rule = stratRule(st, s.players[p].factionId, d.name);
-    if (rule.react !== on) continue;
+    // a card whose WHEN is "just after an enemy unit has selected its targets" is asked at that moment too (in its own phase)
+    const asked = on === 'targeted' && !rule.react && rule.bot === 'defend' && /after an enemy unit has selected (its|their) targets/i.test(st.text ?? '')
+      && (() => { const ph = planStratagem(st).phases; return ph === 'any' || !ph.length || ph.includes(s.phase); })();
+    if (rule.react !== on && !asked) continue;
     if (rule.killedKw && !(ctx.victimId && unitById(s, ctx.victimId).models.some((m) => rule.killedKw!.split('|').some((k) => m.keywords.includes(k))))) continue;
     if (rule.ctxModel && ctx.modelId) {
       const m = ctx.unitId ? unitById(s, ctx.unitId).models.find((x) => x.id === ctx.modelId) : undefined;
@@ -798,6 +802,7 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
     (globalThis as unknown as { __offer?: (id: string) => void }).__offer?.(o.st.id); // DEBUG-OFFER
     const isAuto = !bot && autos.includes(o.st.id);
     if (!bot && !isAuto) continue;
+    if (!o.rule.react) continue; // asked only of a player; the bot weighs these itself (botStrats)
     const pick = autoPick(s, p, o, ctx, isAuto);
     if (!pick) continue;
     applyDetachmentStratagem(s, p, o.st, pick.u.id, { enemyId: pick.enemyId, choice: pick.choice, ctx });
@@ -806,7 +811,9 @@ function handleReact(s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx): boo
   if (bot || SYNC_ONLY.has(on)) return false;
   const left = offers.filter((o) => !autos.includes(o.st.id));
   if (!left.length) return false;
-  if (s.window || s.attack) {
+  // 'targeted' is asked while the attack is open, before any dice: the player answers, then the attack goes on
+  if (on === 'targeted' && s.window) return false;
+  if (s.window || (s.attack && on !== 'targeted')) {
     (s.reactQueue ??= []).push({ player: p, on, ctx, turn: s.turn, phase: s.phase });
     return false;
   }
