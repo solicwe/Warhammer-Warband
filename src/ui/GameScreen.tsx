@@ -1147,28 +1147,10 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
 
   const quickActions = useMemo(() => {
     if (!sel || !selUnit) return undefined;
-    if (spectate || replay) {
-      return {
-        unitId: selUnit.id,
-        actions: [{
-          label: 'Datasheet',
-          primary: true,
-          onClick: () => setSheet(selUnit.id),
-        }],
-      };
-    }
+    if (spectate || replay) return undefined;
     // in the Fight phase the side whose pick it is acts, whoever's turn it is (the defender fights back)
     const picksNow = !!fc && !!selUnit && fc.player === selUnit.owner && fc.units.includes(selUnit);
-    if (selUnit.owner !== s.active && !picksNow) {
-      return {
-        unitId: selUnit.id,
-        actions: [{
-          label: 'Datasheet',
-          primary: false,
-          onClick: () => setSheet(selUnit.id),
-        }],
-      };
-    }
+    if (selUnit.owner !== s.active && !picksNow) return undefined;
     const actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] = [];
     if (s.phase === 'movement' && onBoard(selUnit)) {
       if (selUnit.move && reopenMove && reopenMove.mode.unitId === selUnit.id) {
@@ -1214,14 +1196,6 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           });
         }
       }
-    } else if (s.phase === 'shooting' && onBoard(selUnit)) {
-      actions.push({
-        label: 'Datasheet',
-        primary: true,
-        onClick: () => {
-          setSheet(selUnit.id);
-        },
-      });
     } else if (s.phase === 'charge' && onBoard(selUnit) && !selUnit.declaredCharge && !chargeEligibility(s, selUnit)) {
       actions.push({
         label: 'Charge',

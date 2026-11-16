@@ -1985,7 +1985,8 @@ function BoardImpl(props: BoardProps) {
               );
             })}
             {pts.length > 0 && (() => {
-              let curY = minY;
+              // while a unit is dragged, each model carries its own pill above its base: start the stack above those
+              let curY = minY - (isDraft && maxFor ? 0.85 : 0);
               const elements: React.ReactNode[] = [];
 
               // 1. Unit Name
