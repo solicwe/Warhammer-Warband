@@ -103,4 +103,15 @@ describe('Transport Datasheet and Builder Integration', () => {
     expect(lrTermiFit.why).toBeNull(); // Terminators fit in Land Raider
     expect(lrTermiFit.space).toBe(2); // Takes 2 spaces
   });
+
+  it('Chaos Daemons Skull Cannon has Deep Strike, so hasDs is true and only Deep Strike is presented', () => {
+    const cd: FactionData = JSON.parse(fs.readFileSync('public/data/factions/CD.json', 'utf8'));
+    const skullCannon = cd.datasheets.find((d) => d.name === 'Skull Cannon')!;
+    const cadians = am.datasheets.find((d) => d.name === 'Cadian Shock Troops')!;
+
+    const unitHasDs = (s?: any) => !!s && ((s.abilities || []).some((a: any) => /deep strike/i.test(a.name)) || (s.keywords || []).some((k: string) => /deep strike/i.test(k)));
+
+    expect(unitHasDs(skullCannon)).toBe(true);
+    expect(unitHasDs(cadians)).toBe(false);
+  });
 });

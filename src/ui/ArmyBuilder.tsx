@@ -1233,7 +1233,8 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     const rider = body ?? u; // a Leader rides with the unit it leads
     const riderSheet = sheetOf(rider.datasheet);
     const unitHasDs = (s?: DatasheetData | null) => !!s && ((s.abilities || []).some((a) => /deep strike/i.test(a.name)) || s.keywords.some((k) => /deep strike/i.test(k)));
-    const hasDs = unitHasDs(sheet) || unitHasDs(riderSheet);
+    const groupForDs = [riderSheet, ...list.units.filter((c) => c.attachTo === rider.uid).map((c) => sheetOf(c.datasheet))].filter((d): d is DatasheetData => !!d);
+    const hasDs = groupForDs.length > 0 ? groupForDs.every(unitHasDs) : unitHasDs(sheet);
     const rideIn = rider.embarkIn ? list.units.find((t) => t.uid === rider.embarkIn) : undefined;
     const isTransport = !!parseTransport(sheet?.transport) || !!sheet?.keywords.includes('TRANSPORT');
     // transports this unit could ride (a full one still shows, in red) / units this transport could carry
@@ -1608,22 +1609,21 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           ))}
           {opts.length > 1 && <button type="button" onClick={() => setPop({ ...pop, mode: 'size' })}><Icon name="size" size={22} />Unit size <span className="ab-pop-val">{u.models}</span></button>}
           {!rider.embarkIn && (
-            <>
-              {hasDs && (
-                <button
-                  type="button"
-                  className={rider.reserve === 'deepstrike' ? 'on' : ''}
-                  onClick={() => {
-                    const next = rider.reserve === 'deepstrike' ? undefined : 'deepstrike';
-                    setUnit(rider.uid, { reserve: next });
-                    setNote(next ? `${rider.datasheet} set to Deep Strike` : `${rider.datasheet} removed from Reserves`);
-                    close();
-                  }}
-                >
-                  <Icon name={rider.reserve === 'deepstrike' ? 'check' : 'deepstrike'} size={22} />
-                  Deep Strike {rider.reserve === 'deepstrike' && <span className="ab-pop-val">Selected</span>}
-                </button>
-              )}
+            hasDs ? (
+              <button
+                type="button"
+                className={rider.reserve === 'deepstrike' ? 'on' : ''}
+                onClick={() => {
+                  const next = rider.reserve === 'deepstrike' ? undefined : 'deepstrike';
+                  setUnit(rider.uid, { reserve: next });
+                  setNote(next ? `${rider.datasheet} set to Deep Strike` : `${rider.datasheet} removed from Reserves`);
+                  close();
+                }}
+              >
+                <Icon name={rider.reserve === 'deepstrike' ? 'check' : 'deepstrike'} size={22} />
+                Deep Strike {rider.reserve === 'deepstrike' && <span className="ab-pop-val">Selected</span>}
+              </button>
+            ) : (
               <button
                 type="button"
                 className={rider.reserve === 'reserves' ? 'on' : ''}
@@ -1637,7 +1637,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 <Icon name={rider.reserve === 'reserves' ? 'check' : 'reserves'} size={22} />
                 Strategic Reserves {rider.reserve === 'reserves' && <span className="ab-pop-val">Selected</span>}
               </button>
-            </>
+            )
           )}
           {isChar && !sheet?.ally && !(sheet?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD') && (
             <button type="button" className={u.warlord ? 'on' : ''} onClick={() => { set({ units: list.units.map((x) => ({ ...x, warlord: x.uid === u.uid ? !u.warlord : false })) }); close(); }}>
