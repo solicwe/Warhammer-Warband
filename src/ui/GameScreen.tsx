@@ -1145,9 +1145,29 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
   }, [baseBadges, mode, modeUnit, shootTargets, targets, s]);
 
   const quickActions = useMemo(() => {
+    if (!sel || !selUnit) return undefined;
+    if (spectate || replay) {
+      return {
+        unitId: selUnit.id,
+        actions: [{
+          label: 'Datasheet',
+          primary: true,
+          onClick: () => setSheet(selUnit.id),
+        }],
+      };
+    }
     // in the Fight phase the side whose pick it is acts, whoever's turn it is (the defender fights back)
     const picksNow = !!fc && !!selUnit && fc.player === selUnit.owner && fc.units.includes(selUnit);
-    if (!sel || !selUnit || (selUnit.owner !== s.active && !picksNow)) return undefined;
+    if (selUnit.owner !== s.active && !picksNow) {
+      return {
+        unitId: selUnit.id,
+        actions: [{
+          label: 'Datasheet',
+          primary: false,
+          onClick: () => setSheet(selUnit.id),
+        }],
+      };
+    }
     const actions: { label: string; icon?: string; primary?: boolean; onClick: () => void }[] = [];
     if (s.phase === 'movement' && onBoard(selUnit)) {
       if (selUnit.move && reopenMove && reopenMove.mode.unitId === selUnit.id) {
@@ -1174,37 +1194,33 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                 if (!beginMove(g, gu, 'normal')) return false;
                 return true;
               });
-            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'normal', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
-            else flash(`${selUnit.name} must Remain Stationary`);
-          },
-        });
-      } else {
-        actions.push({
-          label: 'Fall back',
-          primary: true,
-          onClick: () => {
-            const ok = act((g) => {
-              const gu = unitById(g, selUnit.id);
-              if (!beginMove(g, gu, 'fallback')) return false;
-              return true;
-            });
-            if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'fallback', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
-          },
-        });
+              if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'normal', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
+              else flash(`${selUnit.name} must Remain Stationary`);
+            },
+          });
+        } else {
+          actions.push({
+            label: 'Fall back',
+            primary: true,
+            onClick: () => {
+              const ok = act((g) => {
+                const gu = unitById(g, selUnit.id);
+                if (!beginMove(g, gu, 'fallback')) return false;
+                return true;
+              });
+              if (ok) setMode({ k: 'move', unitId: selUnit.id, kind: 'fallback', fly: fly && hasKw(selUnit, 'FLY') }, startPaths(selUnit));
+            },
+          });
+        }
       }
-    }
-    } else if (s.phase === 'shooting' && onBoard(selUnit) && !selUnit.selectedToShoot) {
-      const smodes = shootingModes(s, selUnit);
-      if (smodes.length > 0) {
-        actions.push({
-          label: 'Shoot',
-          primary: true,
-          onClick: () => {
-            act((g) => autoSelectToShoot(g, unitById(g, selUnit.id)));
-            setMode({ k: 'shoot', unitId: selUnit.id, smode: smodes[0], target: null, useCQ: false, profile: {} });
-          },
-        });
-      }
+    } else if (s.phase === 'shooting' && onBoard(selUnit)) {
+      actions.push({
+        label: 'Datasheet',
+        primary: true,
+        onClick: () => {
+          setSheet(selUnit.id);
+        },
+      });
     } else if (s.phase === 'charge' && onBoard(selUnit) && !selUnit.declaredCharge && !chargeEligibility(s, selUnit)) {
       actions.push({
         label: 'Charge',
@@ -1227,7 +1243,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }
     // the unit's sheet opens from the unit bar; the map keeps only the phase's action
     return actions.length > 0 ? { unitId: selUnit.id, actions } : undefined;
-  }, [sel, selUnit, s, fly, reopenMove, fc]);
+  }, [sel, selUnit, s, fly, reopenMove, fc, spectate, replay]);
 
   // tape measure: tap two points on the board
   const [tape, setTape] = useState<{ on: boolean; a?: Pt; b?: Pt; ma?: { u: string; m: string }; mb?: { u: string; m: string } }>({ on: false });

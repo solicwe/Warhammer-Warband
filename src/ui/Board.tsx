@@ -2182,16 +2182,20 @@ function BoardImpl(props: BoardProps) {
                 const qa = props.quickActions.actions.filter((a) => a.label !== 'Advance' && a.label !== 'Hold');
                 if (qa.length > 0) {
                   curY -= 0.65;
-                  const btnW = 2.1;
                   const gap = 0.22;
+                  const widths = qa.map((act) => Math.max(2.2, act.label.length * 0.22 + 0.65));
+                  const totalW = widths.reduce((sum, w) => sum + w, 0) + (qa.length - 1) * gap;
+                  let runningX = -totalW / 2;
                   elements.push(
                     <g key="quickActions" transform={`translate(${cx} ${curY})`} pointerEvents="auto">
                       {qa.map((act, i) => {
-                        const offX = (i - (qa.length - 1) / 2) * (btnW + gap);
+                        const bw = widths[i];
+                        const posX = runningX + bw / 2;
+                        runningX += bw + gap;
                         return (
                           <g
                             key={act.label}
-                            transform={`translate(${offX} 0)`}
+                            transform={`translate(${posX} 0)`}
                             style={{ cursor: 'pointer' }}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2199,9 +2203,9 @@ function BoardImpl(props: BoardProps) {
                             }}
                           >
                             <rect
-                              x={-btnW / 2}
+                              x={-bw / 2}
                               y={-0.34}
-                              width={btnW}
+                              width={bw}
                               height={0.68}
                               rx={0.34}
                               fill={act.primary ? '#d99b26' : '#121417'}
@@ -2210,7 +2214,7 @@ function BoardImpl(props: BoardProps) {
                             />
                             <text
                               y={0.11}
-                              fontSize={0.32}
+                              fontSize={0.30}
                               textAnchor="middle"
                               fill={act.primary ? '#0f172a' : '#f1f5f9'}
                               fontWeight={800}
