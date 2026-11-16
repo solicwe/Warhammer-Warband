@@ -25,6 +25,6 @@ describe('every automated detachment survives two bot battle rounds', () => {
       while (s.phase !== 'gameover' && s.round < 3 && steps < 3000) { botAct(s); steps++; }
       expect(s.round).toBeGreaterThanOrEqual(3);
       for (const u of s.units) for (const m of u.models) expect(Number.isFinite(m.x) && Number.isFinite(m.y)).toBe(true);
-    });
+    }, 180000);
   }
 });

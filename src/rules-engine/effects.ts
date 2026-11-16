@@ -637,7 +637,7 @@ function collectEffects(s: GameState, u: UnitState): Active[] {
     for (const g of grantsOf(s, h)) {
       if (!g.rule.effects?.length) continue;
       const effs = g.units || g.models
-        ? g.rule.effects.map((e) => (e.units ? e : { ...e, units: g.units ?? (g.models ? [g.models] : undefined) }))
+        ? g.rule.effects.map((e) => (e.units || e.scope === 'enemyAura' ? e : { ...e, units: g.units ?? (g.models ? [g.models] : undefined) }))
         : g.rule.effects;
       ruleEffects(s, u, h, effs, g.name, h.sources[0], () => alive(h).filter((m) => !g.models || m.keywords.includes(g.models)), out);
     }

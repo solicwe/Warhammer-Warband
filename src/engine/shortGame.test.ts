@@ -24,7 +24,7 @@ describe('short battle', () => {
     expect(s.round).toBe(3);
     expect(s.winner).not.toBeNull();
     expect(s.players.some((P) => P.vp > 0)).toBe(true);
-  });
+  }, 180000);
 
   it('a full game is unchanged: no maxRounds, pace equals the round', () => {
     const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 5 });

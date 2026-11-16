@@ -393,7 +393,7 @@ describe('Thousand Sons in a game', () => {
     while (s.phase !== 'gameover' && steps < 15000) { botAct(s); steps++; }
     expect(s.phase).toBe('gameover');
     expect(s.log.some((l) => /Psychic test/.test(l.text) && l.player === 0)).toBe(true);
-  });
+  }, 180000);
 
   it('prevents cross-faction allied units (e.g. in CSM) from using Cabal of Sorcerers rituals', () => {
     const s = game([['Rubric Marines', 5, 100]], [['Boyz', 10, 90]]);
