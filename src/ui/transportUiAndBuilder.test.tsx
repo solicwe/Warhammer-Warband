@@ -114,4 +114,81 @@ describe('Transport Datasheet and Builder Integration', () => {
     expect(unitHasDs(skullCannon)).toBe(true);
     expect(unitHasDs(cadians)).toBe(false);
   });
+
+  it('Allied / detachment points caps: only visible when spent > 0 or explicitly granted by active detachment', async () => {
+    const { subPointsList } = await import('../engine/allies');
+    const csm: FactionData = JSON.parse(fs.readFileSync('public/data/factions/CSM.json', 'utf8'));
+    const dg: FactionData = JSON.parse(fs.readFileSync('public/data/factions/DG.json', 'utf8'));
+
+    // CSM with Huron's Marauders and no daemons or cult marines
+    const csmList = {
+      name: 'CSM List',
+      factionId: 'CSM',
+      battleSize: 'strike_force',
+      detachments: ["Huron's Marauders"],
+      units: [
+        { uid: 'u1', datasheet: 'Legionaries', models: 10, pts: 170 },
+      ],
+    };
+    const csmSub = subPointsList(csmList as any, csm, 2000);
+    const filterVisible = (items: typeof csmSub, dets: string[]) =>
+      items.filter((sp) => {
+        if (sp.spent > 0) return true;
+        if (sp.fromDetachment) {
+          const normDet = sp.fromDetachment.toLowerCase().replace(/’/g, "'");
+          return dets.some((d) => d.toLowerCase().replace(/’/g, "'") === normDet);
+        }
+        return false;
+      });
+
+    // 1. In Huron's Marauders with 0 daemons and 0 cult marines: 0 badges visible
+    const visible1 = filterVisible(csmSub, csmList.detachments);
+    expect(visible1).toHaveLength(0);
+
+    // 2. Add cult marines (Rubric Marines: 105 pts) -> Cult badge appears!
+    const csmWithCult = {
+      ...csmList,
+      units: [...csmList.units, { uid: 'c1', datasheet: 'Rubric Marines', models: 5, pts: 105 }],
+    };
+    const csmWithCultSub = subPointsList(csmWithCult as any, csm, 2000);
+    const visible2 = filterVisible(csmWithCultSub, csmWithCult.detachments);
+    expect(visible2).toHaveLength(1);
+    expect(visible2[0].id).toBe('cult-marines');
+    expect(visible2[0].spent).toBe(105);
+
+    // Also test allied daemons when datasheet is present with ally: 'CD'
+    const csmWithDaemonData: FactionData = {
+      ...csm,
+      datasheets: [
+        ...csm.datasheets,
+        {
+          name: 'Bloodletters',
+          ally: 'CD',
+          keywords: ['INFANTRY', 'DAEMON'],
+          factionKeywords: ['LEGIONES DAEMONICA', 'KHORNE'],
+        } as any,
+      ],
+    };
+    const csmWithDaemons = {
+      ...csmList,
+      units: [...csmList.units, { uid: 'd1', datasheet: 'Bloodletters', models: 10, pts: 110 }],
+    };
+    const csmWithDaemonsSub = subPointsList(csmWithDaemons as any, csmWithDaemonData, 2000);
+    const visible2b = filterVisible(csmWithDaemonsSub, csmWithDaemons.detachments);
+    expect(visible2b).toHaveLength(1);
+    expect(visible2b[0].id).toBe('daemonic-pact');
+    expect(visible2b[0].spent).toBe(110);
+
+    // 3. Death Guard with Tallyband Summoners -> Plague Legions badge appears even at 0 spent because it is a Detachment rule!
+    const dgTallyband = {
+      name: 'DG Tallyband',
+      factionId: 'DG',
+      battleSize: 'strike_force',
+      detachments: ['Tallyband Summoners'],
+      units: [],
+    };
+    const dgSub = subPointsList(dgTallyband as any, dg, 2000);
+    const visible3 = filterVisible(dgSub, dgTallyband.detachments);
+    expect(visible3.some((s) => s.id === 'plague-legions')).toBe(true);
+  });
 });

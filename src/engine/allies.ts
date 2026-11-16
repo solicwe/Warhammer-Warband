@@ -111,6 +111,7 @@ export interface SubPointsItem {
   over: boolean;
   unit?: string;
   title?: string;
+  fromDetachment?: string;
 }
 
 const defaultUnitPoints = (u: ArmyUnitEntry): number => {
@@ -140,6 +141,7 @@ export function subPointsList(
     cap: number,
     predicate: (u: ArmyUnitEntry, d?: DatasheetData) => boolean,
     title?: string,
+    fromDetachment?: string,
   ) => {
     const matching = list.units.filter((u) => predicate(u, sheetOf(u)));
     const spent = matching.reduce((sum, u) => sum + unitPoints(u), 0);
@@ -153,6 +155,7 @@ export function subPointsList(
       over: spent > cap,
       unit: 'pts',
       title: title ?? `${label}: ${spent}/${cap} pts`,
+      fromDetachment,
     });
   };
 
@@ -212,7 +215,8 @@ export function subPointsList(
       'PL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('PLAGUE LEGIONS') || d.keywords.includes('PLAGUE LEGIONS')),
-      `Plague Legions: Tallyband Summoners allied daemons (up to ${cap} pts)`
+      `Plague Legions: Tallyband Summoners allied daemons (up to ${cap} pts)`,
+      'Tallyband Summoners'
     );
   }
 
@@ -230,7 +234,8 @@ export function subPointsList(
       'LE',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('LEGIONS OF EXCESS') || d.keywords.includes('LEGIONS OF EXCESS')),
-      `Legions of Excess: Carnival of Excess allied daemons (up to ${cap} pts)`
+      `Legions of Excess: Carnival of Excess allied daemons (up to ${cap} pts)`,
+      'Carnival of Excess'
     );
   }
 
@@ -248,7 +253,8 @@ export function subPointsList(
       'SL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('SCINTILLATING LEGIONS') || d.keywords.includes('SCINTILLATING LEGIONS')),
-      `Scintillating Legions: Changehost of Deceit allied daemons (up to ${cap} pts)`
+      `Scintillating Legions: Changehost of Deceit allied daemons (up to ${cap} pts)`,
+      'Changehost of Deceit'
     );
   }
 
@@ -266,7 +272,8 @@ export function subPointsList(
       'BL',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('BLOOD LEGIONS') || d.keywords.includes('BLOOD LEGIONS')),
-      `Blood Legions: Khorne Daemonkin allied daemons (up to ${cap} pts)`
+      `Blood Legions: Khorne Daemonkin allied daemons (up to ${cap} pts)`,
+      'Khorne Daemonkin'
     );
   }
 
@@ -284,7 +291,8 @@ export function subPointsList(
       'S',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('HERETIC ASTARTES') || d.keywords.includes('HERETIC ASTARTES')),
-      `Shadow Legion: Heretic Astartes units in Shadow Legion (up to ${cap} pts)`
+      `Shadow Legion: Heretic Astartes units in Shadow Legion (up to ${cap} pts)`,
+      'Shadow Legion'
     );
   }
 
@@ -299,7 +307,8 @@ export function subPointsList(
         'H',
         cap,
         (_u, d) => !!d && (d.factionKeywords.includes('HARLEQUINS') || d.keywords.includes('HARLEQUINS')),
-        `Harlequins: Reaper's Wager allied Harlequins (up to ${cap} pts)`
+        `Harlequins: Reaper's Wager allied Harlequins (up to ${cap} pts)`,
+        "Reaper’s Wager"
       );
     } else {
       const cap = [250, 500, 750][tier];
@@ -329,7 +338,8 @@ export function subPointsList(
       'BB',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('ASTRA MILITARUM') || d.keywords.includes('ASTRA MILITARUM')),
-      `Brood Brothers: Astra Militarum units in Brood Brother Auxilia (up to ${cap} pts)`
+      `Brood Brothers: Astra Militarum units in Brood Brother Auxilia (up to ${cap} pts)`,
+      'Brood Brother Auxilia'
     );
   }
 
@@ -347,7 +357,8 @@ export function subPointsList(
       'TY',
       cap,
       (_u, d) => !!d && (d.factionKeywords.includes('TYRANIDS') || d.keywords.includes('TYRANIDS')),
-      `Tyranids: Vanguard Invader units in Final Day (up to ${cap} pts)`
+      `Tyranids: Vanguard Invader units in Final Day (up to ${cap} pts)`,
+      'Final Day'
     );
   }
 
@@ -364,7 +375,8 @@ export function subPointsList(
       'AM',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('ADEPTUS MECHANICUS') || d.keywords.includes('ADEPTUS MECHANICUS')),
-      `Mechanicus Allies: Adeptus Mechanicus units in Questor Forgepact (up to 500 pts)`
+      `Mechanicus Allies: Adeptus Mechanicus units in Questor Forgepact (up to 500 pts)`,
+      'Questor Forgepact'
     );
   }
 
@@ -381,7 +393,8 @@ export function subPointsList(
       'DH',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('DAMNED') || d.keywords.includes('DAMNED')),
-      `Wretched Thralls: Damned units in Iconoclast Fiefdom (up to 500 pts)`
+      `Wretched Thralls: Damned units in Iconoclast Fiefdom (up to 500 pts)`,
+      'Iconoclast Fiefdom'
     );
   }
 
@@ -398,7 +411,8 @@ export function subPointsList(
       'DW',
       500,
       (_u, d) => !!d && (d.factionKeywords.includes('DEATHWATCH') || d.keywords.includes('DEATHWATCH')),
-      `Deathwatch Allies: Deathwatch units in Deathwatch Support (up to 500 pts)`
+      `Deathwatch Allies: Deathwatch units in Deathwatch Support (up to 500 pts)`,
+      'Deathwatch Support'
     );
   }
 
@@ -431,7 +445,8 @@ export function subPointsList(
         kw.slice(0, 2).toUpperCase(),
         cap,
         (_u, d) => !!d && (d.factionKeywords.some((k) => k.toUpperCase().includes(kw.toUpperCase())) || d.keywords.some((k) => k.toUpperCase().includes(kw.toUpperCase()))),
-        `${det.name}: ${rule.name} (up to ${cap} pts)`
+        `${det.name}: ${rule.name} (up to ${cap} pts)`,
+        det.name
       );
     }
   }

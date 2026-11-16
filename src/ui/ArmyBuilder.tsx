@@ -499,6 +499,19 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
   const taxes = useMemo(() => (faction ? dupTaxes(list, faction) : new Map<string, number>()), [list, faction]);
   const ptsOf = (u: ArmyUnitEntry) => unitPoints(u) + (taxes.get(u.uid) ?? 0) + (faction ? extremisPoints(u, list, faction) : 0);
   const subPoints = useMemo(() => subPointsList(list, faction, size.points, ptsOf), [list, faction, size.points]);
+  const visibleSubPoints = useMemo(() => {
+    return subPoints.filter((sp) => {
+      // 1. If actively being used (spent > 0), show it ("ขึ้นแค่ตอนกดใช้")
+      if (sp.spent > 0) return true;
+      // 2. Or if it is granted by an active Detachment rule ("หรือตามกฎ Detachment เท่านั้นอ่ะ")
+      if (sp.fromDetachment) {
+        const normDet = sp.fromDetachment.toLowerCase().replace(/’/g, "'");
+        return list.detachments.some((d) => d.toLowerCase().replace(/’/g, "'") === normDet);
+      }
+      // If not selected/used, don't show ("ถ้ายังไม่ได้เลือก ก็ไม่ต้อง")
+      return false;
+    });
+  }, [subPoints, list.detachments]);
   const sheetOf = (name: string) => faction?.datasheets.find((d) => d.name === name);
   const factionName = index?.factions.find((f) => f.id === list.factionId)?.name ?? faction?.name ?? list.factionId;
   const subs = faction?.subfactions;
@@ -1794,9 +1807,9 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>
         </div>
         <div className="ab-top-right">
-          {subPoints.length > 0 && (
+          {visibleSubPoints.length > 0 && (
             <div className="ab-sub-totals" aria-label="Allied and detachment point caps">
-              {subPoints.map((sp) => (
+              {visibleSubPoints.map((sp) => (
                 <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
                   <span className="ab-sub-name-full">{sp.label}:</span>
                   <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
