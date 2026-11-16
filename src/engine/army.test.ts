@@ -306,3 +306,89 @@ describe('per-model loadouts when models share a profile name', () => {
     expect(smKeywords).toContain('WULFEN');
   });
 });
+
+describe('Red Corsairs Raiders wargear options', () => {
+  const CSM = JSON.parse(fs.readFileSync('public/data/factions/CSM.json', 'utf8')) as FactionData;
+  const raiders = CSM.datasheets.find((d) => d.name === 'Red Corsairs Raiders')!;
+
+  it('has correct structured wargear options for champion and squad upgrades', () => {
+    expect(raiders).toBeDefined();
+    expect(raiders.wargearOptions?.length).toBe(3);
+
+    const [optChamp, optMelta, optFist] = raiders.wargearOptions!;
+    expect(optChamp.who).toBe('Red Corsairs Raider Champion');
+    expect(optChamp.replace).toEqual(['Bolt pistol']);
+    expect(optChamp.choices).toEqual([['Hand flamer']]);
+    expect(optChamp.scope).toBe('one');
+
+    expect(optMelta.who).toBe('Red Corsairs Raider');
+    expect(optMelta.replace).toEqual(['Boltgun']);
+    expect(optMelta.choices).toEqual([['Meltagun']]);
+    expect(optMelta.scope).toBe('perN');
+    expect(optMelta.per).toBe(5);
+    expect(optMelta.max).toBe(1);
+
+    expect(optFist.who).toBe('Red Corsairs Raider');
+    expect(optFist.replace).toEqual(['Reaver’s blade']);
+    expect(optFist.choices).toEqual([['Power fist']]);
+    expect(optFist.scope).toBe('perN');
+    expect(optFist.per).toBe(5);
+    expect(optFist.max).toBe(1);
+  });
+
+  it('5 models: allows 1 Hand flamer on Champion, 1 Meltagun and 1 Power fist on Raiders', async () => {
+    const { wargearMax } = await import('./army');
+    const [optChamp, optMelta, optFist] = raiders.wargearOptions!;
+
+    expect(wargearMax(raiders, optChamp, 5)).toBe(1);
+    expect(wargearMax(raiders, optMelta, 5)).toBe(1);
+    expect(wargearMax(raiders, optFist, 5)).toBe(1);
+
+    const legal5 = {
+      uid: 'rc5',
+      datasheet: 'Red Corsairs Raiders',
+      models: 5,
+      pts: 80,
+      wargear: [
+        { opt: 0, choice: 0, count: 1 },
+        { opt: 1, choice: 0, count: 1 },
+        { opt: 2, choice: 0, count: 1 },
+      ],
+    };
+    expect(wargearProblems(raiders, legal5)).toEqual([]);
+
+    // 2 Meltaguns at 5 models is invalid
+    const illegal5 = {
+      uid: 'rc5_illegal',
+      datasheet: 'Red Corsairs Raiders',
+      models: 5,
+      pts: 80,
+      wargear: [{ opt: 1, choice: 0, count: 2 }],
+    };
+    expect(wargearProblems(raiders, illegal5).length).toBeGreaterThan(0);
+    expect(syncWargear(raiders, illegal5).wargear?.find((p) => p.opt === 1)?.count).toBe(1);
+  });
+
+  it('10 models: allows 1 Hand flamer on Champion, up to 2 Meltaguns and 2 Power fists on Raiders', async () => {
+    const { wargearMax } = await import('./army');
+    const [optChamp, optMelta, optFist] = raiders.wargearOptions!;
+
+    expect(wargearMax(raiders, optChamp, 10)).toBe(1);
+    expect(wargearMax(raiders, optMelta, 10)).toBe(2);
+    expect(wargearMax(raiders, optFist, 10)).toBe(2);
+
+    const legal10 = {
+      uid: 'rc10',
+      datasheet: 'Red Corsairs Raiders',
+      models: 10,
+      pts: 160,
+      wargear: [
+        { opt: 0, choice: 0, count: 1 },
+        { opt: 1, choice: 0, count: 2 },
+        { opt: 2, choice: 0, count: 2 },
+      ],
+    };
+    expect(wargearProblems(raiders, legal10)).toEqual([]);
+  });
+});
+

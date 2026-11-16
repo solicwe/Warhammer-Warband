@@ -494,6 +494,56 @@
      "T": 5
     }
    ],
+   "options": [
+    "The Red Corsairs Raider Champion’s bolt pistol can be replaced with 1 hand flamer.",
+    "For every 5 models in this unit, 1 Red Corsairs Raider’s boltgun can be replaced with 1 meltagun.",
+    "For every 5 models in this unit, 1 Red Corsairs Raider’s reaver’s blade can be replaced with 1 power fist."
+   ],
+   "wargearOptions": [
+    {
+     "text": "The Red Corsairs Raider Champion’s bolt pistol can be replaced with 1 hand flamer.",
+     "scope": "one",
+     "who": "Red Corsairs Raider Champion",
+     "replace": [
+      "Bolt pistol"
+     ],
+     "choices": [
+      [
+       "Hand flamer"
+      ]
+     ]
+    },
+    {
+     "text": "For every 5 models in this unit, 1 Red Corsairs Raider’s boltgun can be replaced with 1 meltagun.",
+     "scope": "perN",
+     "who": "Red Corsairs Raider",
+     "replace": [
+      "Boltgun"
+     ],
+     "choices": [
+      [
+       "Meltagun"
+      ]
+     ],
+     "per": 5,
+     "max": 1
+    },
+    {
+     "text": "For every 5 models in this unit, 1 Red Corsairs Raider’s reaver’s blade can be replaced with 1 power fist.",
+     "scope": "perN",
+     "who": "Red Corsairs Raider",
+     "replace": [
+      "Reaver’s blade"
+     ],
+     "choices": [
+      [
+       "Power fist"
+      ]
+     ],
+     "per": 5,
+     "max": 1
+    }
+   ],
    "weapons": [
     {
      "name": "Bolt pistol",
