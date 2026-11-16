@@ -84,6 +84,9 @@ Hand-written factions (SM, ORK, CSM, WE, EC, TS, DG, AC, QI, QT, AoI) were check
 ## Owner-approved rule variations
 
 - Thousand Sons: a failed Ritual remains available to another eligible caster that still has an attempt.
+- Thousand Sons: the Rituals panel can be reopened from the Shooting phase after units have shot (owner request).
+- Defensive stratagems worded "just after an enemy unit has selected its targets" (e.g. Wrath of the Doomed) are
+  offered to a player in a window while the attack waits, before any dice; the bot uses them through its own logic.
 - Tzaangor Enlightened with Fatecaster Greatbows: Malign Trickery is offered once at the end of the opponent's
   Movement phase when an enemy is within 12" and the unit is not engaged.
 
