@@ -448,7 +448,7 @@ export const cloudPortraitCount = (): number => Object.keys(cloud).length;
 
 /** Re-render when portraits change; returns a version number usable as a memo key. */
 export function usePortraitsVersion() {
-  return useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version);
+  return useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version, () => version);
 }
 
 /** Read an image file, centre-crop to a square and shrink to 160px JPEG. */

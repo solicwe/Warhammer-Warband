@@ -344,19 +344,21 @@ button.disp-chip:disabled { cursor: default; opacity: 1; }
 .ab-sub-total.over b { color: var(--bad); }
 .ab-sub-name-short { display: none; }
 .ab-sub-name-tiny { display: none; }
+.ab-top-right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: none; }
 @media (max-width: 680px) {
-  .ab-top { gap: 3px; padding: 4px 6px; min-height: 44px; }
-  .ab-top .appbar-back-btn { min-width: 28px; min-height: 28px; padding: 0 4px; font-size: 14px; }
-  .ab-tabs { flex: 0 0 auto; gap: 2px; }
-  .ab-tabs button { font-size: 13px; padding: 6px 5px; white-space: nowrap; }
-  .ab-icon { width: 32px; height: 32px; font-size: 18px; }
-  .ab-total { padding: 0 4px; font-size: 14px; }
-  .ab-total small { font-size: 11px; }
-  .ab-sub-totals { flex: 1; min-width: 0; justify-content: flex-end; gap: 4px; overflow: hidden; }
-  .ab-sub-total { font-size: 11px; padding: 2px 6px; gap: 2px; }
+  .ab-top { gap: 4px; padding: 4px 6px; min-height: 44px; width: 100%; box-sizing: border-box; }
+  .ab-top .appbar-back-btn { min-width: 28px; min-height: 28px; padding: 0 4px; font-size: 14px; flex: none; }
+  .ab-tabs { flex: none; gap: 3px; }
+  .ab-tabs button { font-size: 13px; padding: 6px 6px; white-space: nowrap; }
+  .ab-top-right { margin-left: auto; display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; justify-content: flex-end; }
+  .ab-icon { width: 32px; height: 32px; font-size: 18px; flex: none; }
+  .ab-total { padding: 0 2px; font-size: 13px; white-space: nowrap; flex: none; }
+  .ab-total small { font-size: 10px; }
+  .ab-sub-totals { display: flex; align-items: center; gap: 3px; min-width: 0; flex-shrink: 1; overflow: hidden; justify-content: flex-end; }
+  .ab-sub-total { font-size: 10px; padding: 1px 5px; gap: 2px; }
   .ab-sub-name-full { display: none; }
   .ab-sub-name-short { display: none; }
-  .ab-sub-name-tiny { display: inline; font-size: 11px; font-weight: 700; opacity: 0.85; margin-right: 1px; }
+  .ab-sub-name-tiny { display: inline; font-size: 10px; font-weight: 700; opacity: 0.85; margin-right: 1px; }
   .ab-sub-unit { display: none; }
 }
 .ab-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 20px; }

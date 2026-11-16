@@ -1246,6 +1246,28 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       .map((r) => ({ r, c: embarkCheck(list, faction, r.uid, u.uid) })).filter(({ c }) => !c.why || c.full);
     // all eligible units that can embark in this transport (even if capacity exceeded, shown as full)
     const cargoShown = cargo;
+    const allFactionTransports = faction.datasheets.filter((d) => allowed(d) && parseTransport(d.transport));
+    const canRideInTransportSheet = (transSheet: DatasheetData) => {
+      const tInfo = parseTransport(transSheet.transport);
+      if (!tInfo) return false;
+      const groupSheets = [riderSheet, ...joined.map((j) => j.d)].filter((d): d is DatasheetData => !!d);
+      for (const sh of groupSheets) {
+        const fit = transportFit(tInfo, [...sh.keywords, ...sh.factionKeywords, sh.name]);
+        if (fit.why) return false;
+      }
+      return true;
+    };
+    const compatibleFactionTransports = isTransport ? [] : allFactionTransports.filter(canRideInTransportSheet);
+
+    const tInfoForThisTransport = parseTransport(sheet?.transport);
+    const canSquadRideInThis = (squadSheet: DatasheetData) => {
+      if (!tInfoForThisTransport || squadSheet.keywords.includes('TRANSPORT')) return false;
+      const fit = transportFit(tInfoForThisTransport, [...squadSheet.keywords, ...squadSheet.factionKeywords, squadSheet.name]);
+      return !fit.why;
+    };
+    const compatibleFactionSquads = isTransport && tInfoForThisTransport
+      ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canSquadRideInThis(d))
+      : [];
     const opts = sheet ? pointsOptions(sheet) : [];
     const isChar = !!sheet?.keywords.includes('CHARACTER')
       || (list.detachments.includes('Houndpack Lance') && !!sheet?.keywords.includes('WAR DOG'))
@@ -1413,12 +1435,34 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       content = (
         <>
           <div className="ab-pop-head">Embark · {u.datasheet} <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span></div>
-          {cargoShown.map(({ r, c }) => {
-            const on = r.embarkIn === u.uid;
-            return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} slots · tap to disembark` : c.full ? `No room: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : `${c.need} slots`,
-              on ? 'on' : c.full ? 'full' : '', !on && c.full,
-              () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); }, undefined, r);
-          })}
+          {cargoShown.length > 0 && (
+            <>
+              <div className="ab-pop-tier-title">Units in army</div>
+              {cargoShown.map(({ r, c }) => {
+                const on = r.embarkIn === u.uid;
+                return rideCard(r.uid, r.datasheet, names(r), on ? `${c.need} slots · tap to disembark` : c.full ? `No room: needs ${c.need}, ${Math.max(0, c.capacity - c.used)} left` : `${c.need} slots`,
+                  on ? 'on' : c.full ? 'full' : '', !on && c.full,
+                  () => { setUnit(r.uid, { embarkIn: on ? undefined : u.uid }); setNote(on ? `${r.datasheet} left ${u.datasheet}` : `${r.datasheet} starts embarked in ${u.datasheet}`); }, undefined, r);
+              })}
+            </>
+          )}
+          {compatibleFactionSquads.length > 0 && (
+            <>
+              <div className="ab-pop-tier-title">{cargoShown.length > 0 ? 'Add Squad to Transport' : 'Compatible Units to Embark'}</div>
+              {compatibleFactionSquads.map((d) => (
+                newCard(d, (models) => {
+                  const entry = newEntry(d, models, { embarkIn: u.uid });
+                  if (!entry) return;
+                  set({ units: [...list.units, entry] });
+                  setNote(`Added ${d.name} embarked in ${u.datasheet}`);
+                  close();
+                })
+              ))}
+            </>
+          )}
+          {cargoShown.length === 0 && compatibleFactionSquads.length === 0 && (
+            <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No compatible squads found.</div>
+          )}
         </>
       );
     } else if (pop.mode === 'embark') {
@@ -1427,7 +1471,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <div className="ab-pop-head">Start embarked · {rider.datasheet}{body ? ` (with ${body.datasheet})` : ''}</div>
           {rides.length > 0 && (
             <>
-              <div className="ab-pop-sub" style={{ padding: '4px 12px 2px', fontWeight: 700, color: 'var(--text-3)' }}>Transports in army:</div>
+              <div className="ab-pop-tier-title">Transports in army</div>
               {rides.map(({ t, c }) => {
                 const on = rider.embarkIn === t.uid;
                 return rideCard(
@@ -1447,8 +1491,29 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               })}
             </>
           )}
-          {rides.length === 0 && (
-            <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No compatible transports in your army.</div>
+          {compatibleFactionTransports.length > 0 && (
+            <>
+              <div className="ab-pop-tier-title">{rides.length > 0 ? 'Add Transport & Embark' : 'Available Transports'}</div>
+              {compatibleFactionTransports.map((d) => {
+                const cap = parseTransport(d.transport)?.capacity ?? 0;
+                return newCard(
+                  d,
+                  (models) => {
+                    const trans = newEntry(d, models);
+                    if (!trans) return;
+                    set({
+                      units: [...list.units, trans].map((x) => (x.uid === rider.uid ? { ...x, embarkIn: trans.uid } : x)),
+                    });
+                    setNote(`Added ${d.name}; ${rider.datasheet} embarked in it`);
+                    close();
+                  },
+                  cap > 0 ? `Capacity: ${cap} models` : undefined
+                );
+              })}
+            </>
+          )}
+          {rides.length === 0 && compatibleFactionTransports.length === 0 && (
+            <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No compatible transports found.</div>
           )}
         </>
       );
@@ -1520,7 +1585,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <Icon name="leave" size={22} />Disembark All
             </button>
           )}
-          {myLoad && cargo.length > 0 && (
+          {myLoad && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
               <Icon name="embark" size={22} />Embark <span className="ab-pop-val">{myLoad.used}/{myLoad.capacity}</span>
             </button>
@@ -1530,13 +1595,13 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
               <button type="button" onClick={() => { setUnit(rider.uid, { embarkIn: undefined }); setNote(`${rider.datasheet} left ${rideIn.datasheet}`); close(); }}>
                 <Icon name="leave" size={22} />Disembark <span className="ab-pop-val">{rideIn.datasheet}</span>
               </button>
-              {rides.length > 1 && (
+              {(rides.length > 1 || compatibleFactionTransports.length > 0) && (
                 <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
                   <Icon name="embark" size={22} />Change Transport
                 </button>
               )}
             </>
-          ) : rides.length > 0 && (
+          ) : (rides.length > 0 || compatibleFactionTransports.length > 0) && (
             <button type="button" onClick={() => setPop({ ...pop, mode: 'embark' })}>
               <Icon name="embark" size={22} />Embark
             </button>
@@ -1728,27 +1793,29 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>List</button>
           <button role="tab" aria-selected={tab === 'detachment'} className={tab === 'detachment' ? 'on' : ''} onClick={() => setTab('detachment')}>Detachment</button>
         </div>
-        {subPoints.length > 0 && (
-          <div className="ab-sub-totals" aria-label="Allied and detachment point caps">
-            {subPoints.map((sp) => (
-              <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
-                <span className="ab-sub-name-full">{sp.label}:</span>
-                <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
-                <span className="ab-sub-name-tiny">{sp.tinyLabel ?? sp.shortLabel?.[0] ?? ''}:</span>
-                <span className="ab-sub-val">
-                  <b>{sp.spent}</b>/{sp.cap}
-                  <small className="ab-sub-unit"> {sp.unit ?? 'pts'}</small>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
-        <button type="button" className="ab-icon" aria-label="Share army list" onClick={share}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
-          </svg>
-        </button>
+        <div className="ab-top-right">
+          {subPoints.length > 0 && (
+            <div className="ab-sub-totals" aria-label="Allied and detachment point caps">
+              {subPoints.map((sp) => (
+                <div key={sp.id} className={`ab-sub-total ${sp.over ? 'over' : ''}`} title={sp.title}>
+                  <span className="ab-sub-name-full">{sp.label}:</span>
+                  <span className="ab-sub-name-short">{sp.shortLabel ?? sp.label}:</span>
+                  <span className="ab-sub-name-tiny">{sp.tinyLabel ?? sp.shortLabel?.[0] ?? ''}:</span>
+                  <span className="ab-sub-val">
+                    <b>{sp.spent}</b>/{sp.cap}
+                    <small className="ab-sub-unit"> {sp.unit ?? 'pts'}</small>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={`ab-total ${pts > size.points ? 'over' : ''}`}>{pts}/{size.points}<small> pts</small></div>
+          <button type="button" className="ab-icon" aria-label="Share army list" onClick={share}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+            </svg>
+          </button>
+        </div>
       </header>
       <div className="ab-body">
         {tab === 'list' && (

@@ -310,6 +310,17 @@ export function DatasheetView({
       <Weapons weapons={sheet.weapons} counts={counts} />
       {(sheet.options ?? []).length > 0 && <details><summary className="small">Wargear options</summary>{(sheet.options ?? []).map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       {renderAbilitiesContent(sheet.abilities, probe, sheet.name, rulesFaction, names, sheet.damaged)}
+      {sheet.transport && (
+        <div className="ds-sec-transport" style={{ marginTop: 6 }}>
+          <div className="ds-sec" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icon name="embark" size={14} />
+            <span>TRANSPORT</span>
+          </div>
+          <div className="ds-ab" style={{ paddingTop: 4 }}>
+            <Em text={sheet.transport} names={names} />
+          </div>
+        </div>
+      )}
       {!more && <button type="button" className="ab-moreinfo ds-more" onClick={() => setMore(true)}>MORE INFO <Icon name="down" size={18} /></button>}
       {more && (
         <>
