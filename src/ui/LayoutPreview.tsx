@@ -140,6 +140,23 @@ function DimensionLine({
   );
 }
 
+/** Does the segment cross or start inside the polygon? */
+function segHitsPoly(x1: number, y1: number, x2: number, y2: number, poly: number[][]): boolean {
+  const ccw = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) => (cy - ay) * (bx - ax) - (by - ay) * (cx - ax);
+  for (let i = 0; i < poly.length; i++) {
+    const [px, py] = poly[i];
+    const [qx, qy] = poly[(i + 1) % poly.length];
+    if (ccw(x1, y1, x2, y2, px, py) * ccw(x1, y1, x2, y2, qx, qy) < 0 && ccw(px, py, qx, qy, x1, y1) * ccw(px, py, qx, qy, x2, y2) < 0) return true;
+  }
+  let inside = false; // the start point inside the polygon (ray casting)
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if ((yi > y1) !== (yj > y1) && x1 < ((xj - xi) * (y1 - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 /** Inches to the nearest half, without a trailing ".0". */
 const fmtNum = (v: number) => String(Math.round(v * 2) / 2);
 
@@ -521,17 +538,22 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
 
       {/* 9. Measurements: each terrain area is placed from the table edges ("x + y", the way the official cards give it),
              and the deployment depths come from the zones themselves */}
-      {/* one line, one distance: from the table edge to the terrain area (long edge across, short edge up or down) */}
-      {terrainBoxes.filter(({ bb }) => bb.w >= 2 || bb.h >= 2).flatMap(({ idx, bb }) => {
+      {/* one line, one distance, from the table edge to a terrain area; only for the bigger areas and only when the line
+          reaches the area without passing through another one */}
+      {terrainBoxes.filter(({ bb }) => bb.w >= 3 || bb.h >= 3).flatMap(({ idx, bb }) => {
         const toLeft = bb.minX <= 44 - bb.maxX;
         const toTop = bb.minY <= 60 - bb.maxY;
         const dx = toLeft ? bb.minX : 44 - bb.maxX;
         const dy = toTop ? bb.minY : 60 - bb.maxY;
         const hy = Math.min(Math.max(bb.cy, bb.minY + 0.6), bb.maxY - 0.6);
         const vx = Math.min(Math.max(bb.cx, bb.minX + 0.6), bb.maxX - 0.6);
+        const others = terrainBoxes.filter((o) => o.idx !== idx).map((o) => o.terrain.poly);
+        const clear = (x1: number, y1: number, x2: number, y2: number) => !others.some((poly) => segHitsPoly(x1, y1, x2, y2, poly));
+        const hx1 = toLeft ? 0 : bb.maxX, hx2 = toLeft ? bb.minX : 44;
+        const vy1 = toTop ? 0 : bb.maxY, vy2 = toTop ? bb.minY : 60;
         return [
-          dx >= 1.5 && <DimensionLine key={`h${idx}`} x1={toLeft ? 0 : bb.maxX} y1={hy} x2={toLeft ? bb.minX : 44} y2={hy} label={fmtNum(dx)} textSide="top" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
-          dy >= 1.5 && <DimensionLine key={`v${idx}`} x1={vx} y1={toTop ? 0 : bb.maxY} x2={vx} y2={toTop ? bb.minY : 60} label={fmtNum(dy)} textSide="right" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
+          dx >= 2 && clear(hx1, hy, hx2, hy) && <DimensionLine key={`h${idx}`} x1={hx1} y1={hy} x2={hx2} y2={hy} label={fmtNum(dx)} textSide="top" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
+          dy >= 2 && clear(vx, vy1, vx, vy2) && <DimensionLine key={`v${idx}`} x1={vx} y1={vy1} x2={vx} y2={vy2} label={fmtNum(dy)} textSide="right" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
         ];
       })}
       {/* deployment depths, from the zones themselves: across the table edges the zone starts from */}
