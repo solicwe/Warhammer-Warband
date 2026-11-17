@@ -3815,7 +3815,7 @@ select option {
 
 
 /* Terrain layout card (Tabletop > Inspect Layout): navy title bar, sides row, parchment map, legend */
-.layout-card { background: #ede7d8; color: #1f2937; border-radius: 12px; overflow: hidden; border: 1px solid #1b2a41; }
+.layout-card { flex-shrink: 0; background: #ede7d8; color: #1f2937; border-radius: 12px; overflow: hidden; border: 1px solid #1b2a41; }
 .layout-card-head { position: relative; background: #1b3a5f; color: #fff; padding: 12px 44px 12px 14px; }
 .layout-card-kicker { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; }
 .layout-card-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }

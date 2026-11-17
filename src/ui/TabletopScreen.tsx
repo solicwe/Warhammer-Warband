@@ -2279,7 +2279,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
               <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
               <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
-              <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White Lines:</span> Table Tape Offsets</div>
+              <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>Yellow Lines:</span> Distance from the table edge</div>
             </div>
 
             <button className="btn ghost" style={{ minHeight: 40, marginTop: 4 }} onClick={() => setZoomMap(false)}>
@@ -2298,7 +2298,7 @@ export function TabletopScreen({ index, onBack }: Props) {
         >
           <div
             className="modal-card"
-            style={{ maxWidth: 680, width: '96vw', maxHeight: '96vh', overflowY: 'auto', padding: 16, background: 'var(--surface-1)', borderRadius: 12, border: '1px solid var(--line-2)' }}
+            style={{ maxWidth: 680, width: '96vw', maxHeight: '96vh', overflowY: 'auto', padding: 16, background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--line-2)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -2319,7 +2319,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone</div>
               <div><span style={{ color: 'var(--p0)', fontWeight: 700 }}>Blue:</span> Defender Zone</div>
               <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal:</span> Expansion Objs</div>
-              <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White:</span> Tape Offsets</div>
+              <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>Yellow:</span> Distance from the table edge</div>
             </div>
 
             <button className="btn ghost grow" style={{ width: '100%', minHeight: 40, marginTop: 14 }} onClick={() => setZoomLayout(null)}>
