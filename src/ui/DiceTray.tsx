@@ -3,7 +3,7 @@ import { freeDiceNow } from '../rules-engine/activations';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
-import { rerollable } from '../engine/attack';
+import { precisionOptions, rerollable } from '../engine/attack';
 import { canPerformActOfFaith } from '../factions/sororitas';
 import { canUseFateDie } from '../factions/aeldari';
 import { Icon } from './Icon';
@@ -30,6 +30,8 @@ interface Props {
   /** players run by the bot: their re-rolls and stratagems are the bot's own decisions, no buttons for them */
   botSides?: (0 | 1)[];
   /** Command Re-roll on the random number of attacks (now), or on the next low damage roll (a switch) */
+  /** [PRECISION]: pick which CHARACTER of a unit with several takes the attacks */
+  onPrecision?: (modelId: string) => void;
   onCR?: (what: 'attacks' | 'damage') => void;
   /** substitute a die using an Act of Faith (Sororitas) or Strands of Fate (Aeldari) */
   onActOfFaith?: (stage: 'hit' | 'wound' | 'save', index: number, value: number, isDefender: boolean, isFate: boolean) => void;
@@ -59,7 +61,7 @@ function DiceRow({ dice, cls, pick, onPick, picked }: { dice: Die[]; cls: (d: Di
   );
 }
 
-export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [], onCR, onActOfFaith }: Props) {
+export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratFor = [0, 1], onFree, onPick, auto, botSides = [], onCR, onActOfFaith, onPrecision }: Props) {
   const at = s.attack!;
   const [rr, setRr] = useState<null | 'hit' | 'wound' | 'save'>(null);
   const [fd, setFd] = useState<string | null>(null); // free die being used: tap the die
@@ -516,6 +518,19 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                     </div>
                     {st === 'save' && !pending && !attackerBot && renderFaithButtons('wound', false)}
                     {st === 'save' && !pending && !attackerBot && freeButtons('wound')}
+                    {onPrecision && (st === 'save' || st === 'damage') && !attackerBot && (p.precision || p.precisionOnCrit) && (() => {
+                      const opts = precisionOptions(s, at, T);
+                      if (opts.length < 2) return null;
+                      const cur = opts.find((g) => g.models[0].id === p.precisionTarget) ?? opts[0];
+                      return (
+                        <div className="precision-pick">
+                          <span className="muted small">Precision target:</span>
+                          {opts.map((g) => (
+                            <button key={g.models[0].id} className={`btn small ${g === cur ? 'on' : ''}`} onClick={() => onPrecision(g.models[0].id)}>{g.models[0].name}</button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     {st === 'save' && !pending && !attackerBot && (
                       <button
                         className={`btn small ${rr === 'wound' ? 'on' : ''}`}

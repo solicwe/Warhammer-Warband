@@ -597,6 +597,7 @@ export interface Pool {
   devastating: boolean;
   twinLinked: boolean;
   precision: boolean;
+  precisionTarget?: string; // the attacker picked this CHARACTER model for its [PRECISION] attacks (default: the first one it sees)
   precisionOnCrit?: boolean; // only attacks that scored a critical hit have [PRECISION]
   noHazard?: boolean; // hazardous tests automatically passed
   ap: number;

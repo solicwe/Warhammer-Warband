@@ -51,7 +51,7 @@ const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
-import { endUnitShooting, rerollAttackCount, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
+import { endUnitShooting, rerollAttackCount, setPrecisionTarget, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
 import { officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
 import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../ai/deploy';
@@ -4146,6 +4146,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           onReroll={onReroll}
           onActOfFaith={onActOfFaith}
           onFree={(k, i) => { const e = act((g) => useFreeDie(g, k, i)); if (e) flash(e); }}
+          onPrecision={(id) => act((g) => setPrecisionTarget(g, id))}
           onSkip={() => {
             const at = s.attack;
             if (!at) return;

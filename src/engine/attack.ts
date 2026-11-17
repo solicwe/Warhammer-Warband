@@ -996,6 +996,19 @@ export function rollSavesAndDamage(s: GameState) {
   p.mortalFromDev = Array.from({ length: devCrits }, () => 0);
 }
 
+/** The CHARACTER models [PRECISION] attacks can pick: those some attacking model sees (any, in a fight). */
+export function precisionOptions(s: GameState, at: AttackSession, T: UnitState): Group[] {
+  const A = unitById(s, at.attackerId);
+  return allocationGroups(T).filter((g) => g.char && alive(A).some((am) => modelVisible(s, am, T, g.models[0]) || at.kind === 'fight'));
+}
+
+/** Pick which CHARACTER the current pool's [PRECISION] attacks go to. */
+export function setPrecisionTarget(s: GameState, modelId: string) {
+  const at = s.attack;
+  const p = at?.pools[at.idx];
+  if (p) p.precisionTarget = modelId;
+}
+
 export function applyDamage(s: GameState) {
   const at = s.attack!;
   const p = at.pools[at.idx];
@@ -1004,7 +1017,7 @@ export function applyDamage(s: GameState) {
   const before = alive(T).length;
   const groups = allocationGroups(T);
   let precisionGroup: Group | undefined;
-  if (p.precision || p.precisionOnCrit) precisionGroup = groups.find((g) => g.char && alive(A).some((am) => modelVisible(s, am, T, g.models[0]) || at.kind === 'fight'));
+  if (p.precision || p.precisionOnCrit) precisionGroup = precisionOptions(s, at, T).find((g) => g.models[0].id === p.precisionTarget) ?? precisionOptions(s, at, T)[0];
   // [PRECISION] only on critical hits: that many of the attacks may pick a CHARACTER
   let precise = p.precision ? Infinity : p.precisionOnCrit ? p.hits.filter((h) => h.o === 'crit').length : 0;
   const order = p.saves.map((d, i) => ({ d, i })).sort((x, y) => x.d.v - y.d.v);
