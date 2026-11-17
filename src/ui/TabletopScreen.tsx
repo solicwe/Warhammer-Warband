@@ -365,7 +365,7 @@ export function TabletopScreen({ index, onBack }: Props) {
 
       if (type === 'deploy') {
         setAttackerPlayer(winner);
-        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and deploys first (Attacker)!` });
+        setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and is the Attacker (the Defender sets up first)!` });
       } else {
         setFirstTurnPlayer(winner);
         setRollResult({ p0: r0, p1: r1, reason: `${winnerName} rolled higher (${r0} vs ${r1}) and takes Turn 1!` });
@@ -1049,7 +1049,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>3. Roll-Off & Turn Order</h3>
                 <p className="tiny muted" style={{ margin: 0 }}>
-                  Roll D6 to determine deployment priority (Attacker) and Turn 1 order.
+                  Roll D6: the winner decides who is the Attacker and who is the Defender (the Defender sets up first), then roll for Turn 1.
                 </p>
               </div>
 
@@ -1106,8 +1106,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="card" style={{ padding: '14px', background: 'var(--surface)', border: '1px solid var(--line-2)', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <b style={{ fontSize: 14 }}>1. Deployment Order (Attacker)</b>
-                    <div className="tiny muted">The Attacker deploys their entire army first.</div>
+                    <b style={{ fontSize: 14 }}>1. Attacker and Defender</b>
+                    <div className="tiny muted">The roll-off winner is the Attacker here. The Defender sets up the first unit, then players alternate one unit at a time (a TITANIC unit means skipping your next turn).</div>
                   </div>
                   <button
                     className="btn primary"
@@ -1126,7 +1126,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                     style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setAttackerPlayer(0)}
                   >
-                    {p0Name} Deploys 1st (Attacker)
+                    {p0Name} is the Attacker
                   </button>
                   <button
                     type="button"
@@ -1134,7 +1134,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                     style={{ flex: 1, minHeight: 40, fontSize: 12.5, fontWeight: 700 }}
                     onClick={() => setAttackerPlayer(1)}
                   >
-                    {p1Name} Deploys 1st (Attacker)
+                    {p1Name} is the Attacker
                   </button>
                 </div>
               </div>
@@ -1180,7 +1180,7 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--line-2)', fontSize: 12.5, lineHeight: 1.5 }}>
                 <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 4 }}>Battle Configuration:</div>
                 <div><b>Layout:</b> Layout {curLayout.number} ({deploymentName(curLayout.deployment)})</div>
-                <div><b>Attacker (Deploy 1st):</b> {attackerPlayer === 0 ? p0Name : p1Name} ({attackerPlayer === 0 ? p0Faction : p1Faction})</div>
+                <div><b>Attacker:</b> {attackerPlayer === 0 ? p0Name : p1Name} ({attackerPlayer === 0 ? p0Faction : p1Faction})</div>
                 <div><b>Defender:</b> {attackerPlayer === 0 ? p1Name : p0Name} ({attackerPlayer === 0 ? p1Faction : p0Faction})</div>
                 <div><b>First Turn:</b> {firstTurnPlayer === 0 ? p0Name : p1Name}</div>
               </div>
@@ -2083,7 +2083,7 @@ export function TabletopScreen({ index, onBack }: Props) {
           {/* Deployment & Matchup Info */}
           <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)', fontSize: 12.5, lineHeight: 1.5 }}>
             <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Match Parameters</div>
-            <div><b>Attacker (Deploys first):</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
+            <div><b>Attacker:</b> {attackerPlayer === 0 ? players[0].name : players[1].name}</div>
             <div><b>Defender:</b> {attackerPlayer === 0 ? players[1].name : players[0].name}</div>
             <div><b>First Turn (Turn 1):</b> {firstTurnPlayer === 0 ? players[0].name : players[1].name}</div>
             <div><b>Active Turn:</b> {activeP.name} (Round {round}, Turn {turnInRound + 1}/2)</div>

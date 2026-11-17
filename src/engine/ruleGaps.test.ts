@@ -177,3 +177,23 @@ describe('Deploy Armies: TITANIC', () => {
     expect(s.deployTurn).toBe(0);
   });
 });
+
+describe('Deploy Armies: a real TITANIC datasheet', () => {
+  it('after a Stompa is set up its owner skips the next turn, then the turns alternate again', () => {
+    const s = game([['Rubric Marines', 5], ['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Stompa', 1], ['Boyz', 10], ['Boyz', 10]], 'Brute Bosses');
+    s.phase = 'deploy'; s.turn = 0; s.round = 0;
+    for (const u of s.units) u.status = 'pending';
+    const stompa = s.units.find((u) => u.name.includes('Stompa'))!;
+    expect(stompa.keywords.includes('TITANIC')).toBe(true);
+    const set = (u: typeof stompa) => { const pos = findPlacement(s, u, 'deploy'); expect(pos).toBeTruthy(); expect(deployUnit(s, u.id, pos!).ok).toBe(true); };
+    const opp = 1 - stompa.owner;
+    s.deployTurn = stompa.owner;
+    set(stompa);
+    expect(s.deployTurn).toBe(opp);
+    const [a, b] = s.units.filter((u) => u.owner === opp);
+    set(a);
+    expect(s.deployTurn).toBe(opp); // the Stompa's owner skips
+    set(b);
+    expect(s.deployTurn).toBe(stompa.owner);
+  });
+});

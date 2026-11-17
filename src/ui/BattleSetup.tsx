@@ -200,16 +200,16 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
             </div>
           ) : <div className="small muted">Loading armies…</div>}
           <div className="map-head">
-            <span className="small">{allMaps ? `All ${LAYOUTS.length} official layouts` : 'Official layouts for this pairing'}</span>
-            <button type="button" className="btn small ghost" onClick={() => { setAllMaps((v) => !v); setMapDeploy(''); }}>{allMaps ? 'This pairing only' : `All maps`}</button>
+            <span className="small">{allMaps ? (mapDeploy ? `${deploymentName(mapDeploy)}: ${LAYOUTS.filter((l) => l.deployment === mapDeploy).length} official layouts` : `All ${LAYOUTS.length} official layouts`) : 'Official layouts for this pairing'}</span>
           </div>
-          {allMaps && (
-            <div className="map-filter">
-              {['', ...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
-                <button key={d || 'all'} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(d)}>{d ? deploymentName(d) : 'All'}</button>
-              ))}
-            </div>
-          )}
+          {/* the six deployments: pick one to see its layouts (any pairing), or go back to this pairing's own three */}
+          <div className="map-filter">
+            <button type="button" className={`chip ${!allMaps ? 'on' : ''}`} onClick={() => { setAllMaps(false); setMapDeploy(''); }}>This pairing</button>
+            {[...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
+              <button key={d} type="button" className={`chip ${allMaps && mapDeploy === d ? 'on' : ''}`} onClick={() => { setAllMaps(true); setMapDeploy(d); }}>{deploymentName(d)}</button>
+            ))}
+            <button type="button" className={`chip ${allMaps && !mapDeploy ? 'on' : ''}`} onClick={() => { setAllMaps(true); setMapDeploy(''); }}>All</button>
+          </div>
           <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
             <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
               <div className="layout-random">?</div><span>Random</span>
