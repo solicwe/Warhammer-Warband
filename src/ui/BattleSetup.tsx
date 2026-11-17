@@ -211,22 +211,38 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
             <button type="button" className={`chip ${!allMaps ? 'on' : ''}`} onClick={() => setAllMaps(false)}>This pairing</button>
             <button type="button" className={`chip ${allMaps ? 'on' : ''}`} onClick={() => setAllMaps(true)}>All</button>
           </div>
-          <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
-            <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
-              <div className="layout-random">?</div><span>Random</span>
-            </button>
-            {/* a small empty table for trying out shooting */}
-            <button type="button" className={`layout-opt ${prefs.layoutPick === TEST_RANGE.id ? 'on' : ''}`} onClick={() => set({ layoutPick: TEST_RANGE.id })}>
-              <LayoutPreview layout={TEST_RANGE} width={64} />
-              <span>Test range · 24" × 30", no terrain</span>
-            </button>
-            {(allMaps ? LAYOUTS : pairingMaps).map((l) => (
+          {(() => {
+            const opt = (l: (typeof LAYOUTS)[number], label: string) => (
               <button key={l.id} type="button" className={`layout-opt ${prefs.layoutPick === l.id ? 'on' : ''}`} onClick={() => set({ layoutPick: l.id })}>
                 <LayoutPreview layout={l} width={64} />
-                <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : l.matchup[0] === d0 && l.matchup[1] === d1 || l.matchup[0] === d1 && l.matchup[1] === d0 ? `#${l.number} ${deploymentName(l.deployment)}` : `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}`}</span>
+                <span>{label}</span>
               </button>
-            ))}
-          </div>
+            );
+            const from = (l: (typeof LAYOUTS)[number]) => `${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}`;
+            const own = (l: (typeof LAYOUTS)[number]) => (l.matchup[0] === d0 && l.matchup[1] === d1) || (l.matchup[0] === d1 && l.matchup[1] === d0);
+            return (
+              <>
+                <div className="layout-pick">
+                  <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
+                    <div className="layout-random">?</div><span>Random</span>
+                  </button>
+                  {/* a small empty table for trying out shooting */}
+                  <button type="button" className={`layout-opt ${prefs.layoutPick === TEST_RANGE.id ? 'on' : ''}`} onClick={() => set({ layoutPick: TEST_RANGE.id })}>
+                    <LayoutPreview layout={TEST_RANGE} width={64} />
+                    <span>Test range · 24" × 30", no terrain</span>
+                  </button>
+                  {!allMaps && pairingMaps.map((l) => opt(l, own(l) ? `#${l.number} ${deploymentName(l.deployment)}` : `${deploymentName(l.deployment)} · ${from(l)}`))}
+                </div>
+                {/* all maps, one block for each deployment */}
+                {allMaps && [...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) => (
+                  <div key={dep} className="layout-group">
+                    <div className="layout-group-title">{deploymentName(dep)} <span className="tiny muted">{LAYOUTS.filter((l) => l.deployment === dep).length} maps</span></div>
+                    <div className="layout-pick wrap">{LAYOUTS.filter((l) => l.deployment === dep).map((l) => opt(l, from(l)))}</div>
+                  </div>
+                ))}
+              </>
+            );
+          })()}
           <div className="field">
             <span id="length">Battle length</span>
             <div className="seg" role="radiogroup" aria-labelledby="length">

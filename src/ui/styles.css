@@ -317,9 +317,11 @@ button.disp-chip:disabled { cursor: default; opacity: 1; }
 .map-filter .chip { padding: 6px 10px; border-color: var(--line-2); background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer; }
 .map-filter .chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
 .layout-pick { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: thin; }
-.layout-pick.wrap { flex-wrap: wrap; overflow-x: visible; max-height: 420px; overflow-y: auto; }
+.layout-pick.wrap { flex-wrap: wrap; overflow-x: visible; }
+.layout-group { margin-top: 10px; }
+.layout-group-title { font-weight: 700; font-size: 13px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; }
 .layout-opt { flex: none; width: 88px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: 500 11.5px/1.2 var(--font-ui); cursor: pointer; }
-.layout-pick.wrap .layout-opt { width: 98px; }
+.layout-pick.wrap .layout-opt { width: calc((100% - 24px) / 4); min-width: 76px; }
 .layout-opt.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .layout-opt span { text-align: center; }
 .layout-random { width: 64px; height: 87px; display: grid; place-items: center; background: var(--sunk); border-radius: 3px; font: 600 30px var(--font-cond); color: var(--text-3); }
