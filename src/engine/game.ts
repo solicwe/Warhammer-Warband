@@ -706,16 +706,18 @@ export function modelCanFitWhollyInZone(m: Body, zone: Pt[]): boolean {
   return false;
 }
 
-export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate'): MoveCheck {
+/** `only`: check just that model (no coherency, overlap or engagement checks): the quick filter nudgePlacement runs on every trial spot. */
+export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>, how: 'deploy' | 'ingress' | 'deepStrike' | 'infiltrate', only?: string): MoveCheck {
   const W = tableW(s), H = tableH(s);
   const errors: string[] = [];
   const bad = new Set<string>();
-  endChecks(s, u, pos, errors, bad);
+  if (!only) endChecks(s, u, pos, errors, bad);
   const enemies = boardUnits(s, other(u.owner));
   const enemyZone = zoneOf(s, other(u.owner));
   const fl = how === 'deploy' ? null : unitFlags(s, u); // worked out once, not per model
   const omnis = how === 'ingress' || how === 'deepStrike' ? enemies.map((e) => ({ e, omni: unitFlags(s, e).omniScrambler })).filter((x) => x.omni) : [];
   for (const m of alive(u)) {
+    if (only && m.id !== only) continue;
     const p = pos.get(m.id) ?? m;
     // a Titan's footprint can be wider than a 12" deployment strip: its centre in the zone is enough only if it physically cannot fit wholly
     const zone = zoneOf(s, u.owner);
@@ -757,7 +759,7 @@ export function validatePlacement(s: GameState, u: UnitState, pos: Map<string, P
       if (!mastersOfTheVoid && s.round < RULES.reserves.noEnemyZoneBeforeRound && bodyTouchesPoly(bodyAt(m, p), 0, enemyZone)) { errors.push('Cannot be set up in the enemy deployment zone before battle round 3'); bad.add(m.id); }
     }
   }
-  if (engagedAt(s, u, pos).length) errors.push('Must be set up unengaged');
+  if (!only && engagedAt(s, u, pos).length) errors.push('Must be set up unengaged');
   return { ok: !errors.length, errors: [...new Set(errors)], bad: [...bad] };
 }
 
@@ -785,13 +787,16 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
       out.set(m.id, nearestEdge % 2 === 0 ? { ...p, x: p.x + shift } : { ...p, y: p.y + shift });
     }
   }
-  for (let pass = 0; pass < alive(u).length; pass++) {
+  // a full check costs time in proportion to the unit, so a big squad gets fewer tries (a 30-model unit took 1-2 s per tap)
+  let budget = Math.max(60, Math.floor(2400 / alive(u).length));
+  const stuck = new Set<string>(); // models no spot nearby fixed: not searched again
+  for (let pass = 0; pass < alive(u).length && budget > 0; pass++) {
     const before = validatePlacement(s, u, out, how);
     if (before.ok) break;
     const bad = new Set(before.bad);
     let changed = false;
     for (const m of alive(u)) {
-      if (!bad.has(m.id)) continue;
+      if (!bad.has(m.id) || stuck.has(m.id)) continue;
       const start = out.get(m.id) ?? m;
       // a hull or oval base also turns to find an angle that fits (between walls, inside a ruin), nearest spot first
       const rot0 = m.rot ?? 0;
@@ -802,6 +807,8 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
         const trial = new Map(out);
         trial.set(m.id, { x: start.x + Math.cos(a) * d, y: start.y + Math.sin(a) * d });
         if (m.hl) m.rot = rot0 + t;
+        if (validatePlacement(s, u, trial, how, m.id).bad.length) continue; // fails on its own: no need to check the whole unit
+        if (--budget < 0) break search;
         const check = validatePlacement(s, u, trial, how);
         if (!check.bad.includes(m.id) && check.bad.length < before.bad.length && check.bad.every((id) => bad.has(id))) {
           out.set(m.id, trial.get(m.id)!);
@@ -810,6 +817,7 @@ export function nudgePlacement(s: GameState, u: UnitState, pos: Map<string, Pt>,
         }
       }
       if (!changed && m.hl) m.rot = rot0;
+      if (!changed) stuck.add(m.id);
       if (changed) break;
     }
     if (!changed) break;
