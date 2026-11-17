@@ -45,6 +45,7 @@ Everything runs entirely client-side in the browser via deterministic state mach
 
 ### 4. Primary & Tactical Secondary Missions
 - **45 Tournament Layouts:** Complete library of competitive tournament table arrangements and terrain layouts.
+- **Test range:** a small empty 24" x 30" table (pick it in the layout list of New battle) for trying out shooting; it is not one of the 45 official layouts.
 - **Mission Packs:** Matched Play primary objectives (Take and Hold, Purge the Foe, Scorched Earth, Priority Targets, Linchpin, etc.) with real-time scoring.
 - **Tactical & Fixed Secondaries:** Automated draw/discard deck for Tactical Secondary Missions (Assassination, Bring It Down, Cleanse, Storm Hostile Objective, Behind Enemy Lines, Engage on All Fronts, Sabotage, etc.) with CP generation for discarded cards.
 

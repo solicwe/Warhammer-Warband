@@ -37,6 +37,8 @@ export interface LayoutDef {
   territory: { attacker: number[][]; defender: number[][] };
   objectives: { type: 'home' | 'central' | 'expansion'; owner: 'attacker' | 'defender' | null; x: number; y: number }[];
   terrain: { poly: number[][]; walls: number[][]; obstacles: number[][]; box?: number[][] }[];
+  /** a table that is not 44" x 60" (the test range); the layout itself is still drawn in 44 x 60 units and scaled to it */
+  table?: { width: number; height: number };
 }
 export type DeploymentDef = LayoutDef & { name: string };
 
@@ -69,7 +71,20 @@ export interface SecondaryDef {
 export const secondaryById = (id: string) => MISSIONS.secondaries.find((x) => x.id === id)!;
 
 export const LAYOUTS = (layoutsData as unknown as { layouts: LayoutDef[] }).layouts;
-export const deploymentName = (id: string) => MISSIONS.deploymentCards.find((d) => d.id === id)?.name ?? id;
+/** A small empty table for trying out shooting: 24" x 30", no terrain, 10" deployment bands with a 10" gap. Not one of the
+ *  45 official layouts, so it never turns up in the official lists or in a random pick. */
+export const TEST_RANGE_ID = 'test-range';
+export const TEST_RANGE: LayoutDef = {
+  id: TEST_RANGE_ID, matchup: ['take-and-hold', 'take-and-hold'], number: 1, deployment: TEST_RANGE_ID, attackerEdge: 'top', defenderEdge: 'bottom',
+  table: { width: 24, height: 30 },
+  zones: { attacker: [[0, 0], [44, 0], [44, 20], [0, 20]], defender: [[0, 40], [44, 40], [44, 60], [0, 60]] },
+  territory: { attacker: [[0, 0], [44, 0], [44, 30], [0, 30]], defender: [[0, 30], [44, 30], [44, 60], [0, 60]] },
+  objectives: [{ type: 'home', owner: 'attacker', x: 22, y: 10 }, { type: 'central', owner: null, x: 22, y: 30 }, { type: 'home', owner: 'defender', x: 22, y: 50 }],
+  terrain: [],
+};
+/** The official layouts and the test range: for looking a layout up by id. */
+export const layoutById = (id: string | undefined) => LAYOUTS.find((l) => l.id === id) ?? (id === TEST_RANGE_ID ? TEST_RANGE : undefined);
+export const deploymentName = (id: string) => (id === TEST_RANGE_ID ? 'Test range' : MISSIONS.deploymentCards.find((d) => d.id === id)?.name ?? id);
 export const dispositionById = (id: string) => MISSIONS.forceDispositions.find((d) => d.id === id)!;
 /** Map a detachment's Force Disposition text ("Take and Hold") to its id. */
 export const dispositionId = (name: string | null | undefined): DispositionId | null => {
@@ -92,7 +107,7 @@ export const layoutsFor = (a: DispositionId, b: DispositionId) =>
 
 export const toPoly = (arr: number[][]): Pt[] => arr.map(([x, y]) => ({ x, y }));
 export const deploymentById = (id: string): DeploymentDef => {
-  const l = LAYOUTS.find((d) => d.id === id) ?? LAYOUTS[0];
+  const l = layoutById(id) ?? LAYOUTS[0];
   return { ...l, name: deploymentName(l.deployment) };
 };
 export const primaryById = (id: string): PrimaryDef => {

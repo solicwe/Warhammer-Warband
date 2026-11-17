@@ -1,7 +1,7 @@
 // A new battle: who plays (you against the bot, two players on one phone, or two bots), each side's army, the
 // mission and the map. The last choices are remembered.
 import { useEffect, useMemo, useState } from 'react';
-import { deploymentName, dispositionById, LAYOUTS, layoutsFor, primaryFor, RULES, type DispositionId } from '../engine/config';
+import { deploymentName, dispositionById, LAYOUTS, layoutById, layoutsFor, TEST_RANGE, primaryFor, RULES, type DispositionId } from '../engine/config';
 import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
 import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
@@ -101,7 +101,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
       if (gone.length) { setErr(`Some units are not in 11th edition any more (Legends). Remove them from the army first: ${gone.join(', ')}`); return; }
       if (lists.some((l) => !l.units.length)) { setErr('An army has no units yet. Open it from the home screen and add some, or pick another army.'); return; }
       const dz: [DispositionId, DispositionId] = [dispOf(0) ?? listDisposition(lists[0], factions[0]), dispOf(1) ?? listDisposition(lists[1], factions[1])];
-      const layout = LAYOUTS.find((l) => l.id === prefs.layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+      const layout = layoutById(prefs.layoutPick) ?? LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
       const s = createGame({
         lists: [ready(0), ready(1)], factions: [factions[0], factions[1]],
         names: [playerName(0), playerName(1)], deploymentId: layout?.id, dispositions: dz, secondaryMode: prefs.secMode, maxRounds: prefs.rounds,
@@ -214,6 +214,11 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
           <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
             <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
               <div className="layout-random">?</div><span>Random</span>
+            </button>
+            {/* a small empty table for trying out shooting */}
+            <button type="button" className={`layout-opt ${prefs.layoutPick === TEST_RANGE.id ? 'on' : ''}`} onClick={() => set({ layoutPick: TEST_RANGE.id })}>
+              <LayoutPreview layout={TEST_RANGE} width={64} />
+              <span>Test range · 24" × 30", no terrain</span>
             </button>
             {(allMaps ? LAYOUTS : pairingMaps).map((l) => (
               <button key={l.id} type="button" className={`layout-opt ${prefs.layoutPick === l.id ? 'on' : ''}`} onClick={() => set({ layoutPick: l.id })}>

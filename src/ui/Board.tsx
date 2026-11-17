@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RULES, MISSIONS, deploymentById, primaryById } from '../engine/config';
+import { RULES, MISSIONS, TEST_RANGE_ID, deploymentById, primaryById } from '../engine/config';
 import { baseDist, bodyTouchesPoly, dist, pointInPoly, polyCentroid } from '../engine/geometry';
 import { alive, onBoard, other } from '../engine/state';
 import { flowAreas, inFlow, hasFlowOfMagic } from '../factions/flow';
@@ -667,8 +667,9 @@ function BoardImpl(props: BoardProps) {
   const p1Theme = getPlayerFactionTheme(s, 1);
   const COLORS = [p0Theme.primary, p1Theme.primary];
   const SOFT = [p0Theme.soft, p1Theme.soft];
-  const W = Math.max(RULES.battlefield.width, s.table?.width ?? RULES.battlefield.width);
-  const H = Math.max(RULES.battlefield.height, s.table?.height ?? RULES.battlefield.height);
+  const small = s.deploymentId === TEST_RANGE_ID; // the test range is a small table: draw it as it is
+  const W = small ? s.table!.width : Math.max(RULES.battlefield.width, s.table?.width ?? RULES.battlefield.width);
+  const H = small ? s.table!.height : Math.max(RULES.battlefield.height, s.table?.height ?? RULES.battlefield.height);
   const quarterGuide = needsTableQuarterGuide(s, props.viewer);
   // local draft position for dragging to eliminate global re-renders
   const [localDraft, setLocalDraft] = useState<Paths | null>(null);

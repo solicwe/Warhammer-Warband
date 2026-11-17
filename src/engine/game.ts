@@ -3,7 +3,7 @@ import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deep
 import '../factions/index';
 import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
-import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutsFor, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
+import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutById, layoutsFor, TEST_RANGE_ID, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
 import { assignedObjective, mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle, unitTouchedObjectives } from './missions';
 import { bankSecondary, drawUpTo, scoreSecondaries, secondaryDead } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
@@ -371,7 +371,7 @@ export function createGame(o: NewGameOptions): GameState {
   o = { ...o, factions: [forChapter(o.factions[0], o.lists[0].subfaction), forChapter(o.factions[1], o.lists[1].subfaction)] };
   const disp: [DispositionId, DispositionId] = o.dispositions ?? [listDisposition(o.lists[0], o.factions[0]), listDisposition(o.lists[1], o.factions[1])];
   let layoutId = o.deploymentId;
-  if (!layoutId || !LAYOUTS.some((l) => l.id === layoutId)) {
+  if (!layoutId || !layoutById(layoutId)) {
     const opts = layoutsFor(disp[0], disp[1]);
     const r = mulberryPick((o.seed ?? Date.now()) >>> 0, opts.length);
     layoutId = (opts[r] ?? LAYOUTS[0]).id;
@@ -383,7 +383,8 @@ export function createGame(o: NewGameOptions): GameState {
 
   let tableWidth = RULES.battlefield.width;
   let tableHeight = RULES.battlefield.height;
-  if (isHighPoints) {
+  const own = layoutById(layoutId)?.table; // the test range has its own small table
+  if (own) { tableWidth = own.width; tableHeight = own.height; } else if (isHighPoints) {
     if (maxPts >= 4000) {
       tableWidth = 60;
       tableHeight = 90;
@@ -3066,7 +3067,7 @@ export function sanitizeGameState(s: GameState): GameState {
     }
   }
 
-  if (s.table) {
+  if (s.table && s.deploymentId !== TEST_RANGE_ID) {
     s.table.width = Math.max(RULES.battlefield.width, s.table.width || RULES.battlefield.width);
     s.table.height = Math.max(RULES.battlefield.height, s.table.height || RULES.battlefield.height);
   }

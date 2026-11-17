@@ -49,6 +49,8 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 
 ## Pitfalls seen before
 
+- The Test range (`TEST_RANGE` in `config.ts`) is a layout outside `LAYOUTS` with its own `table` size (24 x 30). Anything that looks a layout up by id
+  must use `layoutById`, not `LAYOUTS.find`; the board and the load-time clamp in `game.ts` skip the 44 x 60 minimum only for it.
 - Tabletop > Inspect Layout copies the gdmissions.app layout card (the layouts there are PNG images, our `data/layouts.json`
   was traced from them). Its "x + y" plate labels are our own: nearest long edge + nearest short edge to each terrain
   area's bounding box, checked against one label only ("14 + 6"); deployment depths come from `zones` (`zoneDepthAt`).
