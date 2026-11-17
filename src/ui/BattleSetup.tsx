@@ -50,6 +50,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const set = (patch: Partial<BattlePrefs>) => setPrefs((p) => ({ ...p, ...patch }));
   const [choosing, setChoosing] = useState<0 | 1 | null>(null); // the side whose army is being picked
   const [allMaps, setAllMaps] = useState(false);
+  const [allDeploy, setAllDeploy] = useState(''); // in All: the deployment whose maps are shown
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -222,7 +223,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
             const own = (l: (typeof LAYOUTS)[number]) => (l.matchup[0] === d0 && l.matchup[1] === d1) || (l.matchup[0] === d1 && l.matchup[1] === d0);
             return (
               <>
-                <div className="layout-pick">
+                <div className="layout-pick wrap">
                   <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
                     <div className="layout-random">?</div><span>Random</span>
                   </button>
@@ -233,13 +234,19 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
                   </button>
                   {!allMaps && pairingMaps.map((l) => opt(l, own(l) ? `#${l.number} ${deploymentName(l.deployment)}` : `${deploymentName(l.deployment)} · ${from(l)}`))}
                 </div>
-                {/* all maps, one block for each deployment */}
-                {allMaps && [...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) => (
-                  <div key={dep} className="layout-group">
-                    <div className="layout-group-title">{deploymentName(dep)} <span className="tiny muted">{LAYOUTS.filter((l) => l.deployment === dep).length} maps</span></div>
-                    <div className="layout-pick wrap">{LAYOUTS.filter((l) => l.deployment === dep).map((l) => opt(l, from(l)))}</div>
-                  </div>
-                ))}
+                {/* all maps: choose a deployment first, then its maps are listed */}
+                {allMaps && (
+                  <>
+                    <div className="map-filter">
+                      {[...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) => (
+                        <button key={dep} type="button" className={`chip ${allDeploy === dep ? 'on' : ''}`} onClick={() => setAllDeploy(allDeploy === dep ? '' : dep)}>{deploymentName(dep)} <span className="tiny muted">{LAYOUTS.filter((l) => l.deployment === dep).length}</span></button>
+                      ))}
+                    </div>
+                    {allDeploy
+                      ? <div className="layout-pick wrap">{LAYOUTS.filter((l) => l.deployment === allDeploy).map((l) => opt(l, from(l)))}</div>
+                      : <div className="small muted">Pick a deployment to see its maps.</div>}
+                  </>
+                )}
               </>
             );
           })()}
