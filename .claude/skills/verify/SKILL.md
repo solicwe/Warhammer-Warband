@@ -73,10 +73,9 @@ or run it on the old code), then pass.
   hold the port.
 - A run of the full suite started while files were changing gave a wrong result. Do not edit `src/` while it runs;
   docs and skills are safe to edit.
-- Charge targets (Core Rules 11.04): a target must be within the charge roll measured to the unit itself. The rule's
-  own example: a 7" roll cannot pick a unit more than 7" away even though the charger could end within 2" of it. The
-  code still allows the roll plus Engagement Range (`chargeTargetOptions`, `declareCharge` in `game.ts`); this is an
-  open item in `docs/05-tech-debt.md`. Fix the code to the rule; do not copy the old behaviour into new code.
+- Charge reach is measured to Engagement Range, not base contact: target filtering, charge result feedback and the
+  auto-charge path must all allow the rolled distance plus Engagement Range (owner decision: the coded rules stand,
+  see `start-here`).
 - `vite.config.ts` excludes the slow tests (`sim`, `autoPlay`, `botLook`, `tune`, `arena`, `*Games*`) by pattern, and
   Vitest applies that even to a file named on the command line: `npx vitest run src/engine/arena.test.ts` answers
   "No test files found". Until the config gets a slow group, the arena, `scripts/elo.mjs` and `scripts/tune.mjs` do

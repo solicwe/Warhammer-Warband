@@ -376,23 +376,9 @@ export function createGame(o: NewGameOptions): GameState {
     const r = mulberryPick((o.seed ?? Date.now()) >>> 0, opts.length);
     layoutId = (opts[r] ?? LAYOUTS[0]).id;
   }
-  const pts0 = o.lists[0].units.reduce((sum, u) => sum + (u.pts ?? 0), 0);
-  const pts1 = o.lists[1].units.reduce((sum, u) => sum + (u.pts ?? 0), 0);
-  const maxPts = Math.max(pts0, pts1);
-  const isHighPoints = maxPts >= 3000 || o.lists[0].battleSize === 'onslaught' || o.lists[0].battleSize === 'war-zone' || o.lists[0].battleSize === 'apocalypse';
-
-  let tableWidth = RULES.battlefield.width;
-  let tableHeight = RULES.battlefield.height;
   const own = layoutById(layoutId)?.table; // the test range has its own small table
-  if (own) { tableWidth = own.width; tableHeight = own.height; } else if (isHighPoints) {
-    if (maxPts >= 4000) {
-      tableWidth = 60;
-      tableHeight = 90;
-    } else {
-      tableWidth = 44;
-      tableHeight = 90;
-    }
-  }
+  const tableWidth = own?.width ?? RULES.battlefield.width;
+  const tableHeight = own?.height ?? RULES.battlefield.height;
 
   const { terrain, objectives } = buildTerrain(layoutId, { width: tableWidth, height: tableHeight });
   const s: GameState = {

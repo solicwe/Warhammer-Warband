@@ -214,7 +214,7 @@ describe('everything automatic', () => {
     it(`${F.name}: every datasheet ability, enhancement and stratagem resolves by itself`, () => {
       const not: string[] = [];
       for (const det of F.detachments) {
-        const all: ArmyList = { name: 'all', factionId: F.id, battleSize: 'onslaught', detachments: [det.name], units: F.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
+        const all: ArmyList = { name: 'all', factionId: F.id, battleSize: 'strike-force', detachments: [det.name], units: F.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
         const units = buildUnits(all, F, 0);
         for (const u of units) for (const a of u.abilities) { const st = abilityStatus(u, a).status; if (st !== 'auto' && st !== 'core' && st !== 'info') not.push(`${a.name}@${u.sources[0]}: ${st}`); }
         for (const e of det.enhancements) { const st = abilityStatus(units[0], { name: e.name, type: 'Enhancement', text: e.text, faction: F.id } as never).status; if (st !== 'auto' && st !== 'info') not.push(`${e.name}: ${st}`); }

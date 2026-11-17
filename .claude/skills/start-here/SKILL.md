@@ -118,6 +118,12 @@ Made in conversation, so they are not all visible in the code. A change that wou
   No invented rules (owner, 17 Nov 2026): a rule that is not in the Core Rules, a faction pack or the mission deck is
   not added, and a number is checked against the source before it is written. `docs/01-rules-11e-reference.md` is the
   project's summary; where it and the code disagree, check the official text, then fix whichever is wrong.
+- **The rules as coded stand** (owner, 17 Nov 2026): the code follows newer rules than the 11th edition text read
+  on Wahapedia that day. The differences listed in `docs/05-tech-debt.md` (R1-R22: charge reach, consolidation,
+  engaged through a friend, cover, the 15" Infantry Beast rule and the rest) are not to be "fixed" toward that text
+  without the owner's yes.
+- **Battle sizes are Incursion (1000) and Strike Force (2000) only** (owner, 17 Nov 2026), on the 44" x 60" table.
+  Do not add sizes above 2000 points or bigger tables.
 - **There is no campaign / roguelike mode** (owner, 17 Nov 2026): it was removed. Do not bring back its code, data,
   styles or docs. **Code nothing uses is deleted**, not kept for later (git history keeps it).
 - **Owner-approved game-wide exceptions** (confirmed in the Ritual / Tzaangor rules discussion): another eligible
@@ -162,5 +168,5 @@ When the owner makes a new decision of this kind, add it here in the same change
 | Saves | `src/services/storage.ts`, `src/ui/library.ts` | | `ui` |
 | Scripts | `scripts/build-data.mjs` (`npm run data`), `build-images.mjs`, `elo.mjs`, `tune.mjs`, `audit_*.ts` (write `audit_report.json`, `integration_audit_report.json`) | | |
 
-The faction pack PDFs in the repository root (`aoi_update.pdf`, `tyranids_faction_pack.pdf`) are sources for data
-imports; read them, never edit them.
+Faction pack PDFs are sources for data imports. They live in `data/raw/` (git-ignored) on the owner's machine and are
+never committed (`*.pdf` is ignored): Games Workshop material does not go in the public repository.

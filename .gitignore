@@ -13,3 +13,6 @@ tsconfig.tsbuildinfo
 
 # scratch: effect sheets, benches, one-off games (never committed)
 src/zz/
+
+# faction pack PDFs and other import sources (Games Workshop material): never commit
+*.pdf

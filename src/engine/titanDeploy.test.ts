@@ -1,4 +1,4 @@
-// Titans deploy: on a 44" x 90" table (3000+ points) and in a 12" deep long-edge zone, where a Warlord's
+// Titans deploy: on the 44" x 60" table and in a 12" deep long-edge zone, where a Warlord's
 // footprint is wider than the zone, the bot still sets every Titan up on the battlefield.
 import fs from 'node:fs';
 import { expect, it } from 'vitest';
@@ -11,8 +11,8 @@ const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${
 const TL = load('TL'), ORK = load('ORK');
 const titans = ['Warhound Titan', 'Reaver Titan', 'Warlord Titan', 'Warbringer Nemesis Titan'];
 const lists = (name: string): [ArmyList, ArmyList] => [
-  { name: 't', factionId: 'TL', battleSize: 'onslaught', detachments: [], units: [{ uid: 'x0', datasheet: name, models: 1, pts: 1000 }] },
-  { name: 'o', factionId: 'ORK', battleSize: 'onslaught', detachments: [], units: [{ uid: 'y0', datasheet: 'Boyz', models: 10, pts: 90 }] },
+  { name: 't', factionId: 'TL', battleSize: 'strike-force', detachments: [], units: [{ uid: 'x0', datasheet: name, models: 1, pts: 1000 }] },
+  { name: 'o', factionId: 'ORK', battleSize: 'strike-force', detachments: [], units: [{ uid: 'y0', datasheet: 'Boyz', models: 10, pts: 90 }] },
 ];
 
 it('finds a deployment spot for every Titan on every layout', () => {

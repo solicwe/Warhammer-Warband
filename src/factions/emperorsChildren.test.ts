@@ -118,7 +118,7 @@ describe('card wording', () => {
 
 describe('everything automatic', () => {
   it('every datasheet ability and enhancement resolves by itself', () => {
-    const all: ArmyList = { name: 'all', factionId: 'EC', battleSize: 'onslaught', detachments: ['Carnival of Excess'], units: EC.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
+    const all: ArmyList = { name: 'all', factionId: 'EC', battleSize: 'strike-force', detachments: ['Carnival of Excess'], units: EC.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
     const not: string[] = [];
     for (const u of buildUnits(all, EC, 0)) for (const a of u.abilities) { const st = abilityStatus(u, a).status; if (st !== 'auto' && st !== 'core' && st !== 'info') not.push(`${a.name}@${u.sources[0]}: ${st}`); }
     expect([...new Set(not)]).toEqual([]);

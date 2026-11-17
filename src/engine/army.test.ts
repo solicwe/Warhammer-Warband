@@ -85,46 +85,6 @@ describe('default wargear: the best free loadout', () => {
   });
 });
 
-describe('3000, 4000, 5000 points battle sizes and scaling rules', () => {
-  const SM = JSON.parse(fs.readFileSync('public/data/factions/SM.json', 'utf8')) as FactionData;
-  const RULES = JSON.parse(fs.readFileSync('data/core-rules.json', 'utf8'));
-
-  it('3000 points Onslaught allows 4 DP, 4 of the same datasheet (e.g. Drop Pod), and 6 enhancements', () => {
-    const onslaught = RULES.battleSizes.find((b: any) => b.id === 'onslaught');
-    expect(onslaught).toBeDefined();
-    expect(onslaught.points).toBe(3000);
-    expect(onslaught.dp).toBe(4);
-    expect(onslaught.unitLimit).toBe(4);
-    expect(onslaught.enhancements).toBe(6);
-
-    const list: ArmyList = {
-      name: 't', factionId: 'SM', battleSize: 'onslaught', detachments: ['Gladius Task Force'],
-      units: [
-        { uid: 'w', datasheet: 'Captain In Gravis Armour', models: 1, pts: 80, warlord: true },
-        { uid: 'd1', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 },
-        { uid: 'd2', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 },
-        { uid: 'd3', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 },
-        { uid: 'd4', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 },
-      ],
-    };
-    expect(validateList(list, SM, onslaught)).toEqual([]);
-    // A 5th Redemptor Dreadnought exceeds limit of 4
-    const list5 = { ...list, units: [...list.units, { uid: 'd5', datasheet: 'Redemptor Dreadnought', models: 1, pts: 210 }] };
-    expect(validateList(list5, SM, onslaught).some((e) => /Redemptor Dreadnought: maximum 4/.test(e))).toBe(true);
-  });
-
-  it('4000 and 5000 points scale DP and unitLimits up to 5 and 6', () => {
-    const warZone = RULES.battleSizes.find((b: any) => b.id === 'war-zone');
-    const apocalypse = RULES.battleSizes.find((b: any) => b.id === 'apocalypse');
-    expect(warZone.points).toBe(4000);
-    expect(warZone.dp).toBe(5);
-    expect(warZone.unitLimit).toBe(5);
-    expect(apocalypse.points).toBe(5000);
-    expect(apocalypse.dp).toBe(6);
-    expect(apocalypse.unitLimit).toBe(6);
-  });
-});
-
 describe('Epic Hero Enhancement Restrictions', () => {
   const SM = JSON.parse(fs.readFileSync('public/data/factions/SM.json', 'utf8')) as FactionData;
   const SIZE = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };

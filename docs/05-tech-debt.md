@@ -29,11 +29,15 @@ The owner's rule from this day: there is no campaign / roguelike mode, and code 
 | `tuneTournamentWeights`, `getActiveTournamentWeights`, `setActiveTournamentWeights` (`tournamentTrainer.ts`) | Called by nothing; the tuner used `Math.random` | about 55 |
 | `segLengthInPoly`, `pathDistance`, `OBJECTIVE_MARKER_R`, `activeLabels`, `resetCoach`, `loadoutSummary`, `isPlaceholderIcon`, `loseWoundsForTest`, `CoreStratagemId` | Exports with no reference anywhere | about 60 |
 | `scratch/update_primary_btn.cjs` | A one-off style patch script, committed by mistake | 82 |
+| Onslaught (3000), War Zone (4000), Apocalypse (5000) and the 44x90 / 60x90 tables | Not in the 11th edition battle sizes (25.03); owner decision | 20 |
+| `aoi_update.pdf`, `tyranids_faction_pack.pdf` | Games Workshop files in a public repository; owner decision. Moved to `data/raw/` (ignored) | |
 | Docs and skills | `CLAUDE.md`, `ARCHITECTURE.md`, `AI_GUIDE.md` and five skills still described the campaign, its files and its tests | |
 
-## Rules that differ from the 11th edition text (P0)
+## Rules that differ from the 11th edition text read on 17 November 2026 (kept, owner decision)
 
-Each row was read in the official text. "Earlier fix" marks behaviour that an earlier session added on purpose.
+The owner says the code follows newer rules than that text, so these rows stay as they are (owner, 17 Nov 2026);
+they are a record, not a to-do list. Change one only with the owner's yes. "Earlier fix" marks behaviour an earlier
+session added on purpose.
 
 | # | Rule (section) | The text says | The code does | Where |
 |---|---|---|---|---|
@@ -49,7 +53,6 @@ Each row was read in the official text. "Earlier fix" marks behaviour that an ea
 | R10 | Obscuring (13.10), "within" (01.04.01) | An area that either of the two models is within is ignored. Within means any part of the base | The observing side counts its whole unit (comment: "10th Ed core"), the observed side one model. A small base must have its centre, or half its radius, on the plate. Cover and Hidden each use another test. `docs/01` section 5.4 also says "unit" and "centre on the plate" | `standsIn`, `modelInPiece`, `hasCover`, `isHidden` |
 | R11 | Lethal Hits (24.23) | The attacker may choose the automatic wound | Always automatic, so a weapon that also has Devastating Wounds or Anti-X can never roll for the critical wound | `hitsForWounding` |
 | R12 | Hazardous (24.15) | One hazard roll for each Hazardous weapon selected | One roll for each weapon type: five plasma guns roll one die | `finishAttack` |
-| R13 | Battle sizes (25.03) | Incursion and Strike Force only | Also Onslaught 3000, War Zone 4000 and Apocalypse 5000 with their own Detachment Points, enhancement and unit limits, on 44x90 and 60x90 tables. Owner to decide: remove, or keep as a mode labelled unofficial | `core-rules.json`, `createGame` |
 | R14 | Strategic Reserves cap (20.01) | Half of the battle size's points limit, counting units embarked in a transport that is in Reserves; no FORTIFICATIONS | Half of the army's own points; embarked units are not counted; AIRCRAFT are left out (the text makes no exception for them); FORTIFICATIONS are not refused | `declareReserves`, `reservesPoints` |
 | R15 | Reserves destroyed (20.04) | At the end of round 3, except units in a transport that arrived and repositioned units | Every unit in Reserves at the end of round 3 and of each later round, so a unit an ability sends back to Reserves dies | `endTurn` |
 | R16 | Desperate Escape (09.07) | A unit that is not Battle-shocked may choose it, then takes a Battle-shock roll | Only when Battle-shocked or forced; no roll afterwards | `commitMove` |
@@ -93,7 +96,7 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S1 | P0 | The slow tests and the bot tools cannot run | `vite.config.ts` excludes `sim`, `autoPlay`, `botLook`, `tune`, `arena` and `*Games*` tests by pattern, and Vitest applies that to a file named on the command line too: `npx vitest run src/engine/sim.test.ts` prints "No test files found". `scripts/elo.mjs` and `scripts/tune.mjs` start Vitest on `tune.test.ts` with its output hidden, so they do nothing. No whole bot-vs-bot game runs in CI. `test:ci` is the same as `test` | A second Vitest config or project for the slow group (`npm run test:slow`), used by the scripts and by a nightly CI job; `npm test` stays fast |
 | S2 | P0 | `docs/RULES_STATUS.md` is not true and cannot be rebuilt | It shows 0 text-only rules in 2,318 unit abilities. 183 of the 3,080 entries in `data/abilities` carry no rule data (Genestealer Cults 79, T'au 17), and entries marked `"code": true` are not checked against any code. The generator is gone. Ten `*Status.test.ts` files only assert the label `status: auto` | One test that builds the table from the data and the engine and fails on `auto` without `effects`, `act` or a registered hook; delete the label tests; then a hand check of 10 rules per faction against the card (the old item 1) |
 | S3 | P0 | A red test run still deploys | `deploy.yml` builds and publishes on every push to `main` without waiting for `ci.yml` | Deploy after CI passes (`workflow_run`, or one workflow with `needs`) |
-| S4 | P1 | Games Workshop files in a public repository | `aoi_update.pdf` and `tyranids_faction_pack.pdf` (33 MB, most of the 37 MB history), datasheet text, 1,441 unit photos. A takedown would stop the site | Owner decision. At least take the PDFs out of git (`data/raw` is already ignored) |
+| S4 | P1 | Games Workshop material in a public repository | The two faction pack PDFs left the repository on 17 Nov 2026 (now in `data/raw/`, `*.pdf` ignored), but they are still in the git history (33 MB of the 37 MB). Datasheet text and 1,441 unit photos remain | Removing them from history means rewriting it and a force push: owner decision |
 | S5 | P1 | Faction rules inside the core | 47 checks of a named rule in `src/engine` (`army.ts` 19, `game.ts` 17, `attack.ts` 8, `state.ts` 2), the 25-name `REDEPLOY` table, set-up code for Chaos Spawn, Spore Mines and Poxwalkers in `createGame`, special cases in `killModel` and `rollWounds`. `layers.test.ts` passes because names are strings, not imports | Move each to rule data or to a hook in `src/factions`; add a test that fails on a quoted rule name in `src/engine` |
 | S6 | P1 | Every faction adds fields to the core state | 157 optional fields on `UnitState` (46), `PlayerState` (72) and `GameState` (39), most of them one faction's bookkeeping; `types.ts` imports a type from `src/factions`; `(u as any).hasFiredThisTurn` in three files | A per-faction `ext` slot with typed access, used for new rules first |
 | S7 | P1 | Very large units of code | `GameScreen` is one React component of about 4,450 lines (49 `useState`, 22 `useEffect`, 24 `useMemo`, 17 `useRef`); `Board.tsx` 2,531; `TabletopScreen.tsx` 2,333; `ArmyBuilder.tsx` 1,898; `game.ts` 2,880; one stylesheet of about 3,000 lines | One panel and one hook per phase, moved when a change touches it; `buildTerrain` (290 lines that repair traced layouts at every game start) into `npm run data` with a snapshot of the 45 layouts; `sanitizeGameState` into storage |
@@ -111,18 +114,13 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 
 ## Order of work
 
-One session, one numbered item or one row group that touches the same files. Each rule fix starts with a test written
-from the official text, fails on the old code, then passes.
+One session, one numbered item or one row group that touches the same files.
 
-1. Tooling first, so the later work is measured: S1 (slow tests and bot tools), S3 (deploy after tests), S8 (unused
+1. Tooling first, so later work is measured: S1 (slow tests and bot tools), S3 (deploy after tests), S8 (unused
    code flag).
-2. Charge and fight: R1, R2, R3, R4, R5, R6, R7. They share `game.ts` and the bot's fight code; the bot is measured
-   before and after with the arena that S1 restores.
-3. Sight and cover: R8, R9, R10 with one helper for "within a terrain area"; re-run the ray check of the 45 layouts.
-4. Attack sequence and morale: R11, R12, R17, R20, R21, R22.
-5. Reserves, transports, objectives: R14, R15, R16, R18, R19, and the owner's answer on R13.
-6. Truth in the docs: S2 (rules status from a test), S12 (README), the corrections to `docs/01`.
-7. Structure, one piece per session: S5 with its guard test, S6, S7 by phase, S9, S10.
+2. Truth in the docs: S2 (rules status from a test), S12 (README).
+3. Structure, one piece per session: S5 with its guard test, S6, S7 by phase, S9, S10.
+4. Tidy-up: S11, S13, S14, S16-S18; ask the owner about S15 and S4 (history).
 
 ## Fixed in the audit of 1-5 November 2026
 
