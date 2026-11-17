@@ -191,6 +191,7 @@
   "act": [
    {
     "when": "selectedToShoot",
+    "limit": "phase",
     "if": [
      "leaderAttached"
     ],
@@ -224,6 +225,7 @@
    },
    {
     "when": "selectedToFight",
+    "limit": "phase",
     "if": [
      "leaderAttached"
     ],

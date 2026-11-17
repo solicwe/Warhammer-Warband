@@ -821,7 +821,21 @@ export function allocationGroups(T: UnitState): Group[] {
   return groups.sort((x, y) => rank(x) - rank(y) || x.models[0].profile.W - y.models[0].profile.W || y.models[0].profile.Sv - x.models[0].profile.Sv);
 }
 
-/** Choose which model takes the next attack: a wounded one if any (05.04), otherwise one whose removal keeps the unit coherent. */
+const diceAvg = (t: string): number => {
+  const m = /^(\d*)d(\d+)([+-]\d+)?$/i.exec(t.trim());
+  return m ? (m[1] ? +m[1] : 1) * (+m[2] + 1) / 2 + (m[3] ? +m[3] : 0) : parseFloat(t) || 0;
+};
+
+/** How much a model's best weapon is worth keeping (attacks x damage x strength and AP); 0 = no weapon. */
+export function weaponValue(m: ModelState): number {
+  let best = 0;
+  for (const w of m.weapons) for (const p of w.profiles) {
+    best = Math.max(best, diceAvg(p.A) * diceAvg(p.D) * ((p.S ?? 4) + 2 * Math.abs(p.AP)));
+  }
+  return best;
+}
+
+/** Choose which model takes the next attack: a wounded one if any (05.04), otherwise one whose removal keeps the unit coherent, then the one with the weakest weapons. */
 export function pickCasualty(u: UnitState, candidates: ModelState[]): ModelState | undefined {
   const a = candidates.filter((m) => !m.dead);
   const wounded = a.find((m) => m.wounds < m.profile.W);
@@ -833,7 +847,7 @@ export function pickCasualty(u: UnitState, candidates: ModelState[]): ModelState
   for (const m of a) {
     const rest = all.filter((x) => x !== m);
     const broken = coherencyProblems(rest, RULES.coherency.near, RULES.coherency.max, rest.map((x) => x.r)).length;
-    const score = -broken * 1000 + Math.hypot(m.x - c.x, m.y - c.y);
+    const score = -broken * 100000 - weaponValue(m) * 10 + Math.hypot(m.x - c.x, m.y - c.y);
     if (score > bestScore) { bestScore = score; best = m; }
   }
   return best;

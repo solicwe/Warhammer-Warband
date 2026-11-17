@@ -12,7 +12,7 @@ import { inFlow } from '../factions/flow';
 import { attemptRitual, beginRitual, casters, finishRitual, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
 import { botRituals } from '../ai/botRituals';
 import { autoDue, autoSelectToShoot, autoStep } from '../ai/autoPlay';
-import { manualActs } from '../rules-engine/activations';
+import { manualActs, useAct } from '../rules-engine/activations';
 import { unitDistance } from './state';
 import { rollExpr, rollN } from './dice';
 import { PRESETS } from '../ui/presets';
@@ -551,5 +551,20 @@ describe('Risen Rubricae enhancement', () => {
     expect(candIds).not.toContain(termWithEnhancement.id);
     expect(candIds).toContain(otherTerm.id);
     expect(candIds).toContain(rubric.id);
+  });
+});
+
+describe('Sacrificial Blessing (once per selection)', () => {
+  it('can be used once in the Shooting phase; the button is gone afterwards', () => {
+    const s = game([['Tzaangors', 10, 100], ['Tzaangor Shaman', 1, 60, 'x0']], [['Boyz', 20, 180]]);
+    const u = put(s, 'p0-x0', { x: 20, y: 25 });
+    put(s, 'p1-x0', { x: 20, y: 33 });
+    s.phase = 'shooting';
+    s.decides = [0];
+    const offered = () => manualActs(s, 0).filter((m) => m.def.name === 'Sacrificial Blessing' && m.def.spec.when === 'selectedToShoot');
+    autoSelectToShoot(s, u);
+    expect(offered().length).toBe(1);
+    expect(useAct(s, offered()[0].def)).toBeNull();
+    expect(offered().length).toBe(0);
   });
 });
