@@ -101,6 +101,12 @@ export const dispositionId = (name: string | null | undefined): DispositionId | 
 /** Your primary mission: your disposition (row) against your opponent's (column). */
 export const primaryFor = (mine: DispositionId, theirs: DispositionId) => MISSIONS.primaries.find((p) => p.forceDisposition === mine && p.vs === theirs)!;
 /** The three official layouts for a pair of dispositions (order does not matter). */
+/** One official map for each of the six deployments: the pairing's own, else one from a pairing that shares a disposition, else any. */
+export const mapsPerDeployment = (a?: DispositionId, b?: DispositionId): LayoutDef[] => [...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) =>
+  (a && b ? layoutsFor(a, b).find((l) => l.deployment === dep) : undefined)
+  ?? LAYOUTS.find((l) => l.deployment === dep && ((l.matchup as string[]).includes(a ?? '') || (l.matchup as string[]).includes(b ?? '')))
+  ?? LAYOUTS.find((l) => l.deployment === dep)!);
+
 export const layoutsFor = (a: DispositionId, b: DispositionId) =>
   LAYOUTS.filter((l) => (l.matchup[0] === a && l.matchup[1] === b) || (l.matchup[0] === b && l.matchup[1] === a)).sort((x, y) => x.number - y.number);
 

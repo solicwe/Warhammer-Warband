@@ -3,7 +3,7 @@ import {
   deploymentName,
   dispositionById,
   LAYOUTS,
-  layoutsFor,
+  mapsPerDeployment,
   MISSIONS,
   primaryFor,
   secondaryById,
@@ -301,10 +301,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   };
 
   // Strictly locked to the playable layouts for this matchup
-  const playableLayouts = useMemo(() => {
-    const matched = layoutsFor(p0Disp, p1Disp);
-    return matched.length ? matched : LAYOUTS.slice(0, 3);
-  }, [p0Disp, p1Disp]);
+  const playableLayouts = useMemo(() => mapsPerDeployment(p0Disp, p1Disp), [p0Disp, p1Disp]);
 
   // Sync selected layout if current selection is not in playable layouts
   useEffect(() => {
@@ -774,8 +771,8 @@ export function TabletopScreen({ index, onBack }: Props) {
               <div className="card" style={{ padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--line-2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontSize: 13, fontWeight: 800 }}>Official Tournament Layouts ({playableLayouts.length} Layouts)</span>
-                    <div className="tiny muted">Locked to the 3 official 11th Edition layouts for this matchup</div>
+                    <span style={{ fontSize: 13, fontWeight: 800 }}>Official layouts: one for each of the six deployments</span>
+                    <div className="tiny muted">The pairing's own map where it has one</div>
                   </div>
                 </div>
 
@@ -799,8 +796,8 @@ export function TabletopScreen({ index, onBack }: Props) {
                       <div onClick={() => setSelectedLayoutId(l.id)} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }}>
                         <LayoutPreview layout={l} width={90} />
                         <div>
-                          <b style={{ fontSize: 12.5, display: 'block' }}>Layout {l.number}</b>
-                          <span className="tiny muted">{deploymentName(l.deployment)}</span>
+                          <b style={{ fontSize: 12.5, display: 'block' }}>{deploymentName(l.deployment)}</b>
+                          <span className="tiny muted">Layout {l.number}</span>
                         </div>
                       </div>
 

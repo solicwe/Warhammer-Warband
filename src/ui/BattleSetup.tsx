@@ -1,7 +1,7 @@
 // A new battle: who plays (you against the bot, two players on one phone, or two bots), each side's army, the
 // mission and the map. The last choices are remembered.
 import { useEffect, useMemo, useState } from 'react';
-import { deploymentName, dispositionById, LAYOUTS, layoutById, layoutsFor, TEST_RANGE, primaryFor, RULES, type DispositionId } from '../engine/config';
+import { deploymentName, dispositionById, LAYOUTS, layoutById, layoutsFor, mapsPerDeployment, TEST_RANGE, primaryFor, RULES, type DispositionId } from '../engine/config';
 import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
 import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
@@ -164,11 +164,7 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
     );
   };
 
-  // the pairing's own maps first; a deployment it has no map for is filled from a pairing that shares one of its dispositions
-  const pairingMaps = [...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) =>
-    layouts.find((l) => l.deployment === dep)
-    ?? LAYOUTS.find((l) => l.deployment === dep && ((l.matchup as string[]).includes(d0 ?? '') || (l.matchup as string[]).includes(d1 ?? '')))
-    ?? LAYOUTS.find((l) => l.deployment === dep)!);
+  const pairingMaps = mapsPerDeployment(d0 ?? undefined, d1 ?? undefined);
 
   return (
     <div className="app setup">
