@@ -66,6 +66,9 @@ interface DimLineProps {
   color?: string;
   textSide?: 'center' | 'top' | 'bottom' | 'left' | 'right';
   textOffset?: number;
+  /** line width and text size (small for the terrain distances) */
+  sw?: number;
+  fs?: number;
 }
 
 function DimensionLine({
@@ -78,6 +81,8 @@ function DimensionLine({
   color = '#ffffff',
   textSide = 'center',
   textOffset = 0,
+  sw = 0.32,
+  fs = 1.15,
 }: DimLineProps) {
   const isHoriz = Math.abs(y1 - y2) < 0.001;
   const isVert = Math.abs(x1 - x2) < 0.001;
@@ -98,18 +103,18 @@ function DimensionLine({
   return (
     <g className="dim-line">
       {/* Main dimension line */}
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={sw} strokeLinecap="round" />
       {/* Perpendicular end ticks */}
       {isHoriz && (
         <>
-          <line x1={x1} y1={y1 - tickLen / 2} x2={x1} y2={y1 + tickLen / 2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
-          <line x1={x2} y1={y2 - tickLen / 2} x2={x2} y2={y2 + tickLen / 2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+          <line x1={x1} y1={y1 - tickLen / 2} x2={x1} y2={y1 + tickLen / 2} stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <line x1={x2} y1={y2 - tickLen / 2} x2={x2} y2={y2 + tickLen / 2} stroke={color} strokeWidth={sw} strokeLinecap="round" />
         </>
       )}
       {isVert && (
         <>
-          <line x1={x1 - tickLen / 2} y1={y1} x2={x1 + tickLen / 2} y2={y1} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
-          <line x1={x2 - tickLen / 2} y1={y2} x2={x2 + tickLen / 2} y2={y2} stroke={color} strokeWidth={0.32} strokeLinecap="round" />
+          <line x1={x1 - tickLen / 2} y1={y1} x2={x1 + tickLen / 2} y2={y1} stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <line x1={x2 - tickLen / 2} y1={y2} x2={x2 + tickLen / 2} y2={y2} stroke={color} strokeWidth={sw} strokeLinecap="round" />
         </>
       )}
       {/* Bold high-contrast white text with crisp dark outline */}
@@ -117,7 +122,7 @@ function DimensionLine({
         x={tx}
         y={ty}
         fill={color}
-        fontSize="1.15"
+        fontSize={fs}
         fontWeight="800"
         fontFamily="Oswald, sans-serif"
         textAnchor="middle"
@@ -139,7 +144,7 @@ function DimensionLine({
 const fmtNum = (v: number) => String(Math.round(v * 2) / 2);
 
 /** How deep a deployment zone is along the table edge at x, measured from the end edge it starts at (y = edgeY). */
-function zoneDepthAt(poly: number[][], x: number, edgeY: number): number {
+function zoneDepthAt(poly: number[][], x: number, edgeY: number, full: number): number {
   const ys: number[] = [];
   for (let i = 0; i < poly.length; i++) {
     const [x1, y1] = poly[i];
@@ -148,17 +153,7 @@ function zoneDepthAt(poly: number[][], x: number, edgeY: number): number {
     else if (x1 === x2 && x1 === x) ys.push(y1, y2);
   }
   if (!ys.length) return 0;
-  return edgeY === 0 ? Math.max(...ys) : 60 - Math.min(...ys);
-}
-
-/** "x + y" over a terrain area: inches from the nearest long edge and from the nearest short edge. */
-function PlateLabel({ x, y, text }: { x: number; y: number; text: string }) {
-  return (
-    <text x={x} y={y + 0.4} fontSize="1.1" fontWeight="800" fontFamily="Oswald, sans-serif" textAnchor="middle" fill="#111"
-      style={{ paintOrder: 'stroke fill', stroke: '#fff', strokeWidth: '0.4px', strokeLinejoin: 'round' }}>
-      {text}
-    </text>
-  );
+  return edgeY === 0 ? Math.max(...ys) : full - Math.min(...ys);
 }
 
 export function LayoutPreview({ layout, width = 120, showMeasurements = false }: LayoutPreviewProps) {
@@ -225,9 +220,9 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
 
   // ViewBox with padding around table to allow depth callout lines
   const vbX = -6;
-  const vbY = -2.5;
+  const vbY = -4.5;
   const vbW = 56;
-  const vbH = 65;
+  const vbH = 70;
 
   return (
     <svg
@@ -526,18 +521,37 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
 
       {/* 9. Measurements: each terrain area is placed from the table edges ("x + y", the way the official cards give it),
              and the deployment depths come from the zones themselves */}
-      {terrainBoxes.filter(({ bb }) => bb.w >= 2 || bb.h >= 2).map(({ idx, bb }) => (
-        <PlateLabel key={`pl${idx}`} x={bb.cx} y={layout.objectives.some((o) => o.x >= bb.minX && o.x <= bb.maxX && o.y >= bb.minY && o.y <= bb.maxY) ? bb.minY + 1.2 : bb.cy} text={`${fmtNum(Math.min(bb.minX, 44 - bb.maxX))} + ${fmtNum(Math.min(bb.minY, 60 - bb.maxY))}`} />
-      ))}
-      {([['attacker', 0], ['defender', 60]] as const).flatMap(([who, edgeY]) =>
-        ([[0, -1.8, 'left'], [44, 45.8, 'right']] as const).map(([x, lx, side]) => {
-          const d = zoneDepthAt(layout.zones[who], x, edgeY);
-          if (d < 0.5) return null;
-          const y0 = who === 'attacker' ? 0 : 60 - d;
-          return <DimensionLine key={`${who}${side}`} x1={lx} y1={y0} x2={lx} y2={y0 + d} label={fmtDim(d)} textSide={side} />;
-        })
-      )}
-
+      {/* one line, one distance: from the table edge to the terrain area (long edge across, short edge up or down) */}
+      {terrainBoxes.filter(({ bb }) => bb.w >= 2 || bb.h >= 2).flatMap(({ idx, bb }) => {
+        const toLeft = bb.minX <= 44 - bb.maxX;
+        const toTop = bb.minY <= 60 - bb.maxY;
+        const dx = toLeft ? bb.minX : 44 - bb.maxX;
+        const dy = toTop ? bb.minY : 60 - bb.maxY;
+        const hy = Math.min(Math.max(bb.cy, bb.minY + 0.6), bb.maxY - 0.6);
+        const vx = Math.min(Math.max(bb.cx, bb.minX + 0.6), bb.maxX - 0.6);
+        return [
+          dx >= 1.5 && <DimensionLine key={`h${idx}`} x1={toLeft ? 0 : bb.maxX} y1={hy} x2={toLeft ? bb.minX : 44} y2={hy} label={fmtNum(dx)} textSide="top" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
+          dy >= 1.5 && <DimensionLine key={`v${idx}`} x1={vx} y1={toTop ? 0 : bb.maxY} x2={vx} y2={toTop ? bb.minY : 60} label={fmtNum(dy)} textSide="right" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
+        ];
+      })}
+      {/* deployment depths, from the zones themselves: across the table edges the zone starts from */}
+      {(['attacker', 'defender'] as const).flatMap((who) => {
+        const edge = who === 'attacker' ? layout.attackerEdge : layout.defenderEdge;
+        const poly = layout.zones[who];
+        if (edge === 'top' || edge === 'bottom') {
+          return ([[0, -1.8, 'left'], [44, 45.8, 'right']] as const).map(([x, lx, side]) => {
+            const d = zoneDepthAt(poly, x, edge === 'top' ? 0 : 60, 60);
+            const y0 = edge === 'top' ? 0 : 60 - d;
+            return d >= 0.5 && <DimensionLine key={`${who}${side}`} x1={lx} y1={y0} x2={lx} y2={y0 + d} label={fmtDim(d)} textSide={side} />;
+          });
+        }
+        const tp = poly.map(([x, y]) => [y, x]);
+        return ([[0, -1.8, 'top'], [60, 61.8, 'bottom']] as const).map(([y, ly, side]) => {
+          const d = zoneDepthAt(tp, y, edge === 'left' ? 0 : 44, 44);
+          const x0 = edge === 'left' ? 0 : 44 - d;
+          return d >= 0.5 && <DimensionLine key={`${who}${side}`} x1={x0} y1={ly} x2={x0 + d} y2={ly} label={fmtDim(d)} textSide={side} />;
+        });
+      })}
     </svg>
   );
 }

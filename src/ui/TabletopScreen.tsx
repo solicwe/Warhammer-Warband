@@ -1227,7 +1227,7 @@ export function TabletopScreen({ index, onBack }: Props) {
                     <div className="layout-card-map" onClick={() => setZoomLayout(inspectLayout)} style={{ cursor: 'zoom-in' }}>
                       <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? Math.min(380, window.innerWidth - 80) : 280} showMeasurements={showLayoutMeasurements} />
                     </div>
-                    <div className="layout-card-foot">44" × 60" board · {inspectLayout.objectives.length} objectives{showLayoutMeasurements ? ' · "x + y" = inches from the nearest long edge and short edge to the terrain area (traced, about ±0.5")' : ''}</div>
+                    <div className="layout-card-foot">44" × 60" board · {inspectLayout.objectives.length} objectives{showLayoutMeasurements ? ' · yellow lines: inches from the table edge to each terrain area (traced, about ±0.5")' : ''}</div>
                     <div className="layout-card-legend">
                       <span><i style={{ background: '#8f1a1d' }} />Attacker zone</span>
                       <span><i style={{ background: '#1b4971' }} />Defender zone</span>

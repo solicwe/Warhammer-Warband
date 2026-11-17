@@ -49,6 +49,10 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 
 ## Pitfalls seen before
 
+- Tabletop > Inspect Layout copies the gdmissions.app layout card (the layouts there are PNG images, our `data/layouts.json`
+  was traced from them). Its "x + y" plate labels are our own: nearest long edge + nearest short edge to each terrain
+  area's bounding box, checked against one label only ("14 + 6"); deployment depths come from `zones` (`zoneDepthAt`).
+  Do not copy the site's images into the repo.
 - The army-buff cards are HTML in a `foreignObject` (`Board.tsx`, `.table-cards`). Two traps, both seen:
   a CSS `transform` scaling that HTML clips the cards wrongly (confirmed in Chromium; scale on the SVG side with
   `<g transform>`), and with nothing painted under the cards Chrome left their old positions on screen while the map
