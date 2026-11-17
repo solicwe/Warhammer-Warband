@@ -543,14 +543,18 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
       {terrainBoxes.filter(({ bb }) => bb.w >= 3 || bb.h >= 3).flatMap(({ idx, bb }) => {
         const toLeft = bb.minX <= 44 - bb.maxX;
         const toTop = bb.minY <= 60 - bb.maxY;
-        const dx = toLeft ? bb.minX : 44 - bb.maxX;
-        const dy = toTop ? bb.minY : 60 - bb.maxY;
-        const hy = Math.min(Math.max(bb.cy, bb.minY + 0.6), bb.maxY - 0.6);
-        const vx = Math.min(Math.max(bb.cx, bb.minX + 0.6), bb.maxX - 0.6);
+        // the line ends on the footprint's own nearest corner, so the number is the real distance to the shape
+        const poly = terrainBoxes[idx].terrain.poly;
+        const vx0 = poly.reduce((m, q) => ((toLeft ? q[0] < m[0] : q[0] > m[0]) ? q : m), poly[0]);
+        const vy0 = poly.reduce((m, q) => ((toTop ? q[1] < m[1] : q[1] > m[1]) ? q : m), poly[0]);
+        const dx = toLeft ? vx0[0] : 44 - vx0[0];
+        const dy = toTop ? vy0[1] : 60 - vy0[1];
+        const hy = vx0[1];
+        const vx = vy0[0];
         const others = terrainBoxes.filter((o) => o.idx !== idx).map((o) => o.terrain.poly);
-        const clear = (x1: number, y1: number, x2: number, y2: number) => !others.some((poly) => segHitsPoly(x1, y1, x2, y2, poly));
-        const hx1 = toLeft ? 0 : bb.maxX, hx2 = toLeft ? bb.minX : 44;
-        const vy1 = toTop ? 0 : bb.maxY, vy2 = toTop ? bb.minY : 60;
+        const clear = (x1: number, y1: number, x2: number, y2: number) => !others.some((o) => segHitsPoly(x1, y1, x2, y2, o));
+        const hx1 = toLeft ? 0 : vx0[0], hx2 = toLeft ? vx0[0] : 44;
+        const vy1 = toTop ? 0 : vy0[1], vy2 = toTop ? vy0[1] : 60;
         return [
           dx >= 2 && clear(hx1, hy, hx2, hy) && <DimensionLine key={`h${idx}`} x1={hx1} y1={hy} x2={hx2} y2={hy} label={fmtNum(dx)} textSide="top" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
           dy >= 2 && clear(vx, vy1, vx, vy2) && <DimensionLine key={`v${idx}`} x1={vx} y1={vy1} x2={vx} y2={vy2} label={fmtNum(dy)} textSide="right" tickLen={0.7} sw={0.18} fs={0.95} color="#fbbf24" />,
