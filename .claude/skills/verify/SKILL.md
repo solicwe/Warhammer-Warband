@@ -1,6 +1,6 @@
 ---
 name: verify
-description: How to prove a change to Warhammer Warband really works, per kind of change (rules, engine, bot, campaign, UI, effects, performance), with the commands, harnesses and numbers to report. Load before saying a task is done, and before fast-forwarding main.
+description: How to prove a change to Warhammer Warband really works, per kind of change (rules, engine, bot, UI, effects, performance, removing code), with the commands, harnesses and numbers to report. Load before saying a task is done, and before fast-forwarding main.
 ---
 
 # Verify
@@ -28,10 +28,12 @@ or run it on the old code), then pass.
 - `docs/RULES_STATUS.md` still tells the truth.
 
 **Engine** (`src/engine/`, `src/rules-engine/`)
-- Unit tests of the rule, then a seeded bot-vs-bot game for the factions involved (see `src/engine/campaignTreeEngine.test.ts`
-  "plays to the end" for the loop: `botShouldAct ? botStep : endPhase` until `gameover`).
-- Effect fields: prove the engine reads them. The pattern is the `signature` helper in `campaignTreeEngine.test.ts`:
-  apply the effect to a unit and check that stats, rolls, OC or attack and defence modifiers change.
+- Unit tests of the rule, then a seeded bot-vs-bot game for the factions involved (see `src/engine/shortGame.test.ts`
+  for the loop: `botShouldAct ? botStep : endPhase` until `gameover`).
+- Effect fields: prove the engine reads them: apply the effect to a unit (`addTimed`) and check that stats, rolls, OC
+  or attack and defence modifiers change (`effectsFor`, `unitFlags`, `buildShootPools`).
+- A core rule: check the number and the wording against the official text (`docs/01-rules-11e-reference.md` gives the
+  section number), not against what the code or an older edition does.
 
 **Bot** (`src/ai/`) — load `bot` too
 - `src/ai/*.test.ts` and `src/engine/bot*.test.ts`.
@@ -41,9 +43,12 @@ or run it on the old code), then pass.
 - Speed: time the worst single bot step in a 2000-point game (a node bench in `src/zz/`, bundled with esbuild, or
   `node --cpu-prof` to find the hot spot). Report before and after.
 
-**Campaign** — load `campaign` too
-- `src/engine/campaign*.test.ts` (tree shape, fit per army, relics, migration, rules, engine). A save-format change
-  needs a migration test that loads the old shape.
+**Removing code**
+- Prove nothing uses it before deleting: `grep -rn "<name>" src scripts` for every export and file, then
+  `npx tsc --noEmit -p . --noUnusedLocals --noUnusedParameters` for imports and locals left behind.
+- A file only its own test imports is dead with its test. A CSS class is dead when no `.ts`/`.tsx` mentions its name
+  and no code builds it (`shake-${kind}`, `o${owner}`).
+- The same suite before and after: the pass count may only drop by the tests of what was deleted.
 
 **UI and effects** — load `ui` / `vfx` too
 - Look at it. Start `npx vite --port 5179 --strictPort` in the background, open the page with Playwright
@@ -68,8 +73,14 @@ or run it on the old code), then pass.
   hold the port.
 - A run of the full suite started while files were changing gave a wrong result. Do not edit `src/` while it runs;
   docs and skills are safe to edit.
-- Charge reach is measured to Engagement Range, not base contact: target filtering, charge result feedback and the
-  auto-charge path must all allow the rolled distance plus the 1" Engagement Range.
+- Charge targets (Core Rules 11.04): a target must be within the charge roll measured to the unit itself. The rule's
+  own example: a 7" roll cannot pick a unit more than 7" away even though the charger could end within 2" of it. The
+  code still allows the roll plus Engagement Range (`chargeTargetOptions`, `declareCharge` in `game.ts`); this is an
+  open item in `docs/05-tech-debt.md`. Fix the code to the rule; do not copy the old behaviour into new code.
+- `vite.config.ts` excludes the slow tests (`sim`, `autoPlay`, `botLook`, `tune`, `arena`, `*Games*`) by pattern, and
+  Vitest applies that even to a file named on the command line: `npx vitest run src/engine/arena.test.ts` answers
+  "No test files found". Until the config gets a slow group, the arena, `scripts/elo.mjs` and `scripts/tune.mjs` do
+  not run (open item in `docs/05-tech-debt.md`).
 - On this Windows checkout, the default Vitest worker pool starved long bot-game tests and caused 300-second
   timeouts. An isolated Changehost game passed with `--maxWorkers=1`; the full suite passed with `--maxWorkers=4`.
   When failures are only timeouts, cap concurrency before treating them as code failures.

@@ -12,12 +12,11 @@ and change it. A doc that describes something that no longer works is worse than
 
 | The change | Update |
 |---|---|
-| Something a player sees or does differently (a mode, a screen, a rule of play, the campaign) | README: the section of that feature (Playing, How the battle works, Building an army, Reading the rules, Campaign, On your phone, Saves) |
+| Something a player sees or does differently (a mode, a screen, a rule of play) | README: the section of that feature (Core Features, Supported Factions, Getting Started) |
 | A rule now runs, or stops running | `docs/RULES_STATUS.md` (counts and the per-faction lists) |
 | A data file moved or a new kind of rule data | `docs/EDITING.md`, `AI_GUIDE.md`, `ARCHITECTURE.md` (Data table) |
 | A new hook, event, layer or module | `ARCHITECTURE.md` (Events, Modifiers, Other extension points, Layers) |
 | A common change got a new step | `AI_GUIDE.md` |
-| Campaign tree, relics, saves | `docs/04-campaign-tree.md` (design, then "How it is checked"), README Campaign |
 | Bot behaviour or strength | `ARCHITECTURE.md` (The bot), `docs/03-bot-competitive.md` if it is about CP and stratagems, the `bot` skill |
 | Battle effects | the `vfx` skill (styles table, parts list) |
 | A new way to verify something, a new scratch harness | the `verify` skill |

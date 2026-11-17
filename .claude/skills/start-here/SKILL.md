@@ -6,8 +6,8 @@ description: The workflow for every task in Warhammer Warband. Load first for an
 # Start here
 
 This project has grown fast, mostly by AI sessions. The main risk is not bad code but **duplicate code**: a second
-scale factor next to the first, a relic that does what a tree node does, a new helper that already existed under
-another name. Every task therefore starts with an inventory, and nothing is built until it is clear what exists.
+scale factor next to the first, a second "15 inch" visibility rule next to Hidden, a new helper that already existed
+under another name. Every task therefore starts with an inventory, and nothing is built until it is clear what exists.
 
 ## 1. Understand the ask
 
@@ -28,7 +28,7 @@ Find everything that already touches the ask. Do all of these, not just the firs
    Also search the names the UI shows (button labels, log lines) and the type names (`types.ts`).
 2. **Read the area's skill and doc** (table below). They hold earlier decisions and the reasons for them.
 3. **Read the lists that define the feature set**: README (what players are told exists), `docs/RULES_STATUS.md`
-   (rules that run), `docs/04-campaign-tree.md` (tree and relics), `ARCHITECTURE.md` (hooks and layers), the test
+   (rules that run), `ARCHITECTURE.md` (hooks and layers), the test
    names of the area (`find src -name '*.test.ts*'`, then `grep -n "it(" <file>`): a test name often says exactly
    what a feature promises.
 4. **Look at the history**: `git log --oneline -30 -- <file>` and `git log --all --oneline --grep "<word>"`. A
@@ -52,8 +52,8 @@ Decision: extend <x> | replace <x> (and delete it) | new <y>, because <reason>
 - **Replace** when what exists is wrong at its root. Then remove the old one in the same change, move its callers,
   and keep its error handling. Never leave two ways to do one thing.
 - **New** only when nothing fits, and name the reason. Put it next to its siblings and follow their conventions.
-- **Keep shared ideas in one place.** One scale factor, one list of tree keys, one relic text writer, one style
-  classifier. If you need a variant, parameterise the original.
+- **Keep shared ideas in one place.** One scale factor, one style classifier, one piece of code for each rule the
+  rulebook states once. If you need a variant, parameterise the original.
 - A change in one area often needs the matching change elsewhere (a new `SkillStyle` needs colours in `BattleFx.tsx`,
   a test, and a line in the vfx skill). List those places before editing.
 
@@ -114,20 +114,16 @@ If nothing new was learned, say so in one line; do not invent a lesson.
 
 Made in conversation, so they are not all visible in the code. A change that would undo one needs the owner's yes.
 
-- **Normal games follow the official rules, except for the owner-approved game-wide variations below.** Other house
-  changes live in the campaign only: random Force Dispositions, both sides drawing their Secondary cards at round 1,
-  the small kill bonus (1 VP a unit, 2 for a character, vehicle or monster, at most 12 a battle).
+- **Games follow the official 11th edition rules only, except for the owner-approved game-wide variations below.**
+  No invented rules (owner, 17 Nov 2026): a rule that is not in the Core Rules, a faction pack or the mission deck is
+  not added, and a number is checked against the source before it is written. `docs/01-rules-11e-reference.md` is the
+  project's summary; where it and the code disagree, check the official text, then fix whichever is wrong.
+- **There is no campaign / roguelike mode** (owner, 17 Nov 2026): it was removed. Do not bring back its code, data,
+  styles or docs. **Code nothing uses is deleted**, not kept for later (git history keeps it).
 - **Owner-approved game-wide exceptions** (confirmed in the Ritual / Tzaangor rules discussion): another eligible
   Thousand Sons caster may retry a failed Ritual, and Fatecaster Greatbows use Malign Trickery once at the end of
   the opponent's Movement phase when an enemy is within 12" and the unit is not engaged.
-- **Campaign battles are normal battles**: an official primary, Tactical secondaries, five rounds; won on points.
-- **Campaign events never pile on a losing player**: enemy reinforcements only while the player is ahead, on a roll,
-  at most once a battle. A loss still pays Scrap; the Scrap reward card pays 80-120 ("more relic" meant that card); BATTLELINE and
-  DEDICATED TRANSPORT copies stay cheaper for longer (their copy limit is doubled in the rules).
-- **The bot plays for points in the campaign and in idle mode** (`pointsFirst`); normal games against the bot keep
-  the usual plan.
-- **The army tree fits each army** (no node for a keyword it cannot field), **tree and relics never overlap** (the tree
-  changes numbers and re-rolls, relics give special rules, no shared names), relic text is written from the effect.
+- **The bot plays for points in idle mode** (`pointsFirst`); normal games against the bot keep the usual plan.
 - **Effects**: fire only for torrent weapons (a psychic power is a psychic bolt, plasma is plasma); no drifting smoke
   or haze as the main event; every effect sized to the model and the zoom through the one scale (`VIS`, `TRACE`);
   blasts about the size of the unit hit; Deep Strike keeps the old lightning arrival the owner liked; mortal wounds
@@ -148,9 +144,9 @@ When the owner makes a new decision of this kind, add it here in the same change
 - `docs/02-game-design.md` is the original MVP plan (October 2026, in Thai): its roadmap and open questions are old.
   Read it for intent, not as the current design.
 - `docs/unit-audit.md` is a dated snapshot (11 Oct 2026).
-- The current truth is the code, the tests, README, ARCHITECTURE.md, AI_GUIDE.md, docs/RULES_STATUS.md,
-  docs/04-campaign-tree.md and these skills. `docs/05-tech-debt.md` lists known bugs and debt by priority: read it
-  before a cleanup, and update it when you fix or find one.
+- The current truth is the code, the tests, README, ARCHITECTURE.md, AI_GUIDE.md, docs/RULES_STATUS.md and these
+  skills. `docs/05-tech-debt.md` lists known bugs and debt by priority: read it before a cleanup, and update it when
+  you fix or find one.
 
 ## Where things are
 
@@ -161,7 +157,6 @@ When the owner makes a new decision of this kind, add it here in the same change
 | Army rules with state | `src/factions/*.ts`, registered in `src/factions/index.ts` | | `ARCHITECTURE.md` (hooks) |
 | Datasheets | generated into `public/data/factions/<ID>.json` | `data/raw`, `data/packs`, `data/overrides/<ID>.json` | `rules-data` |
 | Bot | `src/ai/` (`bot.ts`, `botMove.ts`, `botPlan.ts`, `botLook.ts`, `botStrats.ts`) | `data/bot-weights.json`, `data/bot-elo.json` | `bot`, `docs/03-bot-competitive.md` |
-| Campaign | `src/engine/campaign.ts`, `campaignTree.ts`, `campaignTreeArmies.ts`, `treeFielded.ts`; UI `src/ui/Campaign.tsx`, `ArmyTree.tsx`, `Relics.tsx` | | `campaign`, `docs/04-campaign-tree.md` |
 | Screens | `src/ui/` (`App.tsx`, `GameScreen.tsx`, `Board.tsx`, `ArmyBuilder.tsx`, `styles.css`) | | `ui` |
 | Battle effects | `src/ui/BattleFx.tsx`, `fxTextures.ts`, `src/engine/weaponFx.ts`, `skillStyle` in `src/engine/state.ts` | | `vfx` |
 | Saves | `src/services/storage.ts`, `src/ui/library.ts` | | `ui` |

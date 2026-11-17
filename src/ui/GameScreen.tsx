@@ -4034,7 +4034,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         )}
       </header>
 
-      <div className={`board-wrap ${s.screenShake && Date.now() - s.screenShake < 850 ? 'shake-expand' : shake ? `shake-${shake}` : ''}`}>
+      <div className={`board-wrap ${shake ? `shake-${shake}` : ''}`}>
         <InlineErrorBoundary name="Battlefield Board" onRecover={() => { setSel(null); setMode(null); setDraft(null); }}>
           <Board
             s={s}

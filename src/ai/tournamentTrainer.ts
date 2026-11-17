@@ -37,16 +37,6 @@ export const OPTIMIZED_TOURNAMENT_WEIGHTS: AIWeights = {
   wTradeEfficiency: 85,
 };
 
-let currentLiveWeights: AIWeights = { ...OPTIMIZED_TOURNAMENT_WEIGHTS };
-
-export function getActiveTournamentWeights(): AIWeights {
-  return currentLiveWeights;
-}
-
-export function setActiveTournamentWeights(weights: Partial<AIWeights>) {
-  currentLiveWeights = { ...currentLiveWeights, ...weights };
-}
-
 export interface HeadlessMatchResult {
   winner: 0 | 1 | 'draw';
   rounds: number;
@@ -227,52 +217,5 @@ export function runTournamentBenchmark(
     avgScore0: Math.round((totalScore0 / matchesCount) * 10) / 10,
     avgScore1: Math.round((totalScore1 / matchesCount) * 10) / 10,
     avgDurationMs: Math.round(totalDuration / matchesCount),
-  };
-}
-
-/**
- * Hill-climbing evolutionary weight tuner for competitive tournaments.
- * Perturbs weights across generations to discover superior tactical playstyles.
- */
-export function tuneTournamentWeights(
-  generations = 3,
-  matchesPerGen = 6,
-  baseWeights: AIWeights = OPTIMIZED_TOURNAMENT_WEIGHTS,
-): { championWeights: AIWeights; improvementVP: number } {
-  let currentChampion = { ...baseWeights };
-  let bestScoreDiff = 0;
-
-  // Evaluate baseline
-  const baseline = runTournamentBenchmark(matchesPerGen, 'SM', 'ORK', currentChampion);
-  bestScoreDiff = baseline.avgScore0 - baseline.avgScore1;
-
-  const keys: (keyof AIWeights)[] = [
-    'wObjectiveControl',
-    'wSecondaryCompletion',
-    'wThreatAvoidance',
-    'wFocusFireKillConfirm',
-    'wScreeningPriority',
-    'wTradeEfficiency',
-  ];
-
-  for (let g = 0; g < generations; g++) {
-    const candidate: AIWeights = { ...currentChampion };
-    // Perturb 1-2 random weights by +/- 5% to 15%
-    const keyToMutate = keys[Math.floor(Math.random() * keys.length)];
-    const delta = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 8) + 3);
-    candidate[keyToMutate] = Math.max(10, Math.min(100, candidate[keyToMutate] + delta));
-
-    const result = runTournamentBenchmark(matchesPerGen, 'SM', 'ORK', candidate);
-    const scoreDiff = result.avgScore0 - result.avgScore1;
-
-    if (scoreDiff > bestScoreDiff) {
-      bestScoreDiff = scoreDiff;
-      currentChampion = candidate;
-    }
-  }
-
-  return {
-    championWeights: currentChampion,
-    improvementVP: Math.round(bestScoreDiff * 10) / 10,
   };
 }

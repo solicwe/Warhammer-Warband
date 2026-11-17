@@ -11,8 +11,8 @@ description: Change, measure or debug Warhammer Warband's bot (movement, roles, 
 |---|---|---|
 | Entry | `src/ai/bot.ts` | `botStep(s, p)` plays one step for side p; `botShouldAct`; shooting order (`botShootOne`) |
 | Movement | `src/ai/botMove.ts` | scores places to move with weights from `data/bot-weights.json`; quick planning on big boards (`bigBoard`: more than 150 models brought; `isFastPlanning`) |
-| Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)` (campaign or idle): objectives get holders before units hunt unless `s.idleTactic === 'assault'` |
-| Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue, assault); `chooseTurnStyle` plays copies of the turn to pick one; the campaign plays `rogue` (objectives first) or `assault` (seek and destroy) |
+| Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)`: objectives get holders before units hunt unless `s.idleTactic === 'assault'` |
+| Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue, assault); `chooseTurnStyle` plays copies of the turn to pick one |
 | CP and stratagems | `src/ai/botStrats.ts` | which stratagem, when; re-rolls |
 | Choices | `src/ai/botPlus.ts`, `botRituals.ts` | doctrines, abilities with a decision, Rituals |
 | Deployment | `src/ai/deploy.ts` | where units start |
@@ -21,7 +21,7 @@ description: Change, measure or debug Warhammer Warband's bot (movement, roles, 
 | Baseline | `src/ai/baseline/` | a frozen copy the live bot is measured against (`scripts/bot-baseline/snapshot.mjs`) |
 
 Both sides go through the same code: nothing is special to player 1. Difficulty (`s.botLevel`) sets how much the
-look-ahead tries; the campaign and phones skip the look-ahead.
+look-ahead tries; phones skip the look-ahead.
 
 ## Inventory first
 
@@ -42,7 +42,7 @@ look-ahead tries; the campaign and phones skip the look-ahead.
 
 ## Pitfalls seen before
 
-- Too many hunters, too few objective holders: the campaign is won on points, so `pointsFirst` exists; keep it.
+- Too many hunters, too few objective holders: a battle is won on points, so `pointsFirst` exists; keep it.
 - Big games froze: line of sight from every candidate spot was the cost. Keep the quick path for big boards.
 - A behaviour change for the enemy also changes idle (the same code); say which sides it applies to.
 - Every person is on auto rules and also in `s.decides` (`withAutoRules`). Any `autoPlay.ts` helper that presses a

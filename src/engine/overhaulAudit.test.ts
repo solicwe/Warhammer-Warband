@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createGame, placeUnit, formationAt, polygonArea, fightingArmyPoints, isFightEvenlyMatched } from './game';
+import { createGame, placeUnit, formationAt } from './game';
 import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLoneOpActive, getUnitLoneOpRange } from './visibility';
 import { stratagemShortSummary, type StratRule } from '../rules-engine/stratagems';
 import { cpWorth } from '../ai/botStrats';
@@ -32,7 +32,7 @@ function createRuin(id: string, x0: number, y0: number, x1: number, y1: number, 
   };
 }
 
-describe('Core Rules, UI & Rogue-like Comprehensive Overhaul Tests', () => {
+describe('Line of sight, cover and stratagem summary', () => {
   const SM = loadFaction('SM');
   const ORK = loadFaction('ORK');
 

@@ -73,13 +73,6 @@ export function loadoutLabels(u: UnitState): Map<string, string> {
   return res;
 }
 
-/** For the unit card: who carries what in a mixed squad ("3× Thunder Hammer + Storm Shield", "Lucia Vestha: …"). */
-export function loadoutSummary(u: UnitState): string[] {
-  const out = new Map<string, number>();
-  for (const [, l] of loadouts(u)) out.set(l.full, (out.get(l.full) ?? 0) + 1);
-  return [...out].map(([k, n]) => (k.includes(':') ? k : `${n}× ${k}`));
-}
-
 export interface PictureVariant { key: string; fallback: string[]; label: string }
 
 /** The pictures a squad can have: one per model name, split further by loadout when the same model comes with

@@ -1245,5 +1245,3 @@ export function unfiredWeaponNames(u: UnitState): string[] {
 export function endUnitShooting(u: UnitState) {
   u.selectedToShoot = true;
 }
-
-export { loseWounds as loseWoundsForTest };

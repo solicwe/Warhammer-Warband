@@ -1,6 +1,6 @@
 ---
 name: ui
-description: Change or check Warhammer Warband's screens: home, army builder, battle setup, the battle screen and board, the campaign screens, sheets and menus, touch controls, accessibility, saving, and how fast the page runs on a phone. Load for any request about how something looks, where a button is, a layout bug, or lag.
+description: Change or check Warhammer Warband's screens: home, army builder, battle setup, the battle screen and board, the tabletop companion, sheets and menus, touch controls, accessibility, saving, and how fast the page runs on a phone. Load for any request about how something looks, where a button is, a layout bug, or lag.
 ---
 
 # Screens
@@ -13,12 +13,12 @@ description: Change or check Warhammer Warband's screens: home, army builder, ba
 | Home (army library) | `src/ui/Home.tsx`, `library.ts` |
 | Army builder | `src/ui/ArmyBuilder.tsx`, `loadout.ts` |
 | Battle setup | `src/ui/BattleSetup.tsx` |
-| Battle | `src/ui/GameScreen.tsx` (phases, sheets, bot driving, idle), `Board.tsx` (SVG battlefield), `Hud.tsx`, `DiceTray.tsx`, `AttackReport.tsx`, `MapCam.tsx` |
+| Battle | `src/ui/GameScreen.tsx` (phases, sheets, bot driving, idle), `Board.tsx` (SVG battlefield), `Hud.tsx`, `DiceTray.tsx`, `AttackReport.tsx` |
 | Effects | `src/ui/BattleFx.tsx` (load `vfx`) |
-| Campaign | `src/ui/Campaign.tsx`, `ArmyTree.tsx`, `Relics.tsx` |
-| Rule text | `src/ui/RuleText.tsx`, `RuleTable.tsx`, `AbilityBadgePopover.tsx` |
+| Tabletop companion | `src/ui/TabletopScreen.tsx`, `LayoutPreview.tsx` |
+| Rule text | `src/ui/RuleText.tsx`, `RuleTable.tsx` |
 | State and undo | `src/ui/store.ts` (`useGame`: each action clones the state and applies one engine call) |
-| Saves | `src/services/storage.ts` (`localStorage`: armies, the battle in progress, the campaign, settings) |
+| Saves | `src/services/storage.ts` (`localStorage`: armies, the battle in progress, finished battles, settings) |
 | Look and tokens | `src/ui/styles.css` (colour tokens at the top), `Icon.tsx` (SVG icons, no emoji) |
 
 ## Standards (from the README; keep them)

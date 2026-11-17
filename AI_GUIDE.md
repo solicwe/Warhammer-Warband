@@ -3,7 +3,7 @@
 Start with `CLAUDE.md` and the `start-here` skill (`.claude/skills/start-here/SKILL.md`): every task begins with an
 inventory of what already exists, a written decision (extend, replace or new) and ends with real checks (`verify`)
 and true docs (`docs-sync`), and leaves what it taught in the area's skill. Read `ARCHITECTURE.md` for how the code fits together. This file is the checklist for the
-common changes; each area also has a skill in `.claude/skills/` (`rules-data`, `bot`, `campaign`, `ui`, `vfx`).
+common changes; each area also has a skill in `.claude/skills/` (`rules-data`, `bot`, `ui`, `vfx`).
 
 ## Ground rules
 
@@ -55,7 +55,7 @@ Entry in `data/detachment-rules.json`, key = detachment name (army rules: rule n
 ## Add a game mode
 
 Modes are options on `createGame` (`NewGameOptions` in `game.ts`): `maxRounds` (short battle), `primaryId`
-(mission), `secondaryMode`. Campaign rules live in `campaign.ts`. A new mode adds an option there and a choice in
+(mission), `secondaryMode`. A new mode adds an option there and a choice in
 `src/ui/BattleSetup.tsx`; keep the default behaviour unchanged when the option is absent.
 
 ## Add unit photos
@@ -63,14 +63,6 @@ Modes are options on `createGame` (`NewGameOptions` in `game.ts`): `maxRounds` (
 Put files in `public/images/units/<ID>/` named after the datasheet in lower case with dashes
 (`Intercessor Squad` -> `intercessor-squad.webp`), then `npm run images` to rebuild the manifest. See
 `public/images/README.md`.
-
-## Change the campaign tree or relics
-
-Read the "Tree v3" section of `docs/04-campaign-tree.md` and the `campaign` skill first. A tree node changes numbers
-and re-rolls only (`TREE_KEYS` in `campaignTree.ts`); a relic gives special rules only. Run
-`npx vitest run src/engine/campaign*.test.ts`; after changing which keywords nodes name, regenerate the table with
-`UPDATE_FIELDED=1 npx vitest run src/engine/campaignTreeFit.test.ts`. A change to what a saved id means needs a
-migration (`treeVersion`) and a test that loads the old save.
 
 ## Add or change a battle effect
 

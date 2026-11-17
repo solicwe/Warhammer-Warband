@@ -18,8 +18,6 @@ export function loadCoach(): CoachPrefs {
 export function saveCoach(c: CoachPrefs) {
   writeJSON(KEYS.coach, c);
 }
-/** Start the tips again from the first one (How to play). */
-export function resetCoach() { saveCoach({ off: false, seen: [] }); }
 
 export interface Tip { id: string; at: string; title: string; text: string }
 

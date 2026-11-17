@@ -800,7 +800,6 @@ export interface GameState {
   botIgnoresCards?: PlayerId[];
   fx?: FxEvent[];
   stats?: BattleStats;
-  screenShake?: number;
   table?: { width: number; height: number };
   botTried?: string[]; // bot bookkeeping: units already considered this phase
   fxSeq?: number;

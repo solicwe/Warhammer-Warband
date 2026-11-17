@@ -27,8 +27,6 @@ export function blockingWalls(s: GameState, m: ModelState, fly = false, _ends: P
 /** How close a model's centre may come to a wall: a round token stands in for a hull, so allow a little overlap. */
 export const wallClearance = (m: ModelState, blocking: boolean) => (blocking ? m.r * 0.6 : m.r * 0.5);
 
-/** Objective markers are 40mm flat discs: models may move over them and end a move on them freely. */
-export const OBJECTIVE_MARKER_R = 0.79;
 /** Where a model may END a move or be set up: not on a wall (its base can lean over a little). Objective markers do not block models. */
 export function endSpotBlocked(s: GameState, m: Body, p: Pt): 'wall' | 'objective' | null {
   const ax = axis(bodyAt(m, p));
@@ -78,11 +76,6 @@ export function pathLength(path: Pt[]) {
   let d = 0;
   for (let i = 1; i < path.length; i++) d += dist(path[i - 1], path[i]);
   return d;
-}
-
-/** Total path distance for a model's movement path. */
-export function pathDistance(_s: GameState, _m: ModelState, path: Pt[]): number {
-  return pathLength(path);
 }
 
 /** The path cut to `len` inches. */

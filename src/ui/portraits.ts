@@ -133,12 +133,6 @@ export function hasRealPortrait(datasheetName: string): boolean {
 
 setPicturedCheck(hasRealPortrait);
 
-/** Check if image URL is an invalid placeholder or generic icon */
-export function isPlaceholderIcon(imgUrl?: string): boolean {
-  if (!imgUrl) return true;
-  return imgUrl.includes('placeholder') || imgUrl.includes('default') || imgUrl.includes('generic') || imgUrl.startsWith('#tok-');
-}
-
 const SOURCE_ALIASES: Record<string, string[]> = {
   'Battle Sisters Squad': ['Sisters of Battle Squad'],
   'Sisters of Battle Squad': ['Battle Sisters Squad'],

@@ -1,12 +1,13 @@
 # Architecture
 
 A Warhammer 40,000 (11th edition) battle simulator that runs entirely in the browser: army builder, a rules engine
-that plays the five phases, a bot opponent, and a roguelite campaign. React 19 + TypeScript + Vite, tested with Vitest.
+that plays the five phases, a bot opponent, and a companion for games on a real table. React 19 + TypeScript + Vite,
+tested with Vitest.
 
 ## Layers
 
 ```
-src/ui/            React screens: army builder, battle, campaign map
+src/ui/            React screens: army builder, battle setup, battle, tabletop companion
 src/ai/            the bot: movement, targets, stratagems, lookahead (runs in a Web Worker in the browser)
 src/factions/      army rules that keep state of their own; index.ts registers them with the engine
 src/rules-engine/  rules as data: effects, activations, stratagems, detachment rules, the ability text reader
@@ -148,23 +149,12 @@ rules run and which are still text only.
 scored in `botMove.ts` with weights from `data/bot-weights.json` (tuned by `scripts/tune.mjs`); on a big board (more
 than 150 models brought) it plans with a quicker search so a 2000-point game does not freeze. `botPlan.ts` gives
 every unit a role for the turn (home, anchor on an objective, hammer that hunts, screen, firebase, support, taxi);
-in a battle won on points (the campaign, idle mode) each objective gets a holder before units go hunting
-(`pointsFirst`). `botLook.ts` plays a few copies of the turn in different styles and keeps the best (the campaign
-always plays the objective-first `rogue` style). `botStrats.ts` spends CP, `botPlus.ts` handles choices (doctrines,
+each objective gets a holder before units go hunting (`pointsFirst`), unless the Idle tactic is `assault`.
+`botLook.ts` plays a few copies of the turn in different styles and keeps the best. `botStrats.ts` spends CP, `botPlus.ts` handles choices (doctrines,
 abilities with a decision). In the browser the bot thinks in a Web Worker (`ui/lookWorker.ts`) so the screen stays
 live; a step the worker has not answered in 90 s is played on the main thread. Idle mode hands the player's side to
 the same code. The live bot is measured against a frozen copy in `src/ai/baseline/` (`arena.test.ts`,
 `scripts/elo.mjs`).
-
-## The campaign
-
-`campaign.ts` holds a run: the map (`makeMap`), each battle (`campaignMission`: an official primary, Tactical
-secondaries, five rounds, random Force Dispositions), rewards (`makeOffer`, `takeReward`), recruiting, relics
-(`RELICS`, text written by `relicText`) and what is put on the armies before a battle (`applyCampaign`). The army tree
-is `campaignTree.ts` (shared spokes, ring, keystones; `treeFor(army)` swaps nodes an army cannot use) with each
-army's own branches in `campaignTreeArmies.ts` and the keywords each army can field in `treeFielded.ts` (written by its
-test). The tree only changes numbers and re-rolls; relics only give special rules; tests keep the two apart. Old saves
-go through `migrateRun`. Design: `docs/04-campaign-tree.md`.
 
 ## Battle effects
 
@@ -176,10 +166,11 @@ plague, necron), each with a wind-up, a release and an aftermath. Sizes follow t
 
 ## UI
 
-`App.tsx` routes between Home (army library), the army builder, battle setup, the campaign map and
-`GameScreen.tsx` (the battle). `Board.tsx` draws the battlefield in SVG. Saved data is in `localStorage`
-(`KEYS` in `services/storage.ts`): `w40k11-armies` (army lists), `w40k11-save` (the battle in progress),
-`w40k11-battle` (last setup), `w40k11-portraits` (custom photos), `campaign-run` (the campaign), and settings.
+`App.tsx` routes between Home (army library), the army builder, battle setup, `GameScreen.tsx` (the battle) and
+`TabletopScreen.tsx` (scores, cards and layouts for a game on a real table). `Board.tsx` draws the battlefield in SVG.
+Saved data is in `localStorage` (`KEYS` in `services/storage.ts`): `w40k11-armies` (army lists), `w40k11-save` (the
+battle in progress), `w40k11-battle` (last setup), `w40k11-portraits` (custom photos), `w40k11-battle-logs` (finished
+battles and their replays), and settings.
 
 ## Working on this project
 

@@ -18,7 +18,6 @@ import { type FactionIndex } from './data';
 import { Icon } from './Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { LayoutPreview } from './LayoutPreview';
-import { TabletopSetupGuide } from './TabletopSetupGuide';
 import { Die } from './RollOverlay';
 import { play } from './sfx';
 import { armyColor } from './Sheet';

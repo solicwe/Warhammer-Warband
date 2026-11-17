@@ -1,7 +1,7 @@
 # Warhammer Warband: read this first
 
 A Warhammer 40,000 (11th edition) battle game that runs in the browser on a phone: army builder, rules engine, bot,
-campaign, battle effects. React 19 + TypeScript + Vite, tests in Vitest. No server.
+tabletop companion, battle effects. React 19 + TypeScript + Vite, tests in Vitest. No server.
 
 ## Every task, in this order
 
@@ -27,14 +27,13 @@ Load the `start-here` skill (`.claude/skills/start-here/SKILL.md`) and follow it
 | README, ARCHITECTURE, docs/ | `docs-sync` |
 | an ability, stratagem, detachment, army rule, a faction's data | `rules-data` |
 | the bot: moves, roles, targets, stratagems, speed, strength | `bot` |
-| the campaign: map, rewards, army tree, relics, saves | `campaign` |
 | screens, layout, touch, accessibility, performance of the page | `ui` |
 | battle effects: weapons, melee, abilities, Rituals | `vfx` |
 | writing the code itself | `ponytail` |
 
 The reference docs those skills point to: `ARCHITECTURE.md` (layers, hooks, rules pipeline), `AI_GUIDE.md`
 (step lists for common changes), `docs/EDITING.md` (which data file holds which rule), `docs/RULES_STATUS.md`
-(which rules run), `docs/04-campaign-tree.md` (tree and relic design), `docs/01-rules-11e-reference.md` (the rules).
+(which rules run), `docs/01-rules-11e-reference.md` (the rules), `docs/05-tech-debt.md` (known bugs and debt).
 
 ## The owner's standing rules
 

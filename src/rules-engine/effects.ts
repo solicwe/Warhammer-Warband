@@ -1628,13 +1628,6 @@ export function expireTimed(s: GameState, at: 'phaseEnd' | 'turnEnd' | 'turnStar
   }
 }
 
-/** Short labels of what currently affects a unit, for the unit card. */
-export function activeLabels(s: GameState, u: UnitState): string[] {
-  const out = new Set<string>();
-  for (const a of effectsFor(s, u)) if (holds(a, { s, A: u }) || (a.e.if ?? []).some((c) => /target|within|charged|weapon/i.test(c))) out.add(a.label);
-  return [...out];
-}
-
 export { onObjective };
 
 // ---------- fast checks used by visibility (called very often) ----------

@@ -5,7 +5,6 @@ import type { Pt } from './types';
 
 // Rule numbers and mission data are kept in data/*.json so they can be edited without touching code.
 export const RULES = coreRules;
-export type CoreStratagemId = (typeof coreRules.coreStratagems)[number]['id'];
 
 export type ScoringWhen = 'endOfYourTurn' | 'endOfYourCommandPhase' | 'endOfBattle' | 'endOfAnyTurn';
 export interface ScoringRule {
