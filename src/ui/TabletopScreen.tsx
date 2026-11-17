@@ -1209,61 +1209,44 @@ export function TabletopScreen({ index, onBack }: Props) {
               onClick={(e) => e.stopPropagation()}
               style={{ maxWidth: 520, maxHeight: '92vh', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}
             >
-              <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Layout {inspectLayout.number}: {deploymentName(inspectLayout.deployment)}</h3>
-                  <div className="tiny muted">Attacker edge: {inspectLayout.attackerEdge} · {inspectLayout.objectives.length} objectives</div>
-                </div>
-                <button className="icon-btn" onClick={() => setInspectLayout(null)} aria-label="Close">
-                  <Icon name="close" size={20} />
-                </button>
-              </div>
-
-              {/* Mode Toggle: Show Real Measurements vs Clean Map */}
-              <div style={{ display: 'flex', gap: 6, background: 'var(--surface-2)', padding: 4, borderRadius: 8 }}>
-                <button
-                  type="button"
-                  className={`btn ${showLayoutMeasurements ? 'primary' : 'ghost'}`}
-                  style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                  onClick={() => setShowLayoutMeasurements(true)}
-                >
-                  <Icon name="check" size={14} /> Show Measurements
-                </button>
-                <button
-                  type="button"
-                  className={`btn ${!showLayoutMeasurements ? 'primary' : 'ghost'}`}
-                  style={{ flex: 1, minHeight: 34, fontSize: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                  onClick={() => setShowLayoutMeasurements(false)}
-                >
-                  Standard Map
-                </button>
-              </div>
-
-              {/* Layout SVG Canvas with Click-to-Zoom */}
-              <div
-                style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '12px 0', background: 'var(--surface-2)', borderRadius: 8, cursor: 'zoom-in' }}
-                onClick={() => setZoomLayout(inspectLayout)}
+              {(() => {
+                const [da, db] = inspectLayout.matchup;
+                const nm = (id: string) => MISSIONS.forceDispositions.find((d) => d.id === id)?.name ?? id;
+                const edge = (e: string) => `${e} edge`;
+                return (
+                  <div className="layout-card">
+                    <div className="layout-card-head">
+                      <div className="layout-card-kicker">Terrain layout · {deploymentName(inspectLayout.deployment)}</div>
+                      <div className="layout-card-title">{da === db ? `${nm(da)} mirror` : `${nm(da)} vs ${nm(db)}`} · {String(inspectLayout.number).padStart(2, '0')}</div>
+                      <button className="icon-btn layout-card-close" onClick={() => setInspectLayout(null)} aria-label="Close"><Icon name="close" size={20} /></button>
+                    </div>
+                    <div className="layout-card-sides">
+                      <div><b style={{ color: '#8f1a1d' }}>ATTACKER</b><span>{edge(inspectLayout.attackerEdge)} · red zone</span></div>
+                      <div style={{ textAlign: 'right' }}><b style={{ color: '#1b4971' }}>DEFENDER</b><span>{edge(inspectLayout.defenderEdge)} · blue zone</span></div>
+                    </div>
+                    <div className="layout-card-map" onClick={() => setZoomLayout(inspectLayout)} style={{ cursor: 'zoom-in' }}>
+                      <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? Math.min(380, window.innerWidth - 80) : 280} showMeasurements={showLayoutMeasurements} />
+                    </div>
+                    <div className="layout-card-foot">44" × 60" board · {inspectLayout.objectives.length} objectives{showLayoutMeasurements ? ' · "x + y" = inches from the nearest long edge and short edge to the terrain area (traced, about ±0.5")' : ''}</div>
+                    <div className="layout-card-legend">
+                      <span><i style={{ background: '#8f1a1d' }} />Attacker zone</span>
+                      <span><i style={{ background: '#1b4971' }} />Defender zone</span>
+                      <span><i style={{ background: '#15803d' }} />Ruin walls</span>
+                      <span><i style={{ background: '#d97706' }} />Obstacles</span>
+                      <span><i style={{ background: '#0e7490' }} />Expansion</span>
+                      <span><i style={{ background: '#334155' }} />Centre</span>
+                    </div>
+                  </div>
+                );
+              })()}
+              <button
+                type="button"
+                className={`btn ${showLayoutMeasurements ? 'primary' : 'ghost'}`}
+                style={{ minHeight: 36, fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', borderRadius: 18, alignSelf: 'center', padding: '0 18px' }}
+                onClick={() => setShowLayoutMeasurements((v) => !v)}
               >
-                <LayoutPreview layout={inspectLayout} width={showLayoutMeasurements ? Math.min(380, window.innerWidth - 64) : 280} showMeasurements={showLayoutMeasurements} />
-                <button
-                  type="button"
-                  className="btn ghost small"
-                  style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 11, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '4px 8px', borderRadius: 4 }}
-                  onClick={(e) => { e.stopPropagation(); setZoomLayout(inspectLayout); }}
-                >
-                  Full Screen
-                </button>
-              </div>
-
-              {/* Tournament Legend */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px 10px', fontSize: 11.5, color: 'var(--text-2)', background: 'var(--surface-3)', padding: '10px 12px', borderRadius: 6 }}>
-                <div><span style={{ color: '#ef4444', fontWeight: 700 }}>Red:</span> Attacker Zone (Castle)</div>
-                <div><span style={{ color: 'var(--p0)', fontWeight: 700 }}>Blue:</span> Defender Zone (Castle)</div>
-                <div><span style={{ color: '#2dd4bf', fontWeight: 700 }}>Teal Diamond:</span> Expansion (Skull)</div>
-                <div><span style={{ color: '#94a3b8', fontWeight: 700 }}>Dark Disc:</span> Center Objective</div>
-                <div><span style={{ color: '#22c55e', fontWeight: 700 }}>Green:</span> Ruin Structures</div>
-                <div><span style={{ color: '#ffffff', fontWeight: 700 }}>White Lines:</span> Table Tape Offsets</div>
-              </div>
+                MEASUREMENTS {showLayoutMeasurements ? 'ON' : 'OFF'}
+              </button>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <button

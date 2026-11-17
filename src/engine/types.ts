@@ -746,6 +746,8 @@ export interface GameState {
   active: PlayerId;
   phase: Phase;
   deployTurn: PlayerId;
+  /** a player who just set up a TITANIC unit skips their next set-up turn */
+  deploySkip?: PlayerId;
   players: [PlayerState, PlayerState];
   units: UnitState[];
   terrain: TerrainPiece[];

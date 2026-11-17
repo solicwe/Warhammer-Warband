@@ -1039,6 +1039,8 @@ export function deployUnit(s: GameState, unitId: string, pos: Map<string, Pt>, h
   const zone = zoneOf(s, u.owner);
   u.infiltrated = how === 'infiltrate' && !alive(u).every((m) => bodyWhollyInPoly(m, zone));
   log(s, `Deployed ${u.name}${u.infiltrated ? ' (Infiltrators)' : ''}`, 'info', u.owner);
+  // Event Companion, Deploy Armies: setting up a TITANIC unit means skipping your next turn to set up a unit
+  if (hasKw(u, 'TITANIC') && s.units.some((x) => x.owner === other(u.owner) && x.status === 'pending')) { s.deploySkip = u.owner; log(s, `${u.name} is TITANIC: ${s.players[u.owner].name} skips their next set-up turn`, 'info', u.owner); }
   nextDeployer(s);
   return chk;
 }
@@ -1057,6 +1059,7 @@ export function nextDeployer(s: GameState) {
   const pending = (p: PlayerId) => s.units.some((u) => u.owner === p && u.status === 'pending');
   if (s.redeploy) return; // re-deploying: the player says when they are done
   const o = other(s.deployTurn);
+  if (s.deploySkip === o && pending(s.deployTurn)) { s.deploySkip = undefined; return; } // o set up a TITANIC unit: this player goes again
   if (pending(o)) s.deployTurn = o;
   else if (!pending(s.deployTurn)) finishDeployment(s);
 }

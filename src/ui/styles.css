@@ -3813,3 +3813,17 @@ select option {
 }
 
 
+
+/* Terrain layout card (Tabletop > Inspect Layout): navy title bar, sides row, parchment map, legend */
+.layout-card { background: #ede7d8; color: #1f2937; border-radius: 12px; overflow: hidden; border: 1px solid #1b2a41; }
+.layout-card-head { position: relative; background: #1b3a5f; color: #fff; padding: 12px 44px 12px 14px; }
+.layout-card-kicker { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; }
+.layout-card-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+.layout-card-close { position: absolute; top: 6px; right: 6px; color: #fff; }
+.layout-card-sides { display: flex; justify-content: space-between; gap: 8px; padding: 8px 14px; font-size: 11px; }
+.layout-card-sides b { display: block; font-size: 13px; letter-spacing: 0.04em; }
+.layout-card-sides span { text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; font-size: 10px; }
+.layout-card-map { display: flex; justify-content: center; padding: 6px 10px 4px; }
+.layout-card-foot { text-align: center; font-size: 10px; letter-spacing: 0.06em; opacity: 0.65; padding: 2px 14px 8px; }
+.layout-card-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; padding: 8px 12px 10px; border-top: 1px solid rgba(0, 0, 0, 0.15); font-size: 11px; }
+.layout-card-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }

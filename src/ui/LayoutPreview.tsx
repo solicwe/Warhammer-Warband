@@ -135,6 +135,32 @@ function DimensionLine({
   );
 }
 
+/** Inches to the nearest half, without a trailing ".0". */
+const fmtNum = (v: number) => String(Math.round(v * 2) / 2);
+
+/** How deep a deployment zone is along the table edge at x, measured from the end edge it starts at (y = edgeY). */
+function zoneDepthAt(poly: number[][], x: number, edgeY: number): number {
+  const ys: number[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % poly.length];
+    if ((x1 - x) * (x2 - x) <= 0 && x1 !== x2) ys.push(y1 + ((y2 - y1) * (x - x1)) / (x2 - x1));
+    else if (x1 === x2 && x1 === x) ys.push(y1, y2);
+  }
+  if (!ys.length) return 0;
+  return edgeY === 0 ? Math.max(...ys) : 60 - Math.min(...ys);
+}
+
+/** "x + y" over a terrain area: inches from the nearest long edge and from the nearest short edge. */
+function PlateLabel({ x, y, text }: { x: number; y: number; text: string }) {
+  return (
+    <text x={x} y={y + 0.4} fontSize="1.1" fontWeight="800" fontFamily="Oswald, sans-serif" textAnchor="middle" fill="#111"
+      style={{ paintOrder: 'stroke fill', stroke: '#fff', strokeWidth: '0.4px', strokeLinejoin: 'round' }}>
+      {text}
+    </text>
+  );
+}
+
 export function LayoutPreview({ layout, width = 120, showMeasurements = false }: LayoutPreviewProps) {
   const pts = (a: number[][]) => a.map(([x, y]) => `${x},${y}`).join(' ');
   const line = layout.territory.attacker;
@@ -197,38 +223,10 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
     bb: getBoundingBox(t.poly),
   }));
 
-  // Identify key quadrant ruins for CAD measurements
-  const majorRuins = terrainBoxes.filter((item) => item.bb.w >= 3 || item.bb.h >= 2);
-
-  // Bottom-Left Ruin (cx < 20 && cy > 30)
-  const botLeftRuin = majorRuins
-    .filter((r) => r.bb.cx < 20 && r.bb.cy > 30)
-    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
-
-  // Bottom-Right Ruin (cx > 24 && cy > 30)
-  const botRightRuin = majorRuins
-    .filter((r) => r.bb.cx > 24 && r.bb.cy > 30)
-    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
-
-  // Center Ruin (nearest to center 22, 30)
-  const centerRuin = majorRuins
-    .filter((r) => r.bb.cy >= 20 && r.bb.cy <= 40 && r.bb.cx >= 14 && r.bb.cx <= 30)
-    .sort((a, b) => Math.hypot(a.bb.cx - 22, a.bb.cy - 30) - Math.hypot(b.bb.cx - 22, b.bb.cy - 30))[0];
-
-  // Top-Left Ruin (cx < 20 && cy <= 30)
-  const topLeftRuin = majorRuins
-    .filter((r) => r.bb.cx < 20 && r.bb.cy <= 30)
-    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
-
-  // Top-Right Ruin (cx > 24 && cy <= 30)
-  const topRightRuin = majorRuins
-    .filter((r) => r.bb.cx > 24 && r.bb.cy <= 30)
-    .sort((a, b) => b.bb.w * b.bb.h - a.bb.w * a.bb.h)[0];
-
   // ViewBox with padding around table to allow depth callout lines
-  const vbX = -3.5;
+  const vbX = -6;
   const vbY = -2.5;
-  const vbW = 51;
+  const vbW = 56;
   const vbH = 65;
 
   return (
@@ -526,175 +524,20 @@ export function LayoutPreview({ layout, width = 120, showMeasurements = false }:
         </g>
       ))}
 
-      {/* ===================================================================== */}
-      {/* 9. CAD PHYSICAL TABLE MEASUREMENT LINES ("การวางระยะ")                 */}
-      {/* Exactly matches real-world tape measuring setup seen in WTC diagrams! */}
-      {/* ===================================================================== */}
-
-      {/* A. Bottom-Left Ruin Measurements */}
-      {botLeftRuin && (
-        <g className="measurements-bot-left">
-          {/* Horizontal distance from Left Table Edge (X = 0) to Left Wall/Edge */}
-          <DimensionLine
-            x1={0}
-            y1={Math.min(58, botLeftRuin.bb.maxY + 0.4)}
-            x2={botLeftRuin.bb.minX}
-            y2={Math.min(58, botLeftRuin.bb.maxY + 0.4)}
-            label={fmtDim(botLeftRuin.bb.minX)}
-            textSide="top"
-          />
-          {/* Vertical distance from Bottom Table Edge (Y = 60) to Ruin Bottom */}
-          <DimensionLine
-            x1={Math.max(2, botLeftRuin.bb.minX - 0.4)}
-            y1={botLeftRuin.bb.maxY}
-            x2={Math.max(2, botLeftRuin.bb.minX - 0.4)}
-            y2={60}
-            label={fmtDim(60 - botLeftRuin.bb.maxY)}
-            textSide="left"
-          />
-        </g>
+      {/* 9. Measurements: each terrain area is placed from the table edges ("x + y", the way the official cards give it),
+             and the deployment depths come from the zones themselves */}
+      {terrainBoxes.filter(({ bb }) => bb.w >= 2 || bb.h >= 2).map(({ idx, bb }) => (
+        <PlateLabel key={`pl${idx}`} x={bb.cx} y={layout.objectives.some((o) => o.x >= bb.minX && o.x <= bb.maxX && o.y >= bb.minY && o.y <= bb.maxY) ? bb.minY + 1.2 : bb.cy} text={`${fmtNum(Math.min(bb.minX, 44 - bb.maxX))} + ${fmtNum(Math.min(bb.minY, 60 - bb.maxY))}`} />
+      ))}
+      {([['attacker', 0], ['defender', 60]] as const).flatMap(([who, edgeY]) =>
+        ([[0, -1.8, 'left'], [44, 45.8, 'right']] as const).map(([x, lx, side]) => {
+          const d = zoneDepthAt(layout.zones[who], x, edgeY);
+          if (d < 0.5) return null;
+          const y0 = who === 'attacker' ? 0 : 60 - d;
+          return <DimensionLine key={`${who}${side}`} x1={lx} y1={y0} x2={lx} y2={y0 + d} label={fmtDim(d)} textSide={side} />;
+        })
       )}
 
-      {/* B. Bottom-Right Ruin Measurements */}
-      {botRightRuin && (
-        <g className="measurements-bot-right">
-          {/* Vertical distance from Bottom Table Edge (Y = 60) to Ruin */}
-          <DimensionLine
-            x1={Math.min(42, botRightRuin.bb.maxX + 0.4)}
-            y1={botRightRuin.bb.maxY}
-            x2={Math.min(42, botRightRuin.bb.maxX + 0.4)}
-            y2={60}
-            label={fmtDim(60 - botRightRuin.bb.maxY)}
-            textSide="right"
-          />
-          {/* Horizontal distance from Right Table Edge (X = 44) to Outer Edge */}
-          <DimensionLine
-            x1={botRightRuin.bb.maxX}
-            y1={Math.max(42, botRightRuin.bb.minY + 1.2)}
-            x2={44}
-            y2={Math.max(42, botRightRuin.bb.minY + 1.2)}
-            label={fmtDim(44 - botRightRuin.bb.maxX)}
-            textSide="top"
-          />
-          {/* Horizontal distance from Right Edge to Inner Wall */}
-          {botRightRuin.bb.w >= 4.5 && (
-            <DimensionLine
-              x1={botRightRuin.bb.minX}
-              y1={Math.min(56, botRightRuin.bb.maxY - 1.2)}
-              x2={44}
-              y2={Math.min(56, botRightRuin.bb.maxY - 1.2)}
-              label={fmtDim(44 - botRightRuin.bb.minX)}
-              textSide="bottom"
-            />
-          )}
-        </g>
-      )}
-
-      {/* C. Center Ruins Measurements */}
-      {centerRuin && (
-        <g className="measurements-center">
-          {/* Vertical distance from Top Table Edge (Y = 0) to Center Ruin */}
-          <DimensionLine
-            x1={centerRuin.bb.cx}
-            y1={0}
-            x2={centerRuin.bb.cx}
-            y2={centerRuin.bb.minY}
-            label={fmtDim(centerRuin.bb.minY)}
-            textSide="left"
-          />
-          {/* Horizontal distance from Left Table Edge (X = 0) to Center Ruin */}
-          <DimensionLine
-            x1={0}
-            y1={centerRuin.bb.cy}
-            x2={centerRuin.bb.minX}
-            y2={centerRuin.bb.cy}
-            label={fmtDim(centerRuin.bb.minX)}
-            textSide="top"
-          />
-        </g>
-      )}
-
-      {/* D. Top-Left / Top-Right Ruins (if applicable and non-conflicting) */}
-      {topRightRuin && (
-        <g className="measurements-top-right">
-          <DimensionLine
-            x1={topRightRuin.bb.maxX}
-            y1={Math.max(4, topRightRuin.bb.minY)}
-            x2={44}
-            y2={Math.max(4, topRightRuin.bb.minY)}
-            label={fmtDim(44 - topRightRuin.bb.maxX)}
-            textSide="bottom"
-          />
-        </g>
-      )}
-
-      {topLeftRuin && (
-        <g className="measurements-top-left">
-          <DimensionLine
-            x1={0}
-            y1={Math.max(4, topLeftRuin.bb.minY)}
-            x2={topLeftRuin.bb.minX}
-            y2={Math.max(4, topLeftRuin.bb.minY)}
-            label={fmtDim(topLeftRuin.bb.minX)}
-            textSide="bottom"
-          />
-        </g>
-      )}
-
-      {/* E. Deployment Depth Callouts Along Boundaries */}
-      {dep === 'hammer-and-anvil' && (
-        <g className="deployment-depths">
-          {/* Attacker Depth: 18" along right edge */}
-          <DimensionLine
-            x1={43}
-            y1={0}
-            x2={43}
-            y2={18}
-            label="18&quot;"
-            textSide="left"
-          />
-          {/* Defender Depth: 18.5" along left edge */}
-          <DimensionLine
-            x1={-1.8}
-            y1={41.5}
-            x2={-1.8}
-            y2={60}
-            label="18.5&quot;"
-            textSide="left"
-          />
-          {/* Defender Depth: 19.5" along right edge */}
-          <DimensionLine
-            x1={45.8}
-            y1={40.5}
-            x2={45.8}
-            y2={60}
-            label="19.5&quot;"
-            textSide="right"
-          />
-        </g>
-      )}
-
-      {dep === 'dawn-of-war' && (
-        <g className="deployment-depths">
-          <DimensionLine x1={0} y1={61.5} x2={12} y2={61.5} label="12&quot;" textSide="bottom" />
-          <DimensionLine x1={12} y1={61.5} x2={32} y2={61.5} label="20&quot;" textSide="bottom" />
-          <DimensionLine x1={32} y1={61.5} x2={44} y2={61.5} label="12&quot;" textSide="bottom" />
-        </g>
-      )}
-
-      {dep === 'sweeping-engagement' && (
-        <g className="deployment-depths">
-          <DimensionLine x1={-1.8} y1={0} x2={-1.8} y2={30} label="30&quot;" textSide="left" />
-          <DimensionLine x1={45.8} y1={30} x2={45.8} y2={60} label="30&quot;" textSide="right" />
-        </g>
-      )}
-
-      {dep === 'tipping-point' && (
-        <g className="deployment-depths">
-          <DimensionLine x1={0} y1={-1.5} x2={22} y2={-1.5} label="20&quot; Deep" textSide="top" />
-          <DimensionLine x1={22} y1={-1.5} x2={44} y2={-1.5} label="12&quot; Deep" textSide="top" />
-        </g>
-      )}
     </svg>
   );
 }

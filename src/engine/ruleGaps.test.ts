@@ -8,7 +8,7 @@ import { reactionOffers } from '../rules-engine/stratagems';
 import { reopenRituals, ritualsPending, ritualsReopenable } from '../factions/rituals';
 import { abilityOff, addTimed, effectsFor, unitFlags } from '../rules-engine/effects';
 import { actsOfUnit, resolvePickUnit, resolveRevivals } from '../rules-engine/activations';
-import { commitMove, createGame, formationAt, placeUnit, validatePlacement } from './game';
+import { commitMove, createGame, deployUnit, findPlacement, formationAt, placeUnit, validatePlacement } from './game';
 import type { ArmyList, FactionData, GameState, Pt } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
@@ -158,5 +158,22 @@ describe('Rituals after shooting', () => {
     reopenRituals(s, 0);
     expect(ritualsPending(s, 0)).toBe(true);
     expect(mag.id).toBeTruthy();
+  });
+});
+
+describe('Deploy Armies: TITANIC', () => {
+  it('the owner of a set-up TITANIC unit skips their next turn to set up a unit', () => {
+    const s = game([['Rubric Marines', 5], ['Rubric Marines', 5], ['Rubric Marines', 5]], 'Hexwarp Thrallband', [['Boyz', 10], ['Boyz', 10], ['Boyz', 10]], 'Brute Bosses');
+    s.phase = 'deploy'; s.turn = 0; s.round = 0;
+    for (const u of s.units) u.status = 'pending';
+    const set = (id: string) => { const u = U(s, id); const pos = findPlacement(s, u, 'deploy'); expect(pos).toBeTruthy(); expect(deployUnit(s, id, pos!).ok).toBe(true); };
+    s.deployTurn = 0;
+    U(s, 'p0-x0').keywords.push('TITANIC');
+    set('p0-x0');
+    expect(s.deployTurn).toBe(1);
+    set('p1-x0');
+    expect(s.deployTurn).toBe(1); // player 0 skips
+    set('p1-x1');
+    expect(s.deployTurn).toBe(0);
   });
 });
