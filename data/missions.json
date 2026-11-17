@@ -163,9 +163,19 @@
       5
      ],
      "when": "endOfYourTurn",
-     "condition": "killNearObjective",
+     "condition": "killByUnitNearObjective",
      "vp": 3,
-     "text": "Destroy an enemy unit with a unit within range of an objective, or destroy an enemy unit that started the turn within range of an objective"
+     "text": "Destroy an enemy unit with a unit within range of an objective"
+    },
+    {
+     "rounds": [
+      1,
+      5
+     ],
+     "when": "endOfYourTurn",
+     "condition": "killStartedInRangeOfObjective",
+     "vp": 3,
+     "text": "Destroy an enemy unit that started the turn within range of an objective (scored separately: both can score)"
     },
     {
      "rounds": [
@@ -1555,7 +1565,14 @@
     },
     {
      "trigger": "endOfAnyTurn",
-     "condition": "characterDiedOrAllDead",
+     "condition": "characterDiedThisTurn",
+     "vp": 5,
+     "mode": "tactical",
+     "fromRound": 1
+    },
+    {
+     "trigger": "endOfAnyTurn",
+     "condition": "allCharactersDead",
      "vp": 5,
      "mode": "tactical",
      "fromRound": 1

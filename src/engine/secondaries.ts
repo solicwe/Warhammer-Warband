@@ -94,8 +94,9 @@ function cond(s: GameState, p: PlayerId, c: string): number {
       return !near(e, 6) ? 2 : !near(e, 3) ? 1 : 0;
     }
     case 'characterKillsVP': return deaths.filter((d) => d.character).reduce((a, d) => a + 3 + (d.W >= 4 ? 1 : 0), 0);
-    case 'characterDiedOrAllDead': {
-      if (deaths.some((d) => d.character)) return 1;
+    // the card has two separate 5VP lines: a character destroyed this turn, and every enemy character destroyed in the battle
+    case 'characterDiedThisTurn': return deaths.some((d) => d.character) ? 1 : 0;
+    case 'allCharactersDead': {
       const chars = s.units.filter((u) => u.owner === e).flatMap((u) => u.models).filter((m) => m.isCharacter || m.keywords.includes('CHARACTER'));
       return chars.length && chars.every((m) => m.dead) ? 1 : 0;
     }

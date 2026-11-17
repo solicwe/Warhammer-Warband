@@ -50,8 +50,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
   const set = (patch: Partial<BattlePrefs>) => setPrefs((p) => ({ ...p, ...patch }));
   const [choosing, setChoosing] = useState<0 | 1 | null>(null); // the side whose army is being picked
   const [allMaps, setAllMaps] = useState(false);
-  const [mapDeploy, setMapDeploy] = useState('');
-  const [mapDisp, setMapDisp] = useState(''); // a Force Disposition: every layout where it is one of the two sides
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -165,8 +163,11 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
     );
   };
 
-  const RULES_DISPS = [...new Set(LAYOUTS.flatMap((l) => l.matchup))] as DispositionId[];
-  const shown = LAYOUTS.filter((l) => (!mapDisp || (l.matchup as string[]).includes(mapDisp)) && (!mapDeploy || l.deployment === mapDeploy));
+  // the pairing's own maps first; a deployment it has no map for is filled from a pairing that shares one of its dispositions
+  const pairingMaps = [...new Set(LAYOUTS.map((l) => l.deployment))].map((dep) =>
+    layouts.find((l) => l.deployment === dep)
+    ?? LAYOUTS.find((l) => l.deployment === dep && ((l.matchup as string[]).includes(d0 ?? '') || (l.matchup as string[]).includes(d1 ?? '')))
+    ?? LAYOUTS.find((l) => l.deployment === dep)!);
 
   return (
     <div className="app setup">
@@ -204,31 +205,20 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
             </div>
           ) : <div className="small muted">Loading armies…</div>}
           <div className="map-head">
-            <span className="small">{allMaps ? `${shown.length} official layouts${mapDisp ? ` with ${dispositionById(mapDisp as DispositionId).name}` : ''}${mapDeploy ? ` · ${deploymentName(mapDeploy)}` : ''}` : 'Official layouts for this pairing'}</span>
+            <span className="small">{allMaps ? `All ${LAYOUTS.length} official layouts` : 'Official layouts: one for each of the six deployments'}</span>
           </div>
-          {/* by Force Disposition (all the maps a disposition can get), then by deployment; or just this pairing's own three */}
           <div className="map-filter">
-            <button type="button" className={`chip ${!allMaps ? 'on' : ''}`} onClick={() => { setAllMaps(false); setMapDeploy(''); setMapDisp(''); }}>This pairing</button>
-            {RULES_DISPS.map((d) => (
-              <button key={d} type="button" className={`chip ${allMaps && mapDisp === d ? 'on' : ''}`} onClick={() => { setAllMaps(true); setMapDisp(d); setMapDeploy(''); }}>{dispositionById(d).name}</button>
-            ))}
-            <button type="button" className={`chip ${allMaps && !mapDisp && !mapDeploy ? 'on' : ''}`} onClick={() => { setAllMaps(true); setMapDisp(''); setMapDeploy(''); }}>All</button>
+            <button type="button" className={`chip ${!allMaps ? 'on' : ''}`} onClick={() => setAllMaps(false)}>This pairing</button>
+            <button type="button" className={`chip ${allMaps ? 'on' : ''}`} onClick={() => setAllMaps(true)}>All</button>
           </div>
-          {allMaps && (
-            <div className="map-filter">
-              {[...new Set(LAYOUTS.map((l) => l.deployment))].map((d) => (
-                <button key={d} type="button" className={`chip ${mapDeploy === d ? 'on' : ''}`} onClick={() => setMapDeploy(mapDeploy === d ? '' : d)}>{deploymentName(d)}</button>
-              ))}
-            </div>
-          )}
           <div className={`layout-pick ${allMaps ? 'wrap' : ''}`}>
             <button type="button" className={`layout-opt ${prefs.layoutPick === '' ? 'on' : ''}`} onClick={() => set({ layoutPick: '' })}>
               <div className="layout-random">?</div><span>Random</span>
             </button>
-            {(allMaps ? shown : layouts).map((l) => (
+            {(allMaps ? LAYOUTS : pairingMaps).map((l) => (
               <button key={l.id} type="button" className={`layout-opt ${prefs.layoutPick === l.id ? 'on' : ''}`} onClick={() => set({ layoutPick: l.id })}>
                 <LayoutPreview layout={l} width={64} />
-                <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : `#${l.number} ${deploymentName(l.deployment)}`}</span>
+                <span>{allMaps ? `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}` : l.matchup[0] === d0 && l.matchup[1] === d1 || l.matchup[0] === d1 && l.matchup[1] === d0 ? `#${l.number} ${deploymentName(l.deployment)}` : `${deploymentName(l.deployment)} · ${l.matchup.map((m) => dispositionById(m).name).join(' / ')} #${l.number}`}</span>
               </button>
             ))}
           </div>

@@ -491,7 +491,7 @@ export function evalCondition(s: GameState, p: PlayerId, c: string): number {
     case 'enemyUnitDestroyedThisTurn': return killsThisTurn.length ? 1 : 0;
     case 'perEnemyDestroyedThisTurn': return killsThisTurn.length;
     case 'moreKillsThanLossesLastTurn': return killsThisTurn.length > lossesLastTurn ? 1 : 0;
-    case 'killNearObjective': return killsThisTurn.some((d) => d.killerNearObj || snap?.inRangeObj.includes(d.unitId)) ? 1 : 0;
+    case 'killByUnitNearObjective': return killsThisTurn.some((d) => d.killerNearObj) ? 1 : 0;
     case 'killStartedInRangeOfObjective': return killsThisTurn.some((d) => snap?.inRangeObj.includes(d.unitId)) ? 1 : 0;
     case 'killStartedInRangeOfCentral': return killsThisTurn.some((d) => snap?.inRangeCentral.includes(d.unitId)) ? 1 : 0;
     case 'killStartedInTerrain': return killsThisTurn.some((d) => (snap?.inTerrain[d.unitId] ?? []).length > 0) ? 1 : 0;
