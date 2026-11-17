@@ -111,6 +111,12 @@ export function unitDistance(a: UnitState, b: UnitState): number {
 /** The battlefield of this game: big battles use a bigger table than the 44" x 60" default. */
 export const tableW = (s: GameState) => s.table?.width ?? RULES.battlefield.width;
 export const tableH = (s: GameState) => s.table?.height ?? RULES.battlefield.height;
+/** A number a rule gives per battle size, as the cards print it: [Incursion, Strike Force, Onslaught]. The cards name no
+ *  bigger size, so War Zone (4000) and Apocalypse (5000) use the Onslaught number. */
+export const bySize = <T,>(s: GameState, p: PlayerId, [inc, sf, ons]: [T, T, T]): T => {
+  const pts = RULES.battleSizes.find((b) => b.id === s.players[p].battleSize)?.points ?? 2000;
+  return pts <= 1000 ? inc : pts <= 2000 ? sf : ons;
+};
 export const lastRound = (s: GameState) => Math.max(s.round, s.maxRounds ?? RULES.battleRounds);
 /** How far into the battle this is, as the round of a full 5-round game (a short game's rounds count for more). */
 export const pace = (s: GameState) => (s.maxRounds ? (s.round * RULES.battleRounds) / s.maxRounds : s.round);

@@ -474,7 +474,7 @@ export interface PlayerState {
   oathBackup?: string | null; // Master of Battle: second Oath of Moment target
   slayer?: Record<string, string>; // Slayer's Oath: unit id -> keyword
   subfaction?: string; // chapter / sub-faction picked in the army builder
-  battleSize?: string; // incursion | strike-force (some rules scale with it)
+  battleSize?: string; // a battleSizes id in data/core-rules.json; rules scale with it through bySize (state.ts)
   saga?: { kind: 'hunter' | 'beastslayer' | 'bold'; tally: number; target: number; done: boolean; boasts: string[] }; // Space Wolves Sagas
   abilityUsed?: Record<string, string>; // per-army ability limits: name -> last use key
   /** Thousand Sons Cabal of Sorcerers: Ritual attempts and failed Rituals available to retry this turn. */

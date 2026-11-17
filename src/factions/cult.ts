@@ -5,14 +5,13 @@ import { setBackUp } from '../rules-engine/activations';
 import { addTimed } from '../rules-engine/effects';
 import { dist } from '../engine/geometry';
 import { rollN } from '../engine/dice';
-import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem, tableH, tableW } from '../engine/state';
+import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem, tableH, tableW, bySize } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export function isCultArmy(s: GameState, p: PlayerId): boolean {
   return !!s.players[p]?.armyRules?.some((r) => r.name === 'Cult Ambush');
 }
 
-const POINTS: Record<string, number> = { incursion: 6, 'strike-force': 10, strike: 10, onslaught: 14 };
 
 /** Resurgence points to bring a destroyed unit back: by datasheet and Starting Strength (without attached characters). */
 const COST: [RegExp, Record<number, number>][] = [
@@ -35,7 +34,7 @@ export function cultBattleStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     const P = s.players[p];
     if (!isCultArmy(s, p) || P.resurgencePoints !== undefined) continue;
-    P.resurgencePoints = POINTS[P.battleSize ?? ''] ?? 10;
+    P.resurgencePoints = bySize(s, p, [6, 10, 14]);
     if (s.units.some((u) => u.owner === p && u.enhancements?.some((e) => e.name === 'Deeds That Speak to the Masses'))) P.resurgencePoints += 2;
     P.cultAmbushMarkers = [];
     log(s, `Cult Ambush: ${P.name} starts with ${P.resurgencePoints} Resurgence points`, 'info', p);

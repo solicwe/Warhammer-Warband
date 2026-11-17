@@ -109,7 +109,7 @@ describe('Aeldari Engine & Strands of Fate', () => {
   });
 
   it('Battle Focus: 2 / 4 / 6 tokens by battle size each round, Warhost one more', () => {
-    for (const [size, n] of [['incursion', 3], ['strike-force', 5], ['onslaught', 7]] as const) {
+    for (const [size, n] of [['incursion', 3], ['strike-force', 5], ['onslaught', 7], ['war-zone', 7], ['apocalypse', 7]] as const) {
       state.players[0].battleSize = size;
       aeldariRoundStart(state);
       expect(state.players[0].battleFocusTokens).toBe(n);

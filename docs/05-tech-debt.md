@@ -29,7 +29,8 @@ The owner's rule from this day: there is no campaign / roguelike mode, and code 
 | `tuneTournamentWeights`, `getActiveTournamentWeights`, `setActiveTournamentWeights` (`tournamentTrainer.ts`) | Called by nothing; the tuner used `Math.random` | about 55 |
 | `segLengthInPoly`, `pathDistance`, `OBJECTIVE_MARKER_R`, `activeLabels`, `resetCoach`, `loadoutSummary`, `isPlaceholderIcon`, `loseWoundsForTest`, `CoreStratagemId` | Exports with no reference anywhere | about 60 |
 | `scratch/update_primary_btn.cjs` | A one-off style patch script, committed by mistake | 82 |
-| Onslaught (3000), War Zone (4000), Apocalypse (5000) and the 44x90 / 60x90 tables | Not in the 11th edition battle sizes (25.03); owner decision | 20 |
+| The 44x90 and 60x90 tables of the 3000+ point games | Not in the rules; the owner keeps the 3000, 4000 and 5000 point sizes on the 44" x 60" table | 20 |
+| Seven per-battle-size tables (Aeldari, Genestealer Cults, Death Guard, Warp Portals, Sagas ...) | Each knew only Incursion / Strike Force / Onslaught, so 4000 and 5000 point games got the Strike Force number. Now one helper, `bySize` (`state.ts`); bigger sizes use the Onslaught number | 20 |
 | `aoi_update.pdf`, `tyranids_faction_pack.pdf` | Games Workshop files in a public repository; owner decision. Moved to `data/raw/` (ignored) | |
 | Docs and skills | `CLAUDE.md`, `ARCHITECTURE.md`, `AI_GUIDE.md` and five skills still described the campaign, its files and its tests | |
 

@@ -6,7 +6,7 @@ import { applyMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap } from '../engine/geometry';
 import { unitInRange } from '../engine/missions';
-import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance } from '../engine/state';
+import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance, bySize } from '../engine/state';
 import type { GameState, ModelState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const GIFT = 'Nurgle’s Gift (Aura)';
@@ -22,7 +22,6 @@ export const PLAGUE_IDS = Object.keys(PLAGUES);
 const dgArmy = (s: GameState, p: PlayerId) => activeRules(s, p).includes(GIFT);
 const hasAb = (u: UnitState, name: string) => u.abilities.some((a) => a.name === name);
 const timedOn = (u: UnitState, key: 'contagion' | 'contagionArmy') => (u.timed ?? []).reduce((a, t) => a + (t.e[key] ?? 0), 0);
-const BATTLE_N: Record<string, number> = { incursion: 1, strike: 2, onslaught: 3 };
 
 /** Units of player p whose models spread Nurgle's Gift: Death Guard units with the ability, and (Tallyband Summoners)
  *  Plague Legions units within 7" of one. */
@@ -136,7 +135,7 @@ export function dgRoundStart(s: GameState) {
     if (!activeRules(s, p).includes('Mortarion’s Hammer')) continue;
     const mine = boardUnits(s, p);
     const far = boardUnits(s, other(p)).filter((e) => mine.every((f) => unitDistance(e, f) > 12 + 1e-6)).sort((a, b) => b.pts - a.pts);
-    const n = BATTLE_N[s.players[p].battleSize ?? ''] ?? 2;
+    const n = bySize(s, p, [1, 2, 3]);
     for (const e of far.slice(0, n)) addTimed(s, e, { e: {}, label: 'Miasmic Bombardment', until: 'endOfNextTurn', by: p, mark: 'Afflicted' });
     if (far.length) log(s, `Miasmic Bombardment: ${far.slice(0, n).map((e) => e.name).join(', ')} are Afflicted this battle round`, 'info', p);
   }
@@ -158,8 +157,7 @@ export function dgCommandStart(s: GameState) {
     }
   }
   const P = s.players[a];
-  const rounds: Record<string, number[]> = { incursion: [2, 3], strike: [2, 3, 4], onslaught: [2, 3, 4, 5] };
-  if (activeRules(s, a).includes('Shamblerot Vectorium') && P.poxTemplate && (rounds[P.battleSize ?? ''] ?? rounds.strike).includes(s.round)) {
+  if (activeRules(s, a).includes('Shamblerot Vectorium') && P.poxTemplate && bySize(s, a, [[2, 3], [2, 3, 4], [2, 3, 4, 5]]).includes(s.round)) {
     const u: UnitState = structuredClone(P.poxTemplate);
     u.id = `pox${s.units.length}`;
     u.models.forEach((m, i) => { m.id = `${u.id}-m${i}`; });

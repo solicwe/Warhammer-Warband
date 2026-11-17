@@ -15,7 +15,7 @@ import {
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
 import { unitInRange } from '../engine/missions';
-import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance } from '../engine/state';
+import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance, bySize } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -351,14 +351,13 @@ function markUsed(s: GameState, def: ActDef) {
   bag[baseKey(def)] = `${period(s, def.spec.limit)}|${timesUsed(s, def) + 1}`;
 }
 
-const BATTLE_SIZE_N: Record<string, number> = { incursion: 1, 'strike-force': 2, strike: 2, onslaught: 3 };
 const usesOf = (s: GameState, def: ActDef) => {
   if (def.spec.limit === 'battle' && ['Overkill', 'Soulless Horror', 'Shieldbreaker'].includes(def.name)
     && s.players[def.holder.owner].detachments.some((d) => d.name === 'Veiled Blade Elimination Force')) {
     return 2;
   }
   const u0 = def.spec.uses;
-  const n = u0 === 'battleSize' || u0 === 'battleSize+1' ? (BATTLE_SIZE_N[s.players[def.holder.owner].battleSize ?? ''] ?? 2) + (u0 === 'battleSize+1' ? 1 : 0) : u0 ?? 1;
+  const n = u0 === 'battleSize' || u0 === 'battleSize+1' ? bySize(s, def.holder.owner, [1, 2, 3]) + (u0 === 'battleSize+1' ? 1 : 0) : u0 ?? 1;
   const enh = def.spec.usesEnh;
   return n + (enh && s.units.some((x) => x.owner === def.holder.owner && (onBoard(x) || x.status === 'reserves') && x.enhancements?.some((e) => e.name === enh)) ? 1 : 0);
 };
@@ -476,8 +475,7 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
     out = [c];
   }
   if (t.each && t.count !== undefined) {
-    const sizes: Record<string, number> = { incursion: 2, strike: 3, 'strike-force': 3, onslaught: 4 };
-    const n = t.count === 'round' ? s.round : t.count === 'battleSize' ? sizes[s.players[u.owner].battleSize ?? 'strike'] ?? 3 : t.count;
+    const n = t.count === 'round' ? s.round : t.count === 'battleSize' ? bySize(s, u.owner, [2, 3, 4]) : t.count;
     const foes = boardUnits(s, other(u.owner));
     const gap = (x: UnitState) => (onBoard(x) && foes.length ? Math.min(...foes.map((e) => unitDistance(x, e))) : 99);
     out = [...out].sort((a, b) => gap(a) - gap(b) || b.pts - a.pts).slice(0, n);
@@ -1561,7 +1559,6 @@ onAttackFinished((s, at, info) => {
 
 // ---------- Space Wolves Sagas ----------
 
-const SAGA_SIZE: Record<string, number> = { incursion: 2, strike: 3, onslaught: 4 };
 
 /** Start of the battle: tallies and targets of the Saga in the player's detachment. */
 export function initSagas(s: GameState) {
@@ -1570,7 +1567,7 @@ export function initSagas(s: GameState) {
     const spec = activeRules(s, p).map((n) => DET_RULES[n].saga).find(Boolean);
     if (!spec || P.saga) continue;
     const enemyCMV = s.units.filter((u) => u.owner !== p && ['CHARACTER', 'MONSTER', 'VEHICLE'].some((k) => hasKw(u, k))).length;
-    const target = spec.kind === 'hunter' ? SAGA_SIZE[P.battleSize ?? 'strike'] ?? 3 : spec.kind === 'beastslayer' ? Math.max(1, Math.ceil(enemyCMV / 2)) : 3;
+    const target = spec.kind === 'hunter' ? bySize(s, p, [2, 3, 4]) : spec.kind === 'beastslayer' ? Math.max(1, Math.ceil(enemyCMV / 2)) : 3;
     P.saga = { kind: spec.kind, tally: 0, target, done: false, boasts: [] };
     log(s, `Saga: target ${target}`, 'info', p);
   }

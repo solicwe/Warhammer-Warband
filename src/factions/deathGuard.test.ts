@@ -154,7 +154,7 @@ describe('detachments', () => {
 
 describe('everything automatic', () => {
   it('every datasheet ability and enhancement resolves by itself', () => {
-    const all: ArmyList = { name: 'all', factionId: 'DG', battleSize: 'strike-force', detachments: ['Tallyband Summoners'], units: DG.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
+    const all: ArmyList = { name: 'all', factionId: 'DG', battleSize: 'onslaught', detachments: ['Tallyband Summoners'], units: DG.datasheets.map((d, i) => ({ uid: `u${i}`, datasheet: d.name, models: d.points[0]?.options[0]?.models ?? 1, pts: 0 })) };
     const not: string[] = [];
     for (const u of buildUnits(all, DG, 0)) for (const a of u.abilities) { const st = abilityStatus(u, a).status; if (st !== 'auto' && st !== 'core' && st !== 'info') not.push(`${a.name}@${u.sources[0]}: ${st}`); }
     for (const d of DG.detachments) for (const e of d.enhancements) {

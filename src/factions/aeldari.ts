@@ -11,7 +11,7 @@
 //  - Spend one to let an eligible unit perform an Agile Manoeuvre: the manoeuvres are the rule's `acts` in
 //    data/detachment-rules.json, using the `focusReady:<manoeuvre>` condition and the `ae: "focus:<manoeuvre>"` action.
 import { d6, rollN } from '../engine/dice';
-import { alive, boardUnits, centreOf, hasKw, log, onBoard, phaseKey, pushFx } from '../engine/state';
+import { alive, boardUnits, centreOf, hasKw, log, onBoard, phaseKey, pushFx, bySize } from '../engine/state';
 import type { Active } from '../rules-engine/effects';
 import type { CombatMods } from '../engine/combatMods';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
@@ -59,8 +59,6 @@ export function aeldariBattleStart(s: GameState) {
   }
 }
 
-const FOCUS_TOKENS: Record<string, number> = { incursion: 2, 'strike-force': 4, strike: 4, onslaught: 6 };
-const SEER_DICE: Record<string, number> = { incursion: 3, 'strike-force': 6, strike: 6, onslaught: 9 };
 const hasDet = (s: GameState, p: PlayerId, n: string) => !!s.players[p].detachments?.some((d) => d.name === n);
 
 /** Start of the battle round: Battle Focus tokens (unspent ones are lost); Seer Council's Fate dice in round 1. */
@@ -68,7 +66,7 @@ export function aeldariRoundStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     const P = s.players[p];
     if (isAeldariArmy(s, p) && P.armyRules?.some((r) => r.name === 'Battle Focus')) {
-      let n = FOCUS_TOKENS[P.battleSize ?? ''] ?? 4;
+      let n = bySize(s, p, [2, 4, 6]);
       if (hasDet(s, p, 'Warhost')) n += 1; // Martial Grace
       // Timeless Strategist: the bearer on the battlefield (or in a transport that is)
       if (s.units.some((u) => u.owner === p && u.enhancements?.some((e) => e.name === 'Timeless Strategist') && (onBoard(u) || (u.status === 'embarked' && s.units.some((t) => t.id === u.embarkedIn && onBoard(t)))))) n += 1;
@@ -77,7 +75,7 @@ export function aeldariRoundStart(s: GameState) {
       log(s, `Battle Focus: ${P.name} has ${n} tokens this battle round`, 'info', p);
     }
     if (s.round === 1 && hasDet(s, p, 'Seer Council') && !P.seerFate) {
-      P.seerFate = rollN(s, SEER_DICE[P.battleSize ?? ''] ?? 6).sort((a, b) => a - b);
+      P.seerFate = rollN(s, bySize(s, p, [3, 6, 9])).sort((a, b) => a - b);
       log(s, `Strands of Fate (Seer Council): Fate dice [${P.seerFate.join(', ')}]`, 'info', p);
     }
   }

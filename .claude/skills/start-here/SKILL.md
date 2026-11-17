@@ -122,8 +122,10 @@ Made in conversation, so they are not all visible in the code. A change that wou
   on Wahapedia that day. The differences listed in `docs/05-tech-debt.md` (R1-R22: charge reach, consolidation,
   engaged through a friend, cover, the 15" Infantry Beast rule and the rest) are not to be "fixed" toward that text
   without the owner's yes.
-- **Battle sizes are Incursion (1000) and Strike Force (2000) only** (owner, 17 Nov 2026), on the 44" x 60" table.
-  Do not add sizes above 2000 points or bigger tables.
+- **Battle sizes 1000 to 5000 points, all on the 44" x 60" table** (owner, 17 Nov 2026): Incursion, Strike Force,
+  Onslaught, War Zone, Apocalypse. No bigger tables. A rule number that changes with battle size goes through
+  `bySize(s, p, [incursion, strikeForce, onslaught])` in `state.ts`; War Zone and Apocalypse use the Onslaught number,
+  since no card names a bigger size. Never a new per-size table.
 - **There is no campaign / roguelike mode** (owner, 17 Nov 2026): it was removed. Do not bring back its code, data,
   styles or docs. **Code nothing uses is deleted**, not kept for later (git history keeps it).
 - **Owner-approved game-wide exceptions** (confirmed in the Ritual / Tzaangor rules discussion): another eligible
