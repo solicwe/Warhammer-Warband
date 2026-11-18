@@ -21,6 +21,7 @@ import { pointInPoly } from '../engine/geometry';
 import type { GameState, UnitState } from '../engine/types';
 import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
+import './crTests';
 import { autoPact } from './darkPacts';
 import { destroyedThisRound, ecUnitWiped, initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, raisePledge, sensationalBlock, sensationalOk, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, dgEffects, dgPhaseEnd, dgRoundStart, dsKeep, extraPlague, eyestingerStorm, inContagionOf, isAfflicted, leechspore, PLAGUE_IDS, putridHit, setPlague, signalPox, stinkBlocks } from './deathGuard';
