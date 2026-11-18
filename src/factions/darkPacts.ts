@@ -6,7 +6,8 @@ import { applyMortalWounds, expectedDamage, buildShootPools, buildFightPools, sh
 import { rollExpr, rollN } from '../engine/dice';
 import { activeRules, addTimed, rollMods } from '../rules-engine/effects';
 import { bestLd } from '../engine/game';
-import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, other, phaseKey, pushFx, unitDistance } from '../engine/state';
+import { onCrTestDone, openCrTest } from './crTests';
+import { alive, boardUnits, engagedEnemies, crTest, hasKw, log, notifyAbilityCpGain, other, phaseKey, pushFx, unitById, unitDistance } from '../engine/state';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 export type PactPick = 'lethal hits' | 'sustained hits 1';
@@ -26,13 +27,24 @@ export function makeDarkPact(s: GameState, u: UnitState, pick: PactPick): { pass
   (u.used ??= {}).darkPact = phaseKey(s);
   // Debt to the Soul Forge: a DAEMON VEHICLE invokes its contract (always, here): the test is 1 harder, its attacks get better
   const contract = activeRules(s, u.owner).includes('Soulforged Warpack') && hasKw(u, 'DAEMON') && hasKw(u, 'VEHICLE');
-  const addendum = contract && boardUnits(s, u.owner).some((f) => f.enhancements.some((e) => e.name === 'Tempting Addendum') && unitDistance(u, f) <= 3);
   const ld = bestLd(u, s) + (contract ? 1 : 0);
   let r = rollN(s, 2);
   if (r[0] + r[1] < ld && rollMods(s, u).rerollPactLd) {
     log(s, `${u.name}: Dark Pact Leadership test [${r.join('+')}] re-rolled`, 'roll', u.owner);
     r = rollN(s, 2);
   }
+  // a person may Command Re-roll a die first (the window carries on in finishDarkPact); bots and automatic rules re-roll by themselves
+  const label = `${u.name}: Dark Pact Leadership test (needs ${ld}+)`;
+  if (openCrTest(s, { player: u.owner, test: 'pact', unitId: u.id, label, dice: r, bad: { op: 'lt', n: ld, adj: 0 }, pick }) === 'opened') return { passed: false, total: 0 };
+  r = crTest(s, u.owner, label, r, (v) => v < ld);
+  return finishDarkPact(s, u, pick, r);
+}
+
+/** The rest of the Dark Pact once the Leadership test dice are final. */
+function finishDarkPact(s: GameState, u: UnitState, pick: PactPick, r: number[]): { passed: boolean; total: number } {
+  const contract = activeRules(s, u.owner).includes('Soulforged Warpack') && hasKw(u, 'DAEMON') && hasKw(u, 'VEHICLE');
+  const addendum = contract && boardUnits(s, u.owner).some((f) => f.enhancements.some((e) => e.name === 'Tempting Addendum') && unitDistance(u, f) <= 3);
+  const ld = bestLd(u, s) + (contract ? 1 : 0);
   const total = r[0] + r[1];
   const passed = total >= ld;
   const both = rollMods(s, u).pactBoth;
@@ -68,6 +80,8 @@ export function makeDarkPact(s: GameState, u: UnitState, pick: PactPick): { pass
   }
   return { passed, total };
 }
+
+onCrTestDone('pact', (s, w) => { const u = unitById(s, w.unitId); if (alive(u).length) finishDarkPact(s, u, w.pick as PactPick, w.dice); });
 
 /** Lethal Hits against targets it wounds on 5+ (a critical hit skips that hard roll), Sustained Hits otherwise. */
 export function bestPick(s: GameState, u: UnitState, kind: 'shoot' | 'fight'): PactPick {

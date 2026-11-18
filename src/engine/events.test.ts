@@ -58,3 +58,53 @@ describe('Command Re-roll on a Battle-shock test', () => {
     expect(rerollBattleShock(s, u.id)).not.toBeNull();
   });
 });
+
+describe('Command Re-roll on one-click tests: the player chooses', () => {
+  const setup = (bots: 0[] | []) => {
+    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 9 } as never);
+    const u = s.units.find((x) => x.owner === 0)!;
+    u.models.forEach((m) => { m.profile.Ld = 13; }); // never reachable on 2D6: the test fails
+    s.players[0].cp = 3;
+    s.bots = bots as never;
+    return { s, u };
+  };
+  it('a person gets a window, taps one die, carries on', async () => {
+    const { makeDarkPact } = await import('../factions/darkPacts');
+    const { crTestDone, crTestReroll } = await import('../factions/crTests');
+    const { s, u } = setup([]);
+    makeDarkPact(s, u, 'lethal hits');
+    expect(s.window?.kind).toBe('crTest');
+    expect(s.players[0].cp).toBe(3); // nothing is spent until the player taps
+    expect((u.timed ?? []).some((t) => t.mark === 'darkPact')).toBe(false); // the pact waits for the dice
+    expect(crTestReroll(s, 1)).toBeNull();
+    expect(s.players[0].cp).toBe(2);
+    expect(crTestReroll(s, 0)).not.toBeNull(); // once
+    crTestDone(s);
+    expect(s.window).toBeNull();
+    expect((u.timed ?? []).some((t) => t.mark === 'darkPact')).toBe(true);
+  });
+  it('a bot never waits: it re-rolls by itself when a CP can be spared', async () => {
+    const { makeDarkPact } = await import('../factions/darkPacts');
+    const { s, u } = setup([0]);
+    makeDarkPact(s, u, 'lethal hits');
+    expect(s.window).toBeNull();
+    expect(s.players[0].cp).toBe(2);
+  });
+});
+
+describe('Malefic Surge waits for the player too', () => {
+  it('opens the window on a failed Leadership test and applies the wounds after Carry on', async () => {
+    const { maleficSurge } = await import('../factions/knights');
+    const { crTestDone } = await import('../factions/crTests');
+    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 4 } as never);
+    s.bots = [] as never;
+    const u = s.units.find((x) => x.owner === 0)!;
+    u.models.forEach((m) => { m.profile.Ld = 13; });
+    const before = u.models.reduce((a, m) => a + m.wounds, 0);
+    maleficSurge(s, u);
+    expect(s.window?.kind).toBe('crTest');
+    expect(u.models.reduce((a, m) => a + m.wounds, 0)).toBe(before); // no mortal wounds yet
+    crTestDone(s);
+    expect(u.models.reduce((a, m) => a + m.wounds, 0)).toBeLessThan(before);
+  });
+});

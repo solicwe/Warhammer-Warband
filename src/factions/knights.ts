@@ -4,9 +4,10 @@
 // The rest of both armies' rules are data: data/detachment-rules.json, data/abilities/QI.json, QT.json.
 import { activeRules, addTimed, bondOf, DET_RULES, type DetChoiceOption, type Effect } from '../rules-engine/effects';
 import { applyMortalWounds } from '../engine/attack';
+import { onCrTestDone, openCrTest } from './crTests';
 import { rollExpr, rollN } from '../engine/dice';
 import { baseDist, girth, polyCentroid, segSegDist } from '../engine/geometry';
-import { alive, boardUnits, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitDistance } from '../engine/state';
+import { alive, boardUnits, crTest, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitById, unitDistance } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const CODE = 'Code Chivalric';
@@ -261,6 +262,15 @@ export function maleficSurge(s: GameState, u: UnitState) {
   const ld = Math.min(...alive(u).map((m) => m.profile.Ld));
   let r = rollN(s, 2);
   if (r[0] + r[1] < ld && hasEnh(u, 'Blasphemous Engine')) r = rollN(s, 2);
+  const label = `${u.name}: Malefic Surge Leadership test (needs ${ld}+)`;
+  if (openCrTest(s, { player: u.owner, test: 'surge', unitId: u.id, label, dice: r, bad: { op: 'lt', n: ld, adj: 0 } }) === 'opened') return;
+  r = crTest(s, u.owner, label, r, (v) => v < ld);
+  finishSurge(s, u, r);
+}
+
+/** The rest of Malefic Surge once the Leadership test dice are final. */
+function finishSurge(s: GameState, u: UnitState, r: number[]) {
+  const ld = Math.min(...alive(u).map((m) => m.profile.Ld));
   if (r[0] + r[1] < ld) {
     const n = rollExpr(s, 'D3').total;
     log(s, `Malefic Surge: ${u.name} Leadership [${r.join('+')}] vs ${ld}+ failed → ${n} mortal wound(s)`, 'roll', u.owner);
@@ -268,6 +278,8 @@ export function maleficSurge(s: GameState, u: UnitState) {
   } else log(s, `Malefic Surge: ${u.name} Leadership [${r.join('+')}] vs ${ld}+ passed`, 'roll', u.owner);
   if (onBoard(u) && alive(u).length) addTimed(s, u, { e: {}, label: 'Malefic Surge', until: 'nextCommand', by: u.owner, mark: 'Empowered' });
 }
+
+onCrTestDone('surge', (s, w) => { const u = unitById(s, w.unitId); if (alive(u).length) finishSurge(s, u, w.dice); });
 
 /** Marked Prey: the most valuable enemy unit on the battlefield. */
 function markedPrey(s: GameState, p: PlayerId) {

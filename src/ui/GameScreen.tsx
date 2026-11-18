@@ -67,6 +67,7 @@ import { Board, getObjectiveEffects, placementRings, type Paths, type Ring } fro
 import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
+import { crTestDone, crTestReroll } from '../factions/crTests';
 import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/darkPacts';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
@@ -1688,6 +1689,24 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
+      );
+    }
+    if (w.kind === 'crTest') {
+      const rrWhy = canUseStratagem(s, w.player, 'command-reroll');
+      const can = !rrWhy && !w.rerolled;
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: {w.label}</div>
+          <div className="dice">
+            {w.dice.map((v, i) => (
+              <button key={i} type="button" className={`die ${w.rerolled ? 'rr' : ''} ${can ? 'pick' : ''}`} disabled={!can}
+                title={rrWhy ?? 'Command Re-roll 1CP: re-roll this die'}
+                onClick={() => { const e = act((g) => crTestReroll(g, i)); if (e) flash(e); }}>{v}</button>
+            ))}
+          </div>
+          <div className="small muted">{can ? 'This roll went badly. Tap a die to Command Re-roll it (1CP), or carry on.' : w.rerolled ? 'Command Re-roll used.' : `No Command Re-roll: ${rrWhy}`}</div>
+          <button className="btn primary" onClick={() => act((g) => crTestDone(g))}>Carry on</button>
         </>
       );
     }

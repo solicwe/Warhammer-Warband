@@ -3,10 +3,11 @@
 // Deadly Vectors, Numberless Horde, Blighted Land, Signal Pox, Eyestinger Storm …).
 import { activeRules, addTimed, type Effect } from '../rules-engine/effects';
 import { applyMortalWounds } from '../engine/attack';
+import { onCrTestDone, openCrTest } from './crTests';
 import { rollExpr, rollN } from '../engine/dice';
 import { baseDist, bodyAt, bodyTouchesPoly, circleTouchesPoly, dist, gap } from '../engine/geometry';
 import { unitInRange } from '../engine/missions';
-import { alive, boardUnits, hasKw, log, onBoard, other, unitDistance, bySize } from '../engine/state';
+import { alive, boardUnits, crTest, hasKw, log, onBoard, other, unitById, unitDistance, bySize } from '../engine/state';
 import type { GameState, ModelState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const GIFT = 'Nurgle’s Gift (Aura)';
@@ -141,21 +142,38 @@ export function dgRoundStart(s: GameState) {
   }
 }
 
+/** Deadly Vectors on each Afflicted unit in turn. A total over 6 lets the unit off, so that is what the Death Guard player may Command Re-roll. */
+function deadlyVectors(s: GameState, ids: string[]) {
+  const dg = other(s.active);
+  while (ids.length) {
+    const e = unitById(s, ids.shift()!);
+    if (!alive(e).length) continue;
+    const below = alive(e).length * 2 < e.startingStrength;
+    let r = rollN(s, 2);
+    const label = `Deadly Vectors on ${e.name}${below ? ' (-1)' : ''}`;
+    const bad = { op: 'gt' as const, n: 6, adj: below ? -1 : 0 };
+    if (openCrTest(s, { player: dg, test: 'vectors', unitId: e.id, label, dice: r, bad, below, queue: [...ids] }) === 'opened') return;
+    r = crTest(s, dg, label, r, (sum) => sum - (below ? 1 : 0) > 6);
+    finishVectors(s, e, r, below);
+  }
+}
+
+function finishVectors(s: GameState, e: UnitState, r: number[], below: boolean) {
+  const dg = other(s.active);
+  const v = r[0] + r[1] - (below ? 1 : 0);
+  if (v > 6) { log(s, `Deadly Vectors: ${e.name} rolled [${r.join('+')}]${below ? ' -1' : ''} = ${v}`, 'roll', dg); return; }
+  const n = rollExpr(s, 'D3').total;
+  log(s, `Deadly Vectors: ${e.name} rolled [${r.join('+')}]${below ? ' -1' : ''} = ${v} → ${n} mortal wound(s)`, 'roll', dg);
+  applyMortalWounds(s, e, n, 'Deadly Vectors');
+}
+
+onCrTestDone('vectors', (s, w) => { finishVectors(s, unitById(s, w.unitId), w.dice, !!w.below); deadlyVectors(s, w.queue ?? []); });
+
 /** Start of the Command phase of the active player: Deadly Vectors (the Death Guard's opponent), Numberless Horde. */
 export function dgCommandStart(s: GameState) {
   const a = s.active;
   const dg = other(a);
-  if (activeRules(s, dg).includes('Death Lord’s Chosen')) {
-    for (const e of boardUnits(s, a).filter((x) => isAfflicted(s, x))) {
-      const r = rollN(s, 2);
-      const below = alive(e).length * 2 < e.startingStrength;
-      const v = r[0] + r[1] - (below ? 1 : 0);
-      if (v > 6) { log(s, `Deadly Vectors: ${e.name} rolled [${r.join('+')}]${below ? ' -1' : ''} = ${v}`, 'roll', dg); continue; }
-      const n = rollExpr(s, 'D3').total;
-      log(s, `Deadly Vectors: ${e.name} rolled [${r.join('+')}]${below ? ' -1' : ''} = ${v} → ${n} mortal wound(s)`, 'roll', dg);
-      applyMortalWounds(s, e, n, 'Deadly Vectors');
-    }
-  }
+  if (activeRules(s, dg).includes('Death Lord’s Chosen')) deadlyVectors(s, boardUnits(s, a).filter((x) => isAfflicted(s, x)).map((x) => x.id));
   const P = s.players[a];
   if (activeRules(s, a).includes('Shamblerot Vectorium') && P.poxTemplate && bySize(s, a, [[2, 3], [2, 3, 4], [2, 3, 4, 5]]).includes(s.round)) {
     const u: UnitState = structuredClone(P.poxTemplate);

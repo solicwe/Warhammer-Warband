@@ -218,7 +218,7 @@ export function spendStratagem(s: GameState, player: PlayerId, id: string, unit?
 }
 
 /** Rolls a player can have the Command Re-roll used on without stopping to ask (set in the game menu). */
-export type AutoReroll = 'hazard' | 'damage' | 'attacks';
+export type AutoReroll = 'hazard' | 'damage' | 'attacks' | 'test';
 
 /**
  * Should `player` spend a Command Re-roll on this roll right now? Never when it can't be used. The game decides for
@@ -227,6 +227,15 @@ export type AutoReroll = 'hazard' | 'damage' | 'attacks';
 export function wantsCR(s: GameState, player: PlayerId, _what: AutoReroll, unit?: UnitState): boolean {
   if (canUseStratagem(s, player, 'command-reroll', unit)) return false;
   return s.players[player].cp - 1 >= (s.round >= lastRound(s) ? 0 : 1);
+}
+
+/** The bots' and automatic rules' version of the same test: a bad roll is re-rolled when a CP can be spared. */
+export function crTest(s: GameState, player: PlayerId, label: string, dice: number[], bad: (sum: number) => boolean): number[] {
+  if (!bad(dice.reduce((a, b) => a + b, 0)) || !wantsCR(s, player, 'test')) return dice;
+  spendStratagem(s, player, 'command-reroll');
+  const again = dice.map(() => d6(s));
+  log(s, `Command Re-roll: ${label} [${dice.join('+')}] → [${again.join('+')}]`, 'roll', player);
+  return again;
 }
 
 export function withinTerrain(s: GameState, m: ModelState, categories: string[] = ['exposed', 'light', 'dense']) {

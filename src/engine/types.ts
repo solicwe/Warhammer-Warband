@@ -684,6 +684,8 @@ export type Window =
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
   | { kind: 'pledge'; player: PlayerId; max: number }
+  /** a one-roll test that came out badly: the player may Command Re-roll a die before it counts (factions/crTests.ts) */
+  | { kind: 'crTest'; player: PlayerId; test: 'pact' | 'surge' | 'vectors'; unitId: string; label: string; dice: number[]; bad: { op: 'lt' | 'gt'; n: number; adj: number }; rerolled?: boolean; pick?: string; below?: boolean; queue?: string[] }
   /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
   | { kind: 'blessings'; player: PlayerId; dice: number[]; picks: import('../factions/blessings').BlessingPick[]; extra?: { label: string; kw?: string; until: 'phase' | 'round' }; rerolls?: number; rerollFrom?: string }
   /** a rule asks the player to pick one unit ("select one enemy unit hit by those attacks"); `acts` go to it */
