@@ -3,7 +3,7 @@ import { actsOfUnit } from '../rules-engine/activations';
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildFightPools } from './attack';
-import { createGame, formationAt, placeUnit, rollBattleShock } from './game';
+import { createGame, formationAt, placeUnit, rerollBattleShock, rollBattleShock } from './game';
 import { daemonsCommandStart } from '../factions/daemons';
 import { PRESETS } from '../ui/presets';
 import type { FactionData } from './types';
@@ -41,3 +41,20 @@ describe('faction hooks', () => {
   });
 });
 
+
+describe('Command Re-roll on a Battle-shock test', () => {
+  it('re-rolls a failed test once for 1CP', () => {
+    const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 5 } as never);
+    const u = s.units.find((x) => x.owner === 0)!;
+    s.shockTests = [{ unitId: u.id, result: null, passed: null }];
+    s.players[0].cp = 3;
+    u.models.forEach((m) => { m.profile.Ld = 13; }); // 2D6 can never reach 13: the first roll fails
+    rollBattleShock(s, u.id);
+    const t = s.shockTests[0];
+    expect(t.passed).toBe(false);
+    expect(rerollBattleShock(s, u.id)).toBeNull();
+    expect(t.rerolled).toBe(true);
+    expect(s.players[0].cp).toBe(2);
+    expect(rerollBattleShock(s, u.id)).not.toBeNull();
+  });
+});

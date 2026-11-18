@@ -703,7 +703,7 @@ export interface FightState {
   movedThisStep: string[];
 }
 
-export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean; mod?: number }
+export interface ShockTest { unitId: string; result: number | null; passed: boolean | null; auto?: boolean; mod?: number; was?: boolean; rerolled?: boolean }
 
 export type BotLevel = 'easy' | 'normal' | 'hard' | 'expert';
 

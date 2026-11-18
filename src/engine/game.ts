@@ -1266,6 +1266,7 @@ export function bestLd(u: UnitState, s?: GameState) {
 export function rollBattleShock(s: GameState, unitId: string, insaneBravery = false) {
   const t = s.shockTests.find((x) => x.unitId === unitId)!;
   const u = unitById(s, unitId);
+  t.was ??= u.battleShocked; // the state before the first roll, for a Command Re-roll
   if (insaneBravery) {
     spendStratagem(s, u.owner, 'insane-bravery', u);
     t.result = 0; t.passed = true; t.auto = true;
@@ -1302,6 +1303,22 @@ export function rollBattleShock(s: GameState, unitId: string, insaneBravery = fa
   if (was && t.passed) log(s, `${u.name} is no longer Battle-shocked`, 'info', u.owner);
   if (!was && !t.passed) { fire(s, 'becameShocked', [u]); }
   emit(s, 'shockResult', { u, passed: t.passed });
+}
+
+/** Command Re-roll (1CP) on a failed Battle-shock test: roll it again, once. */
+export function rerollBattleShock(s: GameState, unitId: string): string | null {
+  const t = s.shockTests.find((x) => x.unitId === unitId);
+  if (!t || t.passed !== false || t.auto || t.rerolled) return 'No failed test to re-roll';
+  const u = unitById(s, unitId);
+  // not targeted at the unit: a Battle-shocked unit cannot be targeted by Stratagems, and it is the failed test that shocked it
+  const why = canUseStratagem(s, u.owner, 'command-reroll');
+  if (why) return why;
+  spendStratagem(s, u.owner, 'command-reroll');
+  log(s, `Command Re-roll: ${u.name} re-rolls its Battle-shock test (${t.result})`, 'roll', u.owner);
+  u.battleShocked = t.was ?? false;
+  t.passed = null; t.rerolled = true;
+  rollBattleShock(s, unitId);
+  return null;
 }
 
 /** The bot's decisions at the end of a phase of the other player (Echo of the Ravenspire …), set by botPlus.ts. */

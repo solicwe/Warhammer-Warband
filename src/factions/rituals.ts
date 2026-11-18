@@ -1,6 +1,6 @@
 // Thousand Sons — Cabal of Sorcerers: at the start of the Shooting phase, models with the ability attempt Rituals.
 // Each model attempts one Ritual a turn (Magnus two); a failed Ritual can be attempted again by another eligible model.
-// Psychic test: 2D6, Channel the Warp adds a third D6; any double or triple costs the model's unit D3 mortal wounds;
+// Psychic test: 2D6, Channel the Warp adds a third D6 (decided after the first two are rolled); with Channel, any double or triple costs the model's unit D3 mortal wounds;
 // the total (plus bonuses) must reach the Ritual's Warp Charge. The rules that change any of this live here too:
 // Magnus, Ahriman, Spirit Snare, Immaterial Flare, the enhancements (Diabolic Savant, Warp Syphon, Warpmeld Dagger,
 // Lord of Forbidden Lore, Warp-cursed Runemaster, Empowered Manifestation, Incandaeum, Noctilith Mantle),
@@ -228,7 +228,7 @@ function resolveRitualTest(s: GameState, p: PlayerId, c: Caster, r: Ritual, t: U
     }
   }
   const values = all();
-  const doubles = isDouble(values);
+  const doubles = extra !== null && isDouble(values); // FAQ: the D3 mortal wounds for a double or triple only come with Channel the Warp
   let perils = 0;
   if (doubles) {
     perils = rollExpr(s, 'D3').total;
@@ -360,7 +360,7 @@ export function testOdds(n: 2 | 3, bonus: number, wc: number): { pass: number; p
     tot++;
     const v = n === 3 ? [a, b, c] : [a, b];
     const dbl = v.some((x, i) => v.indexOf(x) !== i);
-    if (dbl) perils++;
+    if (dbl && n === 3) perils++; // only a Channelled test risks perils
     if (a + b + c + bonus >= wc) pass++;
   }
   return { pass: pass / tot, perils: perils / tot };

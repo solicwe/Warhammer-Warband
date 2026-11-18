@@ -66,3 +66,4 @@ skill is the checklist around them.
 - A Ritual that pauses for a decision after its first dice roll must keep that roll in game state so reload preserves
   the decision. Undo should reverse the roll and return to the state before the attempt; resolve doubles/triples with
   one Perils event after the final dice are chosen.
+- Thousand Sons Cabal of Sorcerers (official FAQ, pasted by the owner 18 Nov 2026): the player rolls the first dice, then decides whether to Channel the Warp; the D3 mortal wounds for a double or triple come only when the model Channelled (`resolveRitualTest`, `testOdds` in `rituals.ts`); Rituals are attempted one model and one Ritual at a time, not sequenced up front.

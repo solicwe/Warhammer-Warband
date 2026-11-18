@@ -21,7 +21,7 @@ import {
   autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
   formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible,
-  rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive,
+  rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive,
   validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
   canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
   claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
@@ -2644,7 +2644,14 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                   <button className="btn small" disabled={!!ib} onClick={() => act((g) => rollBattleShock(g, u.id, true))}>Insane Bravery 1CP</button>
                   <button className="btn small primary" onClick={() => act((g) => rollBattleShock(g, u.id))}>Roll</button>
                 </>
-              ) : <span className={t.passed ? 'p0' : 'err'}>{t.auto ? 'Passed (Insane Bravery)' : `${t.result} ${t.passed ? 'Passed' : 'Battle-shocked!'}`}</span>}
+              ) : (
+                <>
+                  <span className={t.passed ? 'p0' : 'err'}>{t.auto ? 'Passed (Insane Bravery)' : `${t.result} ${t.passed ? 'Passed' : 'Battle-shocked!'}`}</span>
+                  {t.passed === false && !t.auto && !t.rerolled && !canUseStratagem(s, u.owner, 'command-reroll') && (
+                    <button className="btn small" onClick={() => { const e = act((g) => rerollBattleShock(g, u.id)); if (e) flash(e); }}>Command Re-roll 1CP</button>
+                  )}
+                </>
+              )}
             </div>
           );
         })}

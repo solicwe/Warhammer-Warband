@@ -150,7 +150,7 @@ describe('Rituals', () => {
     expect(pool.hitNote).toContain("Destiny's Ruin: re-roll hit");
   });
 
-  it('applies one D3 Perils result for a pair or triple among the Psychic test dice', () => {
+  it('applies one D3 Perils result for a pair or triple, only when the model Channels the Warp (FAQ)', () => {
     for (const n of [2, 3] as const) {
       const seed = Array.from({ length: 10000 }, (_, i) => i + 1).find((candidate) => {
         const dice = rollN({ rng: candidate }, n);
@@ -168,11 +168,12 @@ describe('Rituals', () => {
       expect(start.error).toBeNull();
       const expected = { rng: seed };
       rollN(expected, n);
-      rollExpr(expected, 'D3');
+      if (n === 3) rollExpr(expected, 'D3');
       const result = finishRitual(s, 0, n === 3);
 
       expect(result.out?.dice).toHaveLength(n);
-      expect(result.out?.perils).toBeGreaterThan(0);
+      if (n === 3) expect(result.out?.perils).toBeGreaterThan(0);
+      else expect(result.out?.perils).toBe(0);
       expect(s.rng).toBe(expected.rng);
     }
   });
