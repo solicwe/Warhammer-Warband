@@ -98,6 +98,7 @@ describe('Malefic Surge waits for the player too', () => {
     const { crTestDone } = await import('../factions/crTests');
     const s = createGame({ lists: [PRESETS.SM, PRESETS.ORK], factions: [load('SM'), load('ORK')], names: ['A', 'B'], seed: 4 } as never);
     s.bots = [] as never;
+    s.players[0].cp = 3;
     const u = s.units.find((x) => x.owner === 0)!;
     u.models.forEach((m) => { m.profile.Ld = 13; });
     const before = u.models.reduce((a, m) => a + m.wounds, 0);
