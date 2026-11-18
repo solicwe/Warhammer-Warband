@@ -1793,3 +1793,13 @@ export function loadoutLines(sheet: DatasheetData): { name: string; min: number;
   if (lines.length < 3 || sheet.wargearOptions?.length || !lines.every((c) => c.min === 0)) return [];
   return lines.map((c) => ({ name: c.name!, min: c.min!, max: c.max! }));
 }
+
+/** The Mark of Chaos / god that suits a datasheet best (the builder's "Best" button): casters Tzeentch, close-combat units Khorne, tough ones Nurgle, the rest Slaanesh. */
+export function bestMark(sheet: DatasheetData): 'KHORNE' | 'TZEENTCH' | 'NURGLE' | 'SLAANESH' {
+  if (sheet.keywords.includes('PSYKER')) return 'TZEENTCH';
+  const melee = sheet.weapons.filter((w) => w.profiles.some((p) => p.range === 'Melee')).length;
+  const ranged = sheet.weapons.length - melee;
+  if (melee > ranged) return 'KHORNE';
+  if (sheet.models.some((m) => m.T >= 5 || m.W >= 3)) return 'NURGLE';
+  return 'SLAANESH';
+}

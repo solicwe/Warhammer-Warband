@@ -421,7 +421,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                         actFaith?.stage === 'hit' && !actFaith.isDefender
                           ? (d) => !d.rerolled
                           : rr === 'hit'
-                            ? (d) => d.o === 'miss' && !d.rerolled
+                            ? (d) => d.o !== 'auto' && !d.rerolled
                             : fdSpec?.stage === 'hit' && st === 'wound'
                               ? freeCan
                               : undefined
@@ -459,7 +459,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                       onClick={() => { setActFaith(null); setRr(rr === 'hit' ? null : 'hit'); }}
                       style={{ alignSelf: 'flex-start' }}
                     >
-                      Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '- tap a failed die' : ''}
+                      Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'hit' ? '- tap any die' : ''}
                     </button>
                   )}
                 </>
@@ -489,7 +489,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                           actFaith?.stage === 'wound' && !actFaith.isDefender
                             ? (d) => !d.rerolled
                             : rr === 'wound'
-                              ? (d) => d.o === 'fail' && !d.rerolled
+                              ? (d) => d.o !== 'auto' && !d.rerolled
                               : fdSpec?.stage === 'wound' && st === 'save'
                                 ? freeCan
                                 : undefined
@@ -538,7 +538,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                         onClick={() => { setActFaith(null); setRr(rr === 'wound' ? null : 'wound'); }}
                         style={{ alignSelf: 'flex-start' }}
                       >
-                        Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '- tap a failed die' : ''}
+                        Command Re-roll 1CP {attackerCR ? `(${attackerCR})` : rr === 'wound' ? '- tap any die' : ''}
                       </button>
                     )}
                   </>
@@ -596,7 +596,7 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                       onClick={() => { setActFaith(null); setRr(rr === 'save' ? null : 'save'); }}
                       style={{ alignSelf: 'flex-start' }}
                     >
-                      {s.players[T.owner].name}: Command Re-roll Save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '- tap a failed die' : ''}
+                      {s.players[T.owner].name}: Command Re-roll Save 1CP {defenderCR ? `(${defenderCR})` : rr === 'save' ? '- tap any die' : ''}
                     </button>
                   </>
                 )}

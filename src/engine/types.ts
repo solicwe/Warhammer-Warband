@@ -485,7 +485,7 @@ export interface PlayerState {
     by: Record<string, number>;
     done?: boolean;
     reopened?: boolean; // the player asked for the Rituals again after shooting
-    pending?: { unitId: string; modelId: string; ritualId: string; targetId: string; bonus: number; dice: number[] };
+    pending?: { unitId: string; modelId: string; ritualId: string; targetId: string; bonus: number; dice: number[]; rerolled?: number };
   };
   /** Hexwarp Thrallband: the areas in the Flow of Magic this phase */
   flow?: { key: string; nml: boolean; opp: boolean };

@@ -9,7 +9,7 @@ import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { listPoints, validateList } from './army';
 import { createGame, endPhase, formationAt, placeUnit } from './game';
 import { inFlow } from '../factions/flow';
-import { attemptRitual, beginRitual, casters, finishRitual, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
+import { attemptRitual, beginRitual, rerollRitualDie, casters, finishRitual, ritualsLeft, ritualsPending, testOdds } from '../factions/rituals';
 import { botRituals } from '../ai/botRituals';
 import { autoDue, autoSelectToShoot, autoStep } from '../ai/autoPlay';
 import { manualActs, useAct } from '../rules-engine/activations';
@@ -566,5 +566,24 @@ describe('Sacrificial Blessing (once per selection)', () => {
     expect(offered().length).toBe(1);
     expect(useAct(s, offered()[0].def)).toBeNull();
     expect(offered().length).toBe(0);
+  });
+});
+
+describe('Command Re-roll on a Psychic test die', () => {
+  it('re-rolls one chosen die for 1CP, once', () => {
+    const s = game([['Sorcerer', 1, 95]], [['Boyz', 20, 180]]);
+    put(s, 'p0-x0', { x: 20, y: 25 });
+    put(s, 'p1-x0', { x: 20, y: 33 });
+    s.phase = 'shooting';
+    const caster = casters(s, 0)[0];
+    const r = beginRitual(s, 0, caster.model.id, ritualsLeft(s, 0, caster)[0].id, undefined);
+    expect(r.error).toBeNull();
+    s.players[0].cp = 3;
+    const cp = s.players[0].cp;
+    expect(rerollRitualDie(s, 0, 1)).toBeNull();
+    expect(s.players[0].cp).toBe(cp - 1);
+    expect(s.players[0].rituals?.pending?.rerolled).toBe(1);
+    expect(rerollRitualDie(s, 0, 0)).not.toBeNull();
+    expect(s.players[0].cp).toBe(cp - 1);
   });
 });

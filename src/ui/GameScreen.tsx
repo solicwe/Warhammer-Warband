@@ -46,7 +46,7 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { beginRitual, casters, endRituals, finishRitual, RITUALS, ritualsLeft, reopenRituals, ritualsPending, ritualsReopenable, ritualTargets } from '../factions/rituals';
+import { beginRitual, rerollRitualDie, casters, endRituals, finishRitual, RITUALS, ritualsLeft, reopenRituals, ritualsPending, ritualsReopenable, ritualTargets } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
@@ -2862,6 +2862,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       const caster = unit.models.find((m) => m.id === pending.modelId);
       const target = U(pending.targetId);
       const score = pending.dice.reduce((a, b) => a + b, 0) + pending.bonus;
+      const rrWhy = canUseStratagem(s, p, 'command-reroll', unit);
       const finish = (channel: boolean) => {
         const res = act((g) => finishRitual(g, p, channel));
         if (res?.error || !res?.out) { flash(res?.error ?? 'Could not finish this Psychic test'); return; }
@@ -2870,7 +2871,16 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <div className="rit-result">
           <b>{ritual.name}: Psychic test</b>
-          <div className="small">{caster?.name ?? unit.name} on {target.name} · 2D6 [{pending.dice.join(' ')}] +{pending.bonus} = {score} vs WC {ritual.wc}</div>
+          <div className="small">{caster?.name ?? unit.name} on {target.name} · +{pending.bonus} = {score} vs WC {ritual.wc}</div>
+          <div className="dice">
+            {pending.dice.map((v, i) => (
+              <button key={i} type="button" className={`die ${pending.rerolled === i ? 'rr' : ''} ${rrWhy === null && pending.rerolled === undefined ? 'pick' : ''}`}
+                disabled={rrWhy !== null || pending.rerolled !== undefined}
+                title={rrWhy ?? 'Command Re-roll 1CP: re-roll this die'}
+                onClick={() => { const e = act((g) => rerollRitualDie(g, p, i)); if (e) flash(e); }}>{v}</button>
+            ))}
+          </div>
+          <div className="small muted">{rrWhy === null && pending.rerolled === undefined ? 'Tap a die to Command Re-roll it (1CP).' : pending.rerolled !== undefined ? 'Command Re-roll used.' : `No Command Re-roll: ${rrWhy}`}</div>
           <div className="small">Choose whether to add a Channel die, even if the test already passes.</div>
           <div className="row wrap">
             <button className="btn primary" onClick={() => finish(true)}>Channel the Warp · roll 1D6</button>
@@ -2913,7 +2923,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
             const res = act((g) => beginRitual(g, p, c!.model.id, r!.id, rit.target));
             if (res?.error) flash(res.error);
             else setRit({});
-          }}>Attempt {r ? r.name : 'Ritual'}</button>
+          }}>Roll 2D6 · {r ? r.name : 'Ritual'}</button>
         </div>
       </>
     );

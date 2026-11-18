@@ -164,6 +164,22 @@ export function beginRitual(s: GameState, p: PlayerId, modelId: string, ritualId
   return { error: null, dice: [...dice] };
 }
 
+/** Command Re-roll (1CP) on one die of the pending Psychic test, before the player decides to Channel. */
+export function rerollRitualDie(s: GameState, p: PlayerId, index: number): string | null {
+  const pend = ritualState(s, p).pending;
+  if (!pend || index < 0 || index >= pend.dice.length) return 'No Psychic test to re-roll';
+  if (pend.rerolled !== undefined) return 'Only one die can be re-rolled';
+  const unit = unitById(s, pend.unitId);
+  const why = canUseStratagem(s, p, 'command-reroll', unit);
+  if (why) return why;
+  spendStratagem(s, p, 'command-reroll', unit);
+  const old = pend.dice[index];
+  pend.dice[index] = d6(s);
+  pend.rerolled = index;
+  log(s, `Command Re-roll: Psychic test die ${old} → ${pend.dice[index]}`, 'roll', p);
+  return null;
+}
+
 /** Finish the pending test after the player chooses whether to roll a Channel die. */
 export function finishRitual(s: GameState, p: PlayerId, channel: boolean, choices: Omit<RitualChoice, 'channel'> = {}): { error: string | null; out?: RitualOutcome } {
   const R = ritualState(s, p);
@@ -255,9 +271,7 @@ function resolveRitual(s: GameState, c: Caster, r: Ritual, t: UnitState, result:
     t.psyHit = { key: `${s.turn}|${s.phase}`, by: p };
     const n = rollExpr(s, result >= 11 ? 'D3+3' : 'D3').total;
     log(s, `${r.name}: ${t.name} suffers ${n} mortal wounds`, 'roll', p);
-    const killed = applyMortalWounds(s, t, n, r.name);
-    // the player sees what the bolt did, as a card
-    pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${t.name}`, dice: [], result: `${n} mortal wounds · ${killed ? `${killed} model${killed > 1 ? 's' : ''} destroyed` : 'no model destroyed'}`, good: true });
+    applyMortalWounds(s, t, n, r.name); // the wounds show over the target on the board (the 'mortal' effect), not as a card
   } else if (r.id === 'temporal-surge') {
     runActions(s, r.name, c.unit, [{ on: 'target', move: result >= 10 ? '6' : 'D6', noCharge: true }], t);
   }

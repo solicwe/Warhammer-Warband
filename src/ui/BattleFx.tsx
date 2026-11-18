@@ -4,7 +4,7 @@ import type { WeaponFx } from '../engine/weaponFx';
 import { energyTex, fireTex, fxTextures, type TexKind } from './fxTextures';
 
 /** How long each kind of effect plays (ms). Most rolls are shown by the screen; charge rolls stay by their unit. */
-export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1200, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
+export const FX_MS: Record<FxEvent['kind'], number> = { move: 700, place: 1300, shock: 1500, heal: 1500, attack: 1900, mortal: 1800, skill: 2800, ritual: 2600, explosion: 2400, roll: 2600, rolloff: 0, cards: 0, primary: 0, extract: 550 };
 export function replayFrameDuration(events: FxEvent[]): number {
   const attackReports = events.filter((e) => e.kind === 'attack' && e.report).length;
   return Math.max(700, ...events.map((e, i) => FX_MS[e.kind] + i * 180), attackReports * 1630);
@@ -94,7 +94,7 @@ function FxView({ a, now }: { a: ActiveFx; now: number }) {
         {f < 0.2 && <Glow at={e.at} r={0.6 + f * 4} color="white" op={1 - f / 0.2} />}
         <Glow at={e.at} r={1 + f} color="purple" op={0.7 * (1 - f)} />
         <Shockwave at={e.at} r={1.8} k={f / 0.5} color="#c084fc" />
-        <text x={e.at.x} y={e.at.y - 1 - f * 1.6} opacity={1 - f} fontSize={1} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.14} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
+        <text x={e.at.x} y={e.at.y - 1.4 - f * 1.4} opacity={f < 0.7 ? 1 : 1 - (f - 0.7) / 0.3} fontSize={1.6} textAnchor="middle" fill="#e9d5ff" stroke="#000" strokeWidth={0.2} paintOrder="stroke" fontWeight={900}>-{e.n} MW</text>
       </g>
     );
   }

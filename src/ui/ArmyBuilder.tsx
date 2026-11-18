@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
+import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, bestMark, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf, subPointsList } from '../engine/allies';
 import { Em } from './Em';
@@ -1178,6 +1178,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           {sheet && sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
             <div className="field"><span>Daemonic Allegiance <span className="tiny muted">the god this Daemon Prince serves (keyword + bonus)</span></span>
               <div className="wg-chips">
+                <button type="button" onClick={() => setUnit(u.uid, { mark: bestMark(sheet) })}>Best for this unit</button>
                 {['NURGLE', 'KHORNE', 'TZEENTCH', 'SLAANESH'].map((k) => {
                   const on = (u.mark ?? 'NURGLE') === k;
                   return <button key={k} type="button" className={on ? 'on' : ''} aria-pressed={on} onClick={() => setUnit(u.uid, { mark: k })}>{on && <Icon name="check" size={16} />}{k.charAt(0) + k.slice(1).toLowerCase()}</button>;
@@ -1189,6 +1190,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           {sheet && list.detachments.includes('Pactbound Zealots') && markable(sheet) && !sheet.abilities.some((x) => x.name === 'Daemonic Allegiance') && (
             <div className="field"><span>Mark of Chaos <span className="tiny muted">Pactbound Zealots · after a passed Dark Pact</span></span>
               <div className="wg-chips">
+                <button type="button" onClick={() => setUnit(u.uid, { mark: bestMark(sheet) })}>Best for this unit</button>
                 {CHAOS_MARKS.filter((k) => !(k === 'KHORNE' && sheet.keywords.includes('PSYKER'))).map((k) => {
                   const on = (u.mark ?? 'CHAOS UNDIVIDED') === k;
                   return <button key={k} type="button" className={on ? 'on' : ''} aria-pressed={on} onClick={() => setUnit(u.uid, { mark: k === 'CHAOS UNDIVIDED' ? undefined : k })}>{on && <Icon name="check" size={16} />}{k.charAt(0) + k.slice(1).toLowerCase()}</button>;

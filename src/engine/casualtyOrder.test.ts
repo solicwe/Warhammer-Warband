@@ -56,3 +56,17 @@ describe('Precision picks a CHARACTER', () => {
     expect(first.saveTargets[0].startsWith(last.name)).toBe(true);
   });
 });
+
+describe('bestMark', () => {
+  it('picks a god from the datasheet', async () => {
+    const { bestMark } = await import('./army');
+    const sheet = (kw: string[], melee: number, ranged: number, T = 4, W = 2) => ({
+      keywords: kw, models: [{ T, W }],
+      weapons: [...Array(melee).fill({ profiles: [{ range: 'Melee' }] }), ...Array(ranged).fill({ profiles: [{ range: 24 }] })],
+    }) as never;
+    expect(bestMark(sheet(['PSYKER'], 1, 1))).toBe('TZEENTCH');
+    expect(bestMark(sheet([], 3, 1))).toBe('KHORNE');
+    expect(bestMark(sheet([], 1, 2, 5))).toBe('NURGLE');
+    expect(bestMark(sheet([], 1, 2))).toBe('SLAANESH');
+  });
+});
