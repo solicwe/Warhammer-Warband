@@ -119,7 +119,7 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 |---|---|
 | S1 | Done: `npm run test:slow` (`vitest.slow.config.ts`) runs the slow group; `scripts/elo.mjs` and `scripts/tune.mjs` use it. No nightly CI job yet |
 | S2 | Done: `src/engine/rulesStatus.test.ts` builds the summary table of `docs/RULES_STATUS.md` from the data and fails when it drifts (186 text-only unit abilities). The label-only `*Status.test.ts` files stay |
-| S3 | Ready, not pushed: the token used here may not change `.github/workflows` (it lacks the `workflow` scope). The new `deploy.yml` (deploy after a passed CI run, `workflow_run`) waits for the owner to push it |
+| S3 | Closed by the way of working (owner, 20 Nov 2026): `main` is only fast-forwarded after the full suite passes on that code (CLAUDE.md), so the site never gets a red build from this repo's sessions. The workflow change (deploy after a passed CI run) stays possible if the owner grants the `workflow` scope, see below |
 | S4 | Decided not to rewrite (20 Nov 2026): a rewrite and force push would change every commit id and still leave the files in the read-only `refs/pull/*` of the 20 old pull requests. The way that works is a GitHub Support request to purge them; the files are out of the working tree and `*.pdf` is ignored |
 | S5 | Policy: move a named rule out of `src/engine` when a change touches it; `layers.test.ts` caps them per file (army 19, attack 8, game 12, state 2) so the number only goes down |
 | S6 | Started: `hasFiredThisTurn` is a typed field (no more `as any`); the per-faction slot exists (`ext` on unit, player and game, `ext()` in `state.ts`) for new rules; the 157 old fields stay until their rule is touched |
@@ -138,7 +138,7 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 
 ### Waiting for the owner
 
-- **S3, deploy after CI.** Needs a push with the `workflow` scope. In `.github/workflows/deploy.yml` replace the
+- **S3, deploy after CI (optional).** Needs a push with the `workflow` scope. In `.github/workflows/deploy.yml` replace the
   `on: push: branches: [main]` trigger with
   `on: { workflow_run: { workflows: [CI], types: [completed], branches: [main] }, workflow_dispatch: }`, give the
   `build` job `if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'`, and
