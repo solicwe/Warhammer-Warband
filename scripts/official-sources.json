@@ -1,0 +1,138 @@
+{
+ "_comment": "Official documents listed on https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/ (read 20 Nov 2026). Only the addresses are kept here; the files go to data/official/ and are never committed.",
+ "base": "https://assets.warhammer-community.com/",
+ "files": [
+  {
+   "name": "core-rules",
+   "file": "eng_01-06_warhammer40k_new40k_core_rules-was6fbu1ix-hfewhmxyiy.pdf"
+  },
+  {
+   "name": "universal-rules-updates",
+   "file": "eng_wh40k_core&key_universal_rules_updates-lu3grocned-rphh78bl6k.pdf"
+  },
+  {
+   "name": "faction-pack-adepta-sororitas",
+   "file": "eng_14-10_wh40k_-faction_pack_adepta_sororitas-kby0nywexj-dg7kvr3iiy.pdf"
+  },
+  {
+   "name": "faction-pack-adeptus-mechanicus",
+   "file": "eng_14-10_wh40k_-faction_pack_adeptus-mechanicus-g0jwiuyz3x-f5itnst9j9.pdf"
+  },
+  {
+   "name": "updates-adeptus-custodes",
+   "file": "eng_14-10_wh40k_printed_product_updates_adeptus_custodes_updates-fmj4bdwwhh-0qshh8eauk.pdf"
+  },
+  {
+   "name": "faction-pack-imperial-agents",
+   "file": "eng_14-10_wh40k_-faction_pack_imperial_agents-5bv5lemlti-phvkqckp17.pdf"
+  },
+  {
+   "name": "faction-pack-leagues-of-votann",
+   "file": "eng_14-10_wh40k_faction_pack_leagues_of_votann-os3nsdjlao-buac8a7pzn.pdf"
+  },
+  {
+   "name": "faction-pack-tyranids",
+   "file": "eng_14-10_wh40k_faction_pack_tyranids-an12izciwp-np2hnkcsje.pdf"
+  },
+  {
+   "name": "updates-space-marines",
+   "file": "eng_14-10_wh40k_printed_product_updates_space_marines_updates-91hillwcff-wzs8qnozam.pdf"
+  },
+  {
+   "name": "faction-pack-aeldari",
+   "file": "eng_14-10_wh40k_-faction_pack_aeldari-seqmcs1mu0-g8gzewikcm.pdf"
+  },
+  {
+   "name": "faction-pack-death-guard",
+   "file": "eng_30-09_wh40k_faction_pack_death_guard-bp5c8lcjq6-i4ew7urwyk.pdf"
+  },
+  {
+   "name": "faction-pack-thousand-sons",
+   "file": "eng_30-09_wh40k_faction_pack_thousand_sons-4lioijwxdj-otjrinzt8c.pdf"
+  },
+  {
+   "name": "faction-pack-astra-militarum",
+   "file": "eng_30-09_wh40k_faction_pack_astra_militarum-1hevkhdpmv-stfkch2tsz.pdf"
+  },
+  {
+   "name": "faction-pack-chaos-daemons",
+   "file": "eng_30-09_wh40k_faction_pack_chaos_daemons-e67vyzvv3x-mownb49uc3.pdf"
+  },
+  {
+   "name": "faction-pack-world-eaters",
+   "file": "eng_30-09_wh40k_faction_pack_world_eaters-rxxj1fzeoh-kfx1cectxb.pdf"
+  },
+  {
+   "name": "faction-pack-adeptus-custodes",
+   "file": "eng_30-09_wh40k_faction_pack_adeptus_custodes-xlscee8b1b-b1evo9u920.pdf"
+  },
+  {
+   "name": "faction-pack-necrons",
+   "file": "eng_30-09_wh40k_faction_pack_necrons-1urphgbmpy-wbhocjbaba.pdf"
+  },
+  {
+   "name": "faction-pack-grey-knights",
+   "file": "eng_30-09_wh40k_faction_pack_grey_knights-jnrahwb1qf-ubjtmdlivm.pdf"
+  },
+  {
+   "name": "faction-pack-emperors-children",
+   "file": "eng_30-09_wh40k_faction_pack_emperors_children-xp2mhzppxs-1cvykicdxu.pdf"
+  },
+  {
+   "name": "faction-pack-chaos-space-marines",
+   "file": "eng_30-09_wh40k_faction_pack_chaos_space_marines-xlmrglqa2b-zd2fzntrqu.pdf"
+  },
+  {
+   "name": "faction-pack-chaos-knights",
+   "file": "eng_wh40k_faction_pack_chaos_knights-87ywk2jovh-xk68yzyb18.pdf"
+  },
+  {
+   "name": "faction-pack-drukhari",
+   "file": "eng_wh40k_faction_pack_drukhari-p7mpvgnmnn-clii96hzh6.pdf"
+  },
+  {
+   "name": "faction-pack-imperial-knights",
+   "file": "eng_wh40k_faction_pack_imperial_knights-n1irjnjygs-w8jfnk8kdn.pdf"
+  },
+  {
+   "name": "faction-pack-tau-empire",
+   "file": "eng_wh40k_faction_pack_tau_empire-sxhzmfrlud-mpzjzuhupn.pdf"
+  },
+  {
+   "name": "faction-pack-adeptus-titanicus",
+   "file": "eng_22-07_warhammer_40,000_faction_pack_adeptus_titanicus-pkhrobh6xn-nmtoszeaxw.pdf"
+  },
+  {
+   "name": "faction-pack-genestealer-cults",
+   "file": "eng_22-07_warhammer_40,000_faction_pack_genestealer_cults-vmkwgeydbr-sh7picbeqo.pdf"
+  },
+  {
+   "name": "event-companion",
+   "file": "eng_14-10_wh40k_event_companion-rdwnqprl4c-nj8oqogadv.pdf"
+  },
+  {
+   "name": "event-companion-doubles",
+   "file": "eng_wh40k_doubles_event_companion-x8bakj0hba-chdctfbcoc.pdf"
+  },
+  {
+   "name": "event-companion-teams",
+   "file": "eng_22-07_warhammer_40,000_teams_event_companion-7ow8c92xdm-dyf3i4qpst.pdf"
+  },
+  {
+   "name": "event-companion-dominatus",
+   "file": "eng_22-07_warhammer_40,000_warhammer_dominatus_event_companion-qltehqtely-atbn2qffac.pdf"
+  },
+  {
+   "name": "faction-pack-dark-angels-legends",
+   "file": "eng_30-09_wh40k_faction_pack_dark_angels-grkkeaxdr3-zkavqgpgvq.pdf"
+  },
+  {
+   "name": "faction-pack-space-wolves-legends",
+   "file": "eng_30-09_wh40k_faction_pack_space_wolves-zb02n7jqrg-4gggpsmndk.pdf"
+  },
+  {
+   "name": "faction-pack-blood-angels-legends",
+   "file": "eng_30-09_wh40k_faction_pack_blood_angels-klcdcz9zip-wgf7iqk1vd.pdf"
+  }
+ ]
+}

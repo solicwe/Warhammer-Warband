@@ -3,7 +3,8 @@
 Put the Games Workshop PDFs here (Core Rules, Rules Appendix, faction packs, Chapter Approved mission pack, FAQs and
 errata), downloaded from <https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/>.
 
-Everything in this folder except this file is git-ignored: Games Workshop material is never committed. Then run
+Everything in this folder except this file is git-ignored: Games Workshop material is never committed. `npm run rules:fetch`
+downloads the list in `scripts/official-sources.json` here. Then run
 
     npm run rules:text
 

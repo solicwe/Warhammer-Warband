@@ -8,8 +8,13 @@ files in `docs/EDITING.md`; this page is the loop around them.
 The rules come from Games Workshop's downloads: <https://www.warhammer-community.com/en-gb/downloads/warhammer-40000/>
 (Core Rules, Rules Appendix, the faction packs, Chapter Approved, FAQs and errata).
 
-1. Download what you need into `data/official/` (git-ignored: Games Workshop material is never committed).
-2. `npm run rules:text` turns each PDF into a `.txt` next to it (needs `pdftotext` from Poppler).
+1. `npm run rules:fetch` downloads the documents listed in `scripts/official-sources.json` (Core Rules, Universal Rules
+   Updates, every faction pack, the printed-product updates, the Event Companions: 33 files, about 400 MB) into
+   `data/official/`. That folder is git-ignored: Games Workshop material is never committed, and neither is its text.
+2. `npm run rules:text` turns each PDF into `<name>.txt` and `<name>.json` (`{ source, pages: [{ page, text }] }`) next to
+   it (needs `pdftotext` from Poppler). Scripts can read the JSON; `npm run rule` reads the text.
+
+When the download page adds or changes a document, add its address to `scripts/official-sources.json`.
 
 A number or a wording is never written from memory: it is checked against these documents. Where the code and the
 text differ on purpose, the owner decided it: see "Owner decisions" in `.claude/skills/start-here/SKILL.md` and
