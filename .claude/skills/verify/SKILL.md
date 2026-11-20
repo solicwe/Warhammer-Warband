@@ -76,10 +76,13 @@ or run it on the old code), then pass.
 - Charge reach is measured to Engagement Range, not base contact: target filtering, charge result feedback and the
   auto-charge path must all allow the rolled distance plus Engagement Range (owner decision: the coded rules stand,
   see `start-here`).
-- `vite.config.ts` excludes the slow tests (`sim`, `autoPlay`, `botLook`, `tune`, `arena`, `*Games*`) by pattern, and
-  Vitest applies that even to a file named on the command line: `npx vitest run src/engine/arena.test.ts` answers
-  "No test files found". Until the config gets a slow group, the arena, `scripts/elo.mjs` and `scripts/tune.mjs` do
-  not run (open item in `docs/05-tech-debt.md`).
+- `vite.config.ts` leaves out the slow tests (`sim`, `autoPlay`, `botLook`, `tune`, `arena`, `*Games*`), even when a file is named on
+  the command line. Run them with `npm run test:slow` (`vitest.slow.config.ts`), e.g.
+  `npx vitest run --config vitest.slow.config.ts src/engine/arena.test.ts`; `scripts/elo.mjs` and `scripts/tune.mjs` use it.
+- Whole bot-vs-bot games take about 60 s alone; under four workers they ran past the old 60 s limit (the default is
+  now 120 s in `vite.config.ts`). A timeout in the full run that passes alone is load, not a bug.
+- Editing a file with a bash `node -e "..."` that contains backticks runs the backticked words as shell commands
+  (twice this session: a doc table lost its code names). Write such edits with the Edit tool.
 - On this Windows checkout, the default Vitest worker pool starved long bot-game tests and caused 300-second
   timeouts. An isolated Changehost game passed with `--maxWorkers=1`; the full suite passed with `--maxWorkers=4`.
   When failures are only timeouts, cap concurrency before treating them as code failures.

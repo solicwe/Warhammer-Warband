@@ -136,6 +136,18 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S17 | No change needed until it breaks again |
 | S18 | Done: react 19.3.1, vite 8.3.8, vitest 5.1.1 (npm update) |
 
+### Waiting for the owner
+
+- **S3, deploy after CI.** Needs a push with the `workflow` scope. In `.github/workflows/deploy.yml` replace the
+  `on: push: branches: [main]` trigger with
+  `on: { workflow_run: { workflows: [CI], types: [completed], branches: [main] }, workflow_dispatch: }`, give the
+  `build` job `if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'`, and
+  check out `ref: ${{ github.event.workflow_run.head_sha || github.sha }}`.
+- **S4, the PDFs in history.** A rewrite (`git filter-branch` or `git filter-repo` removing `aoi_update.pdf` and
+  `tyranids_faction_pack.pdf`) and a force push of every branch would change every commit id, so every other checkout
+  has to be cloned again. It still would not remove them from GitHub: the read-only `refs/pull/*` of the 20 old pull
+  requests keep the files, and only GitHub Support can purge those. Decide before it is done.
+
 ## Order of work
 
 One session, one numbered item or one row group that touches the same files.
