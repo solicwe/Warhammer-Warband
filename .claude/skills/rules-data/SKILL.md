@@ -10,6 +10,10 @@ skill is the checklist around them.
 
 ## Inventory first
 
+0. `npm run rule -- "<name>"` prints the card, the rule data, the code, the tests and (with the PDFs in `data/official/`,
+   `npm run rules:text`) the official wording in one report. The loop is in `docs/RULES_WORKFLOW.md`; `npm run rules:check`
+   verifies the rule data as a whole.
+
 1. Find the card text: `public/data/factions/<ID>.json` (generated; never edit it by hand).
 2. Find what already runs for it, in this order:
    - `data/abilities/<ID>.json` (key: the name, or `Name@Datasheet`), `data/stratagems/<ID>.json` (key: the card
