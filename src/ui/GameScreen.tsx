@@ -210,7 +210,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
 
   useEffect(() => {
     if (fastShooting && s.defenderRolls !== false) {
-      act((g) => { g.defenderRolls = false; });
+      act((g) => { g.defenderRolls = false; }, true);
     }
   }, [fastShooting, s.defenderRolls]);
 
@@ -234,7 +234,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           markFought(g, unitById(g, attacker.id));
           openCounteroffensive(g, attacker.owner);
         }
-      });
+      }, true);
       setMode(null);
       if (!spectate && at.kind === 'shoot' && attacker && !unfiredWeaponNames(attacker).length) setSel(null);
     }
@@ -282,7 +282,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         abortThinkingRef.current = null;
         setThinking(false);
         styleRef.current = { p: who, name };
-        act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); });
+        act((g) => { if (!styleChosen(g)) applyStyle(g, who, name); }, true);
         // the commander says how it plays the turn, then what it goes for first
         speak(who, name as VoiceEvent);
         const first = intents.find((x) => s.units.some((u) => u.id === x.targetId && onBoard(u)));
@@ -335,7 +335,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           botStep(g, who);
         }
         return g;
-      });
+      }, true);
     };
     const t = window.setTimeout(() => {
       // the bot's thinking (a unit's move can take a second or more on a phone) runs in the worker: the screen stays live
@@ -354,7 +354,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         if (sRef.current !== sent) return; // the game changed meanwhile (undo …): the next round of this effect asks again
         const next = e.data.state;
         if (!next) { stepOnMain.current = true; onMain(); return; }
-        act((g) => { Object.assign(g, next); });
+        act((g) => { Object.assign(g, next); }, true);
       };
       worker.onerror = () => { window.clearTimeout(giveUp); worker.onmessage = null; setStepping(false); stepOnMain.current = true; if (sRef.current === sent) onMain(); };
       try { worker.postMessage({ kind: 'step', state: s, who, id, style: styleRef.current ?? undefined }); }
@@ -458,7 +458,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           autoStep(g, autoWho);
           count++;
         }
-      });
+      }, true);
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
   }, [s, autoWho, rolling, thinking, viewing, replay]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -3539,7 +3539,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           if (g.fight?.step !== 'pileIn' || g.fight.stepPlayer !== p) return;
           for (const u of boardUnits(g, p).filter((x) => pileInEligible(g, x) && !g.fight!.movedThisStep.includes(x.id))) autoPileMove(g, u, 'pileIn');
           endPileInStep(g);
-        }), 0);
+        }, true), 0);
         return null;
       }
       return (
@@ -3562,7 +3562,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           if (g.fight?.step !== 'consolidate' || g.fight.stepPlayer !== p) return;
           if (bots.includes(p)) for (const u of boardUnits(g, p).filter((x) => consolidateEligible(g, x) && consolidateMode(g, x).mode)) autoPileMove(g, u, 'consolidate');
           endConsolidateStep(g);
-        }), 0);
+        }, true), 0);
         return null;
       }
       return (

@@ -44,11 +44,32 @@ if (typeof window !== 'undefined') {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 }
 
+export interface HistoryEntry { state: GameState; auto: boolean }
+
+/**
+ * Take back the player's last action together with everything the game did by itself after it (a bot step would
+ * otherwise be undone and replayed at once, and an automatic roll would need a second tap). An attack in the middle of
+ * its dice goes back to before the shot, not to a half-rolled stage. Pops what it uses off `h`; returns the state to show.
+ */
+export function undoTarget(h: HistoryEntry[]): GameState | undefined {
+  let target: GameState | undefined;
+  let firstAuto: GameState | undefined;
+  while (h.length) {
+    const e = h.pop()!;
+    if (e.auto) { firstAuto = e.state; continue; }
+    target = e.state;
+    if (target.attack && h.length) continue;
+    break;
+  }
+  return target ?? firstAuto; // only automatic steps left: go back before the first of them
+}
+
 /** Game state holder: every action runs synchronously on a clone of the latest state, then autosaves. */
 export function useGame(initial: GameState, persist = true, readOnly = false, onCommit?: (state: GameState, undone: boolean) => void) {
   const sanitized = sanitizeGameState(initial);
   const ref = useRef<GameState>(sanitized);
-  const history = useRef<GameState[]>([]);
+  // each entry is the state before one action; `auto` marks what the game did by itself (bot steps, automatic rolls)
+  const history = useRef<HistoryEntry[]>([]);
   const [state, setState] = useState<GameState>(sanitized);
   const [undoCount, setUndoCount] = useState(0);
   useLayoutEffect(() => {
@@ -66,7 +87,7 @@ export function useGame(initial: GameState, persist = true, readOnly = false, on
     if (persist) queueSave(next);
     onCommit?.(next, undone);
   };
-  const act = useCallback(<T,>(fn: (s: GameState) => T): T => {
+  const act = useCallback(<T,>(fn: (s: GameState) => T, auto = false): T => {
     if (readOnly) return undefined as T;
     const prev = ref.current;
     const next = structuredClone(prev);
@@ -79,7 +100,7 @@ export function useGame(initial: GameState, persist = true, readOnly = false, on
       window.dispatchEvent(new CustomEvent('game-error', { detail: e instanceof Error ? e.message : String(e) }));
       return undefined as T;
     }
-    history.current.push(prev);
+    history.current.push({ state: prev, auto });
     if (history.current.length > 60) history.current.shift();
     setUndoCount(history.current.length);
     commit(next);
@@ -87,9 +108,9 @@ export function useGame(initial: GameState, persist = true, readOnly = false, on
   }, [onCommit, persist, readOnly]);
   const undo = useCallback(() => {
     if (readOnly) return;
-    const prev = history.current.pop();
+    const target = undoTarget(history.current);
     setUndoCount(history.current.length);
-    if (prev) commit(prev, true);
+    if (target) commit(target, true);
   }, [onCommit, persist, readOnly]);
   return { state, act, undo, canUndo: undoCount > 0 };
 }
