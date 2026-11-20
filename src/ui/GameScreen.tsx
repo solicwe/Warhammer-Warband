@@ -3342,7 +3342,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <>
           <div className="big-result">Charge roll: {roll}"</div>
-          {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${Math.max(0, nearest - RULES.engagementRange).toFixed(1)}" to reach Engagement Range` : ''}</div>}
+          {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${nearest.toFixed(1)}" to touch bases` : ''}</div>}
           {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', finish), <button className="btn small" onClick={() => {
             const add = autoApproach(s, modeUnit, mode.targets.map(U), roll);
             let pth = mergePaths(startPaths(modeUnit), add);

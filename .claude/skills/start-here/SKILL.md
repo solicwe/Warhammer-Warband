@@ -133,6 +133,7 @@ Made in conversation, so they are not all visible in the code. A change that wou
   the opponent's Movement phase when an enemy is within 12" and the unit is not engaged.
 - **The bot plays the same way in every game** (owner, 20 Nov 2026, replacing the idle-only rule): `pointsFirst` is on unless the Idle tactic is assault.
 - **A person spends their own Command points** (owner, 19-20 Nov 2026): every Command Re-roll and stratagem of a person is a button they press; the game re-rolls or pays only for bots and automatic rules.
+- **A charge reaches base contact first, then Engagement Range is counted** (owner, 20 Nov 2026, against Core Rules 11.04, which only asks to end engaged): the rolled distance must reach the target's base (`validateMove` 'charge', `declareCharge`, `chargeTargetOptions`); after Deep Strike (more than 8") the lowest charge is 8+, not 7+. A model that touches a friendly model touching the target counts.
 - **Chaos armies take only Chaos Knights as allies** (owner, 20 Nov 2026): no Daemonic Pact, no Wretched Thralls; Imperium allies are unchanged.
 - **Knights' invulnerable saves**: against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (Imperial and Chaos), which save against everything (owner, 20 Nov 2026; `InSvRanged` in `data/overrides`).
 - **Effects**: fire only for torrent weapons (a psychic power is a psychic bolt, plasma is plasma); no drifting smoke

@@ -711,6 +711,16 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
     const targets = (opt.targets ?? []).map((id) => unitById(s, id));
     for (const t of targets) if (!eng.includes(t)) errors.push(`Must end engaged with the target ${t.name}`);
+    // owner decision (20 Nov 2026): a charge reaches base contact first, and only then is Engagement Range counted: a model
+    // must touch each target (or a friendly model that touches it); stopping 2" short is not enough
+    if (kind === 'charge') {
+      const at = (m: ModelState) => bodyAt(m, pos.get(m.id) ?? m);
+      for (const t of targets) {
+        const touches = alive(u).some((m) => alive(t).some((n) => gap(at(m), n) <= 0.05));
+        const viaFriend = boardUnits(s, u.owner).some((f) => f.id !== u.id && alive(f).some((fm) => alive(t).some((n) => baseDist(fm, n) <= 0.05)) && alive(u).some((m) => alive(f).some((fm) => gap(at(m), fm) <= 0.05)));
+        if (!touches && !viaFriend && eng.includes(t)) errors.push(`Must reach base contact with the target ${t.name} first`);
+      }
+    }
     if (kind === 'charge' && u.chargeMust?.turn === s.turn && !targets.some((t) => t.id === u.chargeMust!.id)) errors.push(`Must charge ${unitById(s, u.chargeMust.id).name} too (it must end engaged with it)`);
     if (kind === 'charge' && unitFlags(s, u).chargeMustEngaged && !targets.some((t) => engagedEnemies(s, t).some((f) => f.id !== u.id))) errors.push('Refusal to be Outdone: must charge an enemy unit that is already engaged');
     for (const e of eng) if (!targets.includes(e)) errors.push(`Cannot end engaged with a unit that was not a target (${e.name})`);
@@ -1869,7 +1879,7 @@ export function declareCharge(s: GameState, u: UnitState, fly = false, cap?: num
   s.lastAct = { unitId: u.id, owner: u.owner, kind: 'charge', turn: s.turn, phase: s.phase, targets: [], lost: [], halved: [] };
   const declaredInOwnTurn = u.owner === s.active && s.phase === 'charge';
   const r = rollN(s, 2);
-  const near = Math.max(0, Math.min(...boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') || hasKw(u, 'FLY')).map((e) => unitDistance(u, e)), 99) - RULES.engagementRange);
+  const near = Math.max(0, Math.min(...boardUnits(s, other(u.owner)).filter((e) => !hasKw(e, 'AIRCRAFT') || hasKw(u, 'FLY')).map((e) => unitDistance(u, e)), 99)); // base to base first (owner, 20 Nov 2026): no Engagement Range taken off
   const bonus = (u.buffs.some((b) => b.kind === 'advanceCharge+1') ? 1 : 0) + rollMods(s, u).chargeBonus - (fly && !u.core.hover ? RULES.flyTakeToSkiesPenalty : 0);
   if (r[0] + r[1] + bonus < near) {
     const higher = Math.max(r[0], r[1]);
@@ -1909,7 +1919,7 @@ function emergencyEmbark(s: GameState, charger: UnitState) {
     const key = `${s.turn}:${t.id}`;
     if ((t.oncePerTurnUsed ??= []).includes(key)) continue;
     const cands = boardUnits(s, p).filter((x) => x.id !== t.id && isAstartes(x) && !isEngaged(s, x)
-      && unitDistance(charger, x) <= (charger.chargeRoll ?? 0) + RULES.engagementRange + 1e-6
+      && unitDistance(charger, x) <= (charger.chargeRoll ?? 0) + 1e-6
       && alive(x).every((m) => alive(t).some((n) => baseDist(m, n) <= 3 + 1e-6)) && !canEmbarkIn(s, x, t));
     const worth = (x: UnitState) => (x.pts * alive(x).length) / Math.max(1, x.startingStrength);
     const best = cands.sort((a, b) => worth(b) - worth(a))[0];
@@ -1992,7 +2002,7 @@ export function chargeTargetOptions(s: GameState, u: UnitState, opts: { onlyChar
     const reach = chargeReach(s, u, [e]);
     const friendsInContact = boardUnits(s, u.owner).filter((fu) => fu.id !== u.id && alive(fu).some((f) => alive(e).some((n) => baseDist(f, n) <= 0.05)));
     const canReachFriend = friendsInContact.some((fu) => unitDistance(u, fu) <= reach + 0.05);
-    if (d > RULES.charge.declareRange || (!canReachFriend && d > reach + RULES.engagementRange + 1e-6)) return false;
+    if (d > RULES.charge.declareRange || (!canReachFriend && d > reach + 1e-6)) return false;
     if (opts.within !== undefined && d > opts.within) return false;
     if (u.chargeOnly?.turn === s.turn && !u.chargeOnly.ids.includes(e.id)) return false;
     if (opts.onlyChargedThisPhase && e.chargedTurn !== s.turn) return false;
