@@ -146,6 +146,7 @@ Made in conversation, so they are not all visible in the code. A change that wou
 - **Small solid blocks are boxes, never an L**: every small traced outline (plain, stepped or cross-shaped, 1.5" to
   5" a side) is the piece's sealed `box`, drawn as a green block.
 - **Big games must not freeze**: the bot's quick planning on big boards and the worker fallback stay.
+- **The bot plans by counts, not by the clock** (20 Nov 2026): a move weighs at most 7 aims (5 on a big board), an arrival 3 spots, so the same game gives the same moves on any machine. Only the app's look-ahead keeps a time budget.
 - No emoji anywhere; replies in Thai.
 
 When the owner makes a new decision of this kind, add it here in the same change.

@@ -3,7 +3,7 @@
 import { woundNeed } from '../engine/attack';
 import { exprAverage } from '../engine/dice';
 import { actsOfUnit } from '../rules-engine/activations';
-import { isRiled, unitFlags } from '../rules-engine/effects';
+import { unitFlags } from '../rules-engine/effects';
 import { bodyTouchesPoly, polyCentroid } from '../engine/geometry';
 import { levelOfControl, objectiveTerrain } from '../engine/game';
 import { alive, boardUnits, other } from '../engine/state';
@@ -185,7 +185,6 @@ function killCardVp(id: string, t: UnitState, onObj: boolean): number {
   }
 }
 
-export const riledUp = (s: GameState, u: UnitState) => isRiled(s, u);
 
 /** Can this unit make objectives stay ours after it leaves them (sticky objectives)? */
 export function securesObjectives(s: GameState, u: UnitState): boolean {

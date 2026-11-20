@@ -254,11 +254,6 @@ export const setReactHook = (fn: ReactHook) => { reactHook = fn; };
 /** Tell the reaction system a moment has come for player p. True when p used a stratagem / a prompt was opened. */
 export const emitReact = (s: GameState, p: PlayerId, on: ReactOn, ctx: ReactCtx = {}) => (reactHook ? reactHook(s, p, on, ctx) : false);
 
-// The ui knows which datasheets have a real picture. The engine never
-// imports the ui, so the ui registers the check here; with none registered every datasheet counts.
-let pictured: (datasheet: string) => boolean = () => true;
-export const setPicturedCheck = (fn: typeof pictured) => { pictured = fn; };
-export const hasPicture = (datasheet: string) => pictured(datasheet);
 
 /** The game makes this player's choices: a bot, or a person who left the rules to the app (not one who decides). */
 export const playsItself = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));

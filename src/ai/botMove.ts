@@ -750,25 +750,6 @@ function crowdScore(s: GameState, u: UnitState): number {
   return v;
 }
 
-/** The parts of scoreSpot, for tests and tuning: objectives, shooting, charging, danger (already × caution), pulls, crowding, position. */
-export function scoreParts(s: GameState, u: UnitState, kind: MoveKind | 'stationary', spot: Spot | null, ctx: Ctx): Record<string, number> {
-  const ms = alive(u);
-  const saved = ms.map((m) => [m, m.x, m.y] as const);
-  const was = { move: u.move, maxMoved: u.maxMoved };
-  if (spot) for (const m of ms) { const p = spot.get(m.id); if (p) { m.x = p.x; m.y = p.y; } }
-  u.move = kind === 'stationary' ? 'stationary' : kind;
-  try {
-    const w = BW(u.owner);
-    const caution = (ctx.role === 'screen' ? w.cautionBrawler * 1.4 : ctx.holder ? w.cautionHolder : ctx.brawler ? w.cautionBrawler : w.cautionOther) * (ctx.risk ?? 1);
-    const homeFactor = homeFactorOf(s, u, ctx, w);
-    return { obj: objectiveWeight(s, u, ctx) * objectiveScore(s, u, homeFactor), shoot: shootScore(s, u, kind, ctx), charge: chargeScore(s, u, ctx), danger: -caution * dangerScore(s, u, ctx), pull: pullScore(s, u, ctx), crowd: -crowdScore(s, u), pos: positionScore(s, u) };
-  } finally {
-    for (const [m, x, y] of saved) { m.x = x; m.y = y; }
-    u.move = was.move;
-    u.maxMoved = was.maxMoved;
-  }
-}
-
 /** Faction-specific tactical tournament biases across 5 archetypes (screening, firing lanes, staging, threat bubbles) */
 function archetypeBiasScore(s: GameState, u: UnitState, kind: MoveKind | 'stationary', ctx: Ctx): number {
   const profile = getArchetypeForPlayer(s, u.owner);
@@ -927,11 +908,12 @@ export interface Plan { kind: MoveKind | 'stationary'; paths?: Paths; score: num
 
 /** The best move of `kind` (or staying put) for the unit, with up to `max` inches per model. */
 export function bestMove(s: GameState, u: UnitState, kind: MoveKind, max: number, ctx: Ctx, opt: MoveOpts & { aims?: Pt[]; noStay?: boolean } = {}): Plan {
-  const startTime = performance.now();
   let best: Plan = opt.noStay ? { kind: 'stationary', score: -Infinity } : { kind: 'stationary', score: scoreSpot(s, u, 'stationary', null, ctx) };
   const byAim: { aim: Pt; score: number }[] = [];
   for (const aim of opt.aims ?? (isFastPlanning(s, u) ? aimsFor(s, u, max, ctx).slice(0, ctx.big ? 5 : 7) : aimsFor(s, u, max, ctx))) {
-    if (byAim.length >= 2 && performance.now() - startTime > 15) break; // Time budget guard
+    // a fixed number of aims, not a time budget: the same game gives the same move on any machine (the bot's
+    // choices used to depend on how busy the computer was)
+    if (byAim.length >= (ctx.big ? 5 : 7)) break;
     let top = -Infinity;
     for (const paths of movesTowards(s, u, kind, max, aim, opt)) {
       const moved = Math.max(0, ...[...paths.values()].map(pathLength));

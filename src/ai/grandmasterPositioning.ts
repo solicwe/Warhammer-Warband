@@ -497,7 +497,6 @@ export function grandmasterArrival(
   u: UnitState,
   how: 'ingress' | 'deepStrike',
 ): Map<string, Pt> | null {
-  const startTime = performance.now();
   const W = tableW(s);
   const H = tableH(s);
   const grid = getThreatGrid(s, u.owner);
@@ -600,7 +599,7 @@ export function grandmasterArrival(
 
   for (let i = 0; i < topCands.length; i++) {
     const c = topCands[i];
-    if (i > 0 && performance.now() - startTime > 15) break; // Time-budget guard
+    if (i >= 3) break; // three candidates at most, a count not a clock (the same game gives the same placement)
 
     const pos = findPlacement(s, u, how, c.pt, (pMap) => {
       const pts = [...pMap.values()];

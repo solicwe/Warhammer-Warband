@@ -120,14 +120,14 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S1 | Done: `npm run test:slow` (`vitest.slow.config.ts`) runs the slow group; `scripts/elo.mjs` and `scripts/tune.mjs` use it. No nightly CI job yet |
 | S2 | Done: `src/engine/rulesStatus.test.ts` builds the summary table of `docs/RULES_STATUS.md` from the data and fails when it drifts (186 text-only unit abilities). The label-only `*Status.test.ts` files stay |
 | S3 | Ready, not pushed: the token used here may not change `.github/workflows` (it lacks the `workflow` scope). The new `deploy.yml` (deploy after a passed CI run, `workflow_run`) waits for the owner to push it |
-| S4 | Owner said remove: rewriting history needs a force push of every branch; see the reply of 20 Nov 2026 |
-| S5 | Guard only: `layers.test.ts` caps the named rule checks per engine file (army 19, attack 8, game 12, state 2); lower a number when one moves out |
+| S4 | Decided not to rewrite (20 Nov 2026): a rewrite and force push would change every commit id and still leave the files in the read-only `refs/pull/*` of the 20 old pull requests. The way that works is a GitHub Support request to purge them; the files are out of the working tree and `*.pdf` is ignored |
+| S5 | Policy: move a named rule out of `src/engine` when a change touches it; `layers.test.ts` caps them per file (army 19, attack 8, game 12, state 2) so the number only goes down |
 | S6 | Started: `hasFiredThisTurn` is a typed field (no more `as any`); the per-faction slot exists (`ext` on unit, player and game, `ext()` in `state.ts`) for new rules; the 157 old fields stay until their rule is touched |
 | S7 | Started: the Rituals panel is `src/ui/RitualPanel.tsx` (GameScreen 4,705 to 4,629 lines). Split the next phase panel out when a change touches it |
-| S8 | Done: unused imports and locals removed in code and tests; `noUnusedLocals` is on. ESLint not added |
+| S8 | Done: unused imports and locals removed in code and tests; `noUnusedLocals` is on. ESLint left out on purpose: installing packages on this Windows checkout once wrote a lockfile `npm ci` refused |
 | S9 | Done for the actions named: `swapSecondary`, `discardSecondary`, `useCounteroffensive` return an error text, `crushingImpact` refuses without CP, `chooseFixedSecondaries` keeps only real cards |
-| S10 | Operation marker ids come from a counter in the state. The bot's look-ahead still stops on the clock, and so do the 15 ms guards of the move search (`botMove.ts`, `grandmasterPositioning.ts`): the Techmarine test in `bot.test.ts` can fail on a busy machine |
-| S11 | `primaryById` throws on an unknown id (the old roguelike id still maps to Meatgrinder); `createGame({ primaryId })` takes the primary's own disposition; the four faction tests no longer ask for `takeAndHold`. Test file names unchanged |
+| S10 | Operation marker ids come from a counter in the state; the bot's move and arrival planning take a fixed number of options (7, or 5 on a big board; 3 arrival spots) instead of stopping after 15 ms, so the same game gives the same moves on any machine (a bot game test failed only under load because of it). The look-ahead of the app still stops on the clock when a budget is given (big games must not freeze); tests give none |
+| S11 | `primaryById` throws on an unknown id (the old roguelike id still maps to Meatgrinder); `createGame({ primaryId })` takes the primary's own disposition. Policy for the session-named test files (`userFeedbackFixes` and the others): move a case to its feature's file when that feature changes |
 | S12 | Done: README rewritten to what runs; `index.html` no longer names the 10th edition |
 | S13 | Done: `tournamentTrainer.ts` and its test deleted |
 | S14 | Done as far as it goes: 16 one-off scripts, the two audit scripts and their reports, about 150 unused style rules removed; the unread `core-rules.json` numbers deleted, `objectiveMarkerRange` now read by the six 3" objective checks in `game.ts`. Kept on purpose: `src/ui/names.json` is the copy `npm run images` makes of `public/images/names.json` for the bundle; `presets.ts` holds the tests' and the bot tools' armies |
@@ -143,10 +143,8 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
   `on: { workflow_run: { workflows: [CI], types: [completed], branches: [main] }, workflow_dispatch: }`, give the
   `build` job `if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'`, and
   check out `ref: ${{ github.event.workflow_run.head_sha || github.sha }}`.
-- **S4, the PDFs in history.** A rewrite (`git filter-branch` or `git filter-repo` removing `aoi_update.pdf` and
-  `tyranids_faction_pack.pdf`) and a force push of every branch would change every commit id, so every other checkout
-  has to be cloned again. It still would not remove them from GitHub: the read-only `refs/pull/*` of the 20 old pull
-  requests keep the files, and only GitHub Support can purge those. Decide before it is done.
+- **S4, the PDFs in history.** Not rewritten (see the table). To purge them from GitHub, ask GitHub Support to
+  remove `aoi_update.pdf` and `tyranids_faction_pack.pdf` from the repository, pull request refs included.
 
 ## Order of work
 
