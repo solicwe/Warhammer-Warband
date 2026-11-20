@@ -218,7 +218,9 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
   const [hold, setHold] = useState(false);
   const stepRef = useRef(onStep);
   stepRef.current = onStep;
-  const botDice = !!auto && !done && (st === 'hit' || st === 'wound' || !!pending);
+  // nothing got through (no successful wound): no saves to roll, so the player is not asked to tap through them
+  const nothingToSave = (st === 'save' || st === 'damage') && p.wounds.every((d) => d.o === 'fail');
+  const botDice = !!auto && !done && (st === 'hit' || st === 'wound' || !!pending || nothingToSave);
   useEffect(() => {
     if (!botDice || hold) return;
     const t = window.setTimeout(() => stepRef.current(), st === 'hit' && at.idx === 0 && !p.hits.length ? 1800 : 900);

@@ -2900,7 +2900,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
 
   const ritualPanel = () => (
     <RitualPanel s={s} act={act} flash={flash} setSel={setSel} rit={rit} setRit={setRit} casters={ritCasters}
-      caster={ritActiveCaster} left={ritActiveLeft} ritual={ritActiveRitual} targets={ritActiveTargets} />
+      caster={ritActiveCaster} left={ritActiveLeft} ritual={ritActiveRitual} targets={ritActiveTargets} rolling={rolling} />
   );
 
   /** Every attack this weapon makes together: a plain total when the numbers are fixed, else the dice ("3 x D6 + 2"). */

@@ -20,9 +20,11 @@ interface Props {
   left: Ritual[];
   ritual: Ritual | null;
   targets: UnitState[];
+  /** the dice are still rolling on the screen: the numbers and what they mean wait until they land */
+  rolling: boolean;
 }
 
-export function RitualPanel({ s, act, flash, setSel, rit, setRit, casters: cs, caster: c, left, ritual: r, targets }: Props) {
+export function RitualPanel({ s, act, flash, setSel, rit, setRit, casters: cs, caster: c, left, ritual: r, targets, rolling }: Props) {
   const U = (id: string) => unitById(s, id);
   const p = s.active;
   const pending = s.players[p].rituals?.pending;
@@ -35,9 +37,17 @@ export function RitualPanel({ s, act, flash, setSel, rit, setRit, casters: cs, c
     const rrWhy = canUseStratagem(s, p, 'command-reroll', unit);
     const finish = (channel: boolean) => {
       const res = act((g) => finishRitual(g, p, channel));
-      if (res?.error || !res?.out) { flash(res?.error ?? 'Could not finish this Psychic test'); return; }
-      flash(`${ritual.name}: ${res.out.manifested ? 'Manifested' : 'Failed'} · [${res.out.dice.join(' ')}] · ${res.out.result} vs WC ${ritual.wc}${res.out.perils ? ` · ${res.out.perils} mortal wounds` : ''}`);
+      // the outcome is the last card of the roll on the screen, after the dice land: no message ahead of it
+      if (res?.error || !res?.out) flash(res?.error ?? 'Could not finish this Psychic test');
     };
+    if (rolling) {
+      return (
+        <div className="rit-result">
+          <b>{ritual.name}: Psychic test</b>
+          <div className="small muted">Rolling the dice...</div>
+        </div>
+      );
+    }
     return (
       <div className="rit-result">
         <b>{ritual.name}: Psychic test</b>

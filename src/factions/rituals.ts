@@ -179,6 +179,7 @@ export function rerollRitualDie(s: GameState, p: PlayerId, index: number): strin
   pend.dice[index] = d6(s);
   pend.rerolled = index;
   log(s, `Command Re-roll: Psychic test die ${old} → ${pend.dice[index]}`, 'roll', p);
+  pushFx(s, { kind: 'roll', owner: p, title: 'Command Re-roll', dice: [pend.dice[index]], result: `${old} → ${pend.dice[index]}` });
   return null;
 }
 
