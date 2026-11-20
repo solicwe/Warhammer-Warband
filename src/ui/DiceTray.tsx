@@ -3,7 +3,7 @@ import { freeDiceNow } from '../rules-engine/activations';
 import { canUseStratagem, unitById } from '../engine/state';
 import type { Die, GameState, Pool } from '../engine/types';
 import { abilityLabel, abilitiesOf } from '../engine/weapons';
-import { precisionOptions, rerollable } from '../engine/attack';
+import { NO_PRECISION, precisionOptions, rerollable } from '../engine/attack';
 import { canPerformActOfFaith } from '../factions/sororitas';
 import { canUseFateDie } from '../factions/aeldari';
 import { Icon } from './Icon';
@@ -522,11 +522,13 @@ export function DiceTray({ s, onStep, onReroll, onSkip, onClose, onStrat, stratF
                     {st === 'save' && !pending && !attackerBot && freeButtons('wound')}
                     {onPrecision && (st === 'save' || st === 'damage') && !attackerBot && (p.precision || p.precisionOnCrit) && (() => {
                       const opts = precisionOptions(s, at, T);
-                      if (opts.length < 2) return null;
-                      const cur = opts.find((g) => g.models[0].id === p.precisionTarget) ?? opts[0];
+                      if (!opts.length) return null;
+                      const none = p.precisionTarget === NO_PRECISION;
+                      const cur = none ? undefined : opts.find((g) => g.models[0].id === p.precisionTarget) ?? opts[0];
                       return (
                         <div className="precision-pick">
-                          <span className="muted small">Precision target:</span>
+                          <span className="muted small">Precision:</span>
+                          <button className={`btn small ${none ? 'on' : ''}`} onClick={() => onPrecision(NO_PRECISION)}>Don't use</button>
                           {opts.map((g) => (
                             <button key={g.models[0].id} className={`btn small ${g === cur ? 'on' : ''}`} onClick={() => onPrecision(g.models[0].id)}>{g.models[0].name}</button>
                           ))}

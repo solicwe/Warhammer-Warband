@@ -1000,6 +1000,8 @@ export function rollSavesAndDamage(s: GameState) {
   p.mortalFromDev = Array.from({ length: devCrits }, () => 0);
 }
 
+export const NO_PRECISION = 'none';
+
 /** The CHARACTER models [PRECISION] attacks can pick: those some attacking model sees (any, in a fight). */
 export function precisionOptions(s: GameState, at: AttackSession, T: UnitState): Group[] {
   const A = unitById(s, at.attackerId);
@@ -1021,7 +1023,8 @@ export function applyDamage(s: GameState) {
   const before = alive(T).length;
   const groups = allocationGroups(T);
   let precisionGroup: Group | undefined;
-  if (p.precision || p.precisionOnCrit) precisionGroup = precisionOptions(s, at, T).find((g) => g.models[0].id === p.precisionTarget) ?? precisionOptions(s, at, T)[0];
+  // the attacker may choose not to use [PRECISION] at all (precisionTarget 'none'): the wounds go to the unit as usual
+  if ((p.precision || p.precisionOnCrit) && p.precisionTarget !== NO_PRECISION) precisionGroup = precisionOptions(s, at, T).find((g) => g.models[0].id === p.precisionTarget) ?? precisionOptions(s, at, T)[0];
   // [PRECISION] only on critical hits: that many of the attacks may pick a CHARACTER
   let precise = p.precision ? Infinity : p.precisionOnCrit ? p.hits.filter((h) => h.o === 'crit').length : 0;
   const order = p.saves.map((d, i) => ({ d, i })).sort((x, y) => x.d.v - y.d.v);
