@@ -96,7 +96,7 @@ export function fireDeathstrikeWarhead(s: GameState, u: UnitState, customPoint?:
   u.oneShotUsed.push(MISSILE);
   u.dsMarker = undefined;
   u.shotTurn = s.turn;
-  (u as any).hasFiredThisTurn = true;
+  u.hasFiredThisTurn = true;
   pushFx(s, { kind: 'skill', unitId: u.id, owner: u.owner, at: c, name: 'Plasma Warhead', who: u.name, style: 'tech', epic: true });
   log(s, `Plasma Warhead Detonation: ${u.name} launches warhead at target coordinates (${c.x.toFixed(1)}, ${c.y.toFixed(1)})!`, 'info', u.owner);
 

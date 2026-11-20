@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  bestDeathstrikeSpot, canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget,
-  deathstrikeShooting, fireDeathstrikeWarhead, hasDeathstrikeMissile, withinMarker, deathstrikeWorth
+  canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget, deathstrikeShooting, fireDeathstrikeWarhead, hasDeathstrikeMissile, withinMarker,
 } from '../factions/deathstrike';
-import { alive, boardUnits, unitById } from './state';
 import type { GameState, ModelState, UnitState } from './types';
 import { botStep } from '../ai/bot';
 

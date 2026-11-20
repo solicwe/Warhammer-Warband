@@ -1,14 +1,12 @@
 import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { createGame, placeUnit, formationAt, zoneOf } from '../engine/game';
-import { alive, boardUnits, other } from '../engine/state';
-import { dist, polyCentroid, ptGap } from '../engine/geometry';
-import { hasLos } from '../engine/visibility';
+import { createGame, placeUnit, formationAt } from '../engine/game';
+import { alive } from '../engine/state';
+import { dist } from '../engine/geometry';
 import {
-  determineMoveStance, getThreatGrid, isInForbiddenFootprintZone,
-  packModelsIntoSafeSlots, congaLineObjectivePaths, grandmasterArrival,
+  getThreatGrid, isInForbiddenFootprintZone, packModelsIntoSafeSlots, congaLineObjectivePaths, grandmasterArrival,
 } from './grandmasterPositioning';
-import type { ArmyList, FactionData, GameState, Pt, TerrainPiece, UnitState } from '../engine/types';
+import type { ArmyList, FactionData, GameState, TerrainPiece, UnitState } from '../engine/types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
 const SM = load('SM');
@@ -97,7 +95,7 @@ describe('Grandmaster AI Positioning & Strict Footprint Avoidance', () => {
   });
 
   it('MODULE 1: Models hug the wall contour and maintain legal coherency', () => {
-    const { s, smUnit, ruin } = setupTestGame();
+    const { s, smUnit } = setupTestGame();
     const grid = getThreatGrid(s, 0);
 
     const anchorPt = { x: 25, y: 29.5 };
@@ -148,7 +146,6 @@ describe('Grandmaster AI Positioning & Strict Footprint Avoidance', () => {
     // Set SM unit in reserves for Deep Strike
     smUnit.status = 'reserves';
     // Move enemy unit away from their home objective (leaving it undefended)
-    const enemyHome = s.objectives.find((o) => o.y < 15) ?? { x: 30, y: 8, id: 'enemy-home', label: 'Home', number: 1 };
     placeUnit(s, enemyUnit, formationAt(enemyUnit, { x: 50, y: 25 }));
 
     const arrival = grandmasterArrival(s, smUnit, 'deepStrike');

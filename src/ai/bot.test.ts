@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { botAct, botMoveOne, botShootOne, botStep, botWindow } from './bot';
 import { buildShootPools, finishAttack, hazardTest, rerollAttackCount, resolveAll, resolveReroll, rollHits, startAttack, stepAttack, toggleRerollPick } from '../engine/attack';
-import { autoCharge, autoPileMove, createGame, declareCharge, endPhase, formationAt, placeUnit } from '../engine/game';
+import { autoCharge, autoPileMove, createGame, declareCharge, formationAt, placeUnit } from '../engine/game';
 import { alive, engagedEnemies, unitDistance } from '../engine/state';
 import { planStratagem } from '../rules-engine/stratagems';
 import { botAfterShootMove, botDoctrineActs } from './botPlus';

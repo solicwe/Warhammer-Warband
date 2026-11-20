@@ -761,7 +761,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       if (n) applyMortalWounds(s, target, n, def.name);
     }
     if (a.setMark) { u.mark = on.id; log(s, `${def.name}: ${on.name} is ${u.name}'s mark`, 'info', u.owner); }
-    if (a.unshot) { on.shotTurn = -99; (on as any).hasFiredThisTurn = false; log(s, `${def.name}: ${on.name} can still be Hidden although it shot`, 'info', u.owner); }
+    if (a.unshot) { on.shotTurn = -99; on.hasFiredThisTurn = false; log(s, `${def.name}: ${on.name} can still be Hidden although it shot`, 'info', u.owner); }
     if (a.characterModel) {
       const m = alive(on).find((x) => !x.isCharacter && /sergeant|leader|champion|headtaker/i.test(x.name)) ?? alive(on).find((x) => !x.isCharacter);
       if (m) {

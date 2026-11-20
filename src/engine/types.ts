@@ -217,6 +217,7 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  hasFiredThisTurn?: boolean; // it shot this turn (Hidden: a unit that fired is no longer hidden)
   dsMarker?: Pt; // Deathstrike Target marker
   parasiteKills?: number; // INFANTRY models the barbed ovipositor destroyed during the current attack (Parasitic Infection)
   startEngaged?: { turn: number; ids: string[] }; // enemy units it was engaged with at the start of this turn (Thrill Seekers)
@@ -764,6 +765,7 @@ export interface GameState {
   shockTests: ShockTest[];
   destroyedByTurn: { turn: number; owner: PlayerId; unitId: string; killerId?: string; killerNearObj?: boolean; phase?: Phase }[];
   markers: OperationMarker[];
+  markerSeq?: number; // the last operation marker id handed out
   modelDeaths: { turn: number; owner: PlayerId; character: boolean; W: number }[];
   pendingActions: PendingAction[];
   turnStart: TurnSnapshot | null;

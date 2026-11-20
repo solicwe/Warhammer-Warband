@@ -1,6 +1,6 @@
 import { autoCharges, autoDeclareCharge, autoDue, autoEndMovement, autoSelectToShoot, autoShoot, autoStep, decides, onAuto } from '../ai/autoPlay';
 import { pathBlocked, routeAround } from '../engine/pathing';
-import { KEYS, readText, writeText, saveBattleLog, loadBattleLogs, type BattleRecord } from '../services/storage';
+import { KEYS, readText, writeText, saveBattleLog, type BattleRecord } from '../services/storage';
 import { compressReplayTimeline } from '../services/replay';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { abilityRuleText, RuleText } from './RuleText';
@@ -18,17 +18,8 @@ import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
-  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
-  counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement,
-  formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible,
-  rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive,
-  validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility,
-  canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed,
-  claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll,
-  beginMove, hasDeepStrike, setOathBackup, arrivalRound,
-  levelOfControl,
-  pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
-  endBattle } from '../engine/game';
+  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+} from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
 } from '../rules-engine/activations';
@@ -41,7 +32,7 @@ import { autoActions, botAct, botShouldAct, botStep } from '../ai/bot';
 import { advantage, applyStyle, lookBudget, setLookahead, styleChosen, type Intent } from '../ai/botLook';
 import LookWorker from './lookWorker?worker&inline';
 import { actionOptions, startAction } from '../engine/missions';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
 import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
@@ -53,17 +44,19 @@ import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, 
 import { StratUseCard } from './StratUse';
 import { effectiveInSv, endUnitShooting, rerollAttackCount, setPrecisionTarget, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
 import { officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
-import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
+import { dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pool, Pt, UnitState, WeaponData } from '../engine/types';
+import type {
+  BuffKind, GameState, ModelState, MoveKind, PlayerId, Pool, Pt, UnitState, WeaponData,
+} from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
 import { isMelee, hasAbility } from '../engine/weapons';
-import { Board, getObjectiveEffects, placementRings, type Paths, type Ring } from './Board';
+import { Board, placementRings, type Paths, type Ring } from './Board';
 import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
@@ -1898,7 +1891,6 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '6px 0 10px 0' }}>
             {rd.left > 0 && candidates.map((x) => {
               const isSel = sel === x.id;
-              const m = alive(x)[0];
               const sub = unitSubDetails(x);
               const dispName = unitDisplayName(x);
               return (

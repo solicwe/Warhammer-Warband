@@ -6,7 +6,9 @@ import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
 import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, playsItself, spendStratagem, unitById, wantsCR } from './state';
-import type { AttackReport, AttackSession, Die, GameState, ModelState, PlayerId, Pool, Pt, UnitState, WeaponData, WeaponProfileData } from './types';
+import type {
+  AttackReport, AttackSession, Die, GameState, ModelState, Pool, Pt, UnitState, WeaponData, WeaponProfileData,
+} from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
 import { hasCover, modelVisible, unitVisibleTo } from './visibility';
@@ -515,7 +517,7 @@ export function startAttack(s: GameState, kind: AttackSession['kind'], attackerI
   }
   if (kind === 'shoot' || kind === 'overwatch') {
     A.shotTurn = s.turn;
-    (A as any).hasFiredThisTurn = true;
+    A.hasFiredThisTurn = true;
   }
   const T = unitById(s, targetId);
   s.attack = {
@@ -645,8 +647,6 @@ export function rollHits(s: GameState) {
     const ones = p.rerollHits1 || A.buffs.some((b) => b.kind === 'rerollHits1');
     if (!p.noHitReroll && (all || ones)) offerReroll(s, p, 'hit', all ? 'all' : 'ones');
   }
-  const T_target = unitById(s, at.targetId);
-  const A_unit = unitById(s, at.attackerId);
   at.stage = 'wound';
 }
 
@@ -1233,7 +1233,7 @@ export function finishAttack(s: GameState) {
   log(s, `${A.name} ${verb} ${T.name}: ${killed} models destroyed`, 'info', A.owner);
   if (at.kind !== 'fight') {
     A.shotTurn = s.turn;
-    (A as any).hasFiredThisTurn = true;
+    A.hasFiredThisTurn = true;
   }
   if (!at.free) {
     if (at.kind === 'shoot' && !unfiredWeaponNames(A).length) A.selectedToShoot = true;

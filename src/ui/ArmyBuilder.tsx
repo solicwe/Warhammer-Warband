@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
-import { addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, bestMark, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords, effectiveModelOc } from '../engine/army';
+import {
+  addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, bestMark, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords,
+} from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf, subPointsList } from '../engine/allies';
 import { Em } from './Em';

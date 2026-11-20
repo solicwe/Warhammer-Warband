@@ -22,7 +22,6 @@ const QT = loadFaction('QT');
 describe('Dynamic Detachment Battleline System', () => {
   it('Astra Militarum Bridgehead Strike: grants Tempestus Scions BATTLELINE and +1 OC', () => {
     const scions = AM.datasheets.find((d) => d.name === 'Tempestus Scions')!;
-    const cmdSquad = AM.datasheets.find((d) => d.name === 'Militarum Tempestus Command Squad')!;
 
     // Base: not Battleline, OC 1
     expect(scions.keywords.includes('BATTLELINE')).toBe(false);

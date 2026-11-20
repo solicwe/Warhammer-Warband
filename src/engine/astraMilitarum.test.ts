@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildShootPools, buildFightPools } from './attack';
-import { buildUnits } from './army';
+import { buildShootPools } from './attack';
 import { botAct } from '../ai/bot';
-import { DET_RULES, modelDefence, unitFlags, abilityStatus, incomingFor, activeRules } from '../rules-engine/effects';
-import { createGame, deployUnit, findPlacement } from './game';
+import { modelDefence, unitFlags } from '../rules-engine/effects';
+import { createGame } from './game';
 import {
   isOfficer,
   officerOrderCapacity,
@@ -17,7 +16,6 @@ import {
   autoIssueOrders,
 } from '../factions/orders';
 import { PRESETS } from '../ui/presets';
-import { alive } from './state';
 import type { FactionData, GameState, UnitState } from './types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;

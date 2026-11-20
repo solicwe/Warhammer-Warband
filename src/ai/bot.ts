@@ -22,7 +22,7 @@ import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, re
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, lookBudget, styleChosen } from './botLook';
 import { roughLos } from '../engine/visibility';
-import { getArchetypeForPlayer, ARCHETYPE_PROFILES } from './factionArchetypes';
+import { getArchetypeForPlayer } from './factionArchetypes';
 import './botUtility';
 import { botAllowChargeStratagem, botDetectionStratagem, botIgnorePenaltiesStratagem, botTauntStratagem, botUnshotStratagem } from './botPlus';
 import { botAdvanceChargeStratagem, botAfterShootStratagems, botArrivalDefence, botChargeBonusStratagem, botCommandExtras, botFightEndActs, botIgnoreModsStratagem, botReadyStratagem, botShieldStratagem, botTeleportActs } from './botPlus';

@@ -15,7 +15,6 @@ import { SvgIcon } from './Icon';
 import { FX_MS, FxLayer, type ActiveFx } from './BattleFx';
 import { getPlayerFactionTheme, getUnitFactionTheme } from './factionColors';
 import type { SecondaryGoal } from '../engine/secondaries';
-import type { Intent } from '../ai/botLook';
 import type { FxEvent, GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 import { play, type Sfx } from './sfx';
 

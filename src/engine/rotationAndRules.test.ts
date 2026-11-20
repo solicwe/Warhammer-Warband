@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { rotateUnit, validateMove } from './game';
-import { canDesignateDeathstrike, canFireDeathstrike, bestDeathstrikeSpot, deathstrikeWorth } from '../factions/deathstrike';
+import { canDesignateDeathstrike, bestDeathstrikeSpot, deathstrikeWorth } from '../factions/deathstrike';
 import { getUnitLoneOpRange, isHidden, modelVisible } from './visibility';
 import type { GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
 

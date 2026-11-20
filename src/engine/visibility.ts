@@ -342,7 +342,7 @@ function shotRecently(s: GameState, u: UnitState) {
     u.shotTurn >= s.turn - 1 ||
     (u.weaponsFired && u.weaponsFired.length > 0) ||
     Boolean(u.selectedToShoot) ||
-    Boolean((u as any).hasFiredThisTurn)
+    Boolean(u.hasFiredThisTurn)
   );
 }
 
@@ -384,7 +384,7 @@ export function isInfantryBeastLoneOpActive(s: GameState, u: UnitState): boolean
   };
   if (!isInfantryBeastUnit(u)) { strip(); return false; }
   // Unit.hasFiredThisTurn === false
-  const hasFired = (u as any).hasFiredThisTurn === true || u.shotTurn === s.turn || (u.weaponsFired && u.weaponsFired.length > 0);
+  const hasFired = u.hasFiredThisTurn === true || u.shotTurn === s.turn || (u.weaponsFired && u.weaponsFired.length > 0);
   if (hasFired) { strip(); return false; }
   // Unit.isWhollyWithinTerrain === true
   const ms = alive(u);

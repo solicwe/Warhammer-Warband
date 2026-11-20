@@ -12,14 +12,12 @@ import { hasLos } from '../engine/visibility';
 import { secondaryGoal } from '../engine/secondaries';
 import { zonePoly } from '../engine/missions';
 import { hasAbility } from '../engine/weapons';
-import { actsOfUnit } from '../rules-engine/activations';
-import { unitFlags } from '../rules-engine/effects';
 import { botOff, W as BW, type BotW } from './botWeights';
 import { armyPlan, followedJob, homeScoresVp, unitPunch, type Role } from './botPlan';
 import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, securesObjectives, shotValue, unitValue,
 } from './botEval';
-import { getArchetypeForPlayer, ARCHETYPE_PROFILES, isScreeningUnit, needsDeepStrikeScreening } from './factionArchetypes';
+import { getArchetypeForPlayer, isScreeningUnit, needsDeepStrikeScreening } from './factionArchetypes';
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import {
   determineMoveStance, getThreatGrid, isInForbiddenFootprintZone, pushOutOfFootprint,

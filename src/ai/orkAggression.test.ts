@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { createGame, endPhase, zoneOf } from '../engine/game';
+import { createGame, zoneOf } from '../engine/game';
 import { botAct } from './bot';
-import { centre, isBrawler } from './botEval';
-import { dist, pointInPoly } from '../engine/geometry';
-import type { ArmyList, FactionData, GameState } from '../engine/types';
+import { centre } from './botEval';
+import { pointInPoly } from '../engine/geometry';
+import type { ArmyList, FactionData } from '../engine/types';
 
 const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
 const SM = load('SM');

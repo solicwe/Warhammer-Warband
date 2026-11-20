@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function ThemeToggle({ className, size = 18 }: Props) {
-  const [theme, setThemeState] = useState<ThemeMode>(getStoredTheme);
+  const [, setThemeState] = useState<ThemeMode>(getStoredTheme);
   const [effective, setEffective] = useState<'light' | 'dark'>(() => getEffectiveTheme(getStoredTheme()));
 
   useEffect(() => {

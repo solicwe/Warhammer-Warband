@@ -52,7 +52,7 @@ export default defineConfig({
   define: { __DATA_VERSION__: JSON.stringify(dataVersion()) },
   // Fast CI test suite: exclude 15,000-step stress simulation games (thousandSonsGames, sim, autoPlay)
   test: {
-    testTimeout: 60000,
+    testTimeout: 120000, // whole bot-vs-bot games take about 60 s alone and more when four workers share the machine
     setupFiles: ['src/engine/testSetup.ts'],
     exclude: [
       '**/node_modules/**',

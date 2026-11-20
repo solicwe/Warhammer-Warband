@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { listPoints, unitPoints, dupTaxes } from './army';
+import { listPoints, dupTaxes } from './army';
 import type { ArmyList, FactionData } from './types';
 
 describe('Telemon Heavy Dreadnought Points Verification', () => {

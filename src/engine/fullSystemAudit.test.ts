@@ -1,25 +1,13 @@
 import * as fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  MISSIONS,
-  primaryFor,
-  secondaryById,
-  dispositionById,
-  layoutsFor,
-  RULES,
-  type DispositionId,
-} from './config';
+import { MISSIONS, primaryFor, layoutsFor, type DispositionId } from './config';
 import {
   canCrossDense,
   blockingWalls,
 } from './pathing';
 import { weaponFx } from './weaponFx';
 import { stratagemBlock } from '../rules-engine/stratagems';
-import {
-  discardSecondary,
-  armyPoints,
-  reservesPoints,
-} from './game';
+import { discardSecondary } from './game';
 import { secondaryDead } from './secondaries';
 import type { GameState, ModelState, StratagemData, WeaponProfileData } from './types';
 

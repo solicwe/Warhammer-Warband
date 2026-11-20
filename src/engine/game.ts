@@ -1,7 +1,7 @@
 // Battle flow: setup, deployment, the five phases, objectives and mission scoring.
 import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
-import { buildUnits, forChapter, newUid, safeUpper, transportFit } from './army';
+import { buildUnits, forChapter, safeUpper, transportFit } from './army';
 import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutById, layoutsFor, TEST_RANGE_ID, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
 import { assignedObjective, mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle, unitTouchedObjectives } from './missions';
@@ -9,10 +9,7 @@ import { bankSecondary, drawUpTo, scoreSecondaries, secondaryDead } from './seco
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body, bodyBox } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance,
-  emitReact, type ReactOn,
-  heroFx, phaseKey,
-  tableH, tableW, hasPicture,
+  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance, emitReact, type ReactOn, heroFx, phaseKey, tableH, tableW,
 } from './state';
 import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
@@ -398,7 +395,7 @@ export function createGame(o: NewGameOptions): GameState {
       secMode: o.secondaryMode ?? 'none', secDeck: [], secActive: [], secVp: 0, secByRound: [0, 0, 0, 0, 0, 0], secFixedVp: {}, secSwapUsed: false,
       armyRules: o.factions[i].armyRules,
       detachments: o.factions[i].detachments.filter((d) => o.lists[i].detachments.includes(d.name)),
-      disposition: o.primaryId ? 'purge-the-foe' : disp[i], primaryId: o.primaryId ?? primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
+      disposition: o.primaryId ? primaryById(o.primaryId).forceDisposition : disp[i], primaryId: o.primaryId ?? primaryFor(disp[i], disp[1 - i]).id, mission: emptyMission(), sec: { guards: [], cleansed: [], plundered: [] },
       subfaction: o.lists[i].subfaction,
       battleSize: o.lists[i].battleSize,
     })) as unknown as GameState['players'],
@@ -1195,7 +1192,7 @@ function resetTurnFlags(s: GameState) {
   for (const u of s.units) {
     u.move = null; u.advanceRoll = null; u.maxMoved = 0; u.selectedToShoot = false; u.declaredCharge = false;
     u.chargeRoll = null; u.chargeTargets = []; u.fought = false; u.weaponsFired = []; u.cantCharge = false;
-    (u as any).hasFiredThisTurn = false;
+    u.hasFiredThisTurn = false;
     u.buffs = u.buffs.filter((b) => b.until === 'battle');
   }
 }
@@ -1975,7 +1972,9 @@ export function commitCharge(s: GameState, u: UnitState, paths: Map<string, Pt[]
   }
 }
 
-export function crushingImpact(s: GameState, u: UnitState, targetId: string) {
+export function crushingImpact(s: GameState, u: UnitState, targetId: string): number[] {
+  const why = canUseStratagem(s, u.owner, 'crushing-impact', u);
+  if (why) { log(s, `Crushing Impact: ${why}`, 'info', u.owner); return []; }
   spendStratagem(s, u.owner, 'crushing-impact', u);
   const t = unitById(s, targetId);
   const m = alive(u).find((x) => modelEngagedWith(x, t)) ?? alive(u)[0];
@@ -2346,11 +2345,14 @@ export function openCounteroffensive(s: GameState, attackerOwner: PlayerId) {
   if (s.fight?.step === 'fight' && counteroffensiveCandidates(s, p).length) s.window = { kind: 'counteroffensive', player: p };
 }
 
-export function useCounteroffensive(s: GameState, u: UnitState) {
+export function useCounteroffensive(s: GameState, u: UnitState): string | null {
+  const why = !s.fight ? 'Only in the Fight phase' : canUseStratagem(s, u.owner, 'counteroffensive', u);
+  if (why) return why;
   spendStratagem(s, u.owner, 'counteroffensive', u);
   u.foughtFirstUntilTurn = s.turn;
   s.fight!.forcedNext = u.id;
   s.window = null;
+  return null;
 }
 
 // ---------- objectives & scoring ----------
@@ -2488,6 +2490,8 @@ export function drawSecondaries(s: GameState, p: PlayerId, n: number) {
 }
 
 export function chooseFixedSecondaries(s: GameState, p: PlayerId, ids: string[]) {
+  // only real mission cards, each once: a bad id from a save or a screen is dropped, not stored
+  ids = [...new Set(ids)].filter((x) => MISSIONS.secondaries.some((c) => c.id === x));
   s.players[p].secActive = ids.slice(0, 2);
   log(s, `${s.players[p].name} selects Fixed Missions: ${ids.map((x) => secondaryById(x).name).join(', ')}`, 'info', p);
 }
@@ -2499,8 +2503,9 @@ export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number
 
 /** Tactical: discard an active card; at the end of your own turn this gains 1CP.
  *  If the card cannot be achieved (secondaryDead), immediately draw a replacement in tactical mode. */
-export function discardSecondary(s: GameState, p: PlayerId, id: string) {
+export function discardSecondary(s: GameState, p: PlayerId, id: string): string | null {
   const P = s.players[p];
+  if (!P.secActive.includes(id)) return 'That card is not active';
   const dead = secondaryDead(s, p, id);
   P.secActive = P.secActive.filter((x) => x !== id);
   if (s.active === p) {
@@ -2512,15 +2517,20 @@ export function discardSecondary(s: GameState, p: PlayerId, id: string) {
   if (P.secMode === "tactical" && dead) {
     drawUpTo(s, p, 2);
   }
+  return null;
 }
 
 /** Once per battle, end of your Command phase: pay 1CP to replace one active card. */
-export function swapSecondary(s: GameState, p: PlayerId, id: string) {
+export function swapSecondary(s: GameState, p: PlayerId, id: string): string | null {
   const P = s.players[p];
+  if (!P.secActive.includes(id)) return 'That card is not active';
+  if (P.secSwapUsed) return 'Already swapped a card this battle';
+  if (P.cp < 1) return 'Not enough CP';
   P.cp -= 1;
   P.secSwapUsed = true;
   P.secActive = P.secActive.filter((x) => x !== id);
   drawSecondaries(s, p, 1);
+  return null;
 }
 
 // ---------- transports ----------

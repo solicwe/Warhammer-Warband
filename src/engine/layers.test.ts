@@ -30,4 +30,17 @@ describe('engine layers', () => {
     const missing = files('src/factions').map((f) => path.basename(f, '.ts')).filter((m) => m !== 'index' && !index.includes(`from './${m}'`) && !index.includes(`import './${m}'`));
     expect(missing).toEqual([]);
   });
+
+  // S5 in docs/05-tech-debt.md: rules named by their text inside the core. They move to rule data or a faction hook
+  // one at a time; this keeps the count from growing (lower a number when you move one, never raise it).
+  it('no new named rule checks in src/engine', () => {
+    const named = /(name === '[A-Z][^']*'|activeRules\([^)]*\)\.includes\('[A-Z]|hasArmyRule\([^)]*'[A-Z]|abilities\.some\(\(a\) => a\.name === ')/;
+    const most: Record<string, number> = { 'src/engine/army.ts': 19, 'src/engine/attack.ts': 8, 'src/engine/game.ts': 12, 'src/engine/state.ts': 2 };
+    const over: string[] = [];
+    for (const f of files('src/engine')) {
+      const n = fs.readFileSync(f, 'utf8').split('\n').filter((l) => named.test(l)).length;
+      if (n > (most[f] ?? 0)) over.push(`${f}: ${n} named rule checks (at most ${most[f] ?? 0})`);
+    }
+    expect(over).toEqual([]);
+  });
 });

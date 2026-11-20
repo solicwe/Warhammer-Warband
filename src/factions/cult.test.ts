@@ -17,7 +17,6 @@ function makeMockState(): GameState {
     firstPlayer: 0 as PlayerId,
     attackerPlayer: 0 as PlayerId,
     deploymentId: 'dawnOfWar',
-    primaryId: 'takeAndHold',
     players: [
       {
         id: 0,

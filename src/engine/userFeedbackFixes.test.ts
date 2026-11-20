@@ -636,7 +636,6 @@ describe('User Feedback Fixes Verification', () => {
 
   it('Melee 2nd-rank fighting eligibility: squad mates in base contact allow trailing models to fight', async () => {
     const { buildFightPools } = await import('./attack');
-    const { autoApproach } = await import('./game');
 
     const s = {
       phase: 'fight',

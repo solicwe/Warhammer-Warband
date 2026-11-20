@@ -4,16 +4,9 @@ import { createGame } from '../engine/game';
 import { botAct } from '../ai/bot';
 import { PRESETS } from '../ui/presets';
 import {
-  canPerformActOfFaith,
-  gainMiracleDice,
-  getMiracleDice,
-  isSororitasArmy,
-  performActOfFaith,
-  sororitasCommandEnd,
-  sororitasTurnStart,
-  sororitasUnitDestroyed,
+  canPerformActOfFaith, gainMiracleDice, getMiracleDice, isSororitasArmy, performActOfFaith, sororitasTurnStart, sororitasUnitDestroyed,
 } from './sororitas';
-import { buildFightPools, buildShootPools } from '../engine/attack';
+import { buildShootPools } from '../engine/attack';
 import type { FactionData } from '../engine/types';
 
 const asFaction = JSON.parse(fs.readFileSync('public/data/factions/AS.json', 'utf8')) as FactionData;

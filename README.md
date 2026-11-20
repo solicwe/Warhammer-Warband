@@ -71,8 +71,7 @@ npm run data       # rebuild public/data from data/raw and data/overrides
 
 Where things are: [ARCHITECTURE.md](ARCHITECTURE.md) (layers and hooks), [AI_GUIDE.md](AI_GUIDE.md) (step lists for
 common changes), [docs/EDITING.md](docs/EDITING.md) (which data file holds which rule). The engine is deterministic: a
-game is driven by a seeded random number generator. The site deploys from `main` only after the CI run (build and
-tests) passes.
+game is driven by a seeded random number generator.
 
 Bot strength: `node scripts/elo.mjs --games 48` plays the live bot against the frozen baseline and records an Elo in
 `data/bot-elo.json`.

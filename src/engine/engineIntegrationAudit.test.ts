@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGame, formationAt, placeUnit } from './game';
-import { effectsFor, modelDefence } from '../rules-engine/effects';
+import { effectsFor } from '../rules-engine/effects';
 import { manualActs, useActByKey } from '../rules-engine/activations';
 import { buildShootPools, applyMortalWounds } from './attack';
 import { canUseStratagem, spendStratagem, unitDistance, hasKw } from './state';

@@ -2,8 +2,7 @@ import { actsOfUnit } from '../rules-engine/activations';
 // Faction rules reached through the event bus (src/factions/index.ts) from every path of the game loop.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildFightPools } from './attack';
-import { createGame, formationAt, placeUnit, rerollBattleShock, rollBattleShock } from './game';
+import { createGame, rerollBattleShock, rollBattleShock } from './game';
 import { daemonsCommandStart } from '../factions/daemons';
 import { PRESETS } from '../ui/presets';
 import type { FactionData } from './types';

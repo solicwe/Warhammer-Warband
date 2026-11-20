@@ -4,7 +4,7 @@ import { listDisposition } from './game';
 import { parseAbilityText } from '../rules-engine/abilityText';
 import { stratCost, canUseStratagem } from './state';
 import { superHeavy } from '../factions/knights';
-import { rollHits, rollWounds, rollSavesAndDamage, applyDamage } from './attack';
+import { rollSavesAndDamage, applyDamage } from './attack';
 import type { DatasheetData, GameState, UnitState, ModelState, ArmyList, FactionData } from './types';
 import tlFaction from '../../public/data/factions/TL.json';
 import smFaction from '../../public/data/factions/SM.json';

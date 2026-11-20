@@ -3,16 +3,15 @@
 // Engineered for tournament-level execution with sub-10ms performance budget.
 
 import {
-  axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems,
-  dist, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, segSegDist, type Body,
+  bodyAt, bodyTouchesPoly, circleTouchesPoly, coherencyProblems, dist, onTable, pointInPoly, pointSegDist, polyCentroid,
 } from '../engine/geometry';
-import { alive, boardUnits, hasKw, isEngaged, other, tableH, tableW, unitDistance } from '../engine/state';
-import { findPlacement, formationAt, hasDeepStrike, validateMove, validatePlacement, zoneOf } from '../engine/game';
-import { hasLos, roughLos } from '../engine/visibility';
-import { pathLength, routeAround } from '../engine/pathing';
+import { alive, boardUnits, other, tableH, tableW, unitDistance } from '../engine/state';
+import { findPlacement, validatePlacement, zoneOf } from '../engine/game';
+import { roughLos } from '../engine/visibility';
+import { routeAround } from '../engine/pathing';
 import { RULES } from '../engine/config';
-import { centre, isBrawler, maxRange, perModel, rangedKills, unitValue, oc } from './botEval';
-import type { GameState, ModelState, MoveKind, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
+import { isBrawler, maxRange, perModel, rangedKills, unitValue, oc } from './botEval';
+import type { GameState, ModelState, PlayerId, Pt, TerrainPiece, UnitState } from '../engine/types';
 
 export type MoveStance = 'STANCE_STAGE_HIDDEN' | 'STANCE_PEEK_SHOOT';
 
@@ -395,8 +394,6 @@ export function congaLineObjectivePaths(
   const models = alive(u);
   if (models.length < 2) return null;
 
-  const W = tableW(s);
-  const H = tableH(s);
   const ruinCentroid = polyCentroid(ruin.poly);
 
   // Direction from objective towards the ruin
@@ -567,8 +564,6 @@ export function grandmasterArrival(
           plan = 'SECONDARY_MISSION_DROP';
         }
         if (P.secActive.includes('engage-on-all-fronts')) {
-          const qx = x > W / 2 ? 1 : 0;
-          const qy = y > H / 2 ? 1 : 0;
           const dCenter = Math.hypot(x - W / 2, y - H / 2);
           if (dCenter >= 6.5) {
             score += 45;

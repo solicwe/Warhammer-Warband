@@ -1,6 +1,6 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
-import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf, subPointsList, type SubPointsItem } from './allies';
+import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf, subPointsList } from './allies';
 export { subPointsList, type SubPointsItem } from './allies';
 import { exprAverage } from './dice';
 import type { ArmyList, ArmyUnitEntry, CoreAbilities, DatasheetData, FactionData, ModelProfileData, ModelState, PlayerId, TransportInfo, UnitState, WargearOption, WargearPick, WeaponData } from './types';

@@ -6,8 +6,7 @@ import { hasLos, hasCover, modelVisible, isInfantryBeastUnit, isInfantryBeastLon
 import { stratagemShortSummary, type StratRule } from '../rules-engine/stratagems';
 import { cpWorth } from '../ai/botStrats';
 import { PRESETS } from '../ui/presets';
-import { baseDist } from './geometry';
-import type { ArmyList, FactionData, GameState, ModelState, Pt, TerrainPiece, UnitState } from './types';
+import type { FactionData, GameState, Pt, TerrainPiece, UnitState } from './types';
 
 function loadFaction(id: string): FactionData {
   const file = path.join(process.cwd(), 'public', 'data', 'factions', `${id}.json`);

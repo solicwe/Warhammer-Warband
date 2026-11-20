@@ -224,7 +224,7 @@ describe('Rituals', () => {
     u.name = 'Tzaangor Enlightened';
     u.sources = ['Tzaangor Enlightened'];
     const greatbows = put(s, 'p0-x0', { x: 20, y: 25 });
-    const boyz = put(s, 'p1-x0', { x: 20, y: 35 });
+    put(s, 'p1-x0', { x: 20, y: 35 });
     s.active = 1;
     s.phase = 'movement';
     endPhase(s);

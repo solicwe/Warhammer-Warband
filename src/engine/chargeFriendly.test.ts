@@ -37,7 +37,7 @@ describe('charging behind friendly models in base contact with enemy', () => {
     const s = game();
     s.round = 1; s.turn = 1; s.active = 0; s.phase = 'charge';
     const ork = put(s, 'p1-x0', { x: 30, y: 20 });
-    const captain = put(s, 'p0-x1', { x: 28.5, y: 20 });
+    put(s, 'p0-x1', { x: 28.5, y: 20 });
     const intercessors = put(s, 'p0-x0', { x: 20, y: 20 });
     intercessors.declaredCharge = true; intercessors.chargeRoll = 10;
     

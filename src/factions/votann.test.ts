@@ -1,18 +1,10 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import {
-  isVotannArmy,
-  gainYieldPoints,
-  spendYieldPoints,
-  votannBattleStart,
-  votannCommandEnd,
-  votannUnitDestroyed,
-  tryUtharAncestralFortune,
+  isVotannArmy, gainYieldPoints, spendYieldPoints, votannBattleStart, votannCommandEnd, votannUnitDestroyed,
 } from './votann';
 import { validateList } from '../engine/army';
-import { rollMods } from '../rules-engine/effects';
 import type { GameState, UnitState, PlayerState, FactionData, ArmyList } from '../engine/types';
 import lovFaction from '../../public/data/factions/LoV.json';
-import smFaction from '../../public/data/factions/SM.json';
 
 function mockGameState(): GameState {
   const p0 = {

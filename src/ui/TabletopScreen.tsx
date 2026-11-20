@@ -229,8 +229,7 @@ export function TabletopScreen({ index, onBack }: Props) {
   const [undoStack, setUndoStack] = useState<MatchSnapshot[]>([]);
 
   // Custom VP popover for a card
-  const [customVpCardId, setCustomVpCardId] = useState<string | null>(null);
-  const [customVpValue, setCustomVpValue] = useState<number>(3);
+  const [, setCustomVpCardId] = useState<string | null>(null);
 
   const allSecondaryIds = useMemo(() => MISSIONS.secondaries.map((s) => s.id), []);
 

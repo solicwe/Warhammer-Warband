@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { canBeObserver, ftggMods, ftggTargetChosen, guidedVs, hasMarkerlight, isTauArmy, spotOf } from './tau';
-import type { GameState, ModelState, PlayerState, UnitState, WeaponData } from '../engine/types';
+import type { GameState, ModelState, PlayerState, UnitState } from '../engine/types';
 
 function createDummyModel(id: string, name: string, keywords: string[] = [], gear: string[] = [], x = 10, y = 10): ModelState {
   return {

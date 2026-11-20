@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import { canLeaderAttach, supportIn, buildUnits, isBattlelineUnit, validateList, chapterRules, effectiveKeywords, enhancementOptions, subPointsList } from './army';
 import { sectionOf, unitKind } from '../ui/ArmyBuilder';
-import { effectsFor, ocOf, activeRules } from '../rules-engine/effects';
-import type { ArmyList, FactionData, GameState, UnitState } from './types';
+import { effectsFor, ocOf } from '../rules-engine/effects';
+import type { ArmyList, FactionData, GameState } from './types';
 
 const loadFaction = (id: string): FactionData =>
   JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8'));

@@ -109,7 +109,7 @@ describe('Single-objective contesting when spanning multiple objectives', () => 
     const chosen = assignedObjective(s, u);
     expect(chosen).toBe('obj2');
 
-    const [a2, b2] = levelOfControl(s, s.objectives[1]);
+    const [a2] = levelOfControl(s, s.objectives[1]);
     expect(a2).toBe(4); // 2 models * 2 OC
 
     updateControl(s);

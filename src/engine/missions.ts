@@ -1,6 +1,6 @@
 // Chapter Approved 2026-27 primary missions: Force Disposition matchups, objective actions,
 // operation markers and the scoring conditions of all 25 primary cards.
-import { deploymentById, MISSIONS, primaryById, RULES, toPoly, type ScoringRule } from './config';
+import { deploymentById, MISSIONS, primaryById, toPoly, type ScoringRule } from './config';
 import { bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, dist, gap, pointInPoly, polyCentroid, ptGap } from './geometry';
 import { alive, boardUnits, emitReact, hasKw, isEngaged, lastRound, log, onBoard, other, pushFx, tableH, tableW, unitById } from './state';
 import type { GameState, ModelState, ObjectiveState, PlayerId, Pt, TerrainPiece, UnitState } from './types';
@@ -162,13 +162,13 @@ export function startOfBattle(s: GameState) {
   }
 }
 
-let markerSeq = 0;
 function addMarker(s: GameState, owner: PlayerId, kind: string, o: { objId?: string; terrainId?: string; at: Pt }) {
-  markerSeq += 1;
+  // the id comes from a counter in the game, not the clock: the same seed and moves give the same game
+  s.markerSeq = (s.markerSeq ?? 0) + 1;
   const n = s.markers.filter((m) => m.owner === owner).length;
   // nudge markers that share a spot so they stay readable
   const off = n % 3 === 0 ? 0 : (n % 3 === 1 ? 0.9 : -0.9);
-  s.markers.push({ id: `mk${Date.now().toString(36)}${markerSeq}`, owner, kind, objId: o.objId, terrainId: o.terrainId, x: o.at.x + off, y: o.at.y + 1.2 });
+  s.markers.push({ id: `mk${s.markerSeq}`, owner, kind, objId: o.objId, terrainId: o.terrainId, x: o.at.x + off, y: o.at.y + 1.2 });
 }
 
 /** Start of a player's turn: snapshot positions (for "started the turn within …" conditions) and Punishment's condemned units. */

@@ -1,7 +1,7 @@
 // A new battle: who plays (you against the bot, two players on one phone, or two bots), each side's army, the
 // mission and the map. The last choices are remembered.
 import { useEffect, useMemo, useState } from 'react';
-import { deploymentName, dispositionById, LAYOUTS, layoutById, layoutsFor, mapsPerDeployment, TEST_RANGE, primaryFor, RULES, type DispositionId } from '../engine/config';
+import { deploymentName, dispositionById, LAYOUTS, layoutById, mapsPerDeployment, TEST_RANGE, primaryFor, RULES, type DispositionId } from '../engine/config';
 import { autoAttach, forChapter, listPoints, syncList } from '../engine/army';
 import { createGame, listDisposition, listDispositionOptions } from '../engine/game';
 import type { ArmyList, FactionData, GameState } from '../engine/types';
@@ -79,8 +79,6 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
     if (a) onUpdateArmy({ ...a, disposition: dispositionById(d).name });
   };
   const d0 = dispOf(0), d1 = dispOf(1);
-  const layouts = d0 && d1 ? layoutsFor(d0, d1) : [];
-
   const bot = (i: 0 | 1) => prefs.mode === 'botbot' || (prefs.mode === 'bot' && i === 1);
   const factionName = (id: string) => index?.factions.find((f) => f.id === id)?.name ?? id;
   const armyNameOf = (i: 0 | 1) => lists[i]?.name?.trim() || factionName(lists[i]?.factionId) || (i ? 'Side 2' : 'Side 1');

@@ -18,15 +18,6 @@ import { roughLos } from '../engine/visibility';
 /** A stand-in model at a point (to ask "could a model standing here see that unit?"). */
 const lookout = (p: Pt): ModelState => ({ x: p.x, y: p.y, r: 0.5, keywords: ['INFANTRY'] }) as unknown as ModelState;
 
-/** Points of `poly` on a coarse grid (where enemy models could stand). */
-function samplePoly(poly: Pt[], step: number): Pt[] {
-  const xs = poly.map((p) => p.x), ys = poly.map((p) => p.y);
-  const out: Pt[] = [];
-  for (let y = Math.min(...ys) + step / 2; y < Math.max(...ys); y += step) {
-    for (let x = Math.min(...xs) + step / 2; x < Math.max(...xs); x += step) if (pointInPoly({ x, y }, poly)) out.push({ x, y });
-  }
-  return out;
-}
 
 /** The models that stand for the unit when checking sight: its ends and its middle. */
 function probes(u: UnitState, pos: Map<string, Pt>): ModelState[] {

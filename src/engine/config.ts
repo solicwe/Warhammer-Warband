@@ -116,6 +116,9 @@ export const deploymentById = (id: string): DeploymentDef => {
   return { ...l, name: deploymentName(l.deployment) };
 };
 export const primaryById = (id: string): PrimaryDef => {
-  // a legacy battle saved before the old 'roguelike-annihilation' mission went plays Meatgrinder (both Purge the Foe)
-  return MISSIONS.primaries.find((p) => p.id === id) ?? MISSIONS.primaries.find((p) => p.id === 'meatgrinder')!;
+  // a legacy battle saved before the old 'roguelike-annihilation' mission went plays Meatgrinder (both Purge the Foe);
+  // any other unknown id is a mistake and says so instead of quietly playing another mission
+  const p = MISSIONS.primaries.find((x) => x.id === (id === 'roguelike-annihilation' ? 'meatgrinder' : id));
+  if (!p) throw new Error(`Unknown primary mission: ${id}`);
+  return p;
 };

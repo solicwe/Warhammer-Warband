@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import { PRESETS } from '../ui/presets';
-import { defaultWargear, syncWargear, wargearProblems, wargearSummary, buildUnits } from './army';
+import { wargearProblems, buildUnits } from './army';
 import type { FactionData } from './types';
 
 describe('Presets competitive wargear validation', () => {
