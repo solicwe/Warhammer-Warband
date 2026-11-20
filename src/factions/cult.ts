@@ -5,7 +5,7 @@ import { setBackUp } from '../rules-engine/activations';
 import { addTimed } from '../rules-engine/effects';
 import { dist } from '../engine/geometry';
 import { rollN } from '../engine/dice';
-import { alive, boardUnits, canUseStratagem, hasKw, log, other, pushFx, spendStratagem, tableH, tableW, bySize } from '../engine/state';
+import { alive, boardUnits, canUseStratagem, hasKw, log, other, playsItself, pushFx, spendStratagem, tableH, tableW, bySize } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export function isCultArmy(s: GameState, p: PlayerId): boolean {
@@ -92,6 +92,7 @@ const MARKER_STRATS: { id: string; name: string; vehicle?: boolean }[] = [
 function saveMarker(s: GameState, p: PlayerId): Pt | null {
   const P = s.players[p];
   for (const st of MARKER_STRATS) {
+    if (!playsItself(s, p)) break; // a person spends their own CP: these three are not paid for them
     if (!P.detachments?.some((d) => d.stratagems?.some((x) => x.id === st.id)) || canUseStratagem(s, p, st.id, undefined, 1)) continue;
     const anchor = st.vehicle ? boardUnits(s, p).find((u) => u.factionKeywords.includes('ASTRA MILITARUM') && hasKw(u, 'VEHICLE')) : undefined;
     if (st.vehicle && !anchor) continue;
@@ -161,7 +162,7 @@ export function cultAmbushArrival(s: GameState) {
     if (!u) { left.push(mk); continue; }
     if (placeAround(s, u, mk, 3)) { arrive(s, u, `at the marker (${mk.x.toFixed(0)}, ${mk.y.toFixed(0)})`); continue; }
     // Lying in Wait: a BATTLELINE unit can be set up wholly within 6" of the marker instead
-    if (hasKw(u, 'BATTLELINE') && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === LYING_IN_WAIT)) && !canUseStratagem(s, p, LYING_IN_WAIT, u, 1) && placeAround(s, u, mk, 6)) {
+    if (playsItself(s, p) && hasKw(u, 'BATTLELINE') && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === LYING_IN_WAIT)) && !canUseStratagem(s, p, LYING_IN_WAIT, u, 1) && placeAround(s, u, mk, 6)) {
       spendStratagem(s, p, LYING_IN_WAIT, u, 1);
       log(s, 'Lying in Wait (−1CP)', 'cp', p);
       arrive(s, u, `within 6" of the marker (${mk.x.toFixed(0)}, ${mk.y.toFixed(0)})`);
@@ -172,7 +173,7 @@ export function cultAmbushArrival(s: GameState) {
   P.cultAmbushMarkers = left;
   // The Downtrodden Rise: one ACOLYTE / METAMORPH / NEOPHYTE unit left in Cult Ambush arrives without a marker, more than 6" from enemies
   const u = s.units.find((x) => x.owner === p && x.status === 'reserves' && x.cultAmbush && /acolyte hybrid|hybrid metamorph|neophyte hybrid/i.test(x.sources[0] ?? x.name));
-  if (u && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === DOWNTRODDEN)) && !canUseStratagem(s, p, DOWNTRODDEN, u, 2)) {
+  if (u && playsItself(s, p) && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === DOWNTRODDEN)) && !canUseStratagem(s, p, DOWNTRODDEN, u, 2)) {
     const at = markerSpot(s, p);
     if (at && placeAround(s, u, at, 3)) {
       spendStratagem(s, p, DOWNTRODDEN, u, 2);

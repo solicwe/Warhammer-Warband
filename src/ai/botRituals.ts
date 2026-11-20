@@ -40,7 +40,6 @@ function ritualValue(s: GameState, c: Caster, r: Ritual, t: UnitState, strongCha
   return 0;
 }
 
-const STRONG: Record<string, number> = { 'destinys-ruin': 10, 'temporal-surge': 10, doombolt: 11, 'twist-of-fate': 12 };
 
 interface Plan { c: Caster; r: Ritual; t: UnitState; channel: boolean; ev: number }
 
@@ -53,7 +52,7 @@ function bestPlan(s: GameState, p: PlayerId, memo: Map<string, number>): Plan | 
       if (!targets.length) continue;
       for (const channel of [false, true]) {
         const odds = testOdds(channel ? 3 : 2, c.bonus, r.wc);
-        const strong = testOdds(channel ? 3 : 2, c.bonus, STRONG[r.id]).pass / Math.max(0.01, odds.pass);
+        const strong = testOdds(channel ? 3 : 2, c.bonus, r.strong).pass / Math.max(0.01, odds.pass);
         let bestT: UnitState | null = null, bestV = 0;
         for (const t of targets) {
           const v = ritualValue(s, c, r, t, Math.min(1, strong), memo);

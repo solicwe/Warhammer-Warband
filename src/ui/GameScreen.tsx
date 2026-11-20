@@ -51,14 +51,14 @@ const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
 import { StratUseCard } from './StratUse';
-import { endUnitShooting, rerollAttackCount, setPrecisionTarget, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
+import { effectiveInSv, endUnitShooting, rerollAttackCount, setPrecisionTarget, toggleRerollPick, unfiredWeaponNames } from '../engine/attack';
 import { officersOf, ordersRemaining, canOfficerTarget, officerAllowedOrders, currentOrders, issueOrder } from '../factions/orders';
 import { bodyTouchesPoly, dist, polyCentroid } from '../engine/geometry';
 import { smartPlacement } from '../ai/deploy';
 import {
   alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, isEngaged, lastRound, onBoard, other, spendStratagem, strength, unitById, unitDistance,
 } from '../engine/state';
-import type { BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pt, UnitState, WeaponData } from '../engine/types';
+import type { BuffKind, GameState, ModelState, MoveKind, ObjectiveState, PlayerId, Pool, Pt, UnitState, WeaponData } from '../engine/types';
 import { hasCover, hasLos, isHidden, modelVisible, unitVisibleTo } from '../engine/visibility';
 import { baseDist } from '../engine/geometry';
 import { Portrait, unitToken } from './Tokens';
@@ -467,10 +467,10 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }, s.phase === 'fight' ? 700 : 300);
     return () => window.clearTimeout(t);
   }, [s, autoWho, rolling, thinking, viewing, replay]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Pile-in on the player's side happens automatically; Consolidation is chosen in the phase panel.
+  // Pile-in and Consolidation are chosen in the phase panel (the bot's side does them by itself).
   const pileKey = s.fight && (s.fight.step === 'pileIn' || s.fight.step === 'consolidate') ? `${s.turn}:${s.fight.step}:${s.fight.stepPlayer}` : null;
   useEffect(() => {
-    if (replay || !pileKey || s.manualPile || s.fight?.step === 'consolidate' || s.attack || s.window) return;
+    if (replay || !pileKey || s.manualPile || s.fight?.step === 'consolidate' || s.fight?.step === 'pileIn' || s.attack || s.window) return;
     const f = s.fight!;
     if (bots.includes(f.stepPlayer) || onAuto(s, f.stepPlayer)) return;
     const kind = f.step === 'pileIn' ? 'pileIn' : 'consolidate';
@@ -684,6 +684,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
 
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string }>({});
+  const disAt = useRef(-1); // which spot around the transport the draft is on (Auto place / the arrows step through them)
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
   const ritActiveCaster = useMemo(() => ritCasters.find((x) => x.model.id === rit.model) ?? null, [ritCasters, rit.model]);
@@ -951,7 +952,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     recheck.current = false;
     if (draftRef.current) onDragEnd(draftRef.current);
   }, [s]);
-  useEffect(() => { turned.current = 0; }, [mode]);
+  useEffect(() => { turned.current = 0; disAt.current = -1; }, [mode]);
   const turnDraft = (d: number) => {
     if (!modeUnit) return;
     act((g) => turnUnit(g, modeUnit.id, d, mode?.k === 'move'));
@@ -1265,6 +1266,11 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       const keep = mode.how === 'deepStrike' ? unitFlags(s, modeUnit).deepStrikeRange : RULES.reserves.enemyDistance;
       r.push(...placementRings(s, boardUnits(s, other(modeUnit.owner)), keep, mode.how !== 'infiltrate'));
     }
+    // Disembark: the area the models may stand in, 3" round the transport (6" for a combat disembark)
+    if (mode?.k === 'place' && mode.how === 'disembark' && mode.transportId) {
+      const tr = s.units.find((x) => x.id === mode.transportId);
+      if (tr) for (const m of alive(tr)) r.push({ c: m, r: (m.hl ? Math.max(m.r, m.hw ?? 0) + m.hl : m.r) + (disembarkMode(s, tr) === 'combat' ? 6 : 3), color: 'rgba(34,197,94,0.65)', dash: true });
+    }
     return r;
   }, [mode, modeUnit, s]);
   const zoneGuide = mode?.k === 'place' && mode.how === 'infiltrate' && modeUnit
@@ -1337,21 +1343,30 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     setSel(null);
   };
 
+  /** Disembark: every legal way to stand around the transport, turning round it in steps (the side facing the closest enemy first). */
+  const stepDisembark = (dir: 1 | -1) => {
+    if (mode?.k !== 'place' || mode.how !== 'disembark') return;
+    const u = U(mode.unitId), t = U(mode.transportId!);
+    const tm = alive(t)[0];
+    if (!tm) return;
+    const combat = disembarkMode(s, t) === 'combat';
+    const foes = boardUnits(s, other(u.owner)).flatMap(alive);
+    const near = foes.length ? foes.reduce((x, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(x.x - tm.x, x.y - tm.y) ? m : x)) : null;
+    const a0 = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
+    const spots: Map<string, Pt>[] = [];
+    for (let k = 0; k < 12; k++) {
+      for (const pos of hullSpots(s, u, tm, a0 + k * (Math.PI / 6), combat ? 6 : 3, combat)) {
+        if (validateDisembark(s, u, t, pos).ok) { spots.push(pos); break; }
+      }
+    }
+    if (!spots.length) { flash('No legal spot around this transport: tap to place'); return; }
+    disAt.current = (disAt.current + dir + spots.length) % spots.length;
+    setDraft(placePaths(spots[disAt.current])); setCheck(null);
+  };
+
   const autoPlace = () => {
     if (mode?.k !== 'place') return;
-    if (mode.how === 'disembark') {
-      const u = U(mode.unitId), t = U(mode.transportId!);
-      const tm = alive(t)[0];
-      // models hug the hull (wholly within 3"), starting on the side facing the closest enemy
-      const foes = boardUnits(s, other(u.owner)).flatMap(alive);
-      const near = foes.length ? foes.reduce((a, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(a.x - tm.x, a.y - tm.y) ? m : a)) : null;
-      const base = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
-      for (const pos of hullSpots(s, u, tm, base, disembarkMode(s, t) === 'combat' ? 6 : 3, disembarkMode(s, t) === 'combat')) {
-        if (validateDisembark(s, u, t, pos).ok) { setDraft(placePaths(pos)); setCheck(null); return; }
-      }
-      flash('No automatic disembark spot found: tap to place');
-      return;
-    }
+    if (mode.how === 'disembark') { stepDisembark(1); return; }
     const near = draft ? polyCentroid([...lastPos(draft).values()]) : undefined;
     const pos = (mode.how === 'deploy' ? smartPlacement(s, U(mode.unitId), { near }) : null) ?? findPlacement(s, U(mode.unitId), mode.how, near);
     if (pos) { setDraft(placePaths(pos)); setCheck(null); } else flash('No automatic spot found: tap to place');
@@ -1823,6 +1838,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <div className="row">
           <button className="btn" onClick={() => { unTurn(); setMode(null); }}>Cancel</button>
           <button className="btn small" onClick={autoPlace}>Auto place</button>
+          {mode.how === 'disembark' && <><button className="btn small" aria-label="Turn the unit round the transport (back)" onClick={() => stepDisembark(-1)}>&lt; Around</button><button className="btn small" aria-label="Turn the unit round the transport (forward)" onClick={() => stepDisembark(1)}>Around &gt;</button></>}
           {draft && turnButtons()}
           <button className="btn primary grow" disabled={!draft} onClick={confirmPlace}><Icon name="check" /> Confirm{mode.rapid ? ' (Rapid Ingress 1CP)' : ''}</button>
         </div>
@@ -2906,6 +2922,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                 onClick={() => { const e = act((g) => rerollRitualDie(g, p, i)); if (e) flash(e); }}>{v}</button>
             ))}
           </div>
+          <div className="small">{score >= ritual.wc ? `Passes WC ${ritual.wc}.` : `Needs ${ritual.wc - score} more for WC ${ritual.wc}.`} {score >= ritual.strong ? `Already at the strongest effect (${ritual.strong}+).` : `Strongest effect at ${ritual.strong}+: needs ${ritual.strong - score} more.`}</div>
           <div className="small muted">{rrWhy === null && pending.rerolled === undefined ? 'Tap a die to Command Re-roll it (1CP).' : pending.rerolled !== undefined ? 'Command Re-roll used.' : `No Command Re-roll: ${rrWhy}`}</div>
           <div className="small">Choose whether to add a Channel die, even if the test already passes.</div>
           <div className="row wrap">
@@ -2929,7 +2946,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           <div className="rit-list">
             {left.map((x) => (
               <button key={x.id} className={`rit-opt ${rit.ritual === x.id ? 'on' : ''}`} onClick={() => setRit({ ...rit, ritual: x.id, target: undefined })}>
-                <span className="rit-opt-head"><b>{x.name}</b><span className="rit-wc">WC {x.wc}</span></span>
+                <span className="rit-opt-head"><b>{x.name}</b><span className="rit-wc">WC {x.wc} · strong {x.strong}+</span></span>
                 <small>{x.text}</small>
               </button>
             ))}
@@ -2953,6 +2970,21 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         </div>
       </>
     );
+  };
+
+  /** Every attack this weapon makes together: a plain total when the numbers are fixed, else the dice ("3 x D6 + 2"). */
+  const attacksText = (ps: Pool[]) => {
+    let fixed = 0;
+    const dice = new Map<string, number>();
+    for (const x of ps) for (const i of x.instances) {
+      fixed += i.flat + (x.attackBonus ?? 0);
+      for (const e of [i.A, ...i.extras]) {
+        if (/^\d+$/.test(e.trim())) fixed += Number(e);
+        else dice.set(e.trim().toUpperCase(), (dice.get(e.trim().toUpperCase()) ?? 0) + 1);
+      }
+    }
+    if (!dice.size) return `${fixed} attack${fixed === 1 ? '' : 's'}`;
+    return 'A ' + [...[...dice].map(([e, n]) => `${n > 1 ? n + ' x ' : ''}${e}`), ...(fixed ? [String(fixed)] : [])].join(' + ');
   };
 
   const shootPanel = () => {
@@ -3170,6 +3202,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               return (
                 <div key={p.key} className="small">
                   <b>{p.weapon}{p.profile.name !== p.weapon ? ` – ${p.profile.name}` : ''}</b> <span className="muted">×{models}</span>
+                  <span className="muted"> · {attacksText(ps)}</span>
                   <div className="statline">
                     Hit <b>{p.autoHit ? 'auto' : p.hitOn6Only ? '6' : `${p.skill}+`}</b>{p.hitMod ? ` (${p.hitMod > 0 ? '+' : ''}${p.hitMod})` : ''} · Wound <b>{p.woundNeed}+</b>{p.woundMod ? ` (+${p.woundMod})` : ''} · AP <b>{p.ap}</b> · D <b>{p.damage}</b>
                     {covered ? ` · cover ${covered}/${models}` : ''}
@@ -3182,8 +3215,13 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                 </div>
               );
             });
+            // what the target saves with against this attack: its armour save and its invulnerable save, which can differ against ranged and melee
+            const dm = alive(T)[0];
+            const invR = dm ? effectiveInSv(s, T, dm, true, false, modeUnit) : null, invM = dm ? effectiveInSv(s, T, dm, false, false, modeUnit) : null;
+            const defLine = dm ? `Save ${dm.profile.Sv}+ · Invulnerable ${invR === null && invM === null ? 'none' : invR === invM ? `${invR}+` : `${invR === null ? 'none' : invR + '+'} vs ranged, ${invM === null ? 'none' : invM + '+'} vs melee`}` : '';
             return (
               <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {defLine && <div className="small muted">{T.name}: {defLine}</div>}
                 {(tHasStealth || tHasCover || tHasLoneOp) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                     {tHasStealth && (
@@ -3557,17 +3595,27 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     const f = s.fight!;
     if (mode?.k === 'pile') return pilePanel();
     if (f.step === 'pileIn') {
-      setTimeout(() => act((g) => {
-        if (!g.fight) return;
-        for (const p of [g.active, other(g.active)]) {
-          for (const u of boardUnits(g, p).filter((x) => pileInEligible(g, x))) {
-            autoPileMove(g, u, 'pileIn');
-          }
-        }
-        endPileInStep(g);
-        endPileInStep(g);
-      }), 0);
-      return null;
+      // the bot's side piles in on its own; a person picks which units pile in (a unit that just charged included) before anything fights
+      const p = f.stepPlayer;
+      const ready = boardUnits(s, p).filter((x) => pileInEligible(s, x) && !f.movedThisStep.includes(x.id));
+      if (bots.includes(p) || onAuto(s, p) || !ready.length) {
+        setTimeout(() => act((g) => {
+          if (g.fight?.step !== 'pileIn' || g.fight.stepPlayer !== p) return;
+          for (const u of boardUnits(g, p).filter((x) => pileInEligible(g, x) && !g.fight!.movedThisStep.includes(x.id))) autoPileMove(g, u, 'pileIn');
+          endPileInStep(g);
+        }), 0);
+        return null;
+      }
+      return (
+        <>
+          <div className="handoff">{pName(s, p)} · Pile in: units that charged or are engaged may move up to 3" towards the enemy, then the fighting starts</div>
+          <div className="unit-strip">{ready.map((u) => unitPill(u, false, () => { setSel(u.id); setMode({ k: 'pile', unitId: u.id, kind: 'pileIn' }, startPaths(u)); }))}</div>
+          <div className="row">
+            <button className="btn" onClick={() => act((g) => { for (const u of boardUnits(g, p).filter((x) => pileInEligible(g, x) && !g.fight!.movedThisStep.includes(x.id))) autoPileMove(g, u, 'pileIn'); endPileInStep(g); })}>Pile in all (auto)</button>
+            <button className="btn primary grow" onClick={() => act((g) => endPileInStep(g))}>Done <Icon name="next" /></button>
+          </div>
+        </>
+      );
     }
     if (f.step === 'consolidate') {
       // the bot's side consolidates on its own; a player picks which of their units consolidate, and how

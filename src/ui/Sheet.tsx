@@ -18,7 +18,7 @@ function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
     <div className="ds-stats">
       <div className="ds-statrow">
         {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
-        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span><span className="ds-inv-label">INV SAVE</span></div> : null}
+        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span><span className="ds-inv-label">INV SAVE{p.InSvRanged ? "*" : ""}</span>{p.InSvRanged && <span className="ds-inv-label">* against ranged attacks only</span>}</div> : null}
       </div>
     </div>
   );

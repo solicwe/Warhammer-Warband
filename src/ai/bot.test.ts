@@ -214,7 +214,7 @@ describe('the bot spends Command Points', () => {
 });
 
 describe('Command Re-roll on hazard, damage and the number of attacks', () => {
-  it('hazard: the game re-rolls one failed die for bots and people alike, keeping 1CP spare', () => {
+  it('hazard: a bot re-rolls one failed die keeping 1CP spare; a person is never re-rolled for without asking', () => {
     let usedBot = 0, usedOff = 0, usedOn = 0;
     for (let seed = 1; seed <= 40; seed++) {
       for (const who of ['bot', 'off', 'on'] as const) {
@@ -232,15 +232,16 @@ describe('Command Re-roll on hazard, damage and the number of attacks', () => {
       }
     }
     expect(usedBot).toBeGreaterThan(0);
-    expect(usedOn).toBeGreaterThan(0);
+    expect(usedOn).toBe(0); // the owner: a person chooses their own Command Re-rolls
     expect(usedOff).toBe(0);
   });
 
-  it('a low random number of attacks is re-rolled by itself once, before the hit rolls', () => {
+  it('a bot re-rolls a low random number of attacks by itself once, before the hit rolls', () => {
     for (let seed = 1; seed <= 40; seed++) {
       const s = game([['Ballistus Dreadnought', 1, 150]], [['Boyz', 20, 180]]); // Ballistus missile launcher: D6+6 attacks
       s.rng = seed * 7919;
       s.players[0].cp = 3;
+      s.bots = [0];
       s.phase = 'shooting';
       const inf = put(s, 'p0-x0', { x: 20, y: 14 });
       const boyz = put(s, 'p1-x0', { x: 20, y: 22 });
@@ -597,5 +598,40 @@ describe('telling an attack', () => {
     expect(rep.killed).toBe(fx.killed);
     expect(rep.chips.some((c) => /Rapid Fire/.test(c.label))).toBe(true); // 12" away: half range for bolt rifles
     if (rep.killed) expect(s.stats!.kills[0]).toMatchObject({ by: 0, attackerId: a.id, targetId: b.id, models: rep.killed });
+  });
+});
+
+describe('Firing Deck planning', () => {
+  it('a melta squad is worth firing from a deck, a bolt rifle squad is not', async () => {
+    const { deckScore } = await import('./bot');
+    const s = game([['Eradicator Squad', 3, 95], ['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+    const erad = s.units.find((u) => u.sources.includes('Eradicator Squad'));
+    const inter = s.units.find((u) => u.sources.includes('Intercessor Squad'))!;
+    expect(inter && deckScore(inter, 2).avg).toBeLessThan(20);
+    if (erad) expect(deckScore(erad, 2).avg).toBeGreaterThanOrEqual(20);
+  });
+});
+
+describe('Hazard roll: a person chooses the Command Re-roll', () => {
+  it('a failed hazard die waits in a window; the wounds come when the player carries on', async () => {
+    const { crTestDone } = await import('../factions/crTests');
+    for (let seed = 1; seed <= 60; seed++) {
+      const s = game([['Intercessor Squad', 5, 80]], [['Boyz', 10, 90]]);
+      s.rng = seed * 7919;
+      s.players[0].cp = 3;
+      s.phase = 'shooting';
+      const u = put(s, 'p0-x0', { x: 20, y: 14 });
+      const w0 = u.models.reduce((a, m) => a + m.wounds, 0);
+      const r = hazardTest(s, u, 5, 'test');
+      if (!r.rolls.some((v) => v <= 2)) continue;
+      expect(r.fails).toBe(0); // nothing applied yet
+      expect(s.window?.kind).toBe('crTest');
+      expect(s.players[0].cp).toBe(3);
+      crTestDone(s);
+      expect(s.window).toBeNull();
+      expect(u.models.reduce((a, m) => a + m.wounds, 0)).toBeLessThan(w0);
+      return;
+    }
+    throw new Error('no failed hazard roll found');
   });
 });

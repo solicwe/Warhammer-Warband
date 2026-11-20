@@ -1,5 +1,5 @@
 {
- "_comment": "Chaos Knights Faction Pack v1.2 (26 Aug 2026). Dark Pacts is the Heretic Astartes army rule (DAMNED units in an Iconoclast Fiefdom do not use it). War Dog Moirax profile per the pack.",
+ "_comment": "Chaos Knights Faction Pack v1.2 (26 Aug 2026). Dark Pacts is the Heretic Astartes army rule (DAMNED units in an Iconoclast Fiefdom do not use it). War Dog Moirax profile per the pack. Knights: the invulnerable save is against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (owner, 20 Nov 2026). Wretched Thralls (the DAMNED units) are left out: a Chaos army takes only Chaos Knights from other books (owner, 20 Nov 2026).",
  "armyRules": [
   {
    "name": "Dark Pacts",
@@ -14,9 +14,173 @@
      "name": "War Dog Moirax",
      "T": 9,
      "W": 14,
-     "OC": 6
+     "OC": 6,
+     "InSvRanged": true
     }
    ]
+  },
+  {
+   "name": "Chaos Cerastus Knight Acheron",
+   "models": [
+    {
+     "name": "Chaos Cerastus Knight Acheron",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Chaos Cerastus Knight Castigator",
+   "models": [
+    {
+     "name": "Chaos Cerastus Knight Castigator",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Chaos Acastus Knight Porphyrion",
+   "models": [
+    {
+     "name": "Chaos Acastus Knight Porphyrion",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Despoiler",
+   "models": [
+    {
+     "name": "Knight Despoiler",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Tyrant",
+   "models": [
+    {
+     "name": "Knight Tyrant",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Desecrator",
+   "models": [
+    {
+     "name": "Knight Desecrator",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Rampager",
+   "models": [
+    {
+     "name": "Knight Rampager",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Chaos Acastus Knight Asterius",
+   "models": [
+    {
+     "name": "Chaos Acastus Knight Asterius",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "War Dog Executioner",
+   "models": [
+    {
+     "name": "War Dog Executioner",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "War Dog Stalker",
+   "models": [
+    {
+     "name": "War Dog Stalker",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "War Dog Karnivore",
+   "models": [
+    {
+     "name": "War Dog Karnivore",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "War Dog Brigand",
+   "models": [
+    {
+     "name": "War Dog Brigand",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "War Dog Huntsman",
+   "models": [
+    {
+     "name": "War Dog Huntsman",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Abominant",
+   "models": [
+    {
+     "name": "Knight Abominant",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Ruinator",
+   "models": [
+    {
+     "name": "Knight Ruinator",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Cultist Firebrand",
+   "_delete": true
+  },
+  {
+   "name": "Dark Commune",
+   "_delete": true
+  },
+  {
+   "name": "Traitor Enforcer",
+   "_delete": true
+  },
+  {
+   "name": "Cultist Mob",
+   "_delete": true
+  },
+  {
+   "name": "Accursed Cultists",
+   "_delete": true
+  },
+  {
+   "name": "Fellgor Beastmen",
+   "_delete": true
+  },
+  {
+   "name": "Traitor Guardsmen Squad",
+   "_delete": true
   }
  ]
 }

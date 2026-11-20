@@ -48,7 +48,7 @@ describe('bot battles with every datasheet', () => {
         steps++;
       }
       expect(s.round >= 4 || s.phase === 'gameover').toBe(true);
-    });
+    }, 180000); // 60 s alone; four workers at once pushed AdM vs TL past the 60 s default
   }
 });
 

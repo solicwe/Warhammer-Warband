@@ -5,7 +5,7 @@ import { assaultWeapons, emit, rescueDie, targetBlock } from './events';
 import { RULES } from './config';
 import { d6, exprAverage, rollExpr, rollN } from './dice';
 import { baseDist, clamp, coherencyProblems, gap, reachOf } from './geometry';
-import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, spendStratagem, unitById, wantsCR } from './state';
+import { alive, boardUnits, canUseStratagem, emitReact, unitDistance, engagedEnemies, hasKw, isEngaged, log, pushFx, modelEngagedWith, onBoard, other, playsItself, spendStratagem, unitById, wantsCR } from './state';
 import type { AttackReport, AttackSession, Die, GameState, ModelState, PlayerId, Pool, Pt, UnitState, WeaponData, WeaponProfileData } from './types';
 import { condApplies, getAbility, hasAbility, isMelee } from './weapons';
 import { onUnitDestroyed } from './missions';
@@ -57,7 +57,7 @@ export function woundNeed(S: number, T: number): number {
 
 const riled = isRiled;
 export const effectiveInSv = (s: GameState, u: UnitState, m: ModelState, ranged = true, psychic = false, attacker?: UnitState) => {
-  const best = Math.min(m.shadowFieldDown ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
+  const best = Math.min(m.shadowFieldDown || (m.profile.InSvRanged && !ranged) ? 7 : m.profile.InSv ?? 7, riled(s, u) ? 5 : 7, modelDefence(s, u, m, ranged ? 'ranged' : 'melee', psychic, attacker).inv ?? 7);
   return best >= 7 ? null : best;
 };
 
@@ -1144,9 +1144,13 @@ export function stepAttack(s: GameState) {
  * Hazard tests (11e: each roll of 1–2 fails). With the owner's say-so (a bot decides itself) one failed die is
  * re-rolled with a Command Re-roll. Logs the dice; the caller applies the mortal wounds.
  */
-export function hazardTest(s: GameState, u: UnitState, n: number, label: string, worse = 0): { rolls: number[]; fails: number } {
+export const hazardFailed = (r: number, worse = 0) => r - worse <= RULES.hazard.failOn;
+/** Mortal wounds for each failed hazard roll of this unit. */
+export const hazardWounds = (u: UnitState) => (alive(u).every(isMV) ? RULES.hazard.mortalWoundsMonsterVehicle : RULES.hazard.mortalWounds);
+
+export function hazardTest(s: GameState, u: UnitState, n: number, label: string, worse = 0, ask = true): { rolls: number[]; fails: number } {
   const rolls = rollN(s, n);
-  const failed = (r: number) => r - worse <= RULES.hazard.failOn;
+  const failed = (r: number) => hazardFailed(r, worse);
   let note = '';
   // an ability re-rolls the failed hazard dice for free
   if (unitFlags(s, u).rerollHazard && rolls.some(failed)) {
@@ -1155,6 +1159,12 @@ export function hazardTest(s: GameState, u: UnitState, n: number, label: string,
     note = ` · re-roll [${before}]`;
   }
   const i = rolls.findIndex(failed);
+  // a person decides: the dice wait in a window (the mortal wounds come when they carry on, factions/crTests.ts)
+  if (i >= 0 && ask && !playsItself(s, u.owner) && !s.window && !canUseStratagem(s, u.owner, 'command-reroll')) {
+    s.window = { kind: 'crTest', player: u.owner, test: 'hazard', unitId: u.id, label: `${label} ${u.name}: hazard roll (${RULES.hazard.failOn + worse} or less fails)`, dice: [...rolls], bad: { op: 'lt', n: 0, adj: 0 }, hz: { worse, source: label } };
+    log(s, `${label} ${u.name}: hazard [${rolls.join(' ')}]${note}: Command Re-roll?`, 'roll', u.owner);
+    return { rolls, fails: 0 };
+  }
   if (i >= 0 && wantsCR(s, u.owner, 'hazard', u)) {
     spendStratagem(s, u.owner, 'command-reroll', u);
     const again = d6(s);

@@ -2647,7 +2647,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
 /** Emergency disembark when a transport is destroyed (18.05). */
 export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
   for (const u of embarkedIn(s, t)) {
-    const { fails } = hazardTest(s, u, alive(u).length, 'Emergency Disembark');
+    const { fails } = hazardTest(s, u, alive(u).length, 'Emergency Disembark', 0, false); // in the middle of an attack: no window
     let placed: Map<string, Pt> | null = null;
     for (let ring = 0; ring < 5 && !placed; ring++) {
       for (let a = 0; a < 12 && !placed; a++) {

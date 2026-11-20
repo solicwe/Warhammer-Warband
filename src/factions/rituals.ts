@@ -15,12 +15,12 @@ import { alive, boardUnits, canUseStratagem, engagedEnemies, hasKw, log, onBoard
 import type { GameState, ModelState, PlayerId, StratagemData, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
-export interface Ritual { id: string; name: string; wc: number; side: 'enemy' | 'friendly'; text: string }
+export interface Ritual { id: string; name: string; wc: number; strong: number; side: 'enemy' | 'friendly'; text: string }
 export const RITUALS: Ritual[] = [
-  { id: 'destinys-ruin', name: "Destiny's Ruin", wc: 5, side: 'enemy', text: 'Our attacks against that unit re-roll Hit rolls of 1 (10+: re-roll the Hit roll)' },
-  { id: 'temporal-surge', name: 'Temporal Surge', wc: 6, side: 'friendly', text: 'A friendly unit makes a Normal move of up to D6" (10+: 6"), then cannot charge this turn' },
-  { id: 'doombolt', name: 'Doombolt', wc: 7, side: 'enemy', text: 'D3 mortal wounds (11+: D3+3)' },
-  { id: 'twist-of-fate', name: 'Twist of Fate', wc: 9, side: 'enemy', text: 'Our attacks against that unit improve AP by 1 (12+: by 2)' },
+  { id: 'destinys-ruin', name: "Destiny's Ruin", wc: 5, strong: 10, side: 'enemy', text: 'Our attacks against that unit re-roll Hit rolls of 1 (10+: re-roll the Hit roll)' },
+  { id: 'temporal-surge', name: 'Temporal Surge', wc: 6, strong: 10, side: 'friendly', text: 'A friendly unit makes a Normal move of up to D6" (10+: 6"), then cannot charge this turn' },
+  { id: 'doombolt', name: 'Doombolt', wc: 7, strong: 11, side: 'enemy', text: 'D3 mortal wounds (11+: D3+3)' },
+  { id: 'twist-of-fate', name: 'Twist of Fate', wc: 9, strong: 12, side: 'enemy', text: 'Our attacks against that unit improve AP by 1 (12+: by 2)' },
 ];
 export const ritualById = (id: string) => RITUALS.find((r) => r.id === id)!;
 
@@ -161,6 +161,8 @@ export function beginRitual(s: GameState, p: PlayerId, modelId: string, ritualId
   R.by[c.model.id] = (R.by[c.model.id] ?? 0) + 1;
   const dice = rollN(s, 2);
   R.pending = { unitId: c.unit.id, modelId: c.model.id, ritualId: r.id, targetId: t.id, bonus: c.bonus, dice };
+  // the two dice roll on the screen at once; the test waits for the player's choice
+  pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${c.model.name}`, dice: [...dice], result: `2D6${c.bonus ? ` +${c.bonus}` : ''} = ${dice[0] + dice[1] + c.bonus} vs ${r.wc}+`, good: dice[0] + dice[1] + c.bonus >= r.wc });
   return { error: null, dice: [...dice] };
 }
 
@@ -193,6 +195,8 @@ export function finishRitual(s: GameState, p: PlayerId, channel: boolean, choice
   const target = unitById(s, pending.targetId);
   R.pending = undefined;
   const dice = [...pending.dice, ...(channel ? [d6(s)] : [])];
+  // Channel the Warp: only the one extra die rolls on the screen
+  if (channel) pushFx(s, { kind: 'roll', owner: p, title: `Channel the Warp · ${model.name}`, dice: [dice[2]], result: `+${dice[2]}`, good: true });
   return { error: null, out: resolveRitualTest(s, p, c, r, target, { ...choices, channel }, dice) };
 }
 
@@ -248,7 +252,7 @@ function resolveRitualTest(s: GameState, p: PlayerId, c: Caster, r: Ritual, t: U
   if (manifested) R.failed = R.failed.filter((id) => id !== r.id);
   else if (!R.failed.includes(r.id)) R.failed.push(r.id);
   const bonusTxt = [mods ? `+${mods}` : '', chan ? `+${chan} (channel)` : ''].filter(Boolean).join(' ');
-  pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${c.model.name}`, dice: values, result: `${casterDead ? 'the sorcerer fell' : `${result}${bonusTxt ? ` (${bonusTxt})` : ''} vs ${r.wc}+`} → ${manifested ? 'manifested' : 'failed'}${doubles ? ` · perils ${perils} MW` : ''}`, good: manifested });
+  pushFx(s, { kind: 'roll', owner: p, title: `${r.name} · ${c.model.name}`, dice: [], result: `[${values.join(' ')}] ${casterDead ? 'the sorcerer fell' : `${result}${bonusTxt ? ` (${bonusTxt})` : ''} vs ${r.wc}+`} → ${manifested ? 'manifested' : 'failed'}${doubles ? ` · perils ${perils} MW` : ''}`, good: manifested });
   log(s, `${c.model.name}: ${r.name} — Psychic test [${values.join(' ')}]${how.channel ? ' (Channelled the Warp)' : ''}${bonusTxt ? ` ${bonusTxt}` : ''}${notes.length ? ` · ${notes.join(' · ')}` : ''} = ${result} vs ${r.wc} → ${manifested ? `manifested on ${t.name}` : 'failed'}`, 'roll', p);
   // the Ritual on the board: from the sorcerer to its target
   const mid = (u: UnitState) => { const ms = alive(u).length ? alive(u) : u.models; return { x: ms.reduce((a, m) => a + m.x, 0) / ms.length, y: ms.reduce((a, m) => a + m.y, 0) / ms.length }; };

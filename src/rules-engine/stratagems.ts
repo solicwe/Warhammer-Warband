@@ -720,7 +720,7 @@ export function reactionOffers(s: GameState, p: PlayerId, on: ReactOn, ctx: Reac
   for (const d of s.players[p].detachments) for (const st of d.stratagems) {
     const rule = stratRule(st, s.players[p].factionId, d.name);
     // a card whose WHEN is "just after an enemy unit has selected its targets" is asked at that moment too (in its own phase)
-    const asked = on === 'targeted' && !rule.react && rule.bot === 'defend' && /after an enemy unit has selected (its|their) targets/i.test(st.text ?? '')
+    const asked = on === 'targeted' && !rule.react && /after an enemy unit has selected (its|their) targets/i.test(st.text ?? '')
       && (() => { const ph = planStratagem(st).phases; return ph === 'any' || !ph.length || ph.includes(s.phase); })();
     if (rule.react !== on && !asked) continue;
     if (rule.killedKw && !(ctx.victimId && unitById(s, ctx.victimId).models.some((m) => rule.killedKw!.split('|').some((k) => m.keywords.includes(k))))) continue;

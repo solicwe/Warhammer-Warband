@@ -588,3 +588,20 @@ describe('Command Re-roll on a Psychic test die', () => {
     expect(s.players[0].cp).toBe(cp - 1);
   });
 });
+
+describe('a bot owner of Malign Trickery does not get stuck after the human moves', () => {
+  it('the window is answered (and closed) by the bot', async () => {
+    const { botStep } = await import('../ai/bot');
+    const s = game([['Tzaangor Enlightened with Fatecaster Greatbows', 3, 55]], [['Boyz', 10, 90]]);
+    put(s, 'p0-x0', { x: 20, y: 25 });
+    put(s, 'p1-x0', { x: 20, y: 39 });
+    s.bots = [0];
+    s.active = 1;
+    s.phase = 'movement';
+    endPhase(s);
+    expect(s.window?.kind).toBe('abilityMove');
+    for (let i = 0; i < 6 && s.window; i++) botStep(s, 0);
+    expect(s.window).toBeNull();
+    expect(s.attack).toBeNull();
+  });
+});

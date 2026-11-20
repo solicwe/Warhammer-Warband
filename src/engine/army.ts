@@ -1653,7 +1653,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (cap && pts > cap) errs.push(`${pact.det}: ${pts} pts of ${pact.kw} units — at most ${cap} pts at this battle size`);
     if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
-  // Mechanicus Allies (Questor Forgepact) / Wretched Thralls (Iconoclast Fiefdom): up to 500 points, only with that detachment
+  // Mechanicus Allies (Questor Forgepact): up to 500 points, only with that detachment
   for (const al of DETACHMENT_ALLIES) {
     if (faction.id !== al.id) continue;
     const xs = list.units.filter((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return !!d && !!detachmentAllyOf(faction.id, d); });

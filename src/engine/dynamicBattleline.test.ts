@@ -170,39 +170,14 @@ describe('Dynamic Detachment Battleline System', () => {
     expect(unitKind(melee, ['Warrior Bioform Onslaught'], TYR)).toBe('Battleline');
   });
 
-  it('Wretched Thralls (DH) only shows for Chaos Knights (QT), not Chaos Space Marines (CSM)', async () => {
+  it('Wretched Thralls are left out: no DAMNED cap for Chaos Knights or Chaos Space Marines (owner)', async () => {
     const { subPointsList } = await import('./allies');
-    const CSM = loadFaction('CSM');
-
-    // CSM list with a 50 pt Cultist Mob (has DAMNED keyword)
-    const csmList: ArmyList = {
-      name: 'CSM Marauders',
-      factionId: 'CSM',
-      battleSize: 'strikeForce',
-      detachments: ["Huron's Marauders"],
-      units: [
-        { uid: 'c1', datasheet: 'Cultist Mob', models: 10, pts: 50 },
-      ],
-    };
-    const csmSubs = subPointsList(csmList, CSM, 2000);
-    // Should NOT have wretched-thralls / DH in CSM
-    expect(csmSubs.some((s) => s.id === 'wretched-thralls')).toBe(false);
-
-    // Chaos Knights list with Iconoclast Fiefdom detachment
-    const qtList: ArmyList = {
-      name: 'Chaos Knights Fiefdom',
-      factionId: 'QT',
-      battleSize: 'strikeForce',
-      detachments: ['Iconoclast Fiefdom'],
-      units: [
-        { uid: 'q1', datasheet: 'Cultist Mob', models: 10, pts: 50 },
-      ],
-    };
-    const qtSubs = subPointsList(qtList, QT, 2000);
-    // SHOULD have wretched-thralls / DH in QT
-    expect(qtSubs.some((s) => s.id === 'wretched-thralls')).toBe(true);
-    expect(qtSubs.find((s) => s.id === 'wretched-thralls')?.spent).toBe(50);
+    const QT = loadFaction('QT');
+    expect(QT.datasheets.some((d) => d.keywords.includes('DAMNED') || d.factionKeywords.includes('DAMNED'))).toBe(false);
+    const qtList: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strikeForce', detachments: ['Iconoclast Fiefdom'], units: [] };
+    expect(subPointsList(qtList, QT, 2000).some((s) => s.id === 'wretched-thralls')).toBe(false);
   });
+
 
   it('Wulfen and Wulfen Dreadnought wargear options work correctly', async () => {
     const { wargearMax, wargearProblems } = await import('./army');

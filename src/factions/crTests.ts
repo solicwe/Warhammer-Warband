@@ -1,8 +1,9 @@
 // A test the game rolls in one go (Dark Pact, Malefic Surge, Deadly Vectors) stops when it came out badly for a person
 // who can spare a Command Re-roll: the dice wait in a window, the player taps a die to re-roll it (1CP) or carries on.
 // Bots and automatic rules never wait: `crTest` (state.ts) re-rolls for them when a CP can be spared.
+import { applyMortalWounds, hazardFailed, hazardWounds } from '../engine/attack';
 import { d6 } from '../engine/dice';
-import { canUseStratagem, log, playsItself, spendStratagem } from '../engine/state';
+import { alive, canUseStratagem, log, playsItself, spendStratagem, unitById } from '../engine/state';
 import type { GameState, PlayerId } from '../engine/types';
 
 type CrWindow = Extract<NonNullable<GameState['window']>, { kind: 'crTest' }>;
@@ -10,7 +11,8 @@ const finishers: Partial<Record<CrWindow['test'], (s: GameState, w: CrWindow) =>
 /** The faction file that rolled the test registers how it goes on once the dice are final. */
 export const onCrTestDone = (test: CrWindow['test'], fn: (s: GameState, w: CrWindow) => void) => { finishers[test] = fn; };
 
-const isBad = (w: Pick<CrWindow, 'dice' | 'bad'>) => {
+const isBad = (w: Pick<CrWindow, 'dice' | 'bad' | 'hz'>) => {
+  if (w.hz) return w.dice.some((v) => hazardFailed(v, w.hz!.worse));
   const v = w.dice.reduce((a, b) => a + b, 0) + w.bad.adj;
   return w.bad.op === 'lt' ? v < w.bad.n : v > w.bad.n;
 };
@@ -46,3 +48,11 @@ export function crTestDone(s: GameState) {
   s.window = null;
   finishers[w.test]?.(s, w);
 }
+
+// a hazard roll (Hazardous weapons, Desperate Escape, a Combat Disembark ...): each die that still fails costs mortal wounds
+onCrTestDone('hazard', (s, w) => {
+  const u = unitById(s, w.unitId);
+  const fails = w.dice.filter((v) => hazardFailed(v, w.hz?.worse ?? 0)).length;
+  log(s, `${w.hz?.source ?? 'Hazard'} ${u.name}: hazard [${w.dice.join(' ')}] → ${fails} failed`, 'roll', w.player);
+  if (fails && alive(u).length) applyMortalWounds(s, u, fails * hazardWounds(u), w.hz?.source ?? 'Hazard');
+});

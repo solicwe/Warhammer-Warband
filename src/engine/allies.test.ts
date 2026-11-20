@@ -16,7 +16,7 @@ const allyErrs = (f: FactionData, l: ArmyList) => validateList(l, f, SF).filter(
 describe('allied units', () => {
   it('each army gets the allies its rules allow', () => {
     const csm = merged('CSM', 'Chaos');
-    expect([...new Set(csm.datasheets.map((d) => d.allyName).filter(Boolean))].sort()).toEqual(['Chaos Daemons', 'Chaos Knights']);
+    expect([...new Set(csm.datasheets.map((d) => d.allyName).filter(Boolean))].sort()).toEqual(['Chaos Knights']); // no Daemonic Pact (owner)
     expect(csm.datasheets.some((d) => d.name === 'War Dog Karnivore' && d.ally === 'QT')).toBe(true);
     // the Knights' cultists are not Dreadblades
     expect(csm.datasheets.find((d) => d.name === 'Cultist Mob')?.ally).toBeUndefined();
@@ -56,15 +56,4 @@ describe('allied units', () => {
     expect(allyErrs(sm, list('SM', [['Rogue Trader Entourage', 4], ['Navigator', 1], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10], ['Voidsmen-at-arms', 10]])).join()).toMatch(/at most 2 RETINUE/);
   });
 
-  it('the Daemonic Pact caps the points and needs Battleline per god', () => {
-    const csm = merged('CSM', 'Chaos');
-    const d = csm.datasheets.filter((x) => x.ally === 'CD');
-    const line = d.find((x) => x.keywords.includes('KHORNE') && x.keywords.includes('BATTLELINE'))!;
-    const other = d.find((x) => x.keywords.includes('KHORNE') && !x.keywords.includes('BATTLELINE') && !x.keywords.includes('EPIC HERO'))!;
-    expect(allyErrs(csm, list('CSM', [[other.name, other.models.length]])).join()).toMatch(/Khorne needs/);
-    expect(allyErrs(csm, list('CSM', [[line.name, 10], [other.name, other.models.length]])).join()).not.toMatch(/Khorne needs/);
-    const big = list('CSM', [[line.name, 10]]);
-    big.units[0].pts = 600;
-    expect(allyErrs(csm, big).join() + unitPoints(big.units[0])).toMatch(/at most 500 pts/);
-  });
 });

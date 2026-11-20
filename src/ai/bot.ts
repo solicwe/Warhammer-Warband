@@ -2,6 +2,8 @@
 // It plays one unit per step so the UI can animate each action.
 import { botRituals, ritualsPending } from './botRituals';
 import { buildFightPools, buildShootPools, expectedDamage, finishAttack, resolveAll, shootingModes, startAttack } from '../engine/attack';
+import { exprAverage } from '../engine/dice';
+import { isMelee } from '../engine/weapons';
 import { RULES } from '../engine/config';
 import { smartPlacement } from './deploy';
 import { dist } from '../engine/geometry';
@@ -82,6 +84,18 @@ export function botPickFixed(s: GameState, p: PlayerId) {
   chooseFixedSecondaries(s, p, picks.slice(0, 2));
 }
 
+/** What a squad adds when it shoots from a Firing Deck X: the best ranged weapon of each model (attacks x strength x damage, more for AP), the best X of them added up. */
+export function deckScore(u: UnitState, X: number): { total: number; avg: number } {
+  const per = alive(u).map((m) => Math.max(0, ...m.weapons.filter((w) => !isMelee(w.profiles[0])).map((w) => {
+    const p = w.profiles[0];
+    return (exprAverage(p.A) || 1) * (p.S ?? 3) * (exprAverage(p.D) || 1) * (1 + Math.abs(p.AP) / 4);
+  }))).sort((a, b) => b - a).slice(0, X);
+  const total = per.reduce((a, b) => a + b, 0);
+  return { total, avg: per.length ? total / per.length : 0 };
+}
+/** Passengers whose guns are worth firing out of a Firing Deck (a melta squad is, a bolter squad is not) stay in while the transport is not yet in danger. */
+const deckShooters = (s: GameState, t: UnitState, cargo: UnitState[]) => !!t.core.firingDeck && cargo.some((u) => !isBrawler(s, u) && deckScore(u, t.core.firingDeck!).avg >= 20);
+
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
   // a redeploy ability: the bot keeps its deployment (it was placed with the whole board in mind)
@@ -91,7 +105,7 @@ export function botDeploy(s: GameState) {
   for (const t of s.units.filter((x) => x.owner === p && x.transport && ['pending', 'board', 'reserves'].includes(x.status))) {
     if (embarkedIn(s, t).length) continue;
     const riders = s.units.filter((x) => x.owner === p && x.status === 'pending' && !canEmbarkIn(s, x, t))
-      .sort((a, b) => Number(isBrawler(s, b)) - Number(isBrawler(s, a)) || unitValue(b) - unitValue(a));
+      .sort((a, b) => (t.core.firingDeck ? deckScore(b, t.core.firingDeck).total - deckScore(a, t.core.firingDeck).total : 0) || Number(isBrawler(s, b)) - Number(isBrawler(s, a)) || unitValue(b) - unitValue(a));
     if (riders.length && !embarkUnit(s, riders[0], t, true)) return;
   }
   // Battle formation, once, before setting anything up: deep strikers start in Reserves while there is room (none
@@ -326,6 +340,8 @@ function botDisembark(s: GameState, p: PlayerId): boolean {
 function wantsOut(s: GameState, u: UnitState, t: UnitState, near: number, need: number | undefined): boolean {
   const M = moveOf(u);
   const fighter = isBrawler(s, u);
+  // a Firing Deck shooter fires from inside: it stays aboard until the enemy is close or the battle is half over
+  if (!fighter && deckShooters(s, t, [u]) && near > 6 && pace(s) < 3 && !(need !== undefined && need <= M + 5)) return false;
   return pace(s) >= 3
     || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 10)
     || (!fighter && near <= maxRange(u) + 3)
@@ -340,6 +356,7 @@ function botRapidDisembark(s: GameState, t: UnitState) {
   for (const u of s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked')) {
     const { tm, near, need, goal } = passengerGoal(s, t.owner, t);
     if (mode === 'tactical') {
+      if (deckShooters(s, t, [u]) && pace(s) < 3) continue; // it fires from the deck
       if (t.move === 'stationary' && (s.round >= 2 || wantsOut(s, u, t, near, need ? dist(need, tm) : undefined))) getOut(s, u, t, goal);
       continue;
     }
@@ -355,7 +372,7 @@ function botRapidDisembark(s: GameState, t: UnitState) {
 function cargoOffFirst(s: GameState, t: UnitState, plans: { paths?: Map<string, Pt[]> | null }[]): boolean {
   if (s.round < 2 || disembarkMode(s, t) !== 'tactical') return false;
   const cargo = s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked');
-  if (!cargo.length) return false;
+  if (!cargo.length || deckShooters(s, t, cargo)) return false;
   const { tm, goal } = passengerGoal(s, t.owner, t);
   const progress = Math.max(0, ...plans.map((pl) => {
     const path = pl.paths?.get(tm.id);
@@ -862,14 +879,15 @@ export function botWindow(s: GameState) {
     if (w.kind === 'counteroffensive') { if (!botCounteroffensive(s, w.player)) closeWindow(s); continue; }
     if (w.kind === 'fireOverwatch' && s.players[w.player].cp >= 2) {
       let best: { u: UnitState; t: UnitState; v: number } | null = null;
-      for (const u of overwatchCandidates(s, w.player)) {
-        for (const t of overwatchTargets(s, w.player)) {
-          const r = buildShootPools(s, u.id, t.id, { mode: 'snap' });
-          if (r.error || !r.pools.length) continue;
-          const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
-          const v = shotValue(s, u, t, ev);
-          if (!best || v > best.v) best = { u, t, v };
-        }
+      // every pair builds shot pools, so only the closest pairs in snap range are weighed (a big army froze the bot here)
+      const pairs = overwatchCandidates(s, w.player).flatMap((u) => overwatchTargets(s, w.player).map((t) => ({ u, t, d: unitDistance(u, t) })))
+        .filter((x) => x.d <= RULES.snapShooting.range).sort((x, y) => x.d - y.d).slice(0, 8);
+      for (const { u, t } of pairs) {
+        const r = buildShootPools(s, u.id, t.id, { mode: 'snap' });
+        if (r.error || !r.pools.length) continue;
+        const ev = r.pools.reduce((a, p) => a + expectedDamage(s, p, t).models, 0);
+        const v = shotValue(s, u, t, ev);
+        if (!best || v > best.v) best = { u, t, v };
       }
       if (best && best.v >= 12) {
         const r = buildShootPools(s, best.u.id, best.t.id, { mode: 'snap' });

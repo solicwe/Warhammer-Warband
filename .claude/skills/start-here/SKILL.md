@@ -131,7 +131,10 @@ Made in conversation, so they are not all visible in the code. A change that wou
 - **Owner-approved game-wide exceptions** (confirmed in the Ritual / Tzaangor rules discussion): another eligible
   Thousand Sons caster may retry a failed Ritual, and Fatecaster Greatbows use Malign Trickery once at the end of
   the opponent's Movement phase when an enemy is within 12" and the unit is not engaged.
-- **The bot plays for points in idle mode** (`pointsFirst`); normal games against the bot keep the usual plan.
+- **The bot plays the same way in every game** (owner, 20 Nov 2026, replacing the idle-only rule): `pointsFirst` is on unless the Idle tactic is assault.
+- **A person spends their own Command points** (owner, 19-20 Nov 2026): every Command Re-roll and stratagem of a person is a button they press; the game re-rolls or pays only for bots and automatic rules.
+- **Chaos armies take only Chaos Knights as allies** (owner, 20 Nov 2026): no Daemonic Pact, no Wretched Thralls; Imperium allies are unchanged.
+- **Knights' invulnerable saves**: against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (Imperial and Chaos), which save against everything (owner, 20 Nov 2026; `InSvRanged` in `data/overrides`).
 - **Effects**: fire only for torrent weapons (a psychic power is a psychic bolt, plasma is plasma); no drifting smoke
   or haze as the main event; every effect sized to the model and the zoom through the one scale (`VIS`, `TRACE`);
   blasts about the size of the unit hit; Deep Strike keeps the old lightning arrival the owner liked; mortal wounds
@@ -168,7 +171,7 @@ When the owner makes a new decision of this kind, add it here in the same change
 | Screens | `src/ui/` (`App.tsx`, `GameScreen.tsx`, `Board.tsx`, `ArmyBuilder.tsx`, `styles.css`) | | `ui` |
 | Battle effects | `src/ui/BattleFx.tsx`, `fxTextures.ts`, `src/engine/weaponFx.ts`, `skillStyle` in `src/engine/state.ts` | | `vfx` |
 | Saves | `src/services/storage.ts`, `src/ui/library.ts` | | `ui` |
-| Scripts | `scripts/build-data.mjs` (`npm run data`), `build-images.mjs`, `elo.mjs`, `tune.mjs`, `audit_*.ts` (write `audit_report.json`, `integration_audit_report.json`) | | |
+| Scripts | `scripts/build-data.mjs` (`npm run data`), `build-images.mjs`, `elo.mjs`, `tune.mjs` | | |
 
 Faction pack PDFs are sources for data imports. They live in `data/raw/` (git-ignored) on the owner's machine and are
 never committed (`*.pdf` is ignored): Games Workshop material does not go in the public repository.

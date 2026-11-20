@@ -222,9 +222,10 @@ export type AutoReroll = 'hazard' | 'damage' | 'attacks' | 'test';
 
 /**
  * Should `player` spend a Command Re-roll on this roll right now? Never when it can't be used. The game decides for
- * everyone, people included: it keeps 1CP spare until the last round.
+ * the bots and automatic rules; it keeps 1CP spare until the last round. A person is never re-rolled for without asking.
  */
 export function wantsCR(s: GameState, player: PlayerId, _what: AutoReroll, unit?: UnitState): boolean {
+  if (!playsItself(s, player)) return false; // a person spends their own CP: nothing is re-rolled for them without asking
   if (canUseStratagem(s, player, 'command-reroll', unit)) return false;
   return s.players[player].cp - 1 >= (s.round >= lastRound(s) ? 0 : 1);
 }

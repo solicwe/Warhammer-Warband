@@ -175,9 +175,7 @@ describe('Transport Datasheet and Builder Integration', () => {
     };
     const csmWithDaemonsSub = subPointsList(csmWithDaemons as any, csmWithDaemonData, 2000);
     const visible2b = filterVisible(csmWithDaemonsSub, csmWithDaemons.detachments);
-    expect(visible2b).toHaveLength(1);
-    expect(visible2b[0].id).toBe('daemonic-pact');
-    expect(visible2b[0].spent).toBe(110);
+    expect(visible2b.some((x) => x.id === 'daemonic-pact')).toBe(false); // no Daemonic Pact (owner)
 
     // 3. Death Guard with Tallyband Summoners -> Plague Legions badge appears even at 0 spent because it is a Detachment rule!
     const dgTallyband = {

@@ -201,11 +201,10 @@ describe('Chaos Knights', () => {
     knightsCommandStart(s);
     expect((d.timed ?? []).some((t) => t.mark === 'Empowered')).toBe(true);
   });
-  it('Houndpack Lance needs three War Dogs; Wretched Thralls: DAMNED only with Iconoclast Fiefdom', () => {
+  it('Houndpack Lance needs three War Dogs; no Wretched Thralls', () => {
     const two: ArmyList = { ...PRESETS.QT, detachments: ['Houndpack Lance'], units: PRESETS.QT.units.slice(0, 3) };
     expect(validateList(two, QT, size).join()).toMatch(/three or more WAR DOG/);
-    const mob: ArmyList['units'] = [{ uid: 'm1', datasheet: 'Cultist Mob', models: 10, pts: 50 }];
-    expect(validateList(with_(PRESETS.QT, 'Traitoris Lance', mob), QT, size).join()).toMatch(/Iconoclast Fiefdom/);
+    expect(QT.datasheets.find((d) => d.name === 'Cultist Mob')).toBeUndefined(); // Wretched Thralls left out (owner)
   });
 });
 

@@ -1,9 +1,173 @@
 {
- "_comment": "Imperial Knights Faction Pack v1.2 (26 Aug 2026). Doctrina Imperatives belongs to Adeptus Mechanicus armies: Mechanicus Allies in a Questor Forgepact do not use it (FAQ).",
+ "_comment": "Imperial Knights Faction Pack v1.2 (26 Aug 2026). Doctrina Imperatives belongs to Adeptus Mechanicus armies: Mechanicus Allies in a Questor Forgepact do not use it (FAQ). Knights: the invulnerable save is against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (owner, 20 Nov 2026).",
  "armyRules": [
   {
    "name": "Doctrina Imperatives",
    "_delete": true
+  }
+ ],
+ "datasheets": [
+  {
+   "name": "Knight Paladin",
+   "models": [
+    {
+     "name": "Knight Paladin",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Errant",
+   "models": [
+    {
+     "name": "Knight Errant",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Warden",
+   "models": [
+    {
+     "name": "Knight Warden",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Gallant",
+   "models": [
+    {
+     "name": "Knight Gallant",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Crusader",
+   "models": [
+    {
+     "name": "Knight Crusader",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Acastus Knight Porphyrion",
+   "models": [
+    {
+     "name": "Acastus Knight Porphyrion",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Cerastus Knight Acheron",
+   "models": [
+    {
+     "name": "Cerastus Knight Acheron",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Cerastus Knight Castigator",
+   "models": [
+    {
+     "name": "Cerastus Knight Castigator",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Armiger Helverin",
+   "models": [
+    {
+     "name": "Armiger Helverin",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Armiger Warglaive",
+   "models": [
+    {
+     "name": "Armiger Warglaive",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Preceptor",
+   "models": [
+    {
+     "name": "Knight Preceptor",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Canis Rex",
+   "models": [
+    {
+     "name": "Canis Rex",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Castellan",
+   "models": [
+    {
+     "name": "Knight Castellan",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Valiant",
+   "models": [
+    {
+     "name": "Knight Valiant",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Acastus Knight Asterius",
+   "models": [
+    {
+     "name": "Acastus Knight Asterius",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Armiger Moirax",
+   "models": [
+    {
+     "name": "Armiger Moirax",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Defender",
+   "models": [
+    {
+     "name": "Knight Defender",
+     "InSvRanged": true
+    }
+   ]
+  },
+  {
+   "name": "Knight Destrier",
+   "models": [
+    {
+     "name": "Knight Destrier",
+     "InSvRanged": true
+    }
+   ]
   }
  ]
 }
