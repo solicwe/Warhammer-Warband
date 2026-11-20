@@ -262,3 +262,12 @@ export const hasPicture = (datasheet: string) => pictured(datasheet);
 
 /** The game makes this player's choices: a bot, or a person who left the rules to the app (not one who decides). */
 export const playsItself = (s: GameState, p: PlayerId) => (s.bots ?? []).includes(p) || ((s.autoRules ?? []).includes(p) && !(s.decides ?? []).includes(p));
+
+/**
+ * A faction rule's own state on a unit, a player or the game, kept under the rule's name instead of a new field on the
+ * core types (docs/05-tech-debt.md S6). The first call creates it: `ext(u, 'Blood Tithe', () => ({ points: 0 })).points += 1`.
+ */
+export function ext<T extends object>(holder: { ext?: Record<string, unknown> }, key: string, init: () => T): T {
+  const bag = (holder.ext ??= {});
+  return (bag[key] ??= init()) as T;
+}

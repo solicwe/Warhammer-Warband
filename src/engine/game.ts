@@ -654,7 +654,7 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
   if (kind === 'extra' && u.extraMove?.endIn) {
     const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
     const inDz = u.extraMove.endIn === 'dzOrObjective' && at.every((m) => bodyWhollyInPoly(m, zoneOf(s, u.owner)));
-    const onObj = s.objectives.some((o) => at.some((m) => ptGap(m, o) <= 3 + 1e-6));
+    const onObj = s.objectives.some((o) => at.some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6));
     if (!inDz && !onObj) errors.push(u.extraMove.endIn === 'objective' ? 'Must end within range of an objective' : 'Must end wholly within your deployment zone or within range of an objective');
   }
   if (kind === 'charge' || kind === 'heroic' as MoveKind) {
@@ -1333,7 +1333,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Vow-sworn Crusaders): objectives INFANTRY control now are secured
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtMovementEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6)) o.secured = s.active;
     }
     if (offerOpponentMovementEnd(s)) return;
   }
@@ -1347,7 +1347,7 @@ export function endPhase(s: GameState) {
     // Uphold the Honour of the Emperor (Templar Vows): objectives held now stay yours
     for (const u of boardUnits(s, s.active)) {
       if (!unitFlags(s, u).secureAtCommandEnd || !hasKw(u, 'INFANTRY')) continue;
-      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) o.secured = s.active;
+      for (const o of s.objectives) if (o.controller === s.active && assignedObjective(s, u) === o.id && alive(u).some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6)) o.secured = s.active;
     }
     sagaBoasts(s, 'commandEnd');
     scoreTiming(s, 'endOfYourCommandPhase');
@@ -1646,7 +1646,7 @@ export function commitMove(s: GameState, u: UnitState, kind: MoveKind, given: Ma
 function sabotageCheck(s: GameState, u: UnitState) {
   for (const o of s.objectives) {
     // Mortis Snares: one trap, sprung by the first enemy unit that ends a move in range
-    if (o.snared !== undefined && o.snared !== null && o.snared !== u.owner && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) {
+    if (o.snared !== undefined && o.snared !== null && o.snared !== u.owner && alive(u).some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6)) {
       const by = o.snared;
       o.snared = null;
       const r = d6(s);
@@ -1655,7 +1655,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
       if (mw) applyMortalWounds(s, u, mw, 'Mortis Snares');
       if (!onBoard(u)) return;
     }
-    if (o.mutated !== undefined && o.mutated !== null && o.mutated !== u.owner && o.controller === o.mutated && alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) {
+    if (o.mutated !== undefined && o.mutated !== null && o.mutated !== u.owner && o.controller === o.mutated && alive(u).some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6)) {
       const r = d6(s);
       const mw = r >= 4 ? rollExpr(s, 'D3').total : 0;
       log(s, `Mutate Landscape: ${u.name} ended a move on the mutated objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.mutated);
@@ -1663,7 +1663,7 @@ function sabotageCheck(s: GameState, u: UnitState) {
       if (!onBoard(u)) return;
     }
     if (o.sabotaged === undefined || o.sabotaged === null || o.sabotaged === u.owner || o.controller !== o.sabotaged) continue;
-    if (!alive(u).some((m) => ptGap(m, o) <= 3 + 1e-6)) continue;
+    if (!alive(u).some((m) => ptGap(m, o) <= RULES.objectiveMarkerRange + 1e-6)) continue;
     const r = d6(s);
     const mw = r >= 2 ? rollExpr(s, 'D3').total : 0;
     log(s, `A Deadly Prize: ${u.name} ended a move on the sabotaged objective — rolled ${r}${mw ? ` → ${mw} mortal wounds` : ''}`, 'roll', o.sabotaged);

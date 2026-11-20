@@ -18,6 +18,7 @@ import { applyPick } from '../factions/blessings';
 import { botPledge, setPledge } from '../factions/emperorsChildren';
 import { botPlague, PLAGUE_IDS } from '../factions/deathGuard';
 import { crTestDone } from '../factions/crTests';
+import { answerCpAsk } from '../factions/cult';
 import { abilityChoices, acceptOffer, botUseActs, closeOffers, pickAbilities, resolvePickUnit, unitSelected } from '../rules-engine/activations';
 import { botOff, W } from './botWeights';
 import { applyStyle, chooseTurnStyle, lookBudget, styleChosen } from './botLook';
@@ -844,6 +845,7 @@ export function botWindow(s: GameState) {
     if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); continue; }
     if (w.kind === 'pledge') { setPledge(s, w.player, botPledge(s, w.player)); continue; }
     if (w.kind === 'crTest') { crTestDone(s); continue; }
+    if (w.kind === 'cpAsk') { answerCpAsk(s, false); continue; } // asked of people only; a bot pays by itself
     if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); continue; }
     if (w.kind === 'abilityMove') {
       // reaction moves ("an enemy ended a move near this unit") are taken when there is somewhere better to be

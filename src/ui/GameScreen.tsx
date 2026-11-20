@@ -37,7 +37,7 @@ import { DiceFace } from './DiceFace';
 import { Joystick } from './Joystick';
 import { RollOverlay, roundsText, SecondaryCard } from './RollOverlay';
 import { InlineErrorBoundary } from './InlineErrorBoundary';
-import { beginRitual, rerollRitualDie, casters, endRituals, finishRitual, RITUALS, ritualsLeft, reopenRituals, ritualsPending, ritualsReopenable, ritualTargets } from '../factions/rituals';
+import { casters, RITUALS, ritualsLeft, reopenRituals, ritualsPending, ritualsReopenable, ritualTargets } from '../factions/rituals';
 const RITUAL_NAMES = new Set(RITUALS.map((r) => r.name));
 import { beaconCandidates, guardOptions, objLocationDesc, secondaryDead, secondaryGoal, secondaryPreview, setBeacon, setGuard, setTemptingTarget, temptingTargetCandidates } from '../engine/secondaries';
 import { EFFECT_LABEL, stratagemBlock, stratagemsNow, applyDetachmentStratagem, answerReaction, stratCandidates, stratRuleFor } from '../rules-engine/stratagems';
@@ -61,6 +61,8 @@ import { replayFrameDuration } from './BattleFx';
 import { DiceTray } from './DiceTray';
 import { Coach, loadCoach, saveCoach, tipsNow } from './Coach';
 import { crTestDone, crTestReroll } from '../factions/crTests';
+import { answerCpAsk } from '../factions/cult';
+import { RitualPanel, type RitPick } from './RitualPanel';
 import { canMakePact, madePact, makeDarkPact, type PactPick } from '../factions/darkPacts';
 import { UnitView } from './Sheet';
 import { useGame } from './store';
@@ -676,7 +678,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
   }, [s.phase, s.turn, s.active, s.units]);
 
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
-  const [rit, setRit] = useState<{ model?: string; ritual?: string; target?: string }>({});
+  const [rit, setRit] = useState<RitPick>({});
   const disAt = useRef(-1); // which spot around the transport the draft is on (Auto place / the arrows step through them)
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
@@ -1697,6 +1699,20 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
+      );
+    }
+    if (w.kind === 'cpAsk') {
+      const why = canUseStratagem(s, w.player, w.stratId, w.unitId ? U(w.unitId) : undefined, w.cp);
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: {w.name}</div>
+          <div className="small">{w.label}</div>
+          {why && <div className="small muted">Cannot use it: {why}</div>}
+          <div className="row">
+            <button className="btn" onClick={() => act((g) => answerCpAsk(g, false))}>No</button>
+            <button className="btn primary grow" disabled={!!why} onClick={() => { const e = act((g) => answerCpAsk(g, true)); if (e) flash(e); }}>Use ({w.cp}CP)</button>
+          </div>
         </>
       );
     }
@@ -2882,87 +2898,10 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     );
   };
 
-  const ritualPanel = () => {
-    const p = s.active;
-    const cs = ritCasters;
-    const c = ritActiveCaster;
-    const left = ritActiveLeft;
-    const r = ritActiveRitual;
-    const targets = ritActiveTargets;
-    const pending = s.players[p].rituals?.pending;
-    if (pending) {
-      const ritual = RITUALS.find((x) => x.id === pending.ritualId)!;
-      const unit = U(pending.unitId);
-      const caster = unit.models.find((m) => m.id === pending.modelId);
-      const target = U(pending.targetId);
-      const score = pending.dice.reduce((a, b) => a + b, 0) + pending.bonus;
-      const rrWhy = canUseStratagem(s, p, 'command-reroll', unit);
-      const finish = (channel: boolean) => {
-        const res = act((g) => finishRitual(g, p, channel));
-        if (res?.error || !res?.out) { flash(res?.error ?? 'Could not finish this Psychic test'); return; }
-        flash(`${ritual.name}: ${res.out.manifested ? 'Manifested' : 'Failed'} · [${res.out.dice.join(' ')}] · ${res.out.result} vs WC ${ritual.wc}${res.out.perils ? ` · ${res.out.perils} mortal wounds` : ''}`);
-      };
-      return (
-        <div className="rit-result">
-          <b>{ritual.name}: Psychic test</b>
-          <div className="small">{caster?.name ?? unit.name} on {target.name} · +{pending.bonus} = {score} vs WC {ritual.wc}</div>
-          <div className="dice">
-            {pending.dice.map((v, i) => (
-              <button key={i} type="button" className={`die ${pending.rerolled === i ? 'rr' : ''} ${rrWhy === null && pending.rerolled === undefined ? 'pick' : ''}`}
-                disabled={rrWhy !== null || pending.rerolled !== undefined}
-                title={rrWhy ?? 'Command Re-roll 1CP: re-roll this die'}
-                onClick={() => { const e = act((g) => rerollRitualDie(g, p, i)); if (e) flash(e); }}>{v}</button>
-            ))}
-          </div>
-          <div className="small">{score >= ritual.wc ? `Passes WC ${ritual.wc}.` : `Needs ${ritual.wc - score} more for WC ${ritual.wc}.`} {score >= ritual.strong ? `Already at the strongest effect (${ritual.strong}+).` : `Strongest effect at ${ritual.strong}+: needs ${ritual.strong - score} more.`}</div>
-          <div className="small muted">{rrWhy === null && pending.rerolled === undefined ? 'Tap a die to Command Re-roll it (1CP).' : pending.rerolled !== undefined ? 'Command Re-roll used.' : `No Command Re-roll: ${rrWhy}`}</div>
-          <div className="small">Choose whether to add a Channel die, even if the test already passes.</div>
-          <div className="row wrap">
-            <button className="btn primary" onClick={() => finish(true)}>Channel the Warp · roll 1D6</button>
-            <button className="btn" onClick={() => finish(false)}>Resolve with 2D6</button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <>
-        <div className="handoff">Rituals · start of the Shooting phase</div>
-        <div className="unit-strip rit-casters">
-          {cs.map((x) => (
-            <button key={x.model.id} className={`unit-pill ${rit.model === x.model.id ? 'sel' : ''}`} onClick={() => { setRit({ model: x.model.id }); setSel(x.unit.id); }}>
-              <span className={`side-dot s${x.unit.owner}`} aria-hidden="true" /> {x.model.name}{x.bonus ? ` +${x.bonus}` : ''}{x.tries > 1 ? ` ×${x.tries}` : ''}
-            </button>
-          ))}
-        </div>
-        {c && (
-          <div className="rit-list">
-            {left.map((x) => (
-              <button key={x.id} className={`rit-opt ${rit.ritual === x.id ? 'on' : ''}`} onClick={() => setRit({ ...rit, ritual: x.id, target: undefined })}>
-                <span className="rit-opt-head"><b>{x.name}</b><span className="rit-wc">WC {x.wc} · strong {x.strong}+</span></span>
-                <small>{x.text}</small>
-              </button>
-            ))}
-          </div>
-        )}
-        {r && (
-          <>
-            <div className="label rit-target-head">{r.side === 'enemy' ? 'Enemy target' : 'Friendly unit'} · within {c!.range}"</div>
-            {targets.length ? (
-              <div className="unit-strip rit-targets">{targets.map((t) => <button key={t.id} className={`unit-pill ${rit.target === t.id ? 'sel' : ''}`} onClick={() => setRit({ ...rit, target: t.id })}>{t.name}</button>)}</div>
-            ) : <div className="small muted">No unit in range and in sight (a ruin or wall in between blocks sight; a ruin your unit stands in does not)</div>}
-          </>
-        )}
-        <div className="row">
-          <button className="btn" onClick={() => { act((g) => endRituals(g, p)); setRit({}); }}>Done with Rituals</button>
-          <button className="btn primary grow" disabled={!c || !r || !rit.target} onClick={() => {
-            const res = act((g) => beginRitual(g, p, c!.model.id, r!.id, rit.target));
-            if (res?.error) flash(res.error);
-            else setRit({});
-          }}>Roll 2D6 · {r ? r.name : 'Ritual'}</button>
-        </div>
-      </>
-    );
-  };
+  const ritualPanel = () => (
+    <RitualPanel s={s} act={act} flash={flash} setSel={setSel} rit={rit} setRit={setRit} casters={ritCasters}
+      caster={ritActiveCaster} left={ritActiveLeft} ritual={ritActiveRitual} targets={ritActiveTargets} />
+  );
 
   /** Every attack this weapon makes together: a plain total when the numbers are fixed, else the dice ("3 x D6 + 2"). */
   const attacksText = (ps: Pool[]) => {

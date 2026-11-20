@@ -122,15 +122,15 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S3 | Ready, not pushed: the token used here may not change `.github/workflows` (it lacks the `workflow` scope). The new `deploy.yml` (deploy after a passed CI run, `workflow_run`) waits for the owner to push it |
 | S4 | Owner said remove: rewriting history needs a force push of every branch; see the reply of 20 Nov 2026 |
 | S5 | Guard only: `layers.test.ts` caps the named rule checks per engine file (army 19, attack 8, game 12, state 2); lower a number when one moves out |
-| S6 | Started: `hasFiredThisTurn` is a typed field (no more `as any`); the per-faction `ext` slot is not built |
-| S7 | Not done (split a phase panel out when a change touches it) |
+| S6 | Started: `hasFiredThisTurn` is a typed field (no more `as any`); the per-faction slot exists (`ext` on unit, player and game, `ext()` in `state.ts`) for new rules; the 157 old fields stay until their rule is touched |
+| S7 | Started: the Rituals panel is `src/ui/RitualPanel.tsx` (GameScreen 4,705 to 4,629 lines). Split the next phase panel out when a change touches it |
 | S8 | Done: unused imports and locals removed in code and tests; `noUnusedLocals` is on. ESLint not added |
 | S9 | Done for the actions named: `swapSecondary`, `discardSecondary`, `useCounteroffensive` return an error text, `crushingImpact` refuses without CP, `chooseFixedSecondaries` keeps only real cards |
 | S10 | Operation marker ids come from a counter in the state. The bot's look-ahead still stops on the clock, and so do the 15 ms guards of the move search (`botMove.ts`, `grandmasterPositioning.ts`): the Techmarine test in `bot.test.ts` can fail on a busy machine |
 | S11 | `primaryById` throws on an unknown id (the old roguelike id still maps to Meatgrinder); `createGame({ primaryId })` takes the primary's own disposition; the four faction tests no longer ask for `takeAndHold`. Test file names unchanged |
 | S12 | Done: README rewritten to what runs; `index.html` no longer names the 10th edition |
 | S13 | Done: `tournamentTrainer.ts` and its test deleted |
-| S14 | Partly: 16 one-off scripts, the two audit scripts and their reports, and about 150 unused style rules removed. `presets.ts`, the two `names.json` and the unread `core-rules.json` numbers remain |
+| S14 | Done as far as it goes: 16 one-off scripts, the two audit scripts and their reports, about 150 unused style rules removed; the unread `core-rules.json` numbers deleted, `objectiveMarkerRange` now read by the six 3" objective checks in `game.ts`. Kept on purpose: `src/ui/names.json` is the copy `npm run images` makes of `public/images/names.json` for the bundle; `presets.ts` holds the tests' and the bot tools' armies |
 | S15 | Owner decision: the bot plays the same way in every game (start-here skill) |
 | S16 | After January 2027 |
 | S17 | No change needed until it breaks again |

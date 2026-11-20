@@ -23,6 +23,9 @@ which registers every faction with the hooks below.
 - **`src/engine/`** and **`src/rules-engine/`** know nothing about React. Every rule is a function of `GameState`
   (see `src/engine/types.ts`). The UI and the bot call the same functions, so anything the player can do the bot can
   do, and every game can be replayed from its seed.
+- **One faction's own state** goes in the `ext` slot of the unit, player or game, under the rule's name
+  (`ext(u, 'Rule name', () => ({ ... }))` in `state.ts`), not in a new field of the core types. Named rule checks
+  inside `src/engine` are capped per file by `layers.test.ts`: move them out to rule data or a faction hook, never add one.
 - **`src/ui/`** renders a `GameState` and turns taps into engine calls. Game state lives in `store.ts` (`useGame`):
   each action clones the state, applies one engine call and keeps an undo snapshot. Live games also record each
   committed state for replay; undo removes the matching replay frame. Replay seeks through those states while the

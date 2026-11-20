@@ -89,15 +89,21 @@ export function toCultAmbush(s: GameState, u: UnitState, why: string) {
 const MARKER_STRATS: { id: string; name: string; vehicle?: boolean }[] = [
   { id: '000009076002', name: 'Evasive Vanguard' }, { id: '000009080002', name: 'Along Shadowed Trails' }, { id: '000009085002', name: 'In the Shadow of Iron', vehicle: true },
 ];
-function saveMarker(s: GameState, p: PlayerId): Pt | null {
+/** A marker an enemy came near: a stratagem can move it instead. A bot pays by itself; a person is asked ('asked': the
+ *  marker stays until they answer). */
+function saveMarker(s: GameState, p: PlayerId, mk: Pt): Pt | 'asked' | null {
   const P = s.players[p];
   for (const st of MARKER_STRATS) {
-    if (!playsItself(s, p)) break; // a person spends their own CP: these three are not paid for them
     if (!P.detachments?.some((d) => d.stratagems?.some((x) => x.id === st.id)) || canUseStratagem(s, p, st.id, undefined, 1)) continue;
     const anchor = st.vehicle ? boardUnits(s, p).find((u) => u.factionKeywords.includes('ASTRA MILITARUM') && hasKw(u, 'VEHICLE')) : undefined;
     if (st.vehicle && !anchor) continue;
     const spot = markerSpot(s, p, anchor);
     if (!spot) continue;
+    if (!playsItself(s, p)) {
+      if (s.window) return null;
+      s.window = { kind: 'cpAsk', player: p, label: `An enemy unit came within 8" of a Cult Ambush marker: use ${st.name} (1CP) to move it to (${spot.x.toFixed(0)}, ${spot.y.toFixed(0)}) instead of losing it?`, stratId: st.id, name: st.name, cp: 1, act: 'cultSave', at: spot, marker: mk };
+      return 'asked';
+    }
     spendStratagem(s, p, st.id, undefined, 1);
     log(s, `${st.name} (−1CP): the Cult Ambush marker is moved to (${spot.x.toFixed(0)}, ${spot.y.toFixed(0)})`, 'cp', p);
     return spot;
@@ -124,7 +130,8 @@ export function cultAmbushCheckEnemyMoved(s: GameState, mover: UnitState) {
         continue;
       }
     }
-    const saved = saveMarker(s, p);
+    const saved = saveMarker(s, p, mk);
+    if (saved === 'asked') { kept.push(mk); continue; }
     if (saved) { kept.push(saved); continue; }
     log(s, `${mover.name} ended a move within 8" of a Cult Ambush marker: it is removed`, 'info', p);
   }
@@ -162,7 +169,13 @@ export function cultAmbushArrival(s: GameState) {
     if (!u) { left.push(mk); continue; }
     if (placeAround(s, u, mk, 3)) { arrive(s, u, `at the marker (${mk.x.toFixed(0)}, ${mk.y.toFixed(0)})`); continue; }
     // Lying in Wait: a BATTLELINE unit can be set up wholly within 6" of the marker instead
-    if (playsItself(s, p) && hasKw(u, 'BATTLELINE') && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === LYING_IN_WAIT)) && !canUseStratagem(s, p, LYING_IN_WAIT, u, 1) && placeAround(s, u, mk, 6)) {
+    const lying = hasKw(u, 'BATTLELINE') && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === LYING_IN_WAIT)) && !canUseStratagem(s, p, LYING_IN_WAIT, u, 1);
+    if (lying && !playsItself(s, p) && !s.window) {
+      s.window = { kind: 'cpAsk', player: p, label: `${u.name} has no room at the Cult Ambush marker: use Lying in Wait (1CP) to set it up wholly within 6" of it?`, stratId: LYING_IN_WAIT, name: 'Lying in Wait', cp: 1, act: 'lyingInWait', unitId: u.id, marker: mk };
+      left.push(mk);
+      continue;
+    }
+    if (lying && playsItself(s, p) && placeAround(s, u, mk, 6)) {
       spendStratagem(s, p, LYING_IN_WAIT, u, 1);
       log(s, 'Lying in Wait (−1CP)', 'cp', p);
       arrive(s, u, `within 6" of the marker (${mk.x.toFixed(0)}, ${mk.y.toFixed(0)})`);
@@ -173,9 +186,11 @@ export function cultAmbushArrival(s: GameState) {
   P.cultAmbushMarkers = left;
   // The Downtrodden Rise: one ACOLYTE / METAMORPH / NEOPHYTE unit left in Cult Ambush arrives without a marker, more than 6" from enemies
   const u = s.units.find((x) => x.owner === p && x.status === 'reserves' && x.cultAmbush && /acolyte hybrid|hybrid metamorph|neophyte hybrid/i.test(x.sources[0] ?? x.name));
-  if (u && playsItself(s, p) && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === DOWNTRODDEN)) && !canUseStratagem(s, p, DOWNTRODDEN, u, 2)) {
+  if (u && P.detachments?.some((d) => d.stratagems?.some((x) => x.id === DOWNTRODDEN)) && !canUseStratagem(s, p, DOWNTRODDEN, u, 2)) {
     const at = markerSpot(s, p);
-    if (at && placeAround(s, u, at, 3)) {
+    if (at && !playsItself(s, p)) {
+      if (!s.window) s.window = { kind: 'cpAsk', player: p, label: `Use The Downtrodden Rise (2CP): ${u.name} arrives at (${at.x.toFixed(0)}, ${at.y.toFixed(0)}) without a marker?`, stratId: DOWNTRODDEN, name: 'The Downtrodden Rise', cp: 2, act: 'downtrodden', unitId: u.id, at };
+    } else if (at && placeAround(s, u, at, 3)) {
       spendStratagem(s, p, DOWNTRODDEN, u, 2);
       log(s, 'The Downtrodden Rise (−2CP)', 'cp', p);
       arrive(s, u, `at (${at.x.toFixed(0)}, ${at.y.toFixed(0)}) without a marker`);
@@ -219,4 +234,36 @@ export function regimentalReinforcements(s: GameState, u: UnitState) {
   const r = rollN(s, 1)[0];
   if (r < 3) { log(s, `Regimental Reinforcements: rolled ${r}, no new unit`, 'info', u.owner); return; }
   toCultAmbush(s, u, `rolled ${r} for Regimental Reinforcements`);
+}
+
+/** The person's answer to a Cult Ambush stratagem the game offered (window 'cpAsk'). */
+export function answerCpAsk(s: GameState, use: boolean): string | null {
+  const w = s.window;
+  if (w?.kind !== 'cpAsk') return null;
+  const P = s.players[w.player];
+  const u = w.unitId ? s.units.find((x) => x.id === w.unitId) : undefined;
+  const why = use ? canUseStratagem(s, w.player, w.stratId, u, w.cp) : null;
+  if (why) return why;
+  s.window = null;
+  const same = (a: Pt, b?: Pt) => !!b && a.x === b.x && a.y === b.y;
+  if (w.act === 'cultSave') {
+    if (use && w.at) {
+      spendStratagem(s, w.player, w.stratId, undefined, w.cp);
+      P.cultAmbushMarkers = (P.cultAmbushMarkers ?? []).map((m) => (same(m, w.marker) ? w.at! : m));
+      log(s, `${w.name} (−${w.cp}CP): the Cult Ambush marker is moved to (${w.at.x.toFixed(0)}, ${w.at.y.toFixed(0)})`, 'cp', w.player);
+    } else {
+      P.cultAmbushMarkers = (P.cultAmbushMarkers ?? []).filter((m) => !same(m, w.marker));
+      log(s, 'An enemy unit ended a move within 8" of a Cult Ambush marker: it is removed', 'info', w.player);
+    }
+    return null;
+  }
+  if (!use || !u) return null;
+  const at = w.act === 'lyingInWait' ? w.marker : w.at;
+  if (!at || !placeAround(s, u, at, w.act === 'lyingInWait' ? 6 : 3)) return 'No room to set the unit up there';
+  spendStratagem(s, w.player, w.stratId, u, w.cp);
+  log(s, `${w.name} (−${w.cp}CP)`, 'cp', w.player);
+  if (w.act === 'lyingInWait') P.cultAmbushMarkers = (P.cultAmbushMarkers ?? []).filter((m) => !same(m, w.marker));
+  const where = `(${at.x.toFixed(0)}, ${at.y.toFixed(0)})`;
+  arrive(s, u, w.act === 'lyingInWait' ? `within 6" of the marker ${where}` : `at ${where} without a marker`);
+  return null;
 }

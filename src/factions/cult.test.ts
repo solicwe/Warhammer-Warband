@@ -5,6 +5,7 @@ import {
   cultAmbushUnitDestroyed,
   cultAmbushCheckEnemyMoved,
   cultAmbushArrival,
+  answerCpAsk,
 } from './cult';
 import type { GameState, ObjectiveState, PlayerId, UnitState } from '../engine/types';
 
@@ -159,4 +160,26 @@ describe('Genestealer Cults mechanics', () => {
     expect(s.players[0].cultAmbushMarkers?.length).toBe(0);
   });
 
+
+  it('a person is asked before a stratagem saves a marker, and pays only on yes', () => {
+    for (const use of [true, false]) {
+      const s = makeMockState();
+      s.players[0].detachments = [{ name: 'Host of Ascension', dp: 3, stratagems: [{ id: '000009076002', name: 'EVASIVE VANGUARD', cp: 1 }] }] as never;
+      s.players[0].cp = 2;
+      s.players[0].stratagemsUsed = [];
+      s.players[0].cultAmbushMarkers = [{ x: 20, y: 20 }];
+      const enemy = makeMockUnit('e1', 1, 'Intercessors', ['INFANTRY'], ['ADEPTUS ASTARTES'], 5);
+      enemy.models[0].x = 24; enemy.models[0].y = 20;
+      s.units.push(enemy);
+      cultAmbushCheckEnemyMoved(s, enemy);
+      expect(s.window?.kind).toBe('cpAsk');
+      expect(s.players[0].cp).toBe(2); // nothing paid yet
+      expect(s.players[0].cultAmbushMarkers).toEqual([{ x: 20, y: 20 }]);
+      answerCpAsk(s, use);
+      expect(s.window).toBeNull();
+      expect(s.players[0].cp).toBe(use ? 1 : 2);
+      expect(s.players[0].cultAmbushMarkers?.length).toBe(use ? 1 : 0);
+      if (use) expect(s.players[0].cultAmbushMarkers?.[0]).not.toEqual({ x: 20, y: 20 });
+    }
+  });
 });

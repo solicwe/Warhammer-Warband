@@ -217,6 +217,8 @@ export interface TransportInfo {
 }
 
 export interface UnitState {
+  /** one faction's own bookkeeping, keyed by the rule that owns it: read and write it with `ext` (state.ts), not new fields here */
+  ext?: Record<string, unknown>;
   hasFiredThisTurn?: boolean; // it shot this turn (Hidden: a unit that fired is no longer hidden)
   dsMarker?: Pt; // Deathstrike Target marker
   parasiteKills?: number; // INFANTRY models the barbed ovipositor destroyed during the current attack (Parasitic Infection)
@@ -351,6 +353,8 @@ export interface ObjectiveState {
 }
 
 export interface PlayerState {
+  /** one faction's own bookkeeping, keyed by the rule that owns it: read and write it with `ext` (state.ts), not new fields here */
+  ext?: Record<string, unknown>;
   risenRubricae?: string[]; // unit IDs selected for Infiltrators via Risen Rubricae
   favoured?: string; // Slaanesh's Chosen: the unit that is the army's Favoured Champions
   favouredTurn?: number; // … last changed in this turn (only the first kill in each turn passes it on)
@@ -686,6 +690,8 @@ export type Window =
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
   | { kind: 'pledge'; player: PlayerId; max: number }
+  /** a stratagem the game would use at this moment: a person says yes (and pays) or no (factions/cult.ts) */
+  | { kind: 'cpAsk'; player: PlayerId; label: string; stratId: string; name: string; cp: number; act: 'cultSave' | 'lyingInWait' | 'downtrodden'; unitId?: string; at?: Pt; marker?: Pt }
   /** a one-roll test that came out badly: the player may Command Re-roll a die before it counts (factions/crTests.ts) */
   | { kind: 'crTest'; player: PlayerId; test: 'pact' | 'surge' | 'vectors' | 'hazard'; unitId: string; label: string; dice: number[]; bad: { op: 'lt' | 'gt'; n: number; adj: number }; rerolled?: boolean; pick?: string; below?: boolean; queue?: string[]; hz?: { worse: number; source: string } }
   /** Blessings of Khorne: the dice rolled and the ways to use them; the player picks one (or none) */
@@ -740,6 +746,8 @@ export interface BattleStats {
 }
 
 export interface GameState {
+  /** one faction's own bookkeeping, keyed by the rule that owns it: read and write it with `ext` (state.ts), not new fields here */
+  ext?: Record<string, unknown>;
   phaseTargets?: { key: string; list: [string, string][] }; // [attacker or charger, target] this phase (Thrill Seekers)
   version: 3;
   rng: number;
