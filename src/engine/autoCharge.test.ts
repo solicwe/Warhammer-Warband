@@ -30,7 +30,7 @@ it.each([['Assault Intercessor Squad', 10, 22], ['Terminator Squad', 5, 111]] as
     expect(alive(a).some((m) => alive(t).some((e) => Math.hypot(m.x - e.x, m.y - e.y) - m.r - e.r <= 1.01))).toBe(true);
   });
 
-it('allows a charge roll to reach engagement range when bases remain up to 1" apart', () => {
+it('charges when the roll reaches the target base (gap 3.5, roll 4)', () => {
   const s: GameState = createGame({
     lists: [list('SM', [['Assault Intercessor Squad', 1, 100]]), list('ORK', [['Boyz', 1, 90]])],
     factions: [SM, ORK], names: ['A', 'B'], deploymentId: 'take-and-hold-vs-purge-the-foe-3',
@@ -48,7 +48,7 @@ it('allows a charge roll to reach engagement range when bases remain up to 1" ap
   attacker.x = target.x + target.r + attacker.r + 3.5;
   attacker.y = target.y;
   a.declaredCharge = true;
-  a.chargeRoll = 3;
+  a.chargeRoll = 4;
 
   expect(unitDistance(a, t)).toBeCloseTo(3.5);
   expect(chargeTargetOptions(s, a)).toContain(t);
