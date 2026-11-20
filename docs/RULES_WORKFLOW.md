@@ -16,6 +16,11 @@ The rules come from Games Workshop's downloads: <https://www.warhammer-community
 
 When the download page adds or changes a document, add its address to `scripts/official-sources.json`.
 
+`pdftotext` drops some pages (Core Rules 24.09 Deep Strike came out as a title only). When a page looks empty or
+garbled, read it with PyMuPDF (`python -c "import pymupdf; print(pymupdf.open('data/official/core-rules.pdf')[79].get_text())"`,
+page numbers count from 0) or render it to an image (`pymupdf` page `get_pixmap(dpi=110).save('data/official/pages/x.png')`)
+and look at the picture.
+
 A number or a wording is never written from memory: it is checked against these documents. Where the code and the
 text differ on purpose, the owner decided it: see "Owner decisions" in `.claude/skills/start-here/SKILL.md` and
 `docs/05-tech-debt.md`.
