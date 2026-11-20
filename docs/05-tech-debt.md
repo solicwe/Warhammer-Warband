@@ -136,6 +136,10 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S17 | No change needed until it breaks again |
 | S18 | Done: react 19.3.1, vite 8.3.8, vitest 5.1.1 (npm update) |
 
+### Open data gap
+
+- **Parasitic Woe-Reaper** (Death Guard, Contagion Engines) is for "CONTAGION ENGINE" units, but no datasheet in the data carries that keyword, so no unit can take it. Needs the list of Contagion Engines from the faction pack (the owner's call, not guessed).
+
 ### Waiting for the owner
 
 - **S3, deploy after CI (optional).** Needs a push with the `workflow` scope. In `.github/workflows/deploy.yml` replace the

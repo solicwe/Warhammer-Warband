@@ -1259,6 +1259,13 @@ export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
   return { ...list, units };
 }
 
+/** What an enhancement's "X model only" line is checked against: keywords, faction keywords, the name, the mark, and
+ *  the unit's abilities ("model with the Deep Strike ability only"). */
+export function fitKeywords(sheet: DatasheetData, list: ArmyList, faction: FactionData, mark?: string, gainsCharacter = false): string[] {
+  return [...effectiveKeywords(sheet, list, faction), ...(gainsCharacter ? ['CHARACTER'] : []), ...sheet.factionKeywords, sheet.name, ...(mark ? [mark] : []),
+    ...sheet.abilities.map((a) => `ABILITY:${a.name.toUpperCase()}`), ...(sheet.keywords.includes('DEEP STRIKE') ? ['ABILITY:DEEP STRIKE'] : [])];
+}
+
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
@@ -1279,18 +1286,15 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
     .filter((d) => list.detachments.includes(d.name))
     .flatMap((d) => d.enhancements.map((e) => ({ ...e, detachment: d.name })));
 
-  // If this unit is an EPIC HERO, it can only take an enhancement if:
-  // - It's Officio Assassinorum in Veiled Blade Elimination Force, OR
-  // - The active detachment explicitly permits EPIC HERO enhancements
-  if (sheet.keywords.includes('EPIC HERO') && !isOfficioVeiled) {
-    return [];
-  }
-
+  // An EPIC HERO takes no enhancement, except Officio Assassinorum in Veiled Blade Elimination Force and an enhancement
+  // whose own line names that datasheet (Pantheon of Woe: "C’tan Shard of the Deceiver model only", Prince Yriel).
+  const epic = sheet.keywords.includes('EPIC HERO') && !isOfficioVeiled;
+  const fitWords = fitKeywords(sheet, list, faction, entry.mark, isChar && !sheet.keywords.includes('CHARACTER'));
   return allDetEnhancements.filter((e) => {
+    const fit = enhancementFits(e.text, fitWords);
+    if (epic && !(fit?.ok && fit.names.includes(sheet.name.toUpperCase()))) return false;
     if (!isChar && !e.upgrade) return false;
     // Check if the enhancement specifically fits this datasheet/unit (e.g. ADEPTUS ASTARTES, PSYKER, CAPTAIN, DEATHWING only)
-    const effectiveKws = effectiveKeywords(sheet, list, faction);
-    const fit = enhancementFits(e.text, [...effectiveKws, ...sheet.factionKeywords, sheet.name, ...(entry.mark ? [entry.mark] : [])]);
     if (fit && !fit.ok) return false;
     return true;
   });
@@ -1300,11 +1304,21 @@ export function enhancementOptions(list: ArmyList, faction: FactionData, entry: 
  * Whether an enhancement's "X model only" / "X or Y model only" line lets this datasheet take it.
  * Null when the text names no such restriction (or one this check can't read).
  */
-export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string } | null {
+export function enhancementFits(text: string, keywords: string[]): { ok: boolean; need: string; names: string[] } | null {
   // "(One per army) ADEPTUS CUSTODES INFANTRY/MOUNTED unit only (excluding TERMINATOR units)."
   const t = text.replace(/^[–—]\s*/, '').replace(/^\([^)]+\)\s*/, '').replace(/\s+/g, ' ').trim();
   // keywords in capitals, or a datasheet's name ("Big Mek with Shokk Attack Gun model only", "Great Unclean One only")
   // Supports accents e.g. Kâhl, and (excluding ...) before or after "only"
+  // "LEAGUES OF VOTANN model equipped with an Autoch-pattern combi-bolter only": a weapon, not a keyword: no restriction here
+  if (/\bequipped with\b/i.test(t.split(/\bonly\b/i)[0]) && /\bonly\b/i.test(t)) return null;
+  // "Tyranids model with the Deep Strike ability only"
+  const ab = /^([\p{L}][\p{L}’'\- /]*?)(?:\s+(?:model|unit)s?)?\s+with the ([\p{L}’'\- ]+?) ability only/iu.exec(t);
+  if (ab) {
+    const up = keywords.map((k) => safeUpper(k));
+    const w = new Set(up.flatMap((k) => k.split(/\s+/)));
+    const base = ab[1].toUpperCase().trim().split(/\s+/).every((x) => w.has(x));
+    return { ok: base && up.includes(`ABILITY:${ab[2].toUpperCase().trim()}`), need: `${ab[1].toUpperCase()} with ${ab[2].toUpperCase()}`, names: [] };
+  }
   const m = /^([\p{L}][\p{L}’'\- /]+?(?:(?:,| or| OR) [\p{L}][\p{L}’'\- /]+?)*)(?:\s+(?:model|unit)s?)?(?:\s+\(excluding\s+([\p{L}][\p{L}’'\-/ ]+?)(?:\s+(?:model|unit)s?)?\))?\s+only(?:[ ,]\s*\(excluding\s+([\p{L}][\p{L}’'\-/ ]+?)(?:\s+(?:model|unit)s?)?\))?/iu.exec(t);
   if (!m) return null;
   const target = m[1].toUpperCase();
@@ -1320,9 +1334,11 @@ export function enhancementFits(text: string, keywords: string[]): { ok: boolean
   });
   // "ADEPTUS ASTARTES INFANTRY" is two keywords together: every word has to be among the unit's keyword words
   const words = new Set(keywords.flatMap((k) => safeUpper(k).split(/\s+/)));
-  const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w));
-  if (excludedStr && excludedStr.split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${excludedStr})` };
-  return { ok: alts.some(has), need: alts.join(' / ') };
+  // "SCOUT SENTINEL unit only" fits a datasheet keyworded SCOUT SENTINELS: a plural matches its singular
+  const has = (n: string) => n.trim().split(/\s+/).every((w) => words.has(w) || words.has(`${w}S`));
+  const names = alts.map((a) => a.trim());
+  if (excludedStr && excludedStr.split('/').some(has)) return { ok: false, need: `${alts.join(' / ')} (excluding ${excludedStr})`, names };
+  return { ok: alts.some(has), need: alts.join(' / '), names };
 }
 
 /**
@@ -1728,7 +1744,9 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     const enhObj = allEnh.find((e) => e.name === n);
     const isAllowedEpic = list.detachments.includes('Veiled Blade Elimination Force') && sheet?.keywords.includes('OFFICIO ASSASSINORUM');
-    if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic) {
+    // an enhancement whose own line names the datasheet ("C’tan Shard of the Deceiver model only") is for that EPIC HERO
+    const namesIt = !!(sheet && enhObj?.text && enhancementFits(enhObj.text, fitKeywords(sheet, list, faction, u.mark))?.names.includes(sheet.name.toUpperCase()));
+    if (sheet?.keywords.includes('EPIC HERO') && !isAllowedEpic && !namesIt) {
       errs.push(`${u.datasheet} is an EPIC HERO and cannot take Enhancements`);
     }
     const isAlliedDaemon = !!sheet && sheet.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD' && !list.detachments.includes('Tallyband Summoners');
@@ -1745,7 +1763,7 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     }
     if (!faction.detachments.some((d) => list.detachments.includes(d.name) && d.enhancements.some((e) => e.name === n))) errs.push(`Enhancement "${n}" is not in the selected Detachments`);
     if (sheet && enhObj?.text) {
-      const fit = enhancementFits(enhObj.text, [...effectiveKeywords(sheet, list, faction), ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]);
+      const fit = enhancementFits(enhObj.text, fitKeywords(sheet, list, faction, u.mark, !!isChar && !sheet.keywords.includes('CHARACTER')));
       if (fit && !fit.ok) {
         errs.push(`${u.datasheet} cannot take Enhancement "${n}" (${fit.need} only)`);
       }

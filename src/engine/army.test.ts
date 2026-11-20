@@ -1,7 +1,7 @@
 // Army builder rules: which enhancements a datasheet can take.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import { attachOptions, buildUnits, defaultWargear, enhancementFits, syncWargear, validateList, wargearProblems, wargearSummary } from './army';
+import { attachOptions, buildUnits, defaultWargear, enhancementFits, enhancementOptions, syncWargear, validateList, wargearProblems, wargearSummary } from './army';
 import type { ArmyList, FactionData } from './types';
 
 describe('enhancement restrictions ("X model only")', () => {
@@ -9,7 +9,7 @@ describe('enhancement restrictions ("X model only")', () => {
   const gravisCaptain = ['INFANTRY', 'CHARACTER', 'IMPERIUM', 'GRAVIS', 'CAPTAIN', 'ADEPTUS ASTARTES'];
 
   it('reads the keyword the text asks for and checks it against the unit', () => {
-    expect(enhancementFits('GRAVIS model only. The first time …', captain)).toEqual({ ok: false, need: 'GRAVIS' });
+    expect(enhancementFits('GRAVIS model only. The first time …', captain)).toMatchObject({ ok: false, need: 'GRAVIS' });
     expect(enhancementFits('GRAVIS model only. The first time …', gravisCaptain)?.ok).toBe(true);
     expect(enhancementFits('CAPTAIN model only. Once per battle …', captain)?.ok).toBe(true);
   });
@@ -392,3 +392,51 @@ describe('Red Corsairs Raiders wargear options', () => {
   });
 });
 
+
+describe('enhancements that name an EPIC HERO or an ability', () => {
+  const load = (id: string) => JSON.parse(fs.readFileSync(`public/data/factions/${id}.json`, 'utf8')) as FactionData;
+  const SIZE = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+  const listOf = (f: FactionData, det: string, datasheet: string, extra: object = {}) =>
+    ({ name: 't', factionId: f.id, battleSize: 'strikeForce', detachments: [det], units: [{ uid: 'x', datasheet, models: 1, pts: 0, ...extra }] }) as ArmyList;
+
+  it('Pantheon of Woe: each C’tan Shard can take its own enhancement, and no other shard’s', () => {
+    const NEC = load('NEC');
+    const names = (sheet: string) => enhancementOptions(listOf(NEC, 'Pantheon of Woe', sheet), NEC, listOf(NEC, 'Pantheon of Woe', sheet).units[0]).map((e) => e.name);
+    expect(names('C’tan Shard of the Deceiver')).toEqual(['Singularity Matrix']);
+    expect(names('C’tan Shard of the Nightbringer')).toEqual(['Quantum Goad']);
+    expect(names('C’tan Shard of the Void Dragon')).toEqual(['Animus Damper']);
+    const l = listOf(NEC, 'Pantheon of Woe', 'C’tan Shard of the Deceiver', { enhancement: 'Singularity Matrix', enhancementPts: 45 });
+    expect(validateList(l, NEC, SIZE).join()).not.toMatch(/EPIC HERO|cannot take/);
+  });
+
+  it('a "model with the Deep Strike ability" enhancement is offered to such models only; a plural keyword fits its singular', () => {
+    const TYR = load('TYR');
+    const offered = (sheet: string) => enhancementOptions(listOf(TYR, 'Subterranean Assault', sheet), TYR, listOf(TYR, 'Subterranean Assault', sheet).units[0]).map((e) => e.name);
+    const withDs = TYR.datasheets.filter((d) => d.abilities.some((a) => a.name === 'Deep Strike') && d.keywords.includes('CHARACTER'));
+    const without = TYR.datasheets.filter((d) => !d.abilities.some((a) => a.name === 'Deep Strike') && d.keywords.includes('CHARACTER') && !d.keywords.includes('EPIC HERO'));
+    if (withDs[0]) expect(offered(withDs[0].name)).toContain('Vanguard Intellect');
+    if (without[0]) expect(offered(without[0].name)).not.toContain('Vanguard Intellect');
+    const AM = load('AM');
+    const scout = listOf(AM, 'Designation Force', 'Scout Sentinels');
+    expect(enhancementOptions(scout, AM, scout.units[0]).map((e) => e.name)).toContain('Long-Range Scout');
+  });
+
+  it('every enhancement of every detachment can be taken by some datasheet (the Pactbound marks aside)', () => {
+    const idx = JSON.parse(fs.readFileSync('public/data/index.json', 'utf8')) as { factions: { id: string }[] };
+    const never: string[] = [];
+    for (const { id } of idx.factions) {
+      const f = load(id);
+      for (const det of f.detachments) {
+        const seen = new Set<string>();
+        for (const sh of f.datasheets) {
+          const l = listOf(f, det.name, sh.name);
+          for (const e of enhancementOptions(l, f, l.units[0])) seen.add(e.name);
+          for (const mark of ['KHORNE', 'TZEENTCH', 'NURGLE', 'SLAANESH']) for (const e of enhancementOptions(l, f, { ...l.units[0], mark })) seen.add(e.name);
+        }
+        for (const e of det.enhancements) if (!seen.has(e.name)) never.push(`${id} ${det.name}: ${e.name}`);
+      }
+    }
+    // Parasitic Woe-Reaper names CONTAGION ENGINE units; the data has no such keyword on any datasheet (open: docs/05-tech-debt.md)
+    expect(never).toEqual(['DG Contagion Engines: Parasitic Woe‑Reaper']);
+  });
+});

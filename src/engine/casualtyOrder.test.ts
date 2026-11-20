@@ -70,3 +70,17 @@ describe('bestMark', () => {
     expect(bestMark(sheet([], 1, 2))).toBe('SLAANESH');
   });
 });
+
+describe('casualties keep the models holding an objective', () => {
+  it('the models furthest from the objective are removed first', () => {
+    const at = (id: string, x: number) => ({ ...model(id, x, []), y: 0, r: 0.5 });
+    const near = at('near', 1), mid = at('mid', 5), far = at('far', 9);
+    const u = { models: [near, mid, far] } as unknown as UnitState;
+    const objective = [{ x: 0, y: 0 }];
+    expect(pickCasualty(u, u.models, objective)?.id).toBe('far');
+    far.dead = true;
+    expect(pickCasualty(u, u.models, objective)?.id).toBe('mid');
+    mid.dead = true;
+    expect(pickCasualty(u, u.models, objective)?.id).toBe('near');
+  });
+});

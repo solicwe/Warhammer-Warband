@@ -3143,6 +3143,11 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                     {p.skillNote?.includes('For the Greater Good (non-spotted)') && <span className="oath-tag" style={{ background: '#c62828' }}><Icon name="shock" size={12} /> Non-spotted −1 BS</span>}
                     {p.rerollHits1 && p.rerollWounds1 && <span className="oath-tag observer-tag"><Icon name="radar" size={12} /> Spotter 1s</span>}
                   </div>
+                  {(() => {
+                    // what changes this weapon's rolls: the army's rules, stratagems, abilities and the target's cover
+                    const lines = [...new Set(ps.flatMap((x) => [x.attackNote, x.skillNote, x.hitNote, x.woundNote]).flatMap((n) => (n ?? '').split(' · ')).map((n) => n.trim()).filter((n) => n && !/^\d+ models? × A/.test(n) && !/^S\d+ vs T\d+/.test(n)))];
+                    return lines.length ? <ul className="roll-notes">{lines.map((n) => <li key={n}>{n}</li>)}</ul> : null;
+                  })()}
                 </div>
               );
             });

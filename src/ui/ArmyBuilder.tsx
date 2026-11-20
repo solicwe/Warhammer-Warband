@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { hasFactionRules } from '../rules-engine/effects';
 import {
-  addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, bestMark, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords,
+  addonLines, distributeModels, loadoutLines, supportIn, attachOptions, buildUnits, canLeaderAttach, CHAOS_MARKS, bestMark, markable, chapterRules, defaultWargear, dupTaxes, embarkCheck, extremisPoints, forChapter, enhancementFits, enhancementOptions, fitKeywords, listPoints, newUid, optPerItem, optRequires, optRequiresNot, parseTransport, pointsOptions, splitRuleOf, syncList, syncWargear, transportFit, transportLoads, unitPoints, validateList, wargearMax, wargearSummary, wkey, isBattlelineUnit, effectiveKeywords,
 } from '../engine/army';
 import { RuleText } from './RuleText';
 import { ALLIES, detachmentAllyOf, subPointsList } from '../engine/allies';
@@ -1146,7 +1146,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                   {enh.map((o) => {
                     const on = u.enhancement === o.name;
                     const taken = list.units.find((x) => x.uid !== u.uid && x.enhancement === o.name);
-                    const fit = sheet ? enhancementFits(o.text, [...effectiveKeywords(sheet, list, faction), ...sheet.factionKeywords, sheet.name, ...(u.mark ? [u.mark] : [])]) : null;
+                    const fit = sheet ? enhancementFits(o.text, fitKeywords(sheet, list, faction, u.mark)) : null;
                     if (fit && !fit.ok && !on) return <div key={o.detachment + o.name} className="enh-card off"><span className="enh-head"><b>{o.name}</b><span>+{o.pts} pts</span></span><span className="enh-foot">Not allowed: {fit.need} only</span></div>;
                     return (
                       <button key={o.detachment + o.name} type="button" className={`enh-card ${on ? 'on' : ''} ${taken ? 'taken' : ''}`}

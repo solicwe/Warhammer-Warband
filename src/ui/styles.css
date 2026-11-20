@@ -2677,3 +2677,5 @@ select option {
 .layout-card-foot { text-align: center; font-size: 10px; letter-spacing: 0.06em; opacity: 0.65; padding: 2px 14px 8px; }
 .layout-card-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; padding: 8px 12px 10px; border-top: 1px solid rgba(0, 0, 0, 0.15); font-size: 11px; }
 .layout-card-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+.roll-notes { margin: 4px 0 0; padding: 0 0 0 16px; color: var(--text-2); font: 500 12px/1.4 var(--font-ui); }
+.roll-notes li { margin: 0; }

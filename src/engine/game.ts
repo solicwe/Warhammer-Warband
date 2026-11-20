@@ -313,7 +313,44 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
     for (const t of plates) t.objectiveId = id;
     return { id, type: o.type, owner: undefined, x: ox, y: oy, terrainId: tp.id, terrainIds: plates.map((t) => t.id), controller: null, ownerRole: o.owner ?? undefined } as ObjectiveState & { ownerRole?: string };
   });
+  symmetrizeWalls(terrain, targetW, targetH);
   return { terrain, objectives };
+}
+
+/**
+ * The official layouts are point-symmetric about the centre, but they are traced from pictures, so a wall can come out a
+ * little longer or shorter than its mirror, or lack one. Every wall gets its mirror, the same length as the longer of
+ * the two (docs/05-tech-debt.md: the owner saw crooked, unequal walls).
+ */
+export function symmetrizeWalls(terrain: TerrainPiece[], W: number, H: number) {
+  const mirror = (s: Seg): Seg => ({ a: { x: W - s.a.x, y: H - s.a.y }, b: { x: W - s.b.x, y: H - s.b.y } });
+  const len = (s: Seg) => Math.hypot(s.a.x - s.b.x, s.a.y - s.b.y);
+  const tol = 0.8 * (W / 44);
+  const same = (s: Seg, m: Seg) => (dist(s.a, m.a) < tol && dist(s.b, m.b) < tol) || (dist(s.a, m.b) < tol && dist(s.b, m.a) < tol);
+  const all = () => terrain.flatMap((t) => t.walls.map((w) => ({ t, w })));
+  const done = new Set<Seg>();
+  for (const { w } of all()) {
+    if (done.has(w)) continue;
+    done.add(w);
+    const m = mirror(w);
+    const partner = all().find((x) => x.w !== w && !done.has(x.w) && same(x.w, m));
+    if (!partner) {
+      // no mirror: the piece the mirrored wall would stand in gets it (the one whose outline is nearest)
+      const c = { x: (m.a.x + m.b.x) / 2, y: (m.a.y + m.b.y) / 2 };
+      const host = terrain.filter((x) => x.kind !== 'objective-area' && x.poly.length > 2).sort((p, q) => dist(polyCentroid(p.poly), c) - dist(polyCentroid(q.poly), c))[0];
+      if (host) { host.walls.push(m); done.add(m); }
+      continue;
+    }
+    done.add(partner.w);
+    if (Math.abs(len(w) - len(partner.w)) > 0.3 * (W / 44)) {
+      // keep the longer one and make its mirror exactly its opposite
+      const keep = len(w) >= len(partner.w) ? w : partner.w, other = keep === w ? partner.w : w;
+      const m2 = mirror(keep);
+      const flip = dist(other.a, m2.a) <= dist(other.a, m2.b);
+      other.a = flip ? m2.a : m2.b;
+      other.b = flip ? m2.b : m2.a;
+    }
+  }
 }
 
 export interface NewGameOptions {

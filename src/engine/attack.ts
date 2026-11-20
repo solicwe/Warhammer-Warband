@@ -836,7 +836,7 @@ export function weaponValue(m: ModelState): number {
 }
 
 /** Choose which model takes the next attack: a wounded one if any (05.04), otherwise one whose removal keeps the unit coherent, then the one with the weakest weapons. */
-export function pickCasualty(u: UnitState, candidates: ModelState[]): ModelState | undefined {
+export function pickCasualty(u: UnitState, candidates: ModelState[], objectives: Pt[] = []): ModelState | undefined {
   const a = candidates.filter((m) => !m.dead);
   const wounded = a.find((m) => m.wounds < m.profile.W);
   if (wounded || a.length <= 1) return wounded ?? a[0];
@@ -847,14 +847,18 @@ export function pickCasualty(u: UnitState, candidates: ModelState[]): ModelState
   for (const m of a) {
     const rest = all.filter((x) => x !== m);
     const broken = coherencyProblems(rest, RULES.coherency.near, RULES.coherency.max, rest.map((x) => x.r)).length;
-    const score = -broken * 100000 - weaponValue(m) * 10 + Math.hypot(m.x - c.x, m.y - c.y);
+    // a model standing on an objective stays as long as another one can go (the unit keeps holding it); the ones
+    // furthest from any objective go first
+    const dObj = objectives.length ? Math.min(...objectives.map((o) => Math.hypot(m.x - o.x, m.y - o.y) - m.r)) : 99;
+    const holds = dObj <= RULES.objectiveMarkerRange ? 1 : 0;
+    const score = -broken * 100000 - holds * 20000 + Math.min(dObj, 40) * 50 - weaponValue(m) * 10 + Math.hypot(m.x - c.x, m.y - c.y);
     if (score > bestScore) { bestScore = score; best = m; }
   }
   return best;
 }
 
-function pickModel(g: Group, u: UnitState): ModelState | undefined {
-  return pickCasualty(u, g.models);
+function pickModel(g: Group, u: UnitState, objectives: Pt[] = []): ModelState | undefined {
+  return pickCasualty(u, g.models, objectives);
 }
 
 type TransportHook = (s: GameState, u: UnitState, m: ModelState) => void;
@@ -966,7 +970,7 @@ export function applyMortalWounds(s: GameState, u: UnitState, n: number, source:
       if (maxModels !== undefined && modelsHit >= maxModels) break;
       const nonChar = a.filter((m) => !m.isCharacter);
       const pool = preferChar && a.some((m) => m.isCharacter) ? a.filter((m) => m.isCharacter) : nonChar.length ? nonChar : a;
-      current = pickCasualty(u, pool);
+      current = pickCasualty(u, pool, s.objectives);
       if (!current) break;
       modelsHit += 1;
     }
@@ -1035,7 +1039,7 @@ export function applyDamage(s: GameState) {
     if (usePrecise) precise -= 1;
     const g = usePrecise ? precisionGroup : groups.find((x) => x.models.some((m) => !m.dead));
     if (!g) { d.o = 'saved'; p.saveTargets[i] = '—'; continue; }
-    const m = pickModel(g, T)!;
+    const m = pickModel(g, T, s.objectives)!;
     const kind = at.kind === 'fight' ? 'melee' : 'ranged';
     const psychic = !!p.psychic || hasAbility(p.profile, 'psychic');
     const md = modelDefence(s, T, m, kind, psychic, A);
