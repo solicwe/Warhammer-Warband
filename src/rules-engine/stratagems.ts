@@ -395,10 +395,36 @@ export function planStratagem(st: StratagemData): StratagemPlan {
  *  Keywords are written in capitals on the card; a target without them fits any of your units. */
 export function stratTargetOk(st: StratagemData, u: UnitState): boolean {
   const tgt = section(st.text, 'TARGET').replace(/[’]/g, "'");
-  const m = /\b([A-Z][A-Z'-]+(?:[ /][A-Z][A-Z'-]+)*)\b/.exec(tgt.replace(/^(?:One|That|Up to \w+)\s+/, ''));
-  if (!m || m[1].length < 3) return true;
   const kws = [...u.keywords, ...u.factionKeywords, ...(u.sources ?? [u.name])];
-  return m[1].split('/').some((alt) => kwPhrase(alt.trim(), kws));
+  const m = /\b([A-Z][A-Z'-]+(?:[ /][A-Z][A-Z'-]+)*)\b/.exec(tgt.replace(/^(?:One|That|Up to \w+)\s+/, ''));
+  if (m && m[1].length >= 3) return m[1].split('/').some((alt) => kwPhrase(alt.trim(), kws));
+  // keywords written in ordinary capitals: "One Thousand Sons Psyker unit from your army" (Infernal Fusillade offered a
+  // Defiler and a Rhino because only ALL-CAPS keywords were read)
+  const phrase = targetPhrase(tgt);
+  if (!phrase || UNREADABLE_TARGET.test(phrase)) return true;
+  return kwPhrase(phrase, kws) || phraseCovered(phrase, kws);
+}
+
+/** Target words that are no keyword of the datasheet (a detachment gives the status, or it is a state): such a line is not filtered. */
+const UNREADABLE_TARGET = /\b(?:Attached|Soul Forge|Armoured Skirmisher|War Dog Character)\b/i;
+
+const wordsOf = (x: string) => x.toUpperCase().replace(/[’`]/g, "'").replace(/[^A-Z0-9' ]+/g, ' ').replace(/S\b/g, '').split(/\s+/).filter(Boolean);
+
+/** "Thousand Sons Psyker": every word belongs to one of the unit's keywords ("THOUSAND SONS", "PSYKER"), together covering the phrase. */
+function phraseCovered(phrase: string, kws: string[]): boolean {
+  const words = wordsOf(phrase);
+  const keys = kws.map(wordsOf).filter((k) => k.length);
+  const covers = (i: number): boolean => i >= words.length || keys.some((k) => k.length <= words.length - i && k.every((w, j) => words[i + j] === w) && covers(i + k.length));
+  return words.length > 0 && covers(0);
+}
+
+/** The keywords of a simple "One X Y unit ..." TARGET line, or null when the line is not that simple (a choice, several units). */
+export function targetPhrase(target: string): string | null {
+  const t = target.replace(/[’]/g, "'").trim();
+  const m = /^(?:One|That)\s+((?:[A-Z][\w'-]*\s+)+?)(?:unit|model)s?\b/.exec(t);
+  if (!m) return null;
+  if (/\b(?:or|and|up to)\b/i.test(t.slice(0, m[0].length))) return null;
+  return m[1].trim();
 }
 
 /** Units a stratagem can be used on: on the battlefield, or (for some) in Reserves / just destroyed. */

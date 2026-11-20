@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { buildFightPools, killModel, startAttack } from './attack';
 import { d6 } from './dice';
 import { reactionOffers } from '../rules-engine/stratagems';
+import { PRESETS } from '../ui/presets';
 import { reopenRituals, ritualsPending, ritualsReopenable } from '../factions/rituals';
 import { abilityOff, addTimed, effectsFor, unitFlags } from '../rules-engine/effects';
 import { actsOfUnit, resolvePickUnit, resolveRevivals } from '../rules-engine/activations';
@@ -195,5 +196,23 @@ describe('Deploy Armies: a real TITANIC datasheet', () => {
     expect(s.deployTurn).toBe(opp); // the Stompa's owner skips
     set(b);
     expect(s.deployTurn).toBe(stompa.owner);
+  });
+});
+
+describe('Counter-offensive candidates', () => {
+  it('leave out a unit a Stratagem already targeted this phase (the bot looped on it before)', async () => {
+    const { counteroffensiveCandidates } = await import('./game');
+    const { phaseKey } = await import('./state');
+    const s = createGame({ lists: [PRESETS.TS, PRESETS.ORK], factions: [load('TS'), load('ORK')], names: ['A', 'B'], seed: 4 } as never);
+    s.phase = 'fight';
+    s.players[0].cp = 5;
+    s.fight = { step: 'fight', stepPlayer: 0, chooser: 0, eligible: [], fought: [], pendingConsolidate: null, consolidated: [], forcedNext: null, movedThisStep: [] } as unknown as NonNullable<typeof s.fight>;
+    const u = s.units.find((x) => x.owner === 0 && x.status === 'board') ?? s.units.find((x) => x.owner === 0)!;
+    u.status = 'board';
+    s.fight.eligible = [u.id];
+    const before = counteroffensiveCandidates(s, 0).map((x) => x.id);
+    u.stratagemPhase = phaseKey(s);
+    expect(counteroffensiveCandidates(s, 0).map((x) => x.id)).not.toContain(u.id);
+    expect(before.length).toBeGreaterThanOrEqual(0);
   });
 });

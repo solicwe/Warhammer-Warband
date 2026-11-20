@@ -138,6 +138,7 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 
 ### Open data gap
 
+- **Five layouts still have a wall without an equal mirror** (`layoutSymmetry.test.ts` lists them: disruption-mirror-1, reconnaissance-mirror-2, take-and-hold-mirror-3, take-and-hold-vs-disruption-2, take-and-hold-vs-priority-assets-1). The other 40 are exact mirror images. The rest needs the traced outline redrawn by hand.
 - **Parasitic Woe-Reaper** (Death Guard, Contagion Engines) is for "CONTAGION ENGINE" units, but no datasheet in the data carries that keyword, so no unit can take it. Needs the list of Contagion Engines from the faction pack (the owner's call, not guessed).
 
 ### Waiting for the owner

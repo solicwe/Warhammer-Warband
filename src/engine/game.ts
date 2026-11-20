@@ -325,9 +325,23 @@ export function buildTerrain(layoutId: string, tableSize?: { width: number; heig
 export function symmetrizeWalls(terrain: TerrainPiece[], W: number, H: number) {
   const mirror = (s: Seg): Seg => ({ a: { x: W - s.a.x, y: H - s.a.y }, b: { x: W - s.b.x, y: H - s.b.y } });
   const len = (s: Seg) => Math.hypot(s.a.x - s.b.x, s.a.y - s.b.y);
-  const tol = 0.8 * (W / 44);
+  const k = W / 44;
+  const tol = 0.8 * k;
   const same = (s: Seg, m: Seg) => (dist(s.a, m.a) < tol && dist(s.b, m.b) < tol) || (dist(s.a, m.b) < tol && dist(s.b, m.a) < tol);
   const all = () => terrain.flatMap((t) => t.walls.map((w) => ({ t, w })));
+  // a change must not put a wall alongside or across another one (the clean-up above removed those on purpose)
+  const cross = (o: Pt, a: Pt, b: Pt) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const crosses = (s: Seg, t: Seg) => cross(t.a, t.b, s.a) * cross(t.a, t.b, s.b) < -0.3 && cross(s.a, s.b, t.a) * cross(s.a, s.b, t.b) < -0.3;
+  const alongside = (s: Seg, t: Seg) => {
+    const L = len(s);
+    if (L < 1e-6) return false;
+    const ux = (s.b.x - s.a.x) / L, uy = (s.b.y - s.a.y) / L;
+    const side = (p: Pt) => (p.x - s.a.x) * uy - (p.y - s.a.y) * ux;
+    if (Math.abs(side(t.a)) > 1.35 * k || Math.abs(side(t.b)) > 1.35 * k || Math.abs(side(t.a) - side(t.b)) > 0.45 * k) return false;
+    const along = (p: Pt) => (p.x - s.a.x) * ux + (p.y - s.a.y) * uy;
+    return Math.min(L, Math.max(along(t.a), along(t.b))) - Math.max(0, Math.min(along(t.a), along(t.b))) > 0.6 * k;
+  };
+  const clear = (c: Seg, except: Seg[]) => all().every(({ w }) => except.includes(w) || (!crosses(c, w) && !alongside(c, w) && !alongside(w, c)));
   const done = new Set<Seg>();
   for (const { w } of all()) {
     if (done.has(w)) continue;
@@ -335,20 +349,20 @@ export function symmetrizeWalls(terrain: TerrainPiece[], W: number, H: number) {
     const m = mirror(w);
     const partner = all().find((x) => x.w !== w && !done.has(x.w) && same(x.w, m));
     if (!partner) {
-      // no mirror: the piece the mirrored wall would stand in gets it (the one whose outline is nearest)
+      // no mirror: the piece the mirrored wall would stand in gets it, when it fits among the other walls
       const c = { x: (m.a.x + m.b.x) / 2, y: (m.a.y + m.b.y) / 2 };
       const host = terrain.filter((x) => x.kind !== 'objective-area' && x.poly.length > 2).sort((p, q) => dist(polyCentroid(p.poly), c) - dist(polyCentroid(q.poly), c))[0];
-      if (host) { host.walls.push(m); done.add(m); }
+      if (host && clear(m, [w])) { host.walls.push(m); done.add(m); }
       continue;
     }
     done.add(partner.w);
-    if (Math.abs(len(w) - len(partner.w)) > 0.3 * (W / 44)) {
-      // keep the longer one and make its mirror exactly its opposite
+    if (Math.abs(len(w) - len(partner.w)) > 0.3 * k) {
+      // keep the longer one and make its mirror exactly its opposite (when that fits)
       const keep = len(w) >= len(partner.w) ? w : partner.w, other = keep === w ? partner.w : w;
       const m2 = mirror(keep);
       const flip = dist(other.a, m2.a) <= dist(other.a, m2.b);
-      other.a = flip ? m2.a : m2.b;
-      other.b = flip ? m2.b : m2.a;
+      const next: Seg = flip ? { a: m2.a, b: m2.b } : { a: m2.b, b: m2.a };
+      if (clear(next, [other, keep])) { other.a = next.a; other.b = next.b; }
     }
   }
 }
@@ -2324,7 +2338,7 @@ export function heroicMode(s: GameState, p: PlayerId, u: UnitState): 'leap' | 'f
 
 export function counteroffensiveCandidates(s: GameState, p: PlayerId): UnitState[] {
   if (!s.fight || s.fight.step !== 'fight' || canUseStratagem(s, p, 'counteroffensive')) return [];
-  return boardUnits(s, p).filter((u) => !u.battleShocked && fightEligibleNow(s, u));
+  return boardUnits(s, p).filter((u) => !u.battleShocked && fightEligibleNow(s, u) && !canUseStratagem(s, p, 'counteroffensive', u));
 }
 
 export function smokescreenCandidates(s: GameState, p: PlayerId): UnitState[] {

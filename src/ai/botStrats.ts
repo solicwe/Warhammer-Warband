@@ -332,8 +332,7 @@ export function botCounteroffensive(s: GameState, p: PlayerId): boolean {
   const score = (u: UnitState) => Math.max(0, ...boardUnits(s, other(p)).filter((e) => unitDistance(u, e) <= RULES.engagementRange).map((e) => Math.min(alive(e).length, meleeKills(u, e)) * perModel(e)));
   const best = counteroffensiveCandidates(s, p).map((u) => ({ u, v: score(u) })).sort((a, b) => b.v - a.v)[0];
   if (!best || best.v < 2.8 * cpWorth(s, p)) return false;
-  useCounteroffensive(s, best.u);
-  return true;
+  return !useCounteroffensive(s, best.u); // refused (an error text): not used, so the window closes
 }
 
 // ---------- our own turn ----------
