@@ -328,8 +328,8 @@ describe('User Feedback Fixes Verification', () => {
       firstPlayer: 0,
       active: 0,
       players: [
-        { id: 0, name: 'Thousand Sons', vp: 21, secVp: 0, detachments: [] },
-        { id: 1, name: 'Chaos Knights', vp: 34, secVp: 0, detachments: [] },
+        { id: 0, name: 'Thousand Sons', vp: 21, secVp: 0, detachments: [], primaryId: 'meatgrinder' },
+        { id: 1, name: 'Chaos Knights', vp: 34, secVp: 0, detachments: [], primaryId: 'meatgrinder' },
       ],
       units: [
         // Player 0 has alive units

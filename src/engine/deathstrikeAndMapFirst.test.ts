@@ -59,8 +59,8 @@ function makeState(units: UnitState[]): GameState {
     bots: [],
     decides: [0, 1],
     players: [
-      { id: 0, name: 'P0', role: 'attacker', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
-      { id: 1, name: 'P1', role: 'defender', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
+      { id: 0, name: 'P0', role: 'attacker', primaryId: 'meatgrinder', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
+      { id: 1, name: 'P1', role: 'defender', primaryId: 'meatgrinder', detachments: [], armyRules: [], flags: [], secActive: [], cp: 2, stratagemsUsed: [], mission: { primary: '', trapped: [], done: [] } },
     ],
     log: [],
     fx: [],

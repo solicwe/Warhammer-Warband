@@ -126,7 +126,7 @@ core stratagems' costs and timings, Toughness of an attached unit, Incursion and
 | S7 | Not done (split a phase panel out when a change touches it) |
 | S8 | Done: unused imports and locals removed in code and tests; `noUnusedLocals` is on. ESLint not added |
 | S9 | Done for the actions named: `swapSecondary`, `discardSecondary`, `useCounteroffensive` return an error text, `crushingImpact` refuses without CP, `chooseFixedSecondaries` keeps only real cards |
-| S10 | Operation marker ids come from a counter in the state. The bot's look-ahead still stops on the clock |
+| S10 | Operation marker ids come from a counter in the state. The bot's look-ahead still stops on the clock, and so do the 15 ms guards of the move search (`botMove.ts`, `grandmasterPositioning.ts`): the Techmarine test in `bot.test.ts` can fail on a busy machine |
 | S11 | `primaryById` throws on an unknown id (the old roguelike id still maps to Meatgrinder); `createGame({ primaryId })` takes the primary's own disposition; the four faction tests no longer ask for `takeAndHold`. Test file names unchanged |
 | S12 | Done: README rewritten to what runs; `index.html` no longer names the 10th edition |
 | S13 | Done: `tournamentTrainer.ts` and its test deleted |

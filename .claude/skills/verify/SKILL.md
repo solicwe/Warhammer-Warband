@@ -14,7 +14,8 @@ description: How to prove a change to Warhammer Warband really works, per kind o
 | Types | `npx tsc --noEmit -p .` | seconds |
 | Build | `npx tsc -b && npx vite build` | must print `built in` |
 | Tests of what you touched | `npx vitest run <files>` | name the files and the count that passed |
-| Full suite before `main` | `npx vitest run` | about 20 minutes, 100+ files; run it in the background and wait for it; never fast-forward `main` on a red or unfinished run |
+| Full suite before `main` | `npx vitest run` | about 35 minutes on a 4-core cloud box, 114 files; run it in the background with no `timeout` shorter than 45 minutes and wait for it; never fast-forward `main` on a red or unfinished run |
+| A dependency change | `npm ci` | CI and deploy install with `npm ci`; it refuses a lockfile that does not match `package.json` |
 | The site after `main` moves | the "Deploy to GitHub Pages" run, then the live `index.html` names the new `assets/index-*.js` | the player sees nothing until this is green. `actions/deploy-pages@v4` defaults to a 10-minute timeout; this repo sets 30 minutes because Pages may queue deployments. If a deployment still times out, rerunning that commit can be cancelled; a new commit is needed to create a fresh deployment. |
 
 A test that passes without the change proves nothing. For a fix, make the new test fail first (comment the fix out
@@ -81,6 +82,17 @@ or run it on the old code), then pass.
   `npx vitest run --config vitest.slow.config.ts src/engine/arena.test.ts`; `scripts/elo.mjs` and `scripts/tune.mjs` use it.
 - Whole bot-vs-bot games take about 60 s alone; under four workers they ran past the old 60 s limit (the default is
   now 120 s in `vite.config.ts`). A timeout in the full run that passes alone is load, not a bug.
+- The full run looks hung at the end: one worker at 100% CPU for 25 minutes after every other file is done. It is
+  `src/rules-engine/detachments.test.ts` (35 SM-vs-Ork bot games, 25-60 s each, all in one worker), not a hang; two
+  runs killed by a 25- and a 30-minute `timeout` lost the result. `--reporter=verbose` shows which test is running.
+- `npm update` on the Windows checkout wrote a lockfile without the optional `@emnapi/core` and `@emnapi/runtime`
+  entries; `npm ci` (CI, deploy) refused it. After a dependency change run `npm ci`; fix with `npm install` on Linux.
+- Making an engine function strict (`primaryById` now throws on an unknown id) broke hand-made test states that had
+  no `primaryId` and leaned on the old fallback (`deathstrikeAndMapFirst`, `userFeedbackFixes`). Search the tests for
+  states built by hand without the field, and let the full suite finish before calling it done.
+- `bot.test.ts` "a Techmarine leaves the infantry..." failed once under four workers and passed alone: the move
+  search stops after 15 ms (`botMove.ts`, `grandmasterPositioning.ts`), so a busy machine checks fewer spots. Rerun it
+  alone before treating it as a bug (S10 in `docs/05-tech-debt.md`).
 - Editing a file with a bash `node -e "..."` that contains backticks runs the backticked words as shell commands
   (twice this session: a doc table lost its code names). Write such edits with the Edit tool.
 - On this Windows checkout, the default Vitest worker pool starved long bot-game tests and caused 300-second
