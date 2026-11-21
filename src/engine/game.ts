@@ -970,6 +970,32 @@ export function fitFormation(s: GameState, u: UnitState, tm: ModelState, angle: 
 
 /** Ways to set a unit up round a hull, the side facing `angle` first: the plain packings, then packings round
  *  whatever is in the way (each tried only when the earlier ones were turned down). */
+/** Every legal way to set `u` up round its transport, one per direction (16 directions, the side facing the closest enemy
+ *  first): the plain packing, then the packing round walls and models in the way. The Around buttons step through them. */
+export function disembarkSpots(s: GameState, u: UnitState, t: UnitState): Map<string, Pt>[] {
+  const tm = alive(t)[0];
+  if (!tm) return [];
+  const combat = disembarkMode(s, t, u) === 'combat';
+  const within = combat ? 6 : Math.max(3, unitFlags(s, t).disembarkRange);
+  const foes = boardUnits(s, other(u.owner)).flatMap(alive);
+  const near = foes.length ? foes.reduce((x, m) => (dist(m, tm) < dist(x, tm) ? m : x)) : null;
+  const a0 = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
+  const out: Map<string, Pt>[] = [];
+  const same = (a: Map<string, Pt>, b: Map<string, Pt>) => [...a].every(([id, p]) => { const q = b.get(id); return !!q && dist(p, q) < 0.5; });
+  const dirs = Array.from({ length: 16 }, (_, k) => a0 + k * (Math.PI / 8));
+  const add = (pos: Map<string, Pt> | null | undefined) => { if (pos && validateDisembark(s, u, t, pos).ok && !out.some((p) => same(p, pos))) { out.push(pos); return true; } return false; };
+  // the plain packings all round first (cheap); the packing round walls and models only where that found nothing,
+  // and only while there are few spots (a side blocked by the enemy is not worth a slow search)
+  const open = dirs.map((a) => add(ringFormation(u, tm, a, Math.PI * 0.8, within)) || add(ringFormation(u, tm, a, 2 * Math.PI, within)));
+  for (const [k, a] of dirs.entries()) {
+    if (open[k] || out.length >= 6) continue;
+    add(fitFormation(s, u, tm, a, within, combat));
+  }
+  // in order round the hull, so Around > turns one way and < Around the other
+  const turn = (pos: Map<string, Pt>) => { const c = polyCentroid([...pos.values()]); return (Math.atan2(c.y - tm.y, c.x - tm.x) - a0 + 4 * Math.PI) % (2 * Math.PI); };
+  return out.sort((x, y) => turn(x) - turn(y));
+}
+
 export function* hullSpots(s: GameState, u: UnitState, tm: ModelState, angle: number, within = 3, engage = false): Generator<Map<string, Pt>> {
   const turns = Array.from({ length: 16 }, (_, k) => angle + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8));
   for (const arc of [Math.PI * 0.8, 2 * Math.PI]) for (const a of turns) yield ringFormation(u, tm, a, arc, within);
@@ -2730,7 +2756,22 @@ setEmbarkNear((s, u, range, why) => {
 export const embarkedIn = (s: GameState, t: UnitState) => s.units.filter((u) => u.embarkedIn === t.id && u.status === 'embarked');
 
 /** Can `u` be set up wholly within 3" of its transport without being engaged? Then an engaged transport still allows a Tactical disembark (18.04). */
+const unengagedCache = new WeakMap<GameState, Map<string, boolean>>();
 export function canSetUpUnengaged(s: GameState, u: UnitState, t: UnitState): boolean {
+  // asked for every spot the player tries: worked out once while the transport and the enemy near it stay where they are
+  const tms = alive(t);
+  const foes = boardUnits(s, other(u.owner)).flatMap(alive).filter((m) => tms.some((x) => dist(x, m) <= 16));
+  const key = `${s.turn}|${s.phase}|${u.id}|${tms.map((m) => `${m.x.toFixed(2)},${m.y.toFixed(2)}`).join(';')}|${foes.map((m) => `${m.x.toFixed(1)},${m.y.toFixed(1)}`).join(';')}`;
+  let cache = unengagedCache.get(s);
+  if (!cache) unengagedCache.set(s, (cache = new Map()));
+  const known = cache.get(key);
+  if (known !== undefined) return known;
+  const res = canSetUpUnengagedNow(s, u, t);
+  cache.set(key, res);
+  return res;
+}
+
+function canSetUpUnengagedNow(s: GameState, u: UnitState, t: UnitState): boolean {
   const range = Math.max(3, unitFlags(s, t).disembarkRange);
   for (const tm of alive(t)) {
     for (let ring = 0; ring < 4; ring++) {
@@ -2833,6 +2874,8 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
     u.status = 'board';
     u.battleShocked = true;
     u.cantCharge = true;
+    u.disembarkedTurn = s.turn; // Core FAQ: any disembark move (Emergency too) means the unit disembarked this turn
+    u.disembarkedFrom = t.id;
     log(s, `Emergency Disembark ${u.name}: battle-shocked`, 'roll', u.owner);
     if (fails) applyMortalWounds(s, u, fails * hazardWounds(u), 'Emergency Disembark');
   }

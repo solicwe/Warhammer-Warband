@@ -374,7 +374,7 @@ export interface PlayerState {
    *  enemy units Afflicted (Worldblight / Signal Pox objectives, Blighted Land terrain), the Numberless Horde template */
   plague?: string;
   /** Imperial Knights: the Oaths sworn (Code Chivalric), Honoured, the Gate Warden defensive line, expended Enhancements */
-  knights?: { deeds: string[]; qualities: string[]; random?: boolean; honoured?: boolean; done?: boolean; fulfilled: number; tyrant?: string; roundBase?: number; line?: string[]; expended?: string[] };
+  knights?: { deeds: string[]; qualities: string[]; random?: boolean; honoured?: boolean; done?: boolean; fulfilled: number; tyrant?: string; roundBase?: number; roundKills?: number; line?: string[]; expended?: string[] };
   /** Chaos Knights: Paragons of Terror's extra Dread ability can be selected now */
   dreadBonus?: boolean;
   extraPlague?: string;

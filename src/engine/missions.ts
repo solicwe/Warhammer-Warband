@@ -391,7 +391,8 @@ export function onTurnEnd(s: GameState) {
   for (const a of s.pendingActions.filter((x) => x.player === p)) {
     const u = s.units.find((x) => x.id === a.unitId);
     const def = MISSIONS.actions[a.action];
-    if (!u || !onBoard(u) || u.battleShocked) { log(s, `${def.name}: failed`, 'info', p); continue; }
+    // Core FAQ: battle-shocked after starting stops the action, unless a rule lets the unit start one while battle-shocked
+    if (!u || !onBoard(u) || (u.battleShocked && !may(s, u, 'actionWhileShocked'))) { log(s, `${def.name}: failed`, 'info', p); continue; }
     const o = a.objId ? s.objectives.find((x) => x.id === a.objId) : undefined;
     let ok = false;
     if (def.completes === 'endOfTurnIfControl') ok = !!o && unitControls(s, u, o);

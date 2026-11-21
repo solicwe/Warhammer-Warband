@@ -77,14 +77,17 @@ function applyOath(s: GameState, A: UnitState, T: UnitState, pool: Pool) {
 
 const isMV = (m: ModelState) => (m.keywords ?? []).includes('MONSTER') || (m.keywords ?? []).includes('VEHICLE');
 const buffSum = (u: UnitState, plus: string, minus: string) => u.buffs.filter((b) => b.kind === plus).length - u.buffs.filter((b) => b.kind === minus).length;
+const buffCount = (u: UnitState, kind: string) => u.buffs.filter((b) => b.kind === kind).length;
 const has = (u: UnitState, kind: string) => u.buffs.some((b) => b.kind === kind);
 
-interface Mods { skillDelta: number; skillNotes: string[]; hit: number; hitNotes: string[] }
+/** skillBad / hitBad: the detrimental modifiers alone, which a [PSYCHIC] attack ignores (24.29) while keeping the good ones */
+interface Mods { skillDelta: number; skillNotes: string[]; hit: number; hitNotes: string[]; skillBad: number; hitBad: number }
 
 function finishPoolMods(p: WeaponProfileData, mods: Mods, psychic: boolean) {
   let skillDelta = mods.skillDelta;
   let hit = mods.hit;
-  if (psychic) { skillDelta = Math.min(0, skillDelta); hit = Math.max(0, hit); } // ignore detrimental modifiers
+  // 24.29 [PSYCHIC]: any or all modifiers to BS/WS and to the hit roll can be ignored: every detrimental one is (cover included)
+  if (psychic) { skillDelta -= mods.skillBad; hit -= mods.hitBad; }
   const skill = p.skill === null ? null : clamp(p.skill + skillDelta, RULES.modifierCaps.bestSkill, RULES.modifierCaps.worstSkill);
   return { skill, hit: clamp(hit, -RULES.modifierCaps.hitRoll, RULES.modifierCaps.hitRoll) };
 }
@@ -254,24 +257,25 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       if (!indirect && !linked && !seesT(m)) continue;
       if (indirect && T.core.loneOperative && T.sources.length === 1 && d > T.core.loneOperative) continue;
 
-      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
+      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes], skillBad: cm.skillBad, hitBad: cm.hitBad };
       const ignoresCover = cm.ignoresCover || hasAbility(p, 'ignores-cover', T.keywords) || A.buffs.some((b) => b.kind === 'ignoresCover') || grants(fx, inc, 'ignores cover') || inc.some((i) => i.noCover);
       const cover = indirect || aFlags.givesCover || (!ignoresCover && (coverOf(m) || targetHasCover(s, T, d)));
-      if (cover) { mods.skillDelta += 1; mods.skillNotes.push('Cover −1 BS'); }
+      if (cover) { mods.skillDelta += 1; mods.skillBad += 1; mods.skillNotes.push('Cover −1 BS'); }
       if (leech && deck.includes(m)) { mods.skillDelta -= 1; mods.skillNotes.push('Cartographic Data-leech +1 BS'); }
       if (m.keywords.includes('TOWERING') && d <= RULES.plungingFire.toweringRange && !T.keywords.includes('AIRCRAFT')) { mods.skillDelta -= 1; mods.skillNotes.push('Plunging Fire +1 BS'); }
       const heavy = hasAbility(p, 'heavy') || grants(fx, inc, 'heavy') || cm.heavy;
       if (heavy && isOwnShootingPhase && !isEngaged(s, A) && A.setUpTurn !== s.turn && A.maxMoved <= RULES.heavyMaxMove + 1e-6) { mods.hit += 1; mods.hitNotes.push('Heavy +1'); }
-      if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Engaged MONSTER/VEHICLE target −1'); }
-      if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitNotes.push('Big guns in combat −1'); }
-      if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
+      if (tIsMV && tEngaged && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitBad -= 1; mods.hitNotes.push('Engaged MONSTER/VEHICLE target −1'); }
+      if (opt.mode === 'closeQuarters' && isMV(m) && !aFlags.noBigGunsPenalty && !(hasAbility(p, 'close-quarters') && engagedWithTarget)) { mods.hit -= 1; mods.hitBad -= 1; mods.hitNotes.push('Big guns in combat −1'); }
+      if (damagedHit) { mods.hit -= 1; mods.hitBad -= 1; mods.hitNotes.push('Damaged −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
+      mods.hitBad -= buffCount(A, 'hit-1');
       for (const a of fx) {
-        if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} BS`); }
+        if (a.e.skill) { mods.skillDelta -= a.e.skill; if (a.e.skill < 0) mods.skillBad -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} BS`); }
         if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} BS ${a.e.skillSet}+`); }
       }
-      const psychic = hasAbility(p, 'psychic');
+      const psychic = psy; // the weapon's own [PSYCHIC], or one an effect gives it
       const fm = finishPoolMods(p, mods, psychic);
       const half = d <= range / 2 + 1e-6 || fx.some((a) => a.e.halfRangeAlways);
       const key = [m.source, w.name, p.name, cover, half, fm.skill, fm.hit, fxKey(fx, inc), linked].join('|');
@@ -298,7 +302,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
         const wm = clamp(buffSum(A, 'wound+1', 'wound-1') + cm.woundMod, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundMod = wm;
         pool.woundNote = [`S${strength} vs T${T_T}`, ...(wm ? [`Buff ${wm > 0 ? '+' : ''}${wm}`] : []), ...cm.otherNotes].join(' · ');
-        if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
+        if (psy) pool.psychic = true; // 24.29: BS/WS and hit modifiers only (finishPoolMods); wound modifiers stay
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'ranged', d, p, weapon: w.name }, pool);
@@ -385,18 +389,19 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       const psy = hasAbility(p, 'psychic') || grants(fx, [], 'psychic');
       const inc = incomingFor(s, A, m, T, 'melee').filter((i) => (!i.psychic || psy) && (!i.weaponAbilities || i.weaponAbilities.some((x) => hasAbility(p, x))));
       const cm = combatMods({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name });
-      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes] };
-      if (damagedHit) { mods.hit -= 1; mods.hitNotes.push('Damaged −1'); }
+      const mods: Mods = { skillDelta: -cm.skillBonus, skillNotes: [...cm.skillNotes], hit: cm.hitMod, hitNotes: [...cm.hitNotes], skillBad: cm.skillBad, hitBad: cm.hitBad };
+      if (damagedHit) { mods.hit -= 1; mods.hitBad -= 1; mods.hitNotes.push('Damaged −1'); }
       // Shield of Honour: this model is engaged with that unit but attacks another one
       const shamed = engagedEnemies(s, A).some((e) => e.id !== T.id && unitFlags(s, e).shieldOfHonour && modelEngagedWith(m, e));
-      if (shamed) { mods.hit -= 1; mods.hitNotes.push('Shield of Honour −1'); }
+      if (shamed) { mods.hit -= 1; mods.hitBad -= 1; mods.hitNotes.push('Shield of Honour −1'); }
       const bh = buffSum(A, 'hit+1', 'hit-1');
       if (bh) { mods.hit += bh; mods.hitNotes.push(`Buff ${bh > 0 ? '+' : ''}${bh}`); }
+      mods.hitBad -= buffCount(A, 'hit-1');
       for (const a of fx) {
-        if (a.e.skill) { mods.skillDelta -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
+        if (a.e.skill) { mods.skillDelta -= a.e.skill; if (a.e.skill < 0) mods.skillBad -= a.e.skill; mods.skillNotes.push(`${a.label} +${a.e.skill} WS`); }
         if (a.e.skillSet && p.skill !== null && p.skill > a.e.skillSet) { mods.skillDelta -= p.skill - a.e.skillSet; mods.skillNotes.push(`${a.label} WS ${a.e.skillSet}+`); }
       }
-      const fm = finishPoolMods(p, mods, hasAbility(p, 'psychic'));
+      const fm = finishPoolMods(p, mods, psy);
       const precision = opt.epicChallengeModel === m.id || cm.precision;
       const key = [m.source, w.name, fm.skill, fm.hit, precision, shamed, fxKey(fx, inc)].join('|');
       let pool = pools.get(key);
@@ -414,7 +419,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
         pool.woundMod = clamp(wm, -RULES.modifierCaps.woundRoll, RULES.modifierCaps.woundRoll);
         pool.woundNote = notes.join(' · ');
         applyCombatMods(pool, cm);
-        if (psy) { pool.psychic = true; pool.woundMod = Math.max(0, pool.woundMod); }
+        if (psy) pool.psychic = true; // 24.29: BS/WS and hit modifiers only (finishPoolMods); wound modifiers stay
         applyUnitBuffs(pool, A);
         applyOath(s, A, T, pool);
         runPoolFinishers({ s, A, T, m, psychic: psy, mode: 'melee', d: 0, p, weapon: w.name }, pool);
@@ -786,7 +791,8 @@ export function rollWounds(s: GameState) {
   let { auto, rolls } = hw;
   // Grot Shields: a Gretchin unit within 3" takes each hit as 1 mortal wound and the attack ends there
   const Tg = unitById(s, at.targetId);
-  const grots = (auto || rolls) && at.kind === 'shoot' && hasKw(Tg, 'INFANTRY') && !hasKw(Tg, 'GRETCHIN') && Tg.factionKeywords.includes('ORKS')
+  // Orks FAQ: hits of a [TORRENT] weapon come from no hit roll, so Grot Shields does not take them
+  const grots = (auto || rolls) && at.kind === 'shoot' && !p.autoHit && hasKw(Tg, 'INFANTRY') && !hasKw(Tg, 'GRETCHIN') && Tg.factionKeywords.includes('ORKS')
     ? boardUnits(s, Tg.owner).find((g) => g.id !== Tg.id && unitFlags(s, g).shieldsNear > 0 && unitDistance(g, Tg) <= unitFlags(s, g).shieldsNear + 1e-6) : undefined;
   if (grots) {
     const n = auto + rolls;

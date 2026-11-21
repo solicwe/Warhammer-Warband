@@ -440,14 +440,8 @@ export const unitIsInfantryLike = (u: UnitState) =>
   isInfantryBeastUnit(u) || everyModelKw(u, ['INFANTRY', 'BEASTS', 'SWARM']);
 
 /** Benefit of cover (13.08) against attacks from one attacking model.
- * Strict Footprint Matrix:
- * 1. Attacker outside + Target outside + Ray crosses Footprint: BLOCKED
- * 2. Attacker outside + Target inside Footprint: LoS ESTABLISHED, Target gains Benefit of Cover (-1 BS).
- *    (Benefit of Cover from terrain footprints applies ONLY to INFANTRY, BEASTS, and SWARM units.
- *     VEHICLE and MONSTER units do NOT gain area cover simply by standing in terrain footprints).
- * 3. Attacker inside Footprint + Target outside Footprint: LoS ESTABLISHED, Target does NOT gain Cover from that footprint.
- * 4. Attacker inside Footprint + Target inside SAME Footprint: LoS ESTABLISHED, Target does NOT gain Cover from shared footprint.
- */
+ * An INFANTRY/BEASTS/SWARM model within a terrain area always has it (owner, 21 Nov 2026: as the 11th edition text, row R9
+ * of docs/05-tech-debt.md withdrawn); any model has it when terrain keeps it from being fully visible. */
 let screenHook: ((s: GameState, screen: UnitState, target: UnitState) => boolean) | null = null;
 export const setScreenHook = (h: typeof screenHook) => { screenHook = h; };
 
@@ -469,40 +463,15 @@ export function hasCover(s: GameState, attacker: ModelState, target: UnitState):
   }
 
   const isInfantryLike = unitIsInfantryLike(target);
+  const infantryModel = (m: ModelState) => (m.keywords?.length ? ['INFANTRY', 'BEAST', 'BEASTS', 'SWARM'].some((k) => m.keywords.includes(k)) : isInfantryLike);
 
-  // 13.08: the unit has cover only if every one of its models qualifies
+  // 13.08: the unit has cover only if every one of its models qualifies:
+  // (a) an INFANTRY/BEASTS/SWARM model within a terrain area (wherever the attacker stands), or
+  // (b) a model not fully visible to the attacking model because of terrain in between (walls, obscuring areas
+  //     neither of them is within)
   const res = alive(target).every((m) => {
-    if (isInfantryLike) {
-      // Check if target model is inside a footprint that the attacker is NOT inside (Rule 2)
-      const inDifferentFootprint = s.terrain.some((t) =>
-        t.category !== 'exposed' &&
-        modelStandsIn(s, m, t) &&
-        !modelStandsIn(s, attacker, t)
-      );
-      if (inDifferentFootprint) return true;
-
-      const attackerInSame = s.terrain.some((t) => t.category !== 'exposed' && modelStandsIn(s, attacker, t) && modelStandsIn(s, m, t));
-      if (attackerInSame) {
-        // Rule 4: Attacker inside + Target inside SAME Footprint = Target does NOT gain cover from that shared footprint.
-        return false;
-      }
-
-      const attackerInAny = s.terrain.some((t) => t.category !== 'exposed' && modelStandsIn(s, attacker, t));
-      if (attackerInAny) {
-        // Rule 3: Attacker inside + Target outside = Target does NOT gain cover from attacker's footprint
-        const otherIntervening = s.terrain.some((t) =>
-          t.category !== 'exposed' &&
-          !modelStandsIn(s, attacker, t) &&
-          !modelStandsIn(s, m, t) &&
-          segCrossesPoly({ a: attacker, b: m }, t.poly)
-        );
-        if (otherIntervening) return true;
-        return false;
-      }
-    }
-
-    if (!fullyVisible(s, attacker, m)) return true;
-    return false;
+    if (infantryModel(m) && s.terrain.some((t) => t.category !== 'exposed' && modelStandsIn(s, m, t))) return true;
+    return !fullyVisible(s, attacker, m);
   });
 
   if (cacheKey) coverUnitPairCache.set(cacheKey, res);

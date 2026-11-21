@@ -2680,3 +2680,6 @@ select option {
 .layout-card-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
 .roll-notes { margin: 4px 0 0; padding: 0 0 0 16px; color: var(--text-2); font: 500 12px/1.4 var(--font-ui); }
 .roll-notes li { margin: 0; }
+/* end-of-turn discard: one block per active Tactical card, with what it asks for */
+.discard-card { border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; margin: 6px 0; background: var(--surface); display: grid; gap: 4px; }
+.discard-card.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }

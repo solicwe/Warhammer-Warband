@@ -1679,6 +1679,8 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
   const titanWarlordEligible = (d?: DatasheetData) => !!d && (faction.id === 'TL' || d.keywords.includes('ADEPTUS TITANICUS') || d.factionKeywords.includes('ADEPTUS TITANICUS'));
   if (!list.units.some((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return d?.keywords.includes('CHARACTER') || houndChar(d) || titanWarlordEligible(d); })) errs.push('The army needs at least one CHARACTER (Warlord)');
   if (!list.units.some((u) => u.warlord)) errs.push('No Warlord selected (tap a character\'s ⋮ → Make Warlord)');
+  // World Eaters FAQ: the bearer of Disciple of Khorne (it becomes BLOOD LEGIONS) cannot be the Warlord
+  if (list.units.some((u) => u.warlord && u.enhancement === 'Disciple of Khorne')) errs.push('Disciple of Khorne: the bearer cannot be your Warlord');
   for (const u of list.units) {
     const sheet = faction.datasheets.find((d) => d.name === u.datasheet);
     if (u.warlord && !sheet?.keywords.includes('CHARACTER') && !houndChar(sheet) && !titanWarlordEligible(sheet)) {

@@ -7,7 +7,7 @@ import { applyMortalWounds } from '../engine/attack';
 import { onCrTestDone, openCrTest } from './crTests';
 import { rollExpr, rollN } from '../engine/dice';
 import { baseDist, girth, polyCentroid, segSegDist } from '../engine/geometry';
-import { gainCp, alive, boardUnits, crTest, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitById, unitDistance } from '../engine/state';
+import { gainCp, alive, boardUnits, crTest, hasKw, log, onBoard, other, strength, unitById, unitDistance } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const CODE = 'Code Chivalric';
@@ -109,7 +109,7 @@ function fulfil(s: GameState, p: PlayerId, why: string) {
   const cp = extra ? 1 : K.random ? 3 : 2;
   const got = gainCp(s, p, cp);
   log(s, `Oath fulfilled (${why}): the army is Honoured, +${got}CP`, 'cp', p);
-  if (got) notifyAbilityCpGain(s, p, got, 'Code Chivalric');
+  // no Spy Network / Autodivinator: Code Chivalric is an army rule, not an ability (Necrons FAQ, Canoptek Court)
 }
 
 const deedOf = (s: GameState, p: PlayerId) => { const K = s.players[p].knights; return K && !K.done ? K.deeds[K.deeds.length - 1] : undefined; };
@@ -134,17 +134,23 @@ export function knightsRoundEnd(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
     const K = s.players[p].knights;
     if (deedOf(s, p) === 'tally' && K) {
-      // shortcut: a destroyed unit that comes back (Reanimation …) is no longer counted; a destruction counter would keep it
-      const n = enemyDestroyed(s, p) - (K.roundBase ?? 0);
+      // errata: enemy units destroyed this battle round count even if they later return to the battlefield
+      const n = K.roundKills ?? enemyDestroyed(s, p) - (K.roundBase ?? 0);
       if (n > s.round) fulfil(s, p, `${n} enemy units destroyed this battle round`);
     }
   }
 }
 
+/** An enemy unit of a Knights player was destroyed: one more for this round's tally (it counts even if it comes back). */
+export function knightsUnitDestroyed(s: GameState, u: UnitState) {
+  const K = s.players[other(u.owner)].knights;
+  if (K) K.roundKills = (K.roundKills ?? 0) + 1;
+}
+
 /** Start of each battle round: the tally starts again; Gate Warden Lance picks its foundations (first round). */
 export function knightsRoundStart(s: GameState) {
   for (const p of [0, 1] as PlayerId[]) {
-    if (s.players[p].knights) s.players[p].knights!.roundBase = enemyDestroyed(s, p);
+    if (s.players[p].knights) { s.players[p].knights!.roundBase = enemyDestroyed(s, p); s.players[p].knights!.roundKills = 0; }
     if (s.round === 1 && activeRules(s, p).includes('Gate Warden Lance')) pickFoundations(s, p);
   }
 }

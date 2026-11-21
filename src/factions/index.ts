@@ -25,7 +25,7 @@ import './crTests';
 import { autoPact } from './darkPacts';
 import { destroyedThisRound, ecUnitWiped, initFavoured, noteTarget, pledgeRoundEnd, pledgeRoundStart, poisonTick, raisePledge, sensationalBlock, sensationalOk, snapshotEngaged, thrillBlock } from './emperorsChildren';
 import { attachNear, blightedLand, dgBattleStart, dgCommandEnd, dgCommandStart, dgEffects, dgPhaseEnd, dgRoundStart, dsKeep, extraPlague, eyestingerStorm, inContagionOf, isAfflicted, leechspore, PLAGUE_IDS, putridHit, setPlague, signalPox, stinkBlocks } from './deathGuard';
-import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
+import { auraBonus, bondAgain, choicePicked, choiceWhy, expend, knightsAttackDone, knightsBattleStart, knightsCommandStart, knightsCond, knightsEffects, knightsMoved, knightsRoundEnd, knightsUnitDestroyed, knightsRoundStart, knightsShockFailed, knightsShootingStart, knightsTurnEnd, knightsTurnStart, longLeash, maleficSurge, superHeavy } from './knights';
 import { discardMiracle, gainMiracleDice, resetPhaseActsOfFaith, sororitasCommandEnd, sororitasCommandStart, sororitasTurnStart, sororitasUnitDestroyed, tryActOfFaith } from './sororitas';
 import { aeldariBattleStart, aeldariRoundStart, canFocus, lucidEye, noteVibro, relentlessRaiders, resetPhaseStrandsOfFate, seerDiscounts, shadowFieldCheck, sonicDestruction, spendFocus, tryFateDie, voidThieves } from './aeldari';
 import { delvwerkeNavigator, nomadStrategist, gainYieldPoints, spendYieldPoints, tryUtharAncestralFortune, votannBattleStart, votannTurnEnd, votannCommandEnd, votannUnitDestroyed } from './votann';
@@ -153,6 +153,7 @@ addActionHandler((s, a, x) => {
 addCondition(/^miracle:\d+$/, (c, { s, A }) => (s.players[A.owner].miracleDice ?? []).length >= Number(c.slice(8)));
 addDieRescue('Act of Faith', 'Miracle die', (s, u, stage, x) => tryActOfFaith(s, u, stage, x));
 on('unitDestroyed', (s, e) => sororitasUnitDestroyed(s, e.u, e.attackerId));
+on('unitDestroyed', (s, e) => knightsUnitDestroyed(s, e.u));
 
 // Aeldari
 on('battleStart', (s) => aeldariBattleStart(s));

@@ -65,6 +65,9 @@ export function addCombatMods(fn: CombatModsProvider) {
 export interface CombinedMods extends Required<Omit<CombatMods, 'notes' | 'sustained' | 'critWoundOn'>> {
   sustained: string | null;
   critWoundOn: number | null;
+  /** the detrimental part alone (a [PSYCHIC] attack may ignore just those, 24.29): BS worsened by, hit roll lowered by (negative) */
+  skillBad: number;
+  hitBad: number;
   skillNotes: string[];
   hitNotes: string[];
   otherNotes: string[];
@@ -73,7 +76,7 @@ export interface CombinedMods extends Required<Omit<CombatMods, 'notes' | 'susta
 /** Every registered rule's change to this attack, added up. */
 export function combatMods(x: AttackContext): CombinedMods {
   const out: CombinedMods = {
-    skillBonus: 0, hitMod: 0, woundMod: 0, apBonus: 0, apWorsen: 0, strengthBonus: 0, attacksBonus: 0, damageBonus: 0,
+    skillBonus: 0, hitMod: 0, skillBad: 0, hitBad: 0, woundMod: 0, apBonus: 0, apWorsen: 0, strengthBonus: 0, attacksBonus: 0, damageBonus: 0,
     critHitOn: 6, critWoundOn: null, sustained: null,
     lethal: false, devastating: false, precision: false, ignoresCover: false, ignoreMods: false, assault: false, heavy: false,
     rerollHits: false, rerollHits1: false, rerollWounds: false, rerollWounds1: false,
@@ -84,6 +87,8 @@ export function combatMods(x: AttackContext): CombinedMods {
     if (!m) continue;
     out.skillBonus += m.skillBonus ?? 0;
     out.hitMod += m.hitMod ?? 0;
+    if ((m.skillBonus ?? 0) < 0) out.skillBad -= m.skillBonus!;
+    if ((m.hitMod ?? 0) < 0) out.hitBad += m.hitMod!;
     out.woundMod += m.woundMod ?? 0;
     out.apBonus += m.apBonus ?? 0;
     out.apWorsen += m.apWorsen ?? 0;

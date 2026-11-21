@@ -18,7 +18,7 @@ import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
-  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkSpots, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
 } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
@@ -688,6 +688,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
   // Thousand Sons: the player picks their Rituals at the start of the Shooting phase (sorcerer, Ritual, target, Channel)
   const [rit, setRit] = useState<RitPick>({});
   const disAt = useRef(-1); // which spot around the transport the draft is on (Auto place / the arrows step through them)
+  const disSpots = useRef<{ key: string; spots: Map<string, Pt>[] }>({ key: '', spots: [] });
   const ritualOn = !mode && s.phase === 'shooting' && decides(s, s.active) && !bots.includes(s.active) && ritualsPending(s, s.active);
   const ritCasters = useMemo(() => (ritualOn ? casters(s, s.active) : []), [s, ritualOn]);
   const ritActiveCaster = useMemo(() => ritCasters.find((x) => x.model.id === rit.model) ?? null, [ritCasters, rit.model]);
@@ -886,6 +887,18 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }
     if (mode?.k === 'place') {
       const u = U(mode.unitId);
+      // getting out: the legal spot round the transport nearest the tap (walls and enemies are already kept clear of)
+      if (mode.how === 'disembark' && mode.transportId) {
+        const spots = disembarkChoices(u, U(mode.transportId));
+        if (spots.length) {
+          const at = (q: Map<string, Pt>) => { const c = polyCentroid([...q.values()]); return Math.hypot(c.x - p.x, c.y - p.y); };
+          let best = 0;
+          spots.forEach((q, i) => { if (at(q) < at(spots[best])) best = i; });
+          disAt.current = best;
+          setDraft(placePaths(spots[best])); setCheck(null);
+          return;
+        }
+      }
       let pos = formationAt(u, p, s.players[u.owner].role === 'defender');
       if (mode.how !== 'disembark') pos = nudgePlacement(s, u, pos, mode.how);
       setDraft(placePaths(pos));
@@ -1349,22 +1362,17 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     setSel(null);
   };
 
+  /** The legal spots round a transport, worked out once per transport and turn (the arrows and taps only pick one). */
+  const disembarkChoices = (u: UnitState, t: UnitState) => {
+    const key = `${u.id}|${t.id}|${s.turn}|${s.phase}|${alive(t).map((m) => `${m.x.toFixed(1)},${m.y.toFixed(1)}`).join(';')}`;
+    if (disSpots.current.key !== key) disSpots.current = { key, spots: disembarkSpots(s, u, t) };
+    return disSpots.current.spots;
+  };
+
   /** Disembark: every legal way to stand around the transport, turning round it in steps (the side facing the closest enemy first). */
   const stepDisembark = (dir: 1 | -1) => {
     if (mode?.k !== 'place' || mode.how !== 'disembark') return;
-    const u = U(mode.unitId), t = U(mode.transportId!);
-    const tm = alive(t)[0];
-    if (!tm) return;
-    const combat = disembarkMode(s, t, u) === 'combat';
-    const foes = boardUnits(s, other(u.owner)).flatMap(alive);
-    const near = foes.length ? foes.reduce((x, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(x.x - tm.x, x.y - tm.y) ? m : x)) : null;
-    const a0 = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
-    const spots: Map<string, Pt>[] = [];
-    for (let k = 0; k < 12; k++) {
-      for (const pos of hullSpots(s, u, tm, a0 + k * (Math.PI / 6), combat ? 6 : 3, combat)) {
-        if (validateDisembark(s, u, t, pos).ok) { spots.push(pos); break; }
-      }
-    }
+    const spots = disembarkChoices(U(mode.unitId), U(mode.transportId!));
     if (!spots.length) { flash('No legal spot around this transport: tap to place'); return; }
     disAt.current = (disAt.current + dir + spots.length) % spots.length;
     setDraft(placePaths(spots[disAt.current])); setCheck(null);
@@ -1728,10 +1736,22 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <>
           <div className="handoff">{pName(s, p)}: discard cards?</div>
-          <div className="small">Tap the cards to discard. Discarding gains 1CP (once).</div>
-          <div className="row wrap">
-            {P.secActive.map((id) => <button key={id} type="button" className={`btn ${discardPick.includes(id) ? 'primary' : ''}`} onClick={() => setDiscardPick((x) => x.includes(id) ? x.filter((y) => y !== id) : [...x, id])}>{secondaryById(id).name}{secondaryDead(s, w.player, id) ? ' (cannot score)' : ''}</button>)}
-          </div>
+          <div className="small">Discarding gains 1CP (once). Each card says what it asks you to do.</div>
+          {P.secActive.map((id) => {
+            const d = secondaryById(id);
+            const on = discardPick.includes(id);
+            return (
+              <div key={id} className={`discard-card ${on ? 'on' : ''}`}>
+                <div className="row">
+                  <b className="grow">{d.name}</b>
+                  <button type="button" className={`btn small ${on ? 'primary' : ''}`} onClick={() => setDiscardPick((x) => x.includes(id) ? x.filter((y) => y !== id) : [...x, id])}>{on ? 'Discarding' : 'Discard'}</button>
+                </div>
+                {secondaryDead(s, w.player, id) && <div className="tiny err">Cannot score any more</div>}
+                <div className="tiny muted">{d.when}</div>
+                <div className="small"><Em text={d.text} /></div>
+              </div>
+            );
+          })}
           <button className="btn primary grow" onClick={() => { const e = act((g) => answerDiscard(g, discardPick)); if (e) flash(e); setDiscardPick([]); }}>{discardPick.length ? `Discard ${discardPick.length}, +1CP` : 'Keep all'}</button>
         </>
       );

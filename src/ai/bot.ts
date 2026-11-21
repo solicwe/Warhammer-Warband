@@ -910,8 +910,9 @@ export function botWindow(s: GameState) {
         if (!best || v > best.v) best = { u, t, v };
       }
       if (best && best.v >= 12) {
-        const r = buildShootPools(s, best.u.id, best.t.id, { mode: 'snap' });
         spendStratagem(s, w.player, 'fire-overwatch', best.u);
+        unitSelected(s, best.u, 'shoot'); // FAQ: the Overwatch unit is selected to shoot (a Dark Pact can be made)
+        const r = buildShootPools(s, best.u.id, best.t.id, { mode: 'snap' });
         if (!botAttack(s, 'overwatch', best.u.id, best.t.id, r.pools)) return; // closing the dice tray closes the window
       }
     }
