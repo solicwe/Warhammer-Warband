@@ -108,6 +108,8 @@ export function BattleSetup({ armies, index, onBack, onStart, onUpdateArmy }: Pr
       s.botPlayer = prefs.mode === 'bot' ? 1 : null;
       s.bots = prefs.mode === 'botbot' ? [0, 1] : prefs.mode === 'bot' ? [1] : [];
       s.botLevel = prefs.level;
+      // the roll-off winner decides who is the Attacker: a person is asked (a bot stays the Attacker)
+      if (!s.bots.includes(s.attackerPlayer)) s.window = { kind: 'roleChoice', player: s.attackerPlayer };
       onStart(withAutoRules(s));
     } catch (e) {
       setErr(`Could not start the battle: ${e instanceof Error ? e.message : String(e)}`);

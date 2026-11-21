@@ -10,11 +10,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { factionFromPack, packFile } from './pack.mjs';
+import { applyPatch } from './json-patch.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RAW = path.join(ROOT, 'data/raw');
 const OVERRIDES = path.join(ROOT, 'data/overrides');
-const OUT = path.join(ROOT, 'public/data');
+// BUILD_OUT: write somewhere else (scripts/capture-overrides.mjs builds into a temporary folder to compare)
+const OUT = process.env.BUILD_OUT ? path.resolve(process.env.BUILD_OUT) : path.join(ROOT, 'public/data');
+// the last step: data/overrides/final/<ID>.json, patches made by scripts/capture-overrides.mjs (SKIP_FINAL=1 leaves them out)
+const FINAL = path.join(ROOT, 'data/overrides/final');
+const finalPatch = (name) => { const f = path.join(FINAL, name); return !process.env.SKIP_FINAL && fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null; };
 const BASE_URL = 'https://wahapedia.ru/wh40k11ed/';
 const FILES = [
   'Factions', 'Source', 'Datasheets', 'Datasheets_abilities', 'Datasheets_keywords',
@@ -528,13 +533,20 @@ function build() {
         return t && moves.every((k) => !t.keywords.includes(k) || d.keywords.includes(k));
       });
     }
-    const wasIndented = ['AC', 'AM', 'AoI', 'CD', 'CSM', 'DG', 'EC', 'GC', 'LoV', 'NEC', 'SM', 'TAU', 'TS', 'TYR', 'WE'].includes(f.id);
-    fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), wasIndented ? JSON.stringify(faction, null, 2) : JSON.stringify(faction));
+    // hand corrections made after the import, kept as a patch so a rebuild gives the same file
+    const fin = finalPatch(`${f.id}.json`);
+    if (fin) faction = applyPatch(faction, fin);
+    // written the way the file in public/data already is (indented or on one line), so a rebuild changes no layout
+    const prev = path.join(ROOT, 'public/data/factions', `${f.id}.json`);
+    const indented = fs.existsSync(prev) ? /^\{\r?\n/.test(fs.readFileSync(prev, 'utf8')) : true;
+    const endNl = fs.existsSync(prev) && /\n$/.test(fs.readFileSync(prev, 'utf8')) ? '\n' : '';
+    fs.writeFileSync(path.join(OUT, 'factions', `${f.id}.json`), (indented ? JSON.stringify(faction, null, 2) : JSON.stringify(faction)) + endNl);
     const group = Object.entries(META.groups).find(([, ids]) => ids.includes(f.id))?.[0] ?? 'Other';
     index.factions.push({ id: f.id, name: f.name, group, datasheets: faction.datasheets.length, detachments: faction.detachments.length, ...(sub ? { subfactions: sub.options.map((o) => o.name) } : {}) });
   }
   index.factions.sort((a, b) => a.name.localeCompare(b.name));
-  fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
+  const finIndex = finalPatch('index.json');
+  fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(finIndex ? applyPatch(index, finIndex) : index, null, 1));
   if (pointsMisses.length) console.log(`points updates not applied (${pointsMisses.length}):\n  ${pointsMisses.join('\n  ')}`);
   console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }

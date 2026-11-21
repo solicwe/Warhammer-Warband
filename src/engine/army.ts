@@ -827,16 +827,30 @@ export function coreAbilities(sheets: DatasheetData[]): CoreAbilities {
   if (lo) core.loneOperative = lo.param ? parseInt(lo.param, 10) : 12;
   if (has('Fights First') && sheets.every((s) => (s.abilities || []).some((a) => a.name === 'Fights First'))) core.fightsFirst = true;
   if (has('Deep Strike') && sheets.every((s) => (s.abilities || []).some((a) => a.name === 'Deep Strike'))) core.deepStrike = true;
-  const sc = has('Scouts');
-  if (sc?.param) core.scouts = parseInt(sc.param, 10);
-  if (has('Infiltrators')) core.infiltrators = true;
+  // 24.31 Scouts, 24.17 Infiltrators: an attached unit has them only if every one of its datasheets does (Scouts: the
+  // lowest X among them)
+  const every = (n: string) => sheets.every((s) => (s.abilities || []).some((a) => a.type === 'Core' && a.name.toLowerCase() === n.toLowerCase()));
+  if (every('Scouts')) {
+    const xs = sheets.map((s) => parseInt((s.abilities || []).find((a) => a.type === 'Core' && a.name.toLowerCase() === 'scouts')?.param ?? '', 10)).filter(Number.isFinite);
+    if (xs.length) core.scouts = Math.min(...xs);
+  }
+  if (every('Infiltrators')) core.infiltrators = true;
   const dd = has('Deadly Demise');
   if (dd) core.deadlyDemise = (dd.param || '1').trim();
   if (has('Hover')) core.hover = true;
   const fd = has('Firing Deck');
   if (fd) core.firingDeck = parseInt(fd.param ?? '', 10) || 2;
   const dmg = sheets.find((s) => s.damaged)?.damaged;
-  if (dmg) core.damaged = parseInt(dmg.w.split('-').pop()!, 10);
+  if (dmg) {
+    core.damaged = parseInt(dmg.w.split(/[-‑]/).pop()!, 10);
+    // what the card's Damaged rule does: -1 to hit, less OC, more melee attacks
+    const txt = (dmg.text ?? '').replace(/[’]/g, "'");
+    core.damagedHit = !txt || /subtract 1 from the Hit roll/i.test(txt);
+    const oc = /subtract (\d+) from (?:this model's|its) Objective Control/i.exec(txt);
+    if (oc) core.damagedOc = Number(oc[1]);
+    const a = /add (\d+) to the Attacks characteristic of this model's melee weapons/i.exec(txt);
+    if (a) core.damagedMeleeA = Number(a[1]);
+  }
   return core;
 }
 
@@ -951,7 +965,7 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const core = coreAbilities(sheets);
     // Attached units: each model keeps its own M characteristic (Core Rules, Different Move Characteristics); stealth is shared
     if (joiners.length > 0) {
-      if (core.stealth === undefined && sheets.some((s) => s.keywords.includes('STEALTH'))) {
+      if (core.stealth === undefined && sheets.every((s) => s.keywords.includes('STEALTH') || (s.abilities || []).some((a) => /^stealth$/i.test(a.name)))) {
         core.stealth = true;
       }
     }

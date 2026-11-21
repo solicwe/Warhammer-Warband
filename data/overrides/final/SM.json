@@ -1,0 +1,940 @@
+{
+ "armyRules": [
+  {
+   "name": "The Deathwing",
+   "text": "If your Chapter is Dark Angels, the following ADEPTUS ASTARTES units gain the DEATHWING keyword:\n• TERMINATOR units\n• BLADEGUARD ANCIENT, BLADEGUARD VETERAN SQUAD, STERNGUARD VETERAN SQUAD, and VANGUARD VETERAN SQUAD WITH JUMP PACKS units\n• LAND RAIDER, LAND RAIDER CRUSADER, LAND RAIDER REDEEMER, REPULSOR, and REPULSOR EXECUTIONER units\n• DREADNOUGHT units"
+  },
+  {
+   "name": "The Ravenwing",
+   "text": "If your Chapter is Dark Angels, the following ADEPTUS ASTARTES units gain the RAVENWING keyword:\n• MOUNTED units\n• VEHICLE units with the FLY keyword"
+  }
+ ],
+ "datasheets": [
+  {
+   "name": "Cato Sicarius",
+   "weapons": [
+    {
+     "name": "Talassarian Tempest Blade",
+     "profiles": [
+      {
+       "name": "strike",
+       "A": "4"
+      },
+      {
+       "name": "coup de grace",
+       "A": "6",
+       "S": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Victrix Honour Guard",
+   "role": "Infantry"
+  },
+  {
+   "name": "Suboden Khan",
+   "weapons": [
+    {
+     "name": "Onslaught Gatling Cannon",
+     "profiles": [
+      {
+       "name": "Onslaught Gatling Cannon",
+       "AP": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lieutenant In Phobos Armour",
+   "weapons": [
+    {
+     "name": "Master-crafted Bolt Carbine",
+     "profiles": [
+      {
+       "name": "Master-crafted Bolt Carbine",
+       "S": 4,
+       "AP": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Company Heroes",
+   "role": "Infantry"
+  },
+  {
+   "name": "Invader ATVs",
+   "weapons": [
+    {
+     "name": "Twin Bolt Rifle",
+     "profiles": [
+      {
+       "name": "Twin Bolt Rifle",
+       "skill": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Death Company Captain",
+   "weapons": [
+    {
+     "name": "Master-crafted Chainsword",
+     "profiles": [
+      {
+       "name": "Master-crafted Chainsword",
+       "A": "8"
+      }
+     ]
+    },
+    {
+     "name": "Power Fist",
+     "profiles": [
+      {
+       "name": "Power Fist",
+       "A": "6"
+      }
+     ]
+    },
+    {
+     "name": "Relic Weapon",
+     "profiles": [
+      {
+       "name": "Relic Weapon",
+       "A": "7"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Death Company Captain with Jump Pack",
+   "weapons": [
+    {
+     "name": "Chainsword",
+     "profiles": [
+      {
+       "name": "Chainsword",
+       "A": "8"
+      }
+     ]
+    },
+    {
+     "name": "Plasma Pistol",
+     "profiles": [
+      {
+       "name": "supercharge",
+       "skill": 2
+      },
+      {
+       "name": "standard",
+       "skill": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Death Company Dreadnought",
+   "weapons": [
+    {
+     "name": "Blood Talons",
+     "profiles": [
+      {
+       "name": "Blood Talons",
+       "A": "8"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Asmodai",
+   "weapons": [
+    {
+     "name": "Heavy Bolt Pistol",
+     "profiles": [
+      {
+       "name": "Heavy Bolt Pistol",
+       "skill": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Deathwing Terminator Squad",
+   "weapons": {
+    "_replace": [
+     {
+      "name": "Storm Bolter",
+      "profiles": [
+       {
+        "name": "Storm Bolter",
+        "range": 24,
+        "A": "2",
+        "skill": 3,
+        "S": 5,
+        "AP": -1,
+        "D": "1",
+        "abilities": [
+         "rapid fire 2"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Power Weapon",
+      "profiles": [
+       {
+        "name": "Power Weapon",
+        "range": "Melee",
+        "A": "5",
+        "skill": 3,
+        "S": 5,
+        "AP": -2,
+        "D": "1",
+        "abilities": []
+       }
+      ]
+     },
+     {
+      "name": "Power Fist",
+      "profiles": [
+       {
+        "name": "Power Fist",
+        "range": "Melee",
+        "A": "3",
+        "skill": 3,
+        "S": 8,
+        "AP": -2,
+        "D": "2",
+        "abilities": []
+       }
+      ]
+     },
+     {
+      "name": "Chainfist",
+      "profiles": [
+       {
+        "name": "standard",
+        "range": "Melee",
+        "A": "2",
+        "skill": 4,
+        "S": 8,
+        "AP": -2,
+        "D": "2",
+        "abilities": []
+       },
+       {
+        "name": "hunter",
+        "range": "Melee",
+        "A": "3",
+        "skill": 3,
+        "S": 12,
+        "AP": -2,
+        "D": "3",
+        "abilities": [
+         "hunter: monster/vehicle"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Plasma Cannon",
+      "profiles": [
+       {
+        "name": "standard",
+        "range": 36,
+        "A": "3",
+        "skill": 3,
+        "S": 7,
+        "AP": -2,
+        "D": "2",
+        "abilities": [
+         "blast 1"
+        ]
+       },
+       {
+        "name": "supercharge",
+        "range": 36,
+        "A": "3",
+        "skill": 3,
+        "S": 8,
+        "AP": -3,
+        "D": "3",
+        "abilities": [
+         "blast 1",
+         "hazardous"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Assault Cannon",
+      "profiles": [
+       {
+        "name": "Assault Cannon",
+        "range": 24,
+        "A": "6",
+        "skill": 3,
+        "S": 6,
+        "AP": -2,
+        "D": "1",
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Heavy Flamer",
+      "profiles": [
+       {
+        "name": "Heavy Flamer",
+        "range": 12,
+        "A": "3",
+        "skill": null,
+        "S": 5,
+        "AP": -1,
+        "D": "1",
+        "abilities": [
+         "blast 2",
+         "torrent"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Cyclone Missile Launcher",
+      "profiles": [
+       {
+        "name": "frag",
+        "range": 36,
+        "A": "8",
+        "skill": 3,
+        "S": 4,
+        "AP": -1,
+        "D": "1",
+        "abilities": [
+         "blast 2"
+        ]
+       },
+       {
+        "name": "krak",
+        "range": 36,
+        "A": "2",
+        "skill": 3,
+        "S": 10,
+        "AP": -2,
+        "D": "D3+3",
+        "abilities": []
+       }
+      ]
+     },
+     {
+      "name": "Storm Bolter",
+      "profiles": [
+       {
+        "name": "Storm Bolter",
+        "range": 24,
+        "A": "2",
+        "skill": 3,
+        "S": 5,
+        "AP": -1,
+        "D": "1",
+        "abilities": [
+         "rapid fire 2"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Ezekiel",
+   "weapons": [
+    {
+     "name": "Traitor's Bane",
+     "profiles": [
+      {
+       "name": "Traitor's Bane",
+       "AP": -3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bjorn The Fell-handed",
+   "weapons": [
+    {
+     "name": "Helfrost Cannon",
+     "profiles": [
+      {
+       "name": "focused",
+       "AP": -3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Wolf Scouts",
+   "weapons": [
+    {
+     "name": "Runic Stave",
+     "profiles": [
+      {
+       "name": "Runic Stave",
+       "D": "2"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Wulfen",
+   "models": [
+    {
+     "name": "Wulfen w/Auto-launcher",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen w/Death Totem",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen",
+     "M": 9,
+     "T": 6,
+     "Sv": 4,
+     "InSv": null,
+     "W": 2,
+     "Ld": 7,
+     "OC": 0,
+     "base": {
+      "w": 40,
+      "h": 40,
+      "text": "40mm"
+     }
+    }
+   ],
+   "composition": [
+    {
+     "name": "Wulfen w/Auto-launcher",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen w/Death Totem",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen",
+     "min": 5,
+     "max": 10,
+     "text": "5-10 Wulfen"
+    }
+   ],
+   "loadout": {
+    "*": [
+     "Wulfen weapons",
+     "Death totem"
+    ],
+    "_remove": [
+     "Wulfen w/Auto-launcher",
+     "Wulfen w/Death Totem"
+    ]
+   },
+   "loadoutText": "Each model is equipped with: Death Totem; 1 Wulfen Weapons.",
+   "options": {
+    "_replace": [
+     "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher."
+    ]
+   },
+   "abilities": [
+    {
+     "name": "Death Totem",
+     "type": "Wargear",
+     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher.",
+      "scope": "any",
+      "who": "*",
+      "replace": [
+       "Death totem"
+      ],
+      "choices": [
+       [
+        "Stormfrag auto-launcher"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Wulfen Dreadnought",
+   "composition": [
+    {
+     "name": "Wulfen Dreadnought",
+     "min": 1,
+     "max": 1,
+     "text": "1 Wulfen Dreadnought"
+    }
+   ],
+   "options": {
+    "_replace": [
+     "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+     "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield."
+    ]
+   },
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+      "scope": "one",
+      "who": "Wulfen Dreadnought",
+      "replace": [
+       "Storm Bolter"
+      ],
+      "choices": [
+       [
+        "Heavy Flamer"
+       ]
+      ]
+     },
+     {
+      "text": "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield.",
+      "scope": "one",
+      "who": "Wulfen Dreadnought",
+      "replace": [
+       "Fenrisian Great Axe"
+      ],
+      "choices": [
+       [
+        "Blizzard Shield"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Wulfen with Storm Shields",
+   "models": [
+    {
+     "name": "Wulfen w/Death Totem",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen w/Auto-launcher",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen with Storm Shield",
+     "M": 9,
+     "T": 6,
+     "Sv": 4,
+     "InSv": 4,
+     "W": 2,
+     "Ld": 7,
+     "OC": 0,
+     "base": {
+      "w": 40,
+      "h": 40,
+      "text": "40mm"
+     }
+    }
+   ],
+   "composition": [
+    {
+     "name": "Wulfen w/Death Totem",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen w/Auto-launcher",
+     "_delete": true
+    },
+    {
+     "name": "Wulfen with Storm Shield",
+     "min": 5,
+     "max": 10,
+     "text": "5-10 Wulfen with Storm Shield"
+    }
+   ],
+   "loadout": {
+    "*": [
+     "Thunder hammer",
+     "Stormfrag auto-launcher"
+    ],
+    "_remove": [
+     "Wulfen w/Death Totem",
+     "Wulfen w/Auto-launcher"
+    ]
+   },
+   "loadoutText": "Every model is equipped with: 1 Stormfrag Auto-launcher; 1 Thunder Hammer.",
+   "options": {
+    "_replace": [
+     "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem."
+    ]
+   },
+   "abilities": [
+    {
+     "name": "Death Totem",
+     "type": "Wargear",
+     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem.",
+      "scope": "any",
+      "who": "*",
+      "replace": [
+       "Stormfrag auto-launcher"
+      ],
+      "choices": [
+       [
+        "Death totem"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Castellan",
+   "weapons": [
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "purgatus",
+       "skill": 2
+      },
+      {
+       "name": "damnatus",
+       "skill": 2
+      }
+     ]
+    },
+    {
+     "name": "Heavy Bolt Pistol",
+     "profiles": [
+      {
+       "name": "Heavy Bolt Pistol",
+       "S": 4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Marshal",
+   "weapons": [
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "purgatus",
+       "skill": 2
+      },
+      {
+       "name": "damnatus",
+       "skill": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Corvus Blackstar",
+   "weapons": {
+    "_replace": [
+     {
+      "name": "Armoured Hull",
+      "profiles": [
+       {
+        "name": "Armoured Hull",
+        "range": "Melee",
+        "A": "3",
+        "skill": 4,
+        "S": 6,
+        "AP": 0,
+        "D": "1",
+        "abilities": []
+       }
+      ]
+     },
+     {
+      "name": "Hurricane Bolter",
+      "profiles": [
+       {
+        "name": "Hurricane Bolter",
+        "range": 24,
+        "A": "6",
+        "skill": 3,
+        "S": 5,
+        "AP": -1,
+        "D": "1",
+        "abilities": [
+         "rapid fire 6",
+         "twin-linked"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Twin Assault Cannon",
+      "profiles": [
+       {
+        "name": "Twin Assault Cannon",
+        "range": 24,
+        "A": "6",
+        "skill": 3,
+        "S": 6,
+        "AP": -2,
+        "D": "1",
+        "abilities": [
+         "sustained hits 1",
+         "twin-linked"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Twin Lascannon",
+      "profiles": [
+       {
+        "name": "Twin Lascannon",
+        "range": 48,
+        "A": "1",
+        "skill": 3,
+        "S": 12,
+        "AP": -3,
+        "D": "D3+3",
+        "abilities": [
+         "twin-linked"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Blackstar Rocket Launcher",
+      "profiles": [
+       {
+        "name": "Blackstar Rocket Launcher",
+        "range": 30,
+        "A": "4",
+        "skill": 3,
+        "S": 5,
+        "AP": 0,
+        "D": "1",
+        "abilities": [
+         "blast 1"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Stormstrike Missile Launcher",
+      "profiles": [
+       {
+        "name": "Stormstrike Missile Launcher",
+        "range": 48,
+        "A": "1",
+        "skill": 3,
+        "S": 10,
+        "AP": -2,
+        "D": "3",
+        "abilities": []
+       }
+      ]
+     },
+     {
+      "name": "Blackstar Rocket Launcher",
+      "profiles": [
+       {
+        "name": "Blackstar Rocket Launcher",
+        "range": 30,
+        "A": "4",
+        "skill": 3,
+        "S": 5,
+        "AP": 0,
+        "D": "1",
+        "abilities": [
+         "blast 1"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Stormstrike Missile Launcher",
+      "profiles": [
+       {
+        "name": "Stormstrike Missile Launcher",
+        "range": 48,
+        "A": "1",
+        "skill": 3,
+        "S": 10,
+        "AP": -2,
+        "D": "3",
+        "abilities": []
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Deathwatch Terminator Squad",
+   "weapons": [
+    {
+     "name": "Power Weapon",
+     "profiles": [
+      {
+       "name": "Power Weapon",
+       "A": "5"
+      }
+     ]
+    },
+    {
+     "name": "Twin Lightning Claws",
+     "profiles": [
+      {
+       "name": "Twin Lightning Claws",
+       "A": "6"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Deathwatch Veterans",
+   "weapons": [
+    {
+     "name": "Frag Cannon",
+     "profiles": [
+      {
+       "name": "Frag Cannon",
+       "skill": 3
+      }
+     ]
+    },
+    {
+     "name": "Boltgun",
+     "profiles": [
+      {
+       "name": "Boltgun",
+       "skill": 3
+      }
+     ]
+    },
+    {
+     "name": "Combi-weapon",
+     "profiles": [
+      {
+       "name": "purgatus",
+       "skill": 3
+      },
+      {
+       "name": "damnatus",
+       "skill": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Fortis Kill Team",
+   "weapons": [
+    {
+     "name": "Superfrag Rocket Launcher",
+     "profiles": [
+      {
+       "name": "Superfrag Rocket Launcher",
+       "skill": 3
+      }
+     ]
+    },
+    {
+     "name": "Superkrak Rocket Launcher",
+     "profiles": [
+      {
+       "name": "Superkrak Rocket Launcher",
+       "skill": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Indomitor Kill Team",
+   "weapons": [
+    {
+     "name": "Deathwatch Heavy Bolter",
+     "profiles": [
+      {
+       "name": "Deathwatch Heavy Bolter",
+       "AP": -2,
+       "D": "3"
+      }
+     ]
+    },
+    {
+     "name": "Melta Rifle",
+     "profiles": [
+      {
+       "name": "hunter",
+       "S": 10
+      }
+     ]
+    },
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "skill": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Spectrus Kill Team",
+   "weapons": [
+    {
+     "name": "Instigator Bolt Carbine",
+     "profiles": [
+      {
+       "name": "Instigator Bolt Carbine",
+       "skill": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Watch Captain Artemis",
+   "models": [
+    {
+     "name": "Watch Captain Artemis",
+     "W": 4
+    }
+   ]
+  }
+ ]
+}

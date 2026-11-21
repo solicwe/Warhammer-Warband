@@ -1579,6 +1579,8 @@ export function ocOf(s: GameState, u: UnitState): (m: ModelState) => number {
     for (const x of fx) if (x.e.ocSet !== undefined) oc = Math.max(oc, x.e.ocSet);
     const base = oc;
     for (const x of fx) oc += x.e.oc ?? 0;
+    // the card's Damaged rule: subtract X from the OC characteristic (Knights, Titans, some tanks)
+    if (u.core.damagedOc && u.core.damaged !== undefined && m.wounds <= u.core.damaged) oc -= u.core.damagedOc;
     if (base >= 1 && oc < 1 && fx.some((x) => x.e.ocMin1)) oc = 1;
     if (fx.some((x) => x.e.embarkedOc)) oc += s.units.filter((p) => p.embarkedIn === u.id && p.status === 'embarked').reduce((a, p) => a + alive(p).reduce((b, n) => b + (n.profile.OC ?? 0), 0), 0);
     oc *= Math.max(1, ...fx.map((x) => x.e.ocMultiply ?? 1));

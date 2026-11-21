@@ -1,0 +1,12 @@
+{
+ "armyRules": [
+  {
+   "name": "Synapse",
+   "_delete": true
+  },
+  {
+   "name": "Shadow in the Warp",
+   "_delete": true
+  }
+ ]
+}

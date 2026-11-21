@@ -222,7 +222,7 @@ export function buildShootPools(s: GameState, attackerId: string, targetId: stri
       // pistols only when chosen, or when the model carries no other gun (skipping its guns never fires its pistols instead)
       else chosen = opt.useCloseQuarters || !all.some((w) => !hasAbility(w.profiles[0], 'close-quarters')) ? cqOnly : others;
     }
-    const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
+    const damagedHit = A.core.damaged !== undefined && A.core.damagedHit !== false && m.wounds <= A.core.damaged;
     for (const w of chosen) {
       // Hunter (army rule): a profile marked "Hunter: MONSTER/VEHICLE" only shoots at those; the weapon's other profile then
       const hunts = (q: WeaponProfileData) => { const h = getAbility(q, 'hunter'); return !h || condApplies(h.cond, T.keywords); };
@@ -381,7 +381,7 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
     const nHere = carry ? carry.n : opt.split && engagedCount > 1 && fixedA && fixedA >= 2 ? Math.ceil(fixedA / 2) : null;
     const use = [...(main ? [main] : []), ...(carry ? [] : extra)];
     if (!use.length) use.push({ name: 'Close combat weapon', profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '1', skill: 4, S: m.profile.T, AP: 0, D: '1', abilities: [] }] });
-    const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
+    const damagedHit = A.core.damaged !== undefined && A.core.damagedHit !== false && m.wounds <= A.core.damaged;
     for (const w of use) {
       // a weapon with several profiles (strike / sweep) fights with the one picked, else the first
       const p = w.profiles[Math.min(opt.profile?.[w.name] ?? 0, w.profiles.length - 1)];
@@ -433,7 +433,8 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       (pool.fightUse ??= []).push({ id: m.id, w: w.name, left: isMain && !carry && nHere !== null && fixedA ? fixedA - nHere : 0, extra: !isMain });
       const cleave = getAbility(p, 'cleave', T.keywords);
       const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
-      pool.instances.push({ A: isMain && nHere !== null ? String(nHere) : p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus });
+      const damagedA = A.core.damagedMeleeA && A.core.damaged !== undefined && m.wounds <= A.core.damaged ? A.core.damagedMeleeA : 0;
+      pool.instances.push({ A: isMain && nHere !== null ? String(nHere) : p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus + damagedA });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }

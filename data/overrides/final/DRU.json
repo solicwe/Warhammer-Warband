@@ -1,0 +1,12 @@
+{
+ "armyRules": [
+  {
+   "name": "Battle Focus",
+   "_delete": true
+  },
+  {
+   "name": "Disparate Paths",
+   "_delete": true
+  }
+ ]
+}

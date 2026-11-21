@@ -18,7 +18,7 @@ import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
-  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkSpots, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, answerRoleChoice, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkSpots, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
 } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
@@ -1728,6 +1728,18 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
+      );
+    }
+    if (w.kind === 'roleChoice') {
+      return (
+        <>
+          <div className="handoff">{pName(s, p)} won the roll-off</div>
+          <div className="small">Choose who is the Attacker. The Defender deploys first.</div>
+          <div className="row">
+            <button className="btn primary grow" onClick={() => act((g) => answerRoleChoice(g, true))}>Attacker</button>
+            <button className="btn grow" onClick={() => act((g) => answerRoleChoice(g, false))}>Defender</button>
+          </div>
         </>
       );
     }

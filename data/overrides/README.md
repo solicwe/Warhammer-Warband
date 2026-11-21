@@ -35,3 +35,6 @@
 - **Army rules**: `armyRules[]`
 
 Weapon abilities เขียนเป็นตัวพิมพ์เล็กแบบเดียวกับบนการ์ด เช่น `"rapid fire 1"`, `"anti-infantry 4+"`, `"lethal hits: non-monster/vehicle"`, `"sustained hits d3"`, `"melta 2"`, `"blast 2"`, `"cleave 1"`, `"pistol"`, `"close-quarters"`
+
+## แก้ไฟล์ใน public/data ตรงๆ แล้ว (final patches)
+ถ้าแก้ `public/data/factions/*.json` ด้วยมือ ให้รัน `npm run data:capture` ทุกครั้ง: สคริปต์จะเก็บส่วนที่ต่างจาก build ไว้ที่ `data/overrides/final/<ID>.json` (ขั้นสุดท้ายของ build) แล้วตรวจว่า `npm run data` ได้ไฟล์เหมือนเดิม

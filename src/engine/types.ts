@@ -201,7 +201,10 @@ export interface CoreAbilities {
   infiltrators?: boolean;
   deadlyDemise?: string;
   hover?: boolean;
-  damaged?: number; // Damaged X: -1 to hit while wounds <= X
+  damaged?: number; // Damaged X: the card's Damaged rule applies while wounds <= X
+  damagedHit?: boolean; // ... each attack -1 to hit (false: the card says something else)
+  damagedOc?: number; // ... subtract this from the OC characteristic (Knights 5 or 3, Titans 8-15, AM tanks 4)
+  damagedMeleeA?: number; // ... add this to the A of its melee weapons (a World Eaters card)
   firingDeck?: number; // Firing Deck X: X weapons of the units embarked within shoot from this transport
 }
 
@@ -692,6 +695,8 @@ export type Window =
   | { kind: 'counteroffensive'; player: PlayerId }
   /** end of your own turn, after scoring: Tactical cards may be discarded (Event Companion); doing so gains 1CP once */
   | { kind: 'discardCards'; player: PlayerId }
+  /** the roll-off winner (a person) decides who is the Attacker and who is the Defender (Event Companion) */
+  | { kind: 'roleChoice'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
@@ -773,6 +778,7 @@ export interface GameState {
   objectives: ObjectiveState[];
   deploymentId: string; // terrain layout id (data/layouts.json)
   attackerPlayer: PlayerId;
+  battleReadyScored?: boolean; // the 10VP for Battle Ready armies were given at the end of the battle
   window: Window | null;
   attack: AttackSession | null;
   fight: FightState | null;

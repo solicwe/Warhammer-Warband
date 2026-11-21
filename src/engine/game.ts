@@ -1581,6 +1581,12 @@ function finishTurn(s: GameState) {
 
 export function endBattle(s: GameState) {
   for (const p of [s.firstPlayer, other(s.firstPlayer)] as PlayerId[]) scoreTiming(s, 'endOfBattle', p);
+  // Event Companion, Determine Victor: each player scores 10VP if their army is painted to a Battle Ready standard
+  // (the models on screen are all painted)
+  if (!s.battleReadyScored) {
+    s.battleReadyScored = true;
+    for (const p of [0, 1] as PlayerId[]) { s.players[p].vp += RULES.battleReadyVp; log(s, `${s.players[p].name}: Battle Ready army +${RULES.battleReadyVp}VP`, 'vp', p); }
+  }
   s.phase = 'gameover';
   const [a, b] = [s.players[0].vp + (s.players[0].secVp ?? 0), s.players[1].vp + (s.players[1].secVp ?? 0)];
   s.winner = a === b ? 'draw' : a > b ? 0 : 1;
@@ -2431,7 +2437,8 @@ export function heroicMode(s: GameState, p: PlayerId, u: UnitState): 'leap' | 'f
 }
 
 export function counteroffensiveCandidates(s: GameState, p: PlayerId): UnitState[] {
-  if (!s.fight || s.fight.step !== 'fight' || canUseStratagem(s, p, 'counteroffensive')) return [];
+  // 15.12: only in the Fight step of the opponent's Fight phase (so never by the player whose turn it is)
+  if (!s.fight || s.fight.step !== 'fight' || p === s.active || canUseStratagem(s, p, 'counteroffensive')) return [];
   return boardUnits(s, p).filter((u) => !u.battleShocked && fightEligibleNow(s, u) && !canUseStratagem(s, p, 'counteroffensive', u));
 }
 
@@ -2483,6 +2490,22 @@ export function afterReaction(s: GameState, resume?: 'endPhase') {
     if (w) { if (resume && w.kind === 'stratReaction') w.resume = resume; return; }
   }
   if (resume === 'endPhase') endPhase(s);
+}
+
+/** The roll-off winner decides (Event Companion, Attacker and Defender): the game made them the Attacker; Defender swaps. */
+export function answerRoleChoice(s: GameState, attacker: boolean): string | null {
+  const w = s.window;
+  if (w?.kind !== 'roleChoice') return 'No role question is open';
+  s.window = null;
+  if (attacker || s.units.some((u) => u.status === 'board')) return null;
+  const winner = w.player;
+  s.attackerPlayer = other(winner);
+  s.players[winner].role = 'defender';
+  s.players[other(winner)].role = 'attacker';
+  for (const ob of s.objectives as (ObjectiveState & { ownerRole?: string })[]) if (ob.ownerRole) ob.owner = ob.ownerRole === 'attacker' ? s.attackerPlayer : other(s.attackerPlayer);
+  s.deployTurn = other(s.attackerPlayer); // the Defender deploys first
+  log(s, `${s.players[winner].name} won the roll-off and chose to be the Defender`, 'info', winner);
+  return null;
 }
 
 export function openCounteroffensive(s: GameState, attackerOwner: PlayerId) {
