@@ -4,7 +4,7 @@
 // enhancements that gain, spend or change Miracle dice are worked out here; the rest is data.
 import { d6, rollExpr } from '../engine/dice';
 import { dist } from '../engine/geometry';
-import { alive, centreOf, log, onBoard, pushFx, unitDistance } from '../engine/state';
+import { gainCp, alive, centreOf, log, onBoard, pushFx, unitDistance } from '../engine/state';
 import { abilityOff, addTimed } from '../rules-engine/effects';
 import { ldTest } from '../rules-engine/activations';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
@@ -126,8 +126,8 @@ export function sororitasCommandStart(s: GameState, p: PlayerId) {
     }
     if (hasEnh(u, 'Litanies of Faith') && ldTest(s, u, 'Litanies of Faith')) gainMiracleDice(s, p, 1, undefined, 'Litanies of Faith');
     if (hasAb(u, 'Fiery Conviction')) {
-      if (P.miracleDice.length >= 3) { P.miracleDice.pop(); P.cp += 1; log(s, 'Fiery Conviction: a Miracle dice discarded, +1CP', 'info', p); }
-      else if (ldTest(s, u, 'Fiery Conviction')) { P.cp += 1; log(s, 'Fiery Conviction: +1CP', 'info', p); }
+      if (P.miracleDice.length >= 3) { P.miracleDice.pop(); if (gainCp(s, p, 1)) log(s, 'Fiery Conviction: a Miracle dice discarded, +1CP', 'info', p); }
+      else if (ldTest(s, u, 'Fiery Conviction')) { if (gainCp(s, p, 1)) log(s, 'Fiery Conviction: +1CP', 'info', p); }
     }
     // Manual of Saint Griselda: two low Miracle dice become one of their sum (to a maximum of 6)
     if (hasEnh(u, 'Manual of Saint Griselda') && P.miracleDice.length >= 2) {

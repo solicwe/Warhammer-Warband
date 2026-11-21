@@ -5,7 +5,7 @@
 // of the phase: those are `act` buttons in data/abilities/DRU.json (condition `painReady`, action `dru: "empower"`)
 // and the abilities' effects check `painEmpowered`.
 import { d6 } from '../engine/dice';
-import { alive, boardUnits, hasKw, log, other, unitDistance } from '../engine/state';
+import { gainCp, alive, boardUnits, hasKw, log, other, unitDistance } from '../engine/state';
 import type { CombatMods } from '../engine/combatMods';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
@@ -175,7 +175,7 @@ export function drukhariAction(s: GameState, what: string, u: UnitState, label: 
   if (what === 'gain') gainPainToken(s, u.owner, 1, label);
   if (what === 'spend') spendPainToken(s, u.owner, 1, label);
   if (what === 'newContract') { const P = s.players[u.owner]; P.contract = undefined; pickContract(s, u.owner); }
-  if (what === 'spendCp' && spendPainToken(s, u.owner, 1, label)) { s.players[u.owner].cp += 1; log(s, `${label}: +1CP`, 'cp', u.owner); }
+  if (what === 'spendCp' && spendPainToken(s, u.owner, 1, label)) { if (gainCp(s, u.owner, 1)) log(s, `${label}: +1CP`, 'cp', u.owner); }
   if (what === 'wager') {
     const P = s.players[u.owner];
     if ((P.drukhariWagerWinning ?? 'Drukhari') === 'Drukhari') {

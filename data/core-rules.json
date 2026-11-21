@@ -6,6 +6,7 @@
   "battleRounds": 5,
   "startingCP": 0,
   "cpPerCommandPhase": 1,
+  "maxExtraCpPerRound": 1,
   "engagementRange": 2,
   "coherency": { "near": 2, "max": 9 },
   "advanceDice": "D6",

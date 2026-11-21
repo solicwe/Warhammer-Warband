@@ -149,6 +149,7 @@ button, .btn, select, .unit-pill, .seg button { touch-action: manipulation; }
   min-height: 44px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface);
   color: var(--text); font: 500 15px var(--font-ui); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  max-width: 100%; text-align: center; line-height: 1.2; /* a long label wraps inside the button instead of running off a phone screen */
 }
 .btn:hover { border-color: var(--text-3); }
 .btn:active:not(:disabled) { transform: scale(0.98); }

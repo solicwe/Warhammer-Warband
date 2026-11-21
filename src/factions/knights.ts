@@ -7,7 +7,7 @@ import { applyMortalWounds } from '../engine/attack';
 import { onCrTestDone, openCrTest } from './crTests';
 import { rollExpr, rollN } from '../engine/dice';
 import { baseDist, girth, polyCentroid, segSegDist } from '../engine/geometry';
-import { alive, boardUnits, crTest, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitById, unitDistance } from '../engine/state';
+import { gainCp, alive, boardUnits, crTest, hasKw, log, notifyAbilityCpGain, onBoard, other, strength, unitById, unitDistance } from '../engine/state';
 import type { GameState, PlayerId, Pt, UnitState } from '../engine/types';
 
 export const CODE = 'Code Chivalric';
@@ -107,9 +107,9 @@ function fulfil(s: GameState, p: PlayerId, why: string) {
   K.expended = [];
   K.done = true;
   const cp = extra ? 1 : K.random ? 3 : 2;
-  s.players[p].cp += cp;
-  log(s, `Oath fulfilled (${why}): the army is Honoured, +${cp}CP`, 'cp', p);
-  notifyAbilityCpGain(s, p, cp, 'Code Chivalric');
+  const got = gainCp(s, p, cp);
+  log(s, `Oath fulfilled (${why}): the army is Honoured, +${got}CP`, 'cp', p);
+  if (got) notifyAbilityCpGain(s, p, got, 'Code Chivalric');
 }
 
 const deedOf = (s: GameState, p: PlayerId) => { const K = s.players[p].knights; return K && !K.done ? K.deeds[K.deeds.length - 1] : undefined; };

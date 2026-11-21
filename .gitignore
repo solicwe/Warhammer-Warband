@@ -16,7 +16,3 @@ src/zz/
 
 # faction pack PDFs and other import sources (Games Workshop material): never commit
 *.pdf
-
-# official rules PDFs and their text: local only (data/official/README.md stays)
-data/official/*
-!data/official/README.md

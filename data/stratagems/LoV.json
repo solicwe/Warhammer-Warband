@@ -341,27 +341,31 @@
       "unitIf": [
         "nearLast:8"
       ],
-      "do": [
+      "choice": [
         {
-          "if": [
-            "!yp:2"
-          ],
-          "move": "D6"
-        },
-        {
+          "label": "Spend 2YP: Normal move of up to 6\"",
           "if": [
             "yp:2"
           ],
-          "lov": 2
+          "do": [
+            {
+              "lov": 2
+            },
+            {
+              "move": "6"
+            }
+          ]
         },
         {
-          "if": [
-            "yp:2"
-          ],
-          "move": "6"
+          "label": "Normal move of up to D6\"",
+          "do": [
+            {
+              "move": "D6"
+            }
+          ]
         }
       ],
-      "note": "YP are spent for the 6\" move whenever you have 2 or more",
+      "note": "The player chooses whether to spend 2YP (6\" instead of D6\"); the bot spends them when it has them",
       "status": "auto"
     },
     "DISPERSED FORMATION": {

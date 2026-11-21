@@ -15,7 +15,7 @@ import {
 } from './effects';
 import { baseDist, bodyAt, bodyTouchesPoly, dist, gap, ptGap } from '../engine/geometry';
 import { unitInRange } from '../engine/missions';
-import { alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance, bySize } from '../engine/state';
+import { gainCp, alive, boardUnits, centreOf, emitReact, engagedEnemies, extractToReserves, hasKw, heroFx, log, notifyAbilityCpGain, onBoard, other, pace, phaseKey, playsItself, pushFx, tableH, tableW, unitById, unitDistance, bySize } from '../engine/state';
 import type { AbilityData, AttackSession, GameState, ModelState, PlayerId, TimedEffect, UnitState } from '../engine/types';
 import { unitVisibleTo } from '../engine/visibility';
 
@@ -235,6 +235,8 @@ export interface ActSpec {
   botUse?: 'always' | 'damaged' | 'never' | 'valuable' | 'round2' | 'round3' | 'healthy';
   botIf?: string[]; // the bot only presses it when these conditions hold too (a player may press it any time)
   botOnly?: boolean; // an automatic trigger only for a bot player (a person uses the button version)
+  pickWeapon?: 'ranged' | 'melee'; // "select one ranged weapon equipped by this model": the player picks it (Nova Charge); the buffs then apply to that weapon only
+  ask?: boolean; // an automatic ability whose rule says "select one ... unit": a person is asked to pick it (a pickUnit prompt), a bot takes the best one
   units?: string[]; // detachment acts: which units have it
   armyWide?: boolean; // detachment acts: one button for the army, not one per unit
 }
@@ -488,6 +490,7 @@ export function actTargets(s: GameState, def: ActDef, ctx: FireCtx = {}): UnitSt
 export interface FireCtx {
   targetId?: string; killerId?: string; destroyed?: string[];
   killedCharacter?: boolean; modelsKilled?: number; melee?: boolean; deadModelId?: string;
+  weapon?: string; // the weapon the player picked for a `pickWeapon` ability: its buffs apply to that weapon only
 }
 
 export function heal(s: GameState, u: UnitState, n: number) {
@@ -779,7 +782,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
       }
     }
     const models = a.bearerOnly ? def.bearers.map((m) => m.id) : undefined;
-    for (const e of a.buff ?? []) addTimed(s, on, { e, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
+    for (const e of a.buff ?? []) addTimed(s, on, { e: ctx.weapon ? { ...e, weapon: ctx.weapon } : e, label: ctx.weapon ? `${def.name} (${ctx.weapon})` : def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
     // a bare mark ("buff": []) still has to be placed so `marked:` conditions can see it
     if (a.mark && a.buff && !a.buff.length) addTimed(s, on, { e: {}, label: def.name, until: a.until ?? 'phase', by: u.owner, mark: a.mark, models });
     if (a.incoming) {
@@ -848,7 +851,7 @@ function doActions(s: GameState, def: ActDef, acts: Action[], target: UnitState 
     if (a.unshock && on.battleShocked) { on.battleShocked = false; log(s, `${def.name}: ${on.name} is no longer Battle-shocked`, 'info', u.owner); }
     if (a.riled) { on.riledUntil = s.turn + (s.active === u.owner ? 1 : 0); log(s, `${def.name}: ${on.name} riled up`, 'info', u.owner); }
     if (a.oppCp) { const O = s.players[other(u.owner)]; const n = Math.min(O.cp, -a.oppCp); if (n > 0) { O.cp -= n; log(s, `${def.name}: ${O.name} loses ${n}CP`, 'cp', u.owner); } }
-    if (a.cp) { s.players[u.owner].cp += a.cp; log(s, `+${a.cp}CP (${def.name})`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, a.cp, def.name); }
+    if (a.cp) { const got = gainCp(s, u.owner, a.cp); if (got) { log(s, `+${got}CP (${def.name})`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, got, def.name); } }
     if (a.reserves) {
       extractToReserves(s, on, def.name);
       if (a.earlyArrival) on.arriveEarly = s.round;
@@ -1142,6 +1145,11 @@ export function fire(s: GameState, trigger: Trigger, units: UnitState[], ctx: Fi
       const t = def.spec.target;
       const cands = actTargets(s, def, ctx);
       if (t && t.side !== 'self' && !cands.length) continue;
+      if (def.spec.ask && t && t.side !== 'self' && !t.each && cands.length > 1 && !playsItself(s, u.owner) && !s.window) {
+        markUsed(s, def);
+        s.window = { kind: 'pickUnit', player: u.owner, label: `${def.name}: pick one unit (or skip)`, units: cands.map((c) => c.id), holderId: u.id, acts: def.spec.do ?? [] };
+        continue;
+      }
       const pick = !t || t.side === 'self' || t.each ? undefined : bestTarget(s, def, cands, ctx);
       useAct(s, def, pick, ctx);
     }
@@ -1205,11 +1213,11 @@ export function manualActs(s: GameState, p: PlayerId): ManualAct[] {
 }
 
 /** Press an ability button (by its key) for a unit. */
-export function useActByKey(s: GameState, unitId: string, key: string, targetId?: string): string | null {
+export function useActByKey(s: GameState, unitId: string, key: string, targetId?: string, weapon?: string): string | null {
   const u = unitById(s, unitId);
   const def = actsOfUnit(s, u).find((d) => d.key === key);
   if (!def) return 'No such ability';
-  return useAct(s, def, targetId);
+  return useAct(s, def, targetId, weapon ? { weapon } : {});
 }
 
 /** The bot presses the buttons that are worth it. */
@@ -1232,7 +1240,11 @@ export function botUseActs(s: GameState, p: PlayerId, when?: Trigger[], unitId?:
     if (!longMove && m.def.spec.do?.some((a) => a.move || a.surge || a.reserves)) continue; // moves need a plan the bot does not make
     if (!(m.def.spec.botIf ?? []).every((c) => cond(c, { s, A: m.def.holder, holder: m.def.holder, bearers: m.def.bearers }))) continue;
     const pick = m.def.spec.target && m.def.spec.target.side !== 'self' && !m.def.spec.target.each ? bestTarget(s, m.def, m.targets) : undefined;
-    useAct(s, m.def, pick);
+    // "select one ranged weapon": the bot takes the one with the most damage per volley
+    const pw = m.def.spec.pickWeapon;
+    const ws = pw ? alive(m.def.holder).flatMap((x) => x.weapons).filter((w) => w.profiles?.length && (w.profiles[0].range === 'Melee') === (pw === 'melee')) : [];
+    const weapon = ws.length ? [...ws].sort((a, b) => exprAverage(b.profiles[0].A) * exprAverage(b.profiles[0].D) - exprAverage(a.profiles[0].A) * exprAverage(a.profiles[0].D))[0].name : undefined;
+    useAct(s, m.def, pick, weapon ? { weapon } : {});
   }
 }
 
@@ -1672,8 +1684,8 @@ onModelKilled((s, u) => {
   const isMark = P.oathTarget === u.id;
   for (const f of mine) {
     const fl = unitFlags(s, f);
-    if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill) { P.cp += 1; notifyAbilityCpGain(s, p, 1, f.name); } }
-    if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on) { P.cp += 1; notifyAbilityCpGain(s, p, 1, f.name); } }
+    if (isMark && fl.cpOnOathKill <= 6) { const r = d6(s); log(s, `${f.name}: focus of hatred destroyed, rolled ${r} (${fl.cpOnOathKill}+)${r >= fl.cpOnOathKill ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnOathKill && gainCp(s, p, 1)) notifyAbilityCpGain(s, p, 1, f.name); }
+    if (fl.cpOnKillNear && unitDistance(f, u) <= fl.cpOnKillNear.range + 1e-6) { const r = d6(s); log(s, `${f.name}: enemy unit destroyed nearby, rolled ${r} (${fl.cpOnKillNear.on}+)${r >= fl.cpOnKillNear.on ? ' → +1CP' : ''}`, 'roll', p); if (r >= fl.cpOnKillNear.on && gainCp(s, p, 1)) notifyAbilityCpGain(s, p, 1, f.name); }
     if (f.quarry === u.id && f.abilities.some((a) => ['Architect of Ruin', 'Monarch of the Hunt', 'Prey of the Blood God', 'Exemplar of the Code', 'Methodical Destruction'].includes(a.name))) {
       const next = boardUnits(s, u.owner).sort((a, b) => b.pts - a.pts)[0];
       if (next) { f.quarry = next.id; log(s, `${f.name}: new hated foe → ${next.name}`, 'info', p); }

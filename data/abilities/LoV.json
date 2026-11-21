@@ -756,14 +756,14 @@
     "act": {
       "when": "afterShooting",
       "auto": true,
+      "ask": true,
       "limit": "phase",
       "target": {
         "side": "enemy",
         "hit": true,
         "units": [
           "!TITANIC"
-        ],
-        "closest": true
+        ]
       },
       "do": [
         {

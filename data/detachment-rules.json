@@ -7421,6 +7421,7 @@
         {
           "when": "commandStart",
           "auto": true,
+          "ask": true,
           "armyWide": true,
           "units": [
             "NECRONS"
@@ -7428,8 +7429,7 @@
           "limit": "turn",
           "target": {
             "side": "enemy",
-            "anywhere": true,
-            "closest": true
+            "anywhere": true
           },
           "do": [
             {

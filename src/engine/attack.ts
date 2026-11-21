@@ -344,13 +344,14 @@ function scoreMelee(p: WeaponProfileData, T: number) {
   return a * hit * wound * (1 + -p.AP * 0.25) * exprAverage(p.D);
 }
 
-export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string; models?: string[]; profile?: Record<string, number> } = {}): BuildResult {
+export function buildFightPools(s: GameState, attackerId: string, targetId: string, opt: { weapon?: string; epicChallengeModel?: string; models?: string[]; profile?: Record<string, number>; split?: boolean } = {}): BuildResult {
   const A = unitById(s, attackerId);
   const T = unitById(s, targetId);
   const T_T = targetToughness(T, s);
   const pools = new Map<string, Pool>();
   const only = A.fightOnly && A.fightOnly.key === `${s.turn}:${s.phase}` ? A.fightOnly.models : undefined;
-  const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : only ? alive(A).filter((m) => only.includes(m.id)) : alive(A);
+  const fp = !only ? fightPartOf(s, A) : undefined;
+  const fighters = opt.models ? A.models.filter((m) => opt.models!.includes(m.id)) : only ? alive(A).filter((m) => only.includes(m.id)) : alive(A).filter((m) => !fp?.done.includes(m.id));
   // Angel's Sacrifice: models in Engagement Range of the taunting unit must attack it
   const taunters = unitFlags(s, T).taunt ? [] : engagedEnemies(s, A).filter((e) => unitFlags(s, e).taunt);
   const glamour = unitFlags(s, T).glamour;
@@ -367,9 +368,14 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
     const melee = meleeWeapons(m);
     const extra = melee.filter((w) => hasAbility(w.profiles[0], 'extra-attacks'));
     const normal = melee.filter((w) => !hasAbility(w.profiles[0], 'extra-attacks'));
-    let main = normal.find((w) => w.name === opt.weapon);
+    // 04.01: one melee weapon per model, chosen once; 04.02: its attacks may be split between the enemy units it is engaged with
+    const carry = fp?.left[m.id];
+    let main = carry ? normal.find((w) => w.name === carry.w) : normal.find((w) => w.name === opt.weapon);
     if (!main) main = [...normal].sort((a, b) => scoreMelee(b.profiles[0], T_T) - scoreMelee(a.profiles[0], T_T))[0];
-    const use = [...(main ? [main] : []), ...extra];
+    const fixedA = main && /^\d+$/.test(main.profiles[0].A) ? +main.profiles[0].A : null;
+    const engagedCount = engagedEnemies(s, A).filter((e) => modelEngagedWith(m, e)).length;
+    const nHere = carry ? carry.n : opt.split && engagedCount > 1 && fixedA && fixedA >= 2 ? Math.ceil(fixedA / 2) : null;
+    const use = [...(main ? [main] : []), ...(carry ? [] : extra)];
     if (!use.length) use.push({ name: 'Close combat weapon', profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '1', skill: 4, S: m.profile.T, AP: 0, D: '1', abilities: [] }] });
     const damagedHit = A.core.damaged !== undefined && m.wounds <= A.core.damaged;
     for (const w of use) {
@@ -418,15 +424,51 @@ export function buildFightPools(s: GameState, attackerId: string, targetId: stri
       }
       pool.models += 1;
       (pool.fromIds ??= []).push(m.id);
+      const isMain = !extra.includes(w);
+      (pool.fightUse ??= []).push({ id: m.id, w: w.name, left: isMain && !carry && nHere !== null && fixedA ? fixedA - nHere : 0, extra: !isMain });
       const cleave = getAbility(p, 'cleave', T.keywords);
       const cleaveN = (cleave ? parseInt(cleave.value ?? '1', 10) : grants(fx, inc, 'cleave 1') || grants(fx, inc, 'cleave +1') ? 1 : 0) + (cleave && grants(fx, inc, 'cleave +1') ? 1 : 0); // Into the Fray; Mow 'Em Down: +1
-      pool.instances.push({ A: p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus });
+      pool.instances.push({ A: isMain && nHere !== null ? String(nHere) : p.A, extras: [], flat: cleaveN * Math.floor(alive(T).length / 5) + cm.attacksBonus });
       if (hasAbility(p, 'hazardous') || pool.hazardousAll) pool.hazardous += 1;
     }
   }
   const list = [...pools.values()];
   for (const pl of list) pl.attackNote = attackNote(pl);
   return { pools: list, notes: list.length ? [] : ['No model is engaged with the target'] };
+}
+
+/** The parts of a fight already made by this unit in this phase (none while a fightOnly re-fight runs). */
+function fightPartOf(s: GameState, A: UnitState) {
+  const key = `${s.turn}:${s.phase}`;
+  return A.fightPart && A.fightPart.key === key && !(A.fightOnly && A.fightOnly.key === key) ? A.fightPart : undefined;
+}
+
+/** Enemy units this unit's models can still attack: engaged with a model that has not used all its attacks (04.02). */
+export function fightRemaining(s: GameState, A: UnitState): UnitState[] {
+  const fp = fightPartOf(s, A);
+  const mine = alive(A).filter((m) => !fp?.done.includes(m.id));
+  return engagedEnemies(s, A).filter((e) => mine.some((m) => modelEngagedWith(m, e)));
+}
+
+/** Can the attacks of some model be split between `T` and another unit it is engaged with? */
+export function fightCanSplit(s: GameState, A: UnitState, T: UnitState): boolean {
+  const fp = fightPartOf(s, A);
+  const enemies = engagedEnemies(s, A);
+  return enemies.length > 1 && alive(A).some((m) => !fp?.done.includes(m.id) && !fp?.left[m.id] && modelEngagedWith(m, T)
+    && enemies.filter((e) => modelEngagedWith(m, e)).length > 1
+    && meleeWeapons(m).some((w) => !hasAbility(w.profiles[0], 'extra-attacks') && /^\d+$/.test(w.profiles[0].A) && +w.profiles[0].A >= 2));
+}
+
+/** After the attack of one part: remember which models are finished and what a split model still has to make. */
+function recordFightUse(s: GameState, A: UnitState, pools: Pool[]) {
+  const key = `${s.turn}:${s.phase}`;
+  if (A.fightOnly && A.fightOnly.key === key) return;
+  const fp = A.fightPart && A.fightPart.key === key ? A.fightPart : (A.fightPart = { key, done: [], left: {} });
+  for (const pl of pools) for (const u of pl.fightUse ?? []) {
+    if (u.extra) continue;
+    if (u.left > 0) fp.left[u.id] = { w: u.w, n: u.left };
+    else { delete fp.left[u.id]; if (!fp.done.includes(u.id)) fp.done.push(u.id); }
+  }
 }
 
 /** The notes of an attack that changed its odds, by the stage they act at (the base numbers are left out). */
@@ -1244,7 +1286,7 @@ export function finishAttack(s: GameState) {
   }
   if (!at.free) {
     if (at.kind === 'shoot' && !unfiredWeaponNames(A).length) A.selectedToShoot = true;
-    if (at.kind === 'fight') A.fought = true;
+    if (at.kind === 'fight') { recordFightUse(s, A, at.pools); A.fought = !fightRemaining(s, A).length || !!(A.fightOnly && A.fightOnly.key === `${s.turn}:${s.phase}`); }
   }
   s.attack = null;
   if (!at.free) {

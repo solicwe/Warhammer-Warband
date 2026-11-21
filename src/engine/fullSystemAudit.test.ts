@@ -7,7 +7,7 @@ import {
 } from './pathing';
 import { weaponFx } from './weaponFx';
 import { stratagemBlock } from '../rules-engine/stratagems';
-import { discardSecondary } from './game';
+import { discardCards } from './game';
 import { secondaryDead } from './secondaries';
 import type { GameState, ModelState, StratagemData, WeaponProfileData } from './types';
 
@@ -123,7 +123,7 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
   });
 
   describe('4. Secondary Mission Discard & Redraw Audit', () => {
-    it('Unachievable tactical secondaries discard and immediately redraw without waiting', () => {
+    it('Unachievable tactical secondaries are discarded for 1CP at the end of the turn', () => {
       const s = {
         round: 2,
         active: 0,
@@ -158,11 +158,10 @@ describe('Full System & Gameplay Audit — End-to-End Player Experience', () => 
       // Enemy has no character alive -> Assassination is impossible (dead)
       expect(secondaryDead(s, 0, 'assassination')).toBe(true);
 
-      // Discarding Assassination draws replacement instantly
-      discardSecondary(s, 0, 'assassination');
+      // Discarding Assassination gains 1 CP; the replacement is drawn in the next Command phase
+      discardCards(s, 0, ['assassination']);
 
       expect(s.players[0].secActive).not.toContain('assassination');
-      expect(s.players[0].secActive).toContain('no-prisoners');
       expect(s.players[0].cp).toBe(2); // In your own turn, tactical discard awards +1 CP in sim mode
     });
   });

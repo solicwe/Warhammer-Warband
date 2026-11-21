@@ -9,9 +9,9 @@ import { smartPlacement } from './deploy';
 import { dist } from '../engine/geometry';
 import { detChoices, pickDetChoice } from '../rules-engine/detachments';
 import {
-  autoCharge, autoPileMove, callWaaagh, canOverrun, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
-  declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, markFought,
-  openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
+  autoCharge, autoPileMove, callWaaagh, canOverrun, setEndOfTurnDiscardHook, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitMove, consolidateEligible, consolidateMode,
+  declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, concludeFight, fightCandidates, findPlacement, ingressUnit, markFought,
+  openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutFromReserves, scoutReserves, scoutUnits, scoutsOf,
   sendToReserves, declareReserves, armyPoints, reservesPoints, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, nextDeployer, startConsolidate } from '../engine/game';
 import { applyPick } from '../factions/blessings';
@@ -96,6 +96,11 @@ export function deckScore(u: UnitState, X: number): { total: number; avg: number
 }
 /** Passengers whose guns are worth firing out of a Firing Deck (a melta squad is, a bolter squad is not) stay in while the transport is not yet in danger. */
 const deckShooters = (s: GameState, t: UnitState, cargo: UnitState[]) => !!t.core.firingDeck && cargo.some((u) => !isBrawler(s, u) && deckScore(u, t.core.firingDeck!).avg >= 20);
+/** The whole squad fires through the deck (3 Eradicators in an Impulsor, Firing Deck 7): it rides and shoots all battle.
+ *  A big squad that only fires 2 guns out of a Rhino gets out as before, to hold objectives. */
+const deckWhole = (s: GameState, t: UnitState, u: UnitState) => deckShooters(s, t, [u]) && (t.core.firingDeck ?? 0) >= alive(u).length;
+/** Late in the battle an objective that needs bodies still gets them out. */
+const lateNeed = (s: GameState, d: number | undefined, reach: number) => pace(s) >= 3 && d !== undefined && d <= reach;
 
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
@@ -156,14 +161,16 @@ export function botDeploy(s: GameState) {
 export function botManageCards(s: GameState, p: PlayerId) {
   const P = s.players[p];
   if (P.secMode !== 'tactical' || s.botIgnoresCards?.includes(p)) return;
-  // dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
-  const dead = (id: string) => secondaryDead(s, p, id) || (s.round < lastRound(s) && secondaryChance(s, p, id) < 0.2);
   for (const id of [...P.secActive]) {
-    if (!dead(id)) continue;
-    if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
-    else discardSecondary(s, p, id);
+    if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p && cardIsDead(s, p, id)) swapSecondary(s, p, id);
   }
 }
+
+// dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
+const cardIsDead = (s: GameState, p: PlayerId, id: string) => secondaryDead(s, p, id) || (s.round < lastRound(s) && secondaryChance(s, p, id) < 0.2);
+
+// at the end of its own turn, after scoring, the bot discards the cards that cannot score (Event Companion)
+setEndOfTurnDiscardHook((s, p) => s.players[p].secMode !== 'tactical' || s.botIgnoresCards?.includes(p) ? [] : s.players[p].secActive.filter((id) => cardIsDead(s, p, id)));
 
 export function botCommand(s: GameState) {
   for (const t of s.shockTests) if (t.passed === null) rollBattleShock(s, t.unitId, wantsBravery(s, unitById(s, t.unitId)));
@@ -341,7 +348,9 @@ function botDisembark(s: GameState, p: PlayerId): boolean {
 function wantsOut(s: GameState, u: UnitState, t: UnitState, near: number, need: number | undefined): boolean {
   const M = moveOf(u);
   const fighter = isBrawler(s, u);
-  // a Firing Deck shooter fires from inside: it stays aboard until the enemy is close or the battle is half over
+  // a Firing Deck shooter fires from inside (a melta squad in an Impulsor): it stays aboard, moving and shooting with the
+  // transport, unless an objective needs its bodies late in the battle
+  if (!fighter && deckWhole(s, t, u) && !lateNeed(s, need, M + 5)) return false;
   if (!fighter && deckShooters(s, t, [u]) && near > 6 && pace(s) < 3 && !(need !== undefined && need <= M + 5)) return false;
   return pace(s) >= 3
     || (fighter && !unitFlags(s, t).assaultDisembark && near <= M + 10)
@@ -357,11 +366,14 @@ function botRapidDisembark(s: GameState, t: UnitState) {
   for (const u of s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked')) {
     const { tm, near, need, goal } = passengerGoal(s, t.owner, t);
     if (mode === 'tactical') {
+      if (deckWhole(s, t, u) && !lateNeed(s, need ? dist(need, tm) : undefined, 6)) continue; // the whole squad fires from the deck
       if (deckShooters(s, t, [u]) && pace(s) < 3) continue; // it fires from the deck
       if (t.move === 'stationary' && (s.round >= 2 || wantsOut(s, u, t, near, need ? dist(need, tm) : undefined))) getOut(s, u, t, goal);
       continue;
     }
     if (mode !== 'rapid') continue;
+    // it fires from the deck after the transport moved: staying in keeps it safe and lets it shoot every turn
+    if (deckWhole(s, t, u) && !lateNeed(s, need ? dist(need, tm) : undefined, 6)) continue;
     const shooter = !isBrawler(s, u) || unitFlags(s, t).assaultDisembark;
     const go = (shooter && near <= Math.min(24, maxRange(u) + 2)) || (need !== undefined && dist(need, tm) <= 6) || pace(s) >= 3;
     if (go) getOut(s, u, t, goal);
@@ -808,13 +820,17 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
   // fight with the unit that does the most damage first
   const pick = (x: UnitState) => Math.max(0, ...engagedEnemies(s, x).map((e) => meleeKills(x, e) * perModel(e)));
   const u = (isBot(s, c.player) ? botFightsFirstStratagem(s, c.player, c.units) : null) ?? [...c.units].sort((a, b) => pick(b) - pick(a))[0];
-  unitSelected(s, u, 'fight');
-  if (isBot(s, u.owner)) botReadyStratagem(s, u);
-  if (isBot(s, u.owner)) botFightChoice(s, u);
-  botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
+  const again = u.fightPart?.key === `${s.turn}:${s.phase}`; // a later part of the same fight: the unit is already selected
+  if (!again) {
+    unitSelected(s, u, 'fight');
+    if (isBot(s, u.owner)) botReadyStratagem(s, u);
+    if (isBot(s, u.owner)) botFightChoice(s, u);
+    botUseActs(s, u.owner, ['selectedToFight', 'fightStartButton'], u.id);
+  }
   // no longer engaged: an Overrun fight (pile in towards an enemy within 5", then fight if it got there)
   if (!engagedEnemies(s, u).length && canOverrun(s, u)) autoPileMove(s, u, 'pileIn');
   const eng = engagedEnemies(s, u);
+  let attacked = false;
   if (eng.length) {
     const scored = eng.map((e) => {
       const r = buildFightPools(s, u.id, e.id);
@@ -827,8 +843,10 @@ export function botFightStep(s: GameState, only?: PlayerId): boolean {
       const r = buildFightPools(s, u.id, scored[0].e.id, { epicChallengeModel: epic });
       // the player rolls the saves: the dice tray finishes the fight (marks it fought, offers Counteroffensive)
       if (!botAttack(s, 'fight', u.id, scored[0].e.id, r.pools.length ? r.pools : scored[0].r.pools)) return true;
+      attacked = true;
     }
   }
+  if (attacked) { concludeFight(s, u.id); return true; } // false: models engaged with another unit fight it next time
   markFought(s, unitById(s, u.id), eng.length > 0);
   openCounteroffensive(s, u.owner);
   return true;
@@ -903,6 +921,12 @@ export function botWindow(s: GameState) {
 
 /** Pre-battle Scouts moves: each unit takes the move the planner likes best (forward onto objectives, into cover), or stays. */
 export function botScouts(s: GameState, p: PlayerId) {
+  // 24.31: a Scouts unit kept in Strategic Reserves can be set up in the deployment zone now; a Deep Striker keeps waiting
+  for (const u of scoutReserves(s, p)) {
+    if (hasDeepStrike(s, u)) continue;
+    const pos = smartPlacement(s, u) ?? findPlacement(s, u, 'deploy');
+    if (pos) scoutFromReserves(s, u, pos);
+  }
   for (const u of scoutUnits(s, p)) {
     // a Scout move comes before the first turn: if the enemy shoots first, running out in front of its guns gets the
     // unit killed before it does anything — then only cover and safe spots are worth the move

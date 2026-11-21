@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { canCrossDense, blockingWalls } from './pathing';
 import { weaponFx } from './weaponFx';
 import { stratagemBlock } from '../rules-engine/stratagems';
-import { discardSecondary } from './game';
+import { discardCards } from './game';
 import { secondaryDead } from './secondaries';
 import { embarkCheck, parseTransport } from './army';
 import type { GameState, ModelState, StratagemData, WeaponProfileData, FactionData, ArmyList } from './types';
@@ -89,7 +89,7 @@ describe('User Feedback Fixes Verification', () => {
     expect(blockReason).toContain('Strategic Reserves limit reached');
   });
 
-  it('Discarding an unachievable secondary immediately draws a replacement', () => {
+  it('Discarding an unachievable secondary gains 1CP; the replacement comes in the next Command phase', () => {
     const s = {
       round: 2,
       active: 0,
@@ -124,11 +124,10 @@ describe('User Feedback Fixes Verification', () => {
     } as unknown as GameState;
 
     expect(secondaryDead(s, 0, 'assassination')).toBe(true);
-    discardSecondary(s, 0, 'assassination');
+    discardCards(s, 0, ['assassination']);
 
-    // It should have discarded assassination, drawn replacement immediately, and awarded +1 CP
+    // Event Companion: discarded at the end of your own turn for +1 CP; the replacement is drawn in the next Command phase
     expect(s.players[0].secActive).not.toContain('assassination');
-    expect(s.players[0].secActive).toContain('no-prisoners');
     expect(s.players[0].cp).toBe(2);
   });
 

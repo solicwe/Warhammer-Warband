@@ -73,12 +73,24 @@ export function log(s: GameState, text: string, kind?: LogEntry['kind'], player:
   if (s.log.length > 600) s.log.splice(0, s.log.length - 600);
 }
 
+/** Gain CP from anything but the Command phase's Core CP: at most 1 per battle round (Event Companion, Generating Command Points).
+ *  Returns what was really gained. */
+export function gainCp(s: GameState, p: PlayerId, n: number): number {
+  const P = s.players[p];
+  const used = P.cpGain && P.cpGain.round === s.round ? P.cpGain.n : 0;
+  const got = Math.max(0, Math.min(n, RULES.maxExtraCpPerRound - used));
+  P.cpGain = { round: s.round, n: used + got };
+  P.cp += got;
+  if (got < n) log(s, `${P.name}: ${n - got}CP not gained (at most ${RULES.maxExtraCpPerRound}CP per battle round besides Core CP)`, 'cp', p);
+  return got;
+}
+
 /** Resolve Coteaz's Spy Network after ability-generated CP; its own refund cannot trigger another refund. */
 export function notifyAbilityCpGain(s: GameState, p: PlayerId, amount: number, source: string) {
   for (const c of boardUnits(s, other(p)).filter((u) => u.abilities.some((a) => a.name === 'Spy Network' || a.name === 'Autodivinator'))) {
     for (let i = 0; i < amount; i++) {
       const roll = d6(s);
-      if (roll >= 2) s.players[c.owner].cp += 1;
+      if (roll >= 2) gainCp(s, c.owner, 1);
       log(s, `${c.name} - Spy Network: ${source} gained ${amount}CP, rolled ${roll}${roll >= 2 ? ' -> +1CP' : ''}`, 'roll', c.owner);
     }
   }

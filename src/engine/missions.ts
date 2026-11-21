@@ -245,7 +245,7 @@ const may = (s: GameState, u: UnitState, what: Parameters<EligHook>[2]) => !!eli
 
 export function actionBlock(s: GameState, u: UnitState): string | null {
   if (!onBoard(u)) return 'Not on the battlefield';
-  if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION') || hasKw(u, 'TITANIC')) return 'AIRCRAFT/FORTIFICATION/TITANIC';
+  if (hasKw(u, 'AIRCRAFT') || hasKw(u, 'FORTIFICATION')) return 'AIRCRAFT/FORTIFICATION';
   if (u.battleShocked && !may(s, u, 'actionWhileShocked')) return 'battle-shocked';
   if (!ocOf(u)) return 'OC is 0';
   if (isEngaged(s, u) && !hasKw(u, 'TITANIC') && !may(s, u, 'actionWhileEngaged')) return 'engaged';
@@ -357,7 +357,8 @@ export function startAction(s: GameState, opt: ActionOption) {
   const P = s.players[p];
   const def = MISSIONS.actions[opt.action];
   emitReact(s, p, 'actionStart', { unitId: u.id }); // BY THOUGHT ALONE
-  if (!may(s, u, 'shootAfterAction')) u.selectedToShoot = true; // cannot shoot (or charge) after starting an action
+  // cannot shoot (or charge) after starting an action; a TITANIC unit can still shoot (16.01)
+  if (!may(s, u, 'shootAfterAction') && !hasKw(u, 'TITANIC')) u.selectedToShoot = true;
   u.cantCharge = true;
   // on screen as a card, like a roll: the player sees the action happen
   pushFx(s, { kind: 'roll', owner: p, title: `${def.name} · ${u.name}`, dice: [], result: def.completes === 'immediately' ? 'Action done' : 'Action started · completes at the end of the turn', good: true });

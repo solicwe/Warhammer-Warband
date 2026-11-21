@@ -2,14 +2,14 @@
 import { arrivalDenied, battleShockMod, deepStrikeDistance, deepStrikeKeep, deepStrikeZoneOk, emit, moveBlock, rescueDie, shockDice, targetBlock } from './events';
 import '../factions/index';
 import { buildUnits, forChapter, safeUpper, transportFit } from './army';
-import { applyMortalWounds, buildShootPools, finishAttack, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
+import { applyMortalWounds, buildShootPools, finishAttack, fightRemaining, hazardWounds, hazardTest, killModel, onAttackFinished, onTransportDestroyed, resolveAll, startAttack } from './attack';
 import { deploymentById, dispositionById, dispositionId, LAYOUTS, layoutById, layoutsFor, TEST_RANGE_ID, MISSIONS, primaryById, primaryFor, RULES, secondaryById, type DispositionId } from './config';
 import { assignedObjective, mulberryPick, objectivePolys, onMoveEnd, onTurnEnd, onTurnStart, scorePrimary, startOfBattle, unitTouchedObjectives } from './missions';
-import { bankSecondary, drawUpTo, scoreSecondaries, secondaryDead } from './secondaries';
+import { bankSecondary, drawUpTo, scoreSecondaries } from './secondaries';
 import { d6, nextRandom, rollExpr, rollN, rollOff } from './dice';
 import { axis, baseDist, bodyAt, bodyTouchesPoly, bodyWhollyInPoly, circleTouchesPoly, coherencyProblems, contactAt, dist, EPS, gap, girth, onTable, pointInPoly, pointSegDist, polyCentroid, ptGap, reachOf, segSegDist, type Body, bodyBox } from './geometry';
 import {
-  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, hasKw, isEngaged, lastRound, log, modelEngagedWith, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance, emitReact, type ReactOn, heroFx, phaseKey, tableH, tableW,
+  alive, boardUnits, canUseStratagem, centreOf, engagedEnemies, extractToReserves, gainCp, hasKw, isEngaged, lastRound, log, modelEngagedWith, playsItself, pushFx, onBoard, other, spendStratagem, strength, unitById, unitDistance, emitReact, type ReactOn, heroFx, phaseKey, tableH, tableW,
 } from './state';
 import RIPPERS from '../../data/extra/ripper-swarms.json';
 import type { ArmyList, FactionData, GameState, MissionState, ModelState, MoveKind, ObjectiveState, Phase, PlayerId, Pt, Seg, TerrainPiece, TransportInfo, UnitState } from './types';
@@ -700,7 +700,11 @@ export function validateMove(s: GameState, u: UnitState, kind: MoveKind, paths: 
     const enemiesNear = boardUnits(s, other(u.owner)).some((e) => alive(u).some((m) => { const p = pos.get(m.id) ?? m; return alive(e).some((n) => gap(bodyAt(m, p), n) <= RULES.reserves.enemyDistance); }));
     if (enemiesNear) errors.push(`A Scout move must end more than ${RULES.reserves.enemyDistance}" from all enemy units`);
   }
-  if (['normal', 'advance', 'fallback', 'ingress', 'extra', 'surge'].includes(kind) && eng.length) { errors.push(`Cannot end within Engagement Range (${RULES.engagementRange}") of an enemy`); }
+  if (kind === 'surge') {
+    // 21.02: the surge target is the closest enemy unit; the unit may end engaged with it (and should, if it can) but not with any other enemy unit
+    const target = boardUnits(s, other(u.owner)).sort((x, y) => unitDistance(u, x) - unitDistance(u, y))[0];
+    if (eng.some((e) => e.id !== target?.id)) errors.push('A surge move cannot end engaged with an enemy unit other than the closest one (the surge target)');
+  } else if (['normal', 'advance', 'fallback', 'ingress', 'extra'].includes(kind) && eng.length) { errors.push(`Cannot end within Engagement Range (${RULES.engagementRange}") of an enemy`); }
   // Rigid Discipline: the move must end wholly in the deployment zone or within range of an objective
   if (kind === 'extra' && u.extraMove?.endIn) {
     const at = alive(u).map((m) => { const pth = paths.get(m.id); return { ...m, ...(pth ? pth[pth.length - 1] : {}) }; });
@@ -1229,7 +1233,7 @@ function finishDeployment(s: GameState) {
   s.round = 1;
   s.turn = -1;
   emit(s, 'preBattle', {});
-  if (s.units.some((u) => u.status === 'board' && scoutsOf(s, u))) {
+  if (s.units.some((u) => (u.status === 'board' && scoutsOf(s, u)) || (u.status === 'reserves' && !hasKw(u, 'AIRCRAFT') && !u.cultAmbush && ownScouts(s, u) > 0))) {
     s.phase = 'scouts';
     s.deployTurn = ro.winner;
     log(s, 'Pre-battle: Scout moves (first player first)', 'info', null);
@@ -1238,9 +1242,32 @@ function finishDeployment(s: GameState) {
   startTurn(s, ro.winner);
 }
 
-export const scoutsOf = (s: GameState, u: UnitState) => (u.infiltrated ? 0 : Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts));
+const ownScouts = (s: GameState, u: UnitState) => Math.max(u.core.scouts ?? 0, unitFlags(s, u).scouts);
+export const scoutsOf = (s: GameState, u: UnitState) => {
+  if (u.infiltrated) return 0;
+  const own = ownScouts(s, u);
+  if (own || s.turn >= 0 || !u.transport || !hasKw(u, 'DEDICATED TRANSPORT') || u.status !== 'board') return own;
+  // 24.31: a DEDICATED TRANSPORT wholly within its deployment zone can make a Scout move when every unit embarked in it has Scouts
+  const pax = s.units.filter((x) => x.embarkedIn === u.id && x.status === 'embarked');
+  if (!pax.length || !pax.every((x) => ownScouts(s, x) > 0) || !alive(u).every((m) => bodyWhollyInPoly(bodyAt(m, m), zoneOf(s, u.owner)))) return 0;
+  return Math.min(...pax.map((x) => ownScouts(s, x)));
+};
 export const hasDeepStrike = (s: GameState, u: UnitState) => !!u.core.deepStrike || unitFlags(s, u).deepStrike;
 export const scoutUnits = (s: GameState, p: PlayerId) => s.units.filter((u) => u.owner === p && u.status === 'board' && scoutsOf(s, u) > 0 && !u.scoutDone);
+
+/** Units with Scouts in Strategic Reserves can be set up now, wholly within their deployment zone (24.31). */
+export const scoutReserves = (s: GameState, p: PlayerId) => s.phase !== 'scouts' ? [] : s.units.filter((u) => u.owner === p && u.status === 'reserves' && !hasKw(u, 'AIRCRAFT') && !u.cultAmbush && !u.scoutDone && ownScouts(s, u) > 0);
+
+export function scoutFromReserves(s: GameState, u: UnitState, pos: Map<string, Pt>): MoveCheck {
+  if (!scoutReserves(s, u.owner).includes(u)) return { ok: false, errors: ['This unit cannot be set up from Reserves with Scouts now'], bad: [] };
+  const chk = validatePlacement(s, u, pos, 'deploy');
+  if (!chk.ok) return chk;
+  placeUnit(s, u, pos);
+  u.scoutDone = true;
+  log(s, `${u.name} (Scouts) is set up from Strategic Reserves in its deployment zone`, 'info', u.owner);
+  emit(s, 'reservesChanged', { p: u.owner });
+  return chk;
+}
 
 export function endScouts(s: GameState) {
   if (s.deployTurn === s.firstPlayer) { s.deployTurn = other(s.firstPlayer); if (scoutUnits(s, s.deployTurn).length) return; }
@@ -1499,6 +1526,18 @@ function endTurn(s: GameState) {
   scoreTiming(s, 'endOfYourTurn');
   for (const p of [0, 1] as PlayerId[]) scorePrimary(s, 'endOfAnyTurn', p);
   scoreSecondaries(s, s.round === lastRound(s) && s.active !== s.firstPlayer);
+  // Event Companion: after scoring, in your own turn, Tactical cards may be discarded (once per turn that gains 1CP)
+  const P = s.players[s.active];
+  if (P.secMode === 'tactical' && P.secActive.length) {
+    if (!playsItself(s, s.active)) { s.window = { kind: 'discardCards', player: s.active }; return; }
+    const ids = endOfTurnDiscardHook?.(s, s.active) ?? [];
+    if (ids.length) discardCards(s, s.active, ids);
+  }
+  finishTurn(s);
+}
+
+/** The rest of the turn's end: next turn, or the end of the battle round. */
+function finishTurn(s: GameState) {
   const second = s.active !== s.firstPlayer;
   if (!second) { s.phase = 'command'; startTurn(s, other(s.active)); return; }
   // end of battle round
@@ -2245,6 +2284,16 @@ export function fightCandidates(s: GameState): { player: PlayerId | null; units:
   return { player: other(f.chooser), units: pool.filter((u) => u.owner !== f.chooser) };
 }
 
+/** After one part of a fight (04.02): the unit is finished when no model of it can still attack an engaged enemy;
+ *  otherwise it stays selected so its other models can fight the next target. Returns true when the fight is over. */
+export function concludeFight(s: GameState, attackerId: string): boolean {
+  const u = unitById(s, attackerId);
+  if (onBoard(u) && !u.fought && fightRemaining(s, u).length) return false;
+  markFought(s, u);
+  openCounteroffensive(s, u.owner);
+  return true;
+}
+
 export function markFought(s: GameState, u: UnitState, canConsolidate = true) {
   const f = s.fight!;
   f.fought.push(u.id);
@@ -2339,6 +2388,15 @@ export function heroicCandidates(s: GameState, p: PlayerId): UnitState[] {
 
 /** Which Heroic Intervention a unit should use: Leap to Defend (1CP) when an enemy unit that just charged is in
  *  reach, else Into the Fray (2CP) when any enemy is within 6"; null when neither applies. */
+/** Every mode this unit can use now (the player chooses): Leap to Defend 1CP, Into the Fray 2CP. */
+export function heroicModes(s: GameState, p: PlayerId, u: UnitState): ('leap' | 'fray')[] {
+  const foes = boardUnits(s, other(p));
+  const out: ('leap' | 'fray')[] = [];
+  if (foes.some((e) => e.chargedTurn === s.turn && unitDistance(u, e) <= RULES.charge.declareRange)) out.push('leap');
+  if (!canUseStratagem(s, p, 'heroic-intervention', u, 2) && foes.some((e) => unitDistance(u, e) <= 6)) out.push('fray');
+  return out;
+}
+
 export function heroicMode(s: GameState, p: PlayerId, u: UnitState): 'leap' | 'fray' | null {
   const foes = boardUnits(s, other(p));
   if (foes.some((e) => e.chargedTurn === s.turn && unitDistance(u, e) <= RULES.charge.declareRange)) return 'leap';
@@ -2562,22 +2620,30 @@ export function claimSecondary(s: GameState, p: PlayerId, id: string, vp: number
   return bankSecondary(s, p, id, vp);
 }
 
-/** Tactical: discard an active card; at the end of your own turn this gains 1CP.
- *  If the card cannot be achieved (secondaryDead), immediately draw a replacement in tactical mode. */
-export function discardSecondary(s: GameState, p: PlayerId, id: string): string | null {
+let endOfTurnDiscardHook: ((s: GameState, p: PlayerId) => string[]) | null = null;
+/** The bot picks which Tactical cards to discard at the end of its own turn. */
+export const setEndOfTurnDiscardHook = (h: (s: GameState, p: PlayerId) => string[]) => { endOfTurnDiscardHook = h; };
+
+/** Tactical, end of your own turn after scoring (Event Companion): discard one or more active cards; doing so gains 1CP (once, not per card). */
+export function discardCards(s: GameState, p: PlayerId, ids: string[]): string | null {
   const P = s.players[p];
-  if (!P.secActive.includes(id)) return 'That card is not active';
-  const dead = secondaryDead(s, p, id);
-  P.secActive = P.secActive.filter((x) => x !== id);
-  if (s.active === p) {
-    P.cp += 1;
-    log(s, `${P.name} discards ${secondaryById(id).name}${dead ? " (cannot be achieved)" : ""} → +1CP`, "cp", p);
-  } else {
-    log(s, `${P.name} discards ${secondaryById(id).name}${dead ? " (cannot be achieved)" : ""}`, "info", p);
-  }
-  if (P.secMode === "tactical" && dead) {
-    drawUpTo(s, p, 2);
-  }
+  if (s.active !== p) return 'Cards can only be discarded at the end of your own turn';
+  const cards = [...new Set(ids)].filter((id) => P.secActive.includes(id));
+  if (!cards.length) return null;
+  P.secActive = P.secActive.filter((x) => !cards.includes(x));
+  const got = gainCp(s, p, 1);
+  log(s, `${P.name} discards ${cards.map((id) => secondaryById(id).name).join(', ')}${got ? ' → +1CP' : ''}`, 'cp', p);
+  return null;
+}
+
+/** The discard window of a person at the end of their turn was answered: the turn ends. */
+export function answerDiscard(s: GameState, ids: string[]): string | null {
+  const w = s.window;
+  if (w?.kind !== 'discardCards') return 'No card question is open';
+  const err = discardCards(s, w.player, ids);
+  if (err) return err;
+  s.window = null;
+  finishTurn(s);
   return null;
 }
 
@@ -2663,16 +2729,41 @@ setEmbarkNear((s, u, range, why) => {
 
 export const embarkedIn = (s: GameState, t: UnitState) => s.units.filter((u) => u.embarkedIn === t.id && u.status === 'embarked');
 
-export function disembarkMode(s: GameState, t: UnitState): 'rapid' | 'tactical' | 'combat' | null {
+/** Can `u` be set up wholly within 3" of its transport without being engaged? Then an engaged transport still allows a Tactical disembark (18.04). */
+export function canSetUpUnengaged(s: GameState, u: UnitState, t: UnitState): boolean {
+  const range = Math.max(3, unitFlags(s, t).disembarkRange);
+  for (const tm of alive(t)) {
+    for (let ring = 0; ring < 4; ring++) {
+      for (let a = 0; a < 12; a++) {
+        const ang = (a / 12) * Math.PI * 2;
+        const pos = formationAt(u, { x: tm.x + Math.cos(ang) * (tm.r + 1.2 + ring), y: tm.y + Math.sin(ang) * (tm.r + 1.2 + ring) });
+        const errs: string[] = [];
+        endChecks(s, u, pos, errs, new Set());
+        const within = alive(u).every((m) => { const p = pos.get(m.id)!; return alive(t).some((x) => ptGap(x, p) + reachOf(m) <= range + 0.02); });
+        if (!errs.length && within && !engagedAt(s, u, pos).length) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** The name of the disembark move a unit would make (18.04 Rapid / Tactical / Combat; 18.06 Assault and 18.07 Shock after Universal Rules Updates). */
+export function disembarkLabel(s: GameState, t: UnitState, u?: UnitState): 'Rapid' | 'Tactical' | 'Combat' | 'Assault' | 'Shock' | null {
+  const m = disembarkMode(s, t, u);
+  if (m === 'rapid') return t.move === 'advance' ? 'Shock' : (unitFlags(s, t).assaultDisembark || (u && unitFlags(s, u).assaultDisembark)) ? 'Assault' : 'Rapid';
+  return m === 'tactical' ? 'Tactical' : m === 'combat' ? 'Combat' : null;
+}
+
+export function disembarkMode(s: GameState, t: UnitState, u?: UnitState): 'rapid' | 'tactical' | 'combat' | null {
   if (t.move === 'advance' && unitFlags(s, t).disembarkAfterAdvance) return 'rapid';
   if (t.move === 'advance' || t.move === 'fallback') return null;
-  if (isEngaged(s, t)) return 'combat';
+  if (isEngaged(s, t)) return u && canSetUpUnengaged(s, u, t) ? 'tactical' : 'combat';
   if (t.move === 'normal' || t.move === 'ingress') return 'rapid';
   return 'tactical';
 }
 
 export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos: Map<string, Pt>): MoveCheck {
-  const mode = disembarkMode(s, t);
+  const mode = disembarkMode(s, t, u);
   const errors: string[] = [];
   const bad = new Set<string>();
   if (!mode) return { ok: false, errors: ['The transport Advanced / Fell Back: no disembarking this phase'], bad: [] };
@@ -2692,10 +2783,11 @@ export function validateDisembark(s: GameState, u: UnitState, t: UnitState, pos:
 export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map<string, Pt>): MoveCheck {
   const chk = validateDisembark(s, u, t, pos);
   if (!chk.ok) return chk;
-  const mode = disembarkMode(s, t)!;
+  const mode = disembarkMode(s, t, u)!;
+  const label = disembarkLabel(s, t, u)!;
   if (mode === 'combat') {
     const { fails } = hazardTest(s, u, alive(u).length, 'Combat Disembark');
-    if (fails) applyMortalWounds(s, u, fails, 'Combat Disembark');
+    if (fails) applyMortalWounds(s, u, fails * hazardWounds(u), 'Combat Disembark');
     u.battleShocked = true;
   }
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
@@ -2707,7 +2799,7 @@ export function disembarkUnit(s: GameState, u: UnitState, t: UnitState, pos: Map
   if (mode === 'tactical') u.move = null; // may still make a normal or advance move
   else { u.move = 'stationary'; u.cantCharge = !assault; }
   u.disembarkedFrom = t.id;
-  log(s, `${u.name} disembarks (${assault ? 'Assault: can still charge' : mode === 'rapid' ? 'Rapid' : mode === 'tactical' ? 'Tactical' : 'Combat'} Disembark)`, 'info', u.owner);
+  log(s, `${u.name} disembarks (${assault ? 'Assault: can still charge' : label} Disembark)`, 'info', u.owner);
   arrivalShock(s, u);
   unleashWrathHook?.(s, u);
   fire(s, 'passengerDisembarks', [t], { targetId: u.id });
@@ -2742,7 +2834,7 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
     u.battleShocked = true;
     u.cantCharge = true;
     log(s, `Emergency Disembark ${u.name}: battle-shocked`, 'roll', u.owner);
-    if (fails) applyMortalWounds(s, u, fails, 'Emergency Disembark');
+    if (fails) applyMortalWounds(s, u, fails * hazardWounds(u), 'Emergency Disembark');
   }
 }
 

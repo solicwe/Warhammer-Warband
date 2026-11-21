@@ -34,7 +34,7 @@ import { deploymentById, RULES, toPoly } from '../engine/config';
 import { d6, exprAverage } from '../engine/dice';
 import { baseDist, bodyTouchesPoly, clamp, dist, pointInPoly, pointSegDist, polyEdges } from '../engine/geometry';
 import { setActionEligibilityHook, unitInRange } from '../engine/missions';
-import { alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, tableH, tableW, unitDistance, withinTerrain } from '../engine/state';
+import { gainCp, alive, boardUnits, engagedEnemies, hasKw, log, notifyAbilityCpGain, onBoard, other, phaseKey, setStratBlockHook, setStratHooks, setStratShockedHook, tableH, tableW, unitDistance, withinTerrain } from '../engine/state';
 import type { AbilityData, GameState, ModelState, PlayerId, Pool, Pt, TimedEffect, UnitState, WeaponData, WeaponProfileData } from '../engine/types';
 import { abilityLabel, condApplies, parseAbility } from '../engine/weapons';
 import { hasCover, hasLos, isHidden, setScreenHook, setVisibilityHooks } from '../engine/visibility';
@@ -1562,7 +1562,7 @@ function stratSpent(s: GameState, u: UnitState, stratId: string) {
     if (!a.e.stratCpChance || a.holder.owner !== u.owner) continue;
     const r = d6(s);
     const ok = r >= a.e.stratCpChance;
-    if (ok) { s.players[u.owner].cp += 1; notifyAbilityCpGain(s, u.owner, 1, a.label); }
+    if (ok && gainCp(s, u.owner, 1)) notifyAbilityCpGain(s, u.owner, 1, a.label);
     log(s, `${a.label}: rolled ${r}${ok ? ' → +1CP' : ''}`, 'cp', u.owner);
   }
 }

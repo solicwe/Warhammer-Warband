@@ -67,12 +67,9 @@ npm test           # the everyday suite
 npm run test:slow  # whole bot-vs-bot games and the simulations (minutes)
 npm run build      # dist/
 npm run data       # rebuild public/data from data/raw and data/overrides
-npm run rule -- "Wrath of the Doomed"   # one rule: card, data, code, tests, official text
-npm run rules:check                     # the rule data as a whole (seconds)
 ```
 
-Adding or fixing a rule: [docs/RULES_WORKFLOW.md](docs/RULES_WORKFLOW.md) (the official documents go in `data/official/`,
-never committed). Where things are: [ARCHITECTURE.md](ARCHITECTURE.md) (layers and hooks), [AI_GUIDE.md](AI_GUIDE.md) (step lists for
+Where things are: [ARCHITECTURE.md](ARCHITECTURE.md) (layers and hooks), [AI_GUIDE.md](AI_GUIDE.md) (step lists for
 common changes), [docs/EDITING.md](docs/EDITING.md) (which data file holds which rule). The engine is deterministic: a
 game is driven by a seeded random number generator.
 

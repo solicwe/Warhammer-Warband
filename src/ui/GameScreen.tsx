@@ -9,7 +9,7 @@ import { unitAttachedSummary, unitDisplayName, unitKitSignature, unitSubDetails,
 import { WeaponFireModePanel } from './WeaponFireModePanel';
 import { Em } from './Em';
 import {
-  applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, finishAttack, forceDie, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
+  applyMortalWounds, buildFightPools, buildShootPools, expectedDamage, fightCanSplit, fightRemaining, finishAttack, forceDie, meleeWeapons, rerollOne, resolveAll, shootingModes, startAttack, stepAttack,
   type ShootMode,
 } from '../engine/attack';
 import { hasRisenRubricae, risenRubricaeCandidates, toggleRisenRubricae } from '../factions/thousandSons';
@@ -18,7 +18,7 @@ import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
-  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicMode, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, discardSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, hullSpots, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
 } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
@@ -76,13 +76,20 @@ import { canDesignateDeathstrike, canFireDeathstrike, designateDeathstrikeTarget
 type FxLevel = 'full' | 'short' | 'off';
 const loadFxLevel = (): FxLevel => { const v = readText(KEYS.fx); return v === 'short' || v === 'off' ? v : 'full'; };
 
+/** The models that can throw Explosives: those with the EXPLOSIVES/GRENADES keyword, else (the unit has it) every model. */
+const explosiveModels = (u: UnitState) => {
+  const ms = alive(u);
+  const kw = ms.filter((m) => m.keywords.some((k) => k === 'GRENADES' || k === 'EXPLOSIVES'));
+  return kw.length ? kw : ms;
+};
+
 type Mode =
   | { k: 'place'; unitId: string; how: 'deploy' | 'infiltrate' | 'ingress' | 'deepStrike' | 'disembark'; rapid?: boolean | 'free'; transportId?: string }
   | { k: 'move'; unitId: string; kind: 'normal' | 'advance' | 'fallback' | 'scout' | 'extra' | 'surge'; fly: boolean }
   | { k: 'shoot'; unitId: string; smode: ShootMode; target: string | null; useCQ: boolean; profile: Record<string, number>; overwatch?: boolean; skip?: string[] }
   | { k: 'charge'; unitId: string; targets: string[]; fly?: boolean; heroic?: 'leap' | 'fray' }
   | { k: 'pile'; unitId: string; kind: 'pileIn' | 'consolidate'; overrun?: boolean }
-  | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean; profile?: Record<string, number> }
+  | { k: 'fight'; unitId: string; target: string | null; weapon?: string; epic: boolean; profile?: Record<string, number>; split?: boolean }
   | { k: 'explosives'; unitId: string; target: string | null }
   | { k: 'crush'; unitId: string }
   | { k: 'deathstrike-target'; unitId: string };
@@ -163,6 +170,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     } else replayFrames.current.push(structuredClone(next));
   }, [replay]);
   const { state: s, act, undo, canUndo } = useGame(initial, !replay, replay, recordReplayCommit);
+  const [discardPick, setDiscardPick] = useState<string[]>([]);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const replayEvents = useMemo(() => {
     if (!replayStates || replayIndex === 0) return [];
@@ -231,8 +239,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         finishAttack(g);
         if (at.kind === 'overwatch') closeWindow(g);
         if (at.kind === 'fight' && attacker) {
-          markFought(g, unitById(g, attacker.id));
-          openCounteroffensive(g, attacker.owner);
+          concludeFight(g, attacker.id);
         }
       }, true);
       setMode(null);
@@ -657,13 +664,14 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }).map((t) => t.id);
   }, [s, mode]);
 
-  const fightTargets = useMemo(() => mode?.k === 'fight' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
+  const fightTargets = useMemo(() => mode?.k === 'fight' ? fightRemaining(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
   const explosiveTargets = useMemo(() => {
     if (mode?.k !== 'explosives') return [];
     const u = U(mode.unitId);
     const flags = unitFlags(s, u);
     const maxRange = flags.gheistskull && !u.used?.['Gheistskull'] ? 18 : 8;
-    return boardUnits(s, other(u.owner)).filter((t) => !isEngaged(s, t) && unitDistance(u, t) <= maxRange && alive(u).some((m) => unitVisibleTo(s, m, t))).map((t) => t.id);
+    // 15.05: one EXPLOSIVES/GRENADES model of the unit must be within range of the target and see it
+    return boardUnits(s, other(u.owner)).filter((t) => !isEngaged(s, t) && explosiveModels(u).some((m) => alive(t).some((e) => baseDist(m, e) <= maxRange + 1e-6) && unitVisibleTo(s, m, t))).map((t) => t.id);
   }, [s, mode]);
   const crushTargets = useMemo(() => mode?.k === 'crush' ? engagedEnemies(s, U(mode.unitId)).map((t) => t.id) : [], [s, mode]);
 
@@ -1207,7 +1215,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         label: 'Fight',
         primary: true,
         onClick: () => {
-          const eng = engagedEnemies(s, selUnit).map((e) => e.id);
+          const eng = fightRemaining(s, selUnit).map((e) => e.id);
           const tgt = eng.length === 1 ? eng[0] : (selUnit.chargeTargets?.length === 1 ? selUnit.chargeTargets[0] : null);
           setModeRaw({ k: 'fight', unitId: selUnit.id, target: tgt, epic: false });
         },
@@ -1321,7 +1329,10 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       setMode(null);
       return;
     }
-    if (mode.how === 'deploy' || mode.how === 'infiltrate') {
+    if (mode.how === 'deploy' && s.phase === 'scouts') {
+      const chk = act((g) => scoutFromReserves(g, unitById(g, u.id), pos));
+      if (!chk.ok) { setCheck(chk); return; }
+    } else if (mode.how === 'deploy' || mode.how === 'infiltrate') {
       const chk = act((g) => deployUnit(g, u.id, pos, mode.how as 'deploy' | 'infiltrate'));
       if (!chk.ok) { setCheck(chk); return; }
     } else {
@@ -1344,7 +1355,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     const u = U(mode.unitId), t = U(mode.transportId!);
     const tm = alive(t)[0];
     if (!tm) return;
-    const combat = disembarkMode(s, t) === 'combat';
+    const combat = disembarkMode(s, t, u) === 'combat';
     const foes = boardUnits(s, other(u.owner)).flatMap(alive);
     const near = foes.length ? foes.reduce((x, m) => (Math.hypot(m.x - tm.x, m.y - tm.y) < Math.hypot(x.x - tm.x, x.y - tm.y) ? m : x)) : null;
     const a0 = near ? Math.atan2(near.y - tm.y, near.x - tm.x) : 0;
@@ -1375,7 +1386,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     act((g) => {
       finishAttack(g);
       if (at.kind === 'overwatch') closeWindow(g);
-      if (at.kind === 'fight') { markFought(g, unitById(g, attacker.id)); openCounteroffensive(g, attacker.owner); }
+      if (at.kind === 'fight') concludeFight(g, attacker.id);
     });
     setMode(null);
     if (!spectate && at.kind === 'shoot' && !unfiredWeaponNames(attacker).length) setSel(null);
@@ -1605,9 +1616,12 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                       const k = `${hid}|${m.def.key}`;
                       const t = m.def.spec.target;
                       const pickOne = !!t && t.side !== 'self' && !t.each && m.targets.length > 1;
-                      const use = (targetId?: string) => {
+                      // "select one ranged weapon equipped by this model" (Nova Charge): the player picks the weapon
+                      const pw = m.def.spec.pickWeapon;
+                      const weaponsToPick = pw ? [...new Set(alive(holder).flatMap((mm) => mm.weapons).filter((w) => w.profiles?.length && isMelee(w.profiles[0]) === (pw === 'melee')).map((w) => w.name))] : [];
+                      const use = (targetId?: string, weapon?: string) => {
                         const res = act((g) => {
-                          const err = useActByKey(g, hid, m.def.key, targetId);
+                          const err = useActByKey(g, hid, m.def.key, targetId, weapon);
                           const gu = unitById(g, hid);
                           return { err, move: gu.extraMove && gu.extraMove.phase === `${g.turn}:${g.phase}` && !g.window ? gu.extraMove.kind : null };
                         });
@@ -1617,10 +1631,17 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                       };
                       return (
                         <span key={k} className="ab-opt">
-                          <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id))}>
+                          <button className={`btn small ${actPick === k ? 'on' : ''}`} disabled={!!m.why} title={m.why ?? m.label} onClick={() => (pickOne || weaponsToPick.length > 1 ? setActPick(actPick === k ? null : k) : use(m.targets[0]?.id, weaponsToPick[0]))}>
                             {opts.length > 1 ? optLabel(m.label) : 'Use'}
                           </button>
-                          {actPick === k && (
+                          {actPick === k && weaponsToPick.length > 1 && (
+                            <div className="row wrap" style={{ marginTop: 4, gap: 4 }}>
+                              <span className="tiny muted">Weapon:</span>
+                              {weaponsToPick.map((w) => <button key={w} type="button" className="btn small" onClick={() => use(m.targets[0]?.id, w)}>{w}</button>)}
+                              <button className="btn small ghost" onClick={() => setActPick(null)}>Cancel</button>
+                            </div>
+                          )}
+                          {actPick === k && !weaponsToPick.length && (
                             <div className="unit-strip" style={{ marginTop: 4, gap: 4, alignItems: 'center' }}>
                               <span className="tiny muted" style={{ marginRight: 2 }}>Target:</span>
                               {m.targets.map((x) => unitPill(x, false, () => use(x.id)))}
@@ -1699,6 +1720,19 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
+      );
+    }
+    if (w.kind === 'discardCards') {
+      const P = s.players[w.player];
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: discard cards?</div>
+          <div className="small">Tap the cards to discard. Discarding gains 1CP (once).</div>
+          <div className="row wrap">
+            {P.secActive.map((id) => <button key={id} type="button" className={`btn ${discardPick.includes(id) ? 'primary' : ''}`} onClick={() => setDiscardPick((x) => x.includes(id) ? x.filter((y) => y !== id) : [...x, id])}>{secondaryById(id).name}{secondaryDead(s, w.player, id) ? ' (cannot score)' : ''}</button>)}
+          </div>
+          <button className="btn primary grow" onClick={() => { const e = act((g) => answerDiscard(g, discardPick)); if (e) flash(e); setDiscardPick([]); }}>{discardPick.length ? `Discard ${discardPick.length}, +1CP` : 'Keep all'}</button>
         </>
       );
     }
@@ -1786,15 +1820,17 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: use Heroic Intervention?</div>
           {heroicPick.map((u, i) => {
-            const how = heroicMode(s, p, u);
-            const go = () => {
+            const modes = heroicModes(s, p, u);
+            const go = (how: 'leap' | 'fray') => {
               act((g) => { const gu = unitById(g, u.id); spendStratagem(g, p, 'heroic-intervention', gu, how === 'fray' ? 2 : undefined); declareCharge(g, gu, false, how === 'fray' ? 6 : undefined); });
-              setMode({ k: 'charge', unitId: u.id, targets: [], heroic: how! }, startPaths(u));
+              setMode({ k: 'charge', unitId: u.id, targets: [], heroic: how }, startPaths(u));
             };
             return (
-              <div key={u.id} className="row">
+              <div key={u.id} className="row wrap">
                 <span className="grow small"><b>{i + 1}. {u.name}</b></span>
-                <button className="btn small" disabled={!how} onClick={go}>{how === 'leap' ? 'Leap to Defend · 1CP' : how === 'fray' ? 'Into the Fray · 2CP' : 'No target in reach'}</button>
+                {modes.includes('leap') && <button className="btn small" onClick={() => go('leap')}>Leap to Defend · 1CP</button>}
+                {modes.includes('fray') && <button className="btn small" onClick={() => go('fray')}>Into the Fray · 2CP</button>}
+                {!modes.length && <span className="tiny muted">No target in reach</span>}
               </div>
             );
           })}
@@ -2792,7 +2828,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
             <div className="transport-box">
               {rigs.map((t) => {
                 const pax = s.units.filter((x) => x.embarkedIn === t.id && x.status === 'embarked');
-                const dm = disembarkMode(s, t);
+                const dm = disembarkLabel(s, t);
                 return (
                   <div key={t.id} className="small">
                     <b>{t.name}</b> <span className="muted">· capacity {transportSpaceUsed(s, t)}/{t.transport!.capacity}</span>
@@ -2809,9 +2845,10 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         })()}
         {u && u.status === 'embarked' && (() => {
           const t = U(u.embarkedIn!);
-          const dm = disembarkMode(s, t);
+          const dm = disembarkLabel(s, t, u);
+          const what: Record<string, string> = { Tactical: 'Tactical: can still move', Rapid: 'Rapid: cannot charge', Shock: 'Shock: cannot charge', Assault: 'Assault: can still charge', Combat: 'Combat: hazard + Battle-shocked' };
           return dm
-            ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'disembark', transportId: t.id })}>Disembark from {t.name} ({dm === 'tactical' ? 'Tactical: can still move' : dm === 'rapid' ? 'Rapid: cannot charge' : 'Combat: hazard + Battle-shocked'})</button>
+            ? <button className="btn primary" onClick={() => setMode({ k: 'place', unitId: u.id, how: 'disembark', transportId: t.id })}>Disembark from {t.name} ({what[dm]})</button>
             : <div className="muted small">The transport Advanced / Fell Back: no disembarking this phase</div>;
         })()}
         {rides.map((t) => {
@@ -2927,7 +2964,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       const threshold = flags.esotericExplosives ? 3 : 4;
       return (
         <>
-          <div className="small"><b>Explosives</b> ({modeUnit.name}): tap a visible, unengaged target within {maxRange}"{gheist ? ' (Gheistskull)' : ''}</div>
+          <div className="small"><b>Explosives</b> ({modeUnit.name}): tap an enemy within {maxRange}" that a grenade model sees{gheist ? ' (Gheistskull)' : ''}</div>
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
             <button className="btn primary grow" disabled={!mode.target} onClick={() => {
@@ -2935,7 +2972,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                 const gu = unitById(g, modeUnit.id);
                 spendStratagem(g, gu.owner, 'explosives', gu);
                 const tgt = unitById(g, mode.target!);
-                if (gheist && unitDistance(gu, tgt) > 8) {
+                if (gheist && !explosiveModels(gu).some((m) => alive(tgt).some((e) => baseDist(m, e) <= 8 + 1e-6))) {
                   (gu.used ??= {})['Gheistskull'] = `battle|${g.round}`;
                 }
                 const r = rollN(g, 6);
@@ -3583,13 +3620,14 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       const ec = canUseStratagem(s, u.owner, 'epic-challenge', u);
       // melee weapons with several profiles (strike / sweep): the player picks one, as when shooting
       const multi = [...new Map(alive(u).flatMap(own).filter((w) => w.profiles.length > 1).map((w) => [w.name, w])).values()];
-      const res = mode.target ? buildFightPools(s, u.id, mode.target, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile }) : null;
+      const res = mode.target ? buildFightPools(s, u.id, mode.target, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile, split: mode.split }) : null;
       return (
         <>
           <div className="small"><b>{u.name}</b>{fightTargets.length > 1 ? ' · tap a target' : ''}{weapons.length > 1 ? ' · pick the weapon for models that carry several' : ''}</div>
           {pactRow(u)}
           <div className="row">
             {weapons.length > 1 && weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
+            {mode.target && fightCanSplit(s, u, unitById(s, mode.target)) && <button className={`btn small ${mode.split ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, split: !mode.split })} title="Half of each such model's attacks go here, the rest to the next unit">Split attacks</button>}
             {chars.length > 0 && !ec && <button className={`btn small ${mode.epic ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, epic: !mode.epic })}>Epic Challenge 1CP</button>}
           </div>
           <WeaponFireModePanel hasCQ={false} smode="fight" firedAny={false} useCQ={false} nonCqWeapons={new Map()} cqWeapons={new Map()} multi={multi}
@@ -3603,13 +3641,12 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               act((g) => {
                 const gu = unitById(g, u.id);
                 if (mode.epic) spendStratagem(g, gu.owner, 'epic-challenge', gu);
-                const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile });
+                const r = buildFightPools(g, gu.id, mode.target!, { weapon: mode.weapon, epicChallengeModel: mode.epic ? chars[0]?.id : undefined, profile: mode.profile, split: mode.split });
                 startAttack(g, 'fight', gu.id, mode.target!, r.pools);
                 if (skip && g.window?.kind !== 'stratReaction') { // a stratagem question for the target waits first
                   resolveAll(g);
                   finishAttack(g);
-                  markFought(g, gu);
-                  openCounteroffensive(g, gu.owner);
+                  concludeFight(g, gu.id);
                 }
               });
               setMode(null);
@@ -3631,11 +3668,12 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         {selUnit && cands.units.includes(selUnit) && (isEngaged(s, selUnit) || selUnit.chargedTurn === s.turn) && selUnit.owner === cands.player && (
           <div className="row">
             <button className="btn primary grow" onClick={() => {
-              const eng = engagedEnemies(s, selUnit).map((e) => e.id);
+              const eng = fightRemaining(s, selUnit).map((e) => e.id);
               const tgt = eng.length === 1 ? eng[0] : (selUnit.chargeTargets?.length === 1 ? selUnit.chargeTargets[0] : null);
           setModeRaw({ k: 'fight', unitId: selUnit.id, target: tgt, epic: false });
             }}><Icon name="fight" /> Fight with {selUnit.name}</button>
             {!isEngaged(s, selUnit) && <button className="btn small" onClick={() => act((g) => markFought(g, unitById(g, selUnit.id), false))}>Skip (does not fight)</button>}
+            {selUnit.fightPart?.key === `${s.turn}:${s.phase}` && <button className="btn small" onClick={() => act((g) => { markFought(g, unitById(g, selUnit.id)); openCounteroffensive(g, selUnit.owner); })}>Done fighting</button>}
           </div>
         )}
         {overrunReady && selUnit!.owner === cands.player && (
@@ -3651,6 +3689,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
   };
 
   const scoutsPanel = () => {
+    if (mode?.k === 'place') return placePanel();
     if (mode?.k === 'move' && modeUnit) {
       return (
         <>
@@ -3661,11 +3700,14 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }
     const p = s.deployTurn;
     const list = scoutUnits(s, p);
+    const reserved = scoutReserves(s, p);
     return (
       <>
         <div className="handoff">Pre-battle · Scouts · {pName(s, p)}</div>
         <div className="unit-strip">{list.map((u) => unitPill(u, false, () => { setSel(u.id); setMode({ k: 'move', unitId: u.id, kind: 'scout', fly: false }, startPaths(u)); }))}</div>
-        {!list.length && <div className="muted small">No Scouts units left to move</div>}
+        {reserved.length > 0 && <div className="small muted">In Reserves with Scouts: set up in your deployment zone</div>}
+        <div className="unit-strip">{reserved.map((u) => unitPill(u, false, () => { setSel(u.id); setMode({ k: 'place', unitId: u.id, how: 'deploy' }); }))}</div>
+        {!list.length && !reserved.length && <div className="muted small">No Scouts units left to move</div>}
         <button className="btn primary" onClick={() => { act((g) => endScouts(g)); setSel(null); }}>Done <Icon name="next" /></button>
       </>
     );
@@ -3744,7 +3786,6 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                             {extra && <div className="tiny muted">{extra}</div>}
                             <div className="row" style={{ marginTop: 6 }}>
                               <span className="tiny muted grow">Scored automatically{P.secMode === 'fixed' ? ` · ${P.secFixedVp[id] ?? 0}/20 so far` : ''}</span>
-                              {P.secMode === 'tactical' && !bots.includes(p) && <button className="btn small ghost" onClick={() => act((g) => discardSecondary(g, p, id))}>Discard{s.active === p ? ' (+1CP)' : ''}</button>}
                               {P.secMode === 'tactical' && !bots.includes(p) && !P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && <button className="btn small ghost" onClick={() => act((g) => swapSecondary(g, p, id))}>New Orders 1CP</button>}
                             </div>
                             {!bots.includes(p) && (
@@ -4176,8 +4217,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               finishAttack(g);
               if (at.kind === 'overwatch') closeWindow(g);
               if (at.kind === 'fight' && attacker) {
-                markFought(g, unitById(g, attacker.id));
-                openCounteroffensive(g, attacker.owner);
+                concludeFight(g, attacker.id);
               }
             });
             setMode(null);
@@ -4429,16 +4469,6 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
                           )}
                           {P.secMode === 'tactical' && !bots.includes(p) && (
                             <>
-                              <button
-                                className="btn sec-discard"
-                                style={dead ? { background: '#2563eb', color: '#fff', fontWeight: 700 } : undefined}
-                                onClick={() => {
-                                  act((g) => discardSecondary(g, p, id));
-                                  flash(dead ? 'Unachievable card discarded — drew replacement' : (s.active === p ? 'Card discarded, +1CP' : 'Card discarded (CP only in your own turn)'));
-                                }}
-                              >
-                                <Icon name={dead ? 'reroll' : 'delete'} size={18} /> {dead ? 'Discard & Draw New Card' : `Discard${s.active === p ? ' (+1CP)' : ''}`}
-                              </button>
                               {!P.secSwapUsed && s.active === p && s.phase === 'command' && P.cp >= 1 && (
                                 <button className="btn small sec-discard" onClick={() => act((g) => swapSecondary(g, p, id))}><Icon name="reroll" size={16} /> New Orders (1CP, once)</button>
                               )}

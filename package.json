@@ -10,10 +10,6 @@
     "test": "vitest run",
     "test:slow": "vitest run --config vitest.slow.config.ts",
     "data": "node scripts/build-data.mjs",
-    "rule": "node scripts/rule.mjs",
-    "rules:fetch": "node scripts/rules-fetch.mjs",
-    "rules:text": "node scripts/rules-text.mjs",
-    "rules:check": "vitest run src/engine/rulesData.test.ts src/engine/rulesStatus.test.ts src/engine/army.test.ts src/engine/allies.test.ts src/engine/layers.test.ts src/engine/layoutSymmetry.test.ts src/rules-engine/stratTarget.test.ts",
     "images": "node scripts/build-images.mjs"
   },
   "dependencies": {

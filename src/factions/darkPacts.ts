@@ -7,7 +7,7 @@ import { rollExpr, rollN } from '../engine/dice';
 import { activeRules, addTimed, rollMods } from '../rules-engine/effects';
 import { bestLd } from '../engine/game';
 import { onCrTestDone, openCrTest } from './crTests';
-import { alive, boardUnits, engagedEnemies, crTest, hasKw, log, notifyAbilityCpGain, other, phaseKey, pushFx, unitById, unitDistance } from '../engine/state';
+import { gainCp, alive, boardUnits, engagedEnemies, crTest, hasKw, log, notifyAbilityCpGain, other, phaseKey, pushFx, unitById, unitDistance } from '../engine/state';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 
 export type PactPick = 'lethal hits' | 'sustained hits 1';
@@ -63,7 +63,7 @@ function finishDarkPact(s: GameState, u: UnitState, pick: PactPick, r: number[])
   }
   const enh = (n: string) => u.enhancements.find((e) => e.name === n);
   // Eye of Tzeentch: a passed test of 8+ gives 1CP
-  if (passed && total >= 8 && enh('Eye of Tzeentch')) { s.players[u.owner].cp += 1; log(s, `Eye of Tzeentch: Dark Pact passed on ${total} → +1CP`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, 1, 'Eye of Tzeentch'); }
+  if (passed && total >= 8 && enh('Eye of Tzeentch')) { const got = gainCp(s, u.owner, 1); if (got) { log(s, `Eye of Tzeentch: Dark Pact passed on ${total} → +1CP`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, got, 'Eye of Tzeentch'); } }
   // Talisman of Burning Blood: +D3 A and S on the bearer's melee weapons instead of +1
   const tal = passed ? enh('Talisman of Burning Blood') : undefined;
   if (tal) {
@@ -74,9 +74,8 @@ function finishDarkPact(s: GameState, u: UnitState, pick: PactPick, r: number[])
   }
   // Dark Destiny (Abaddon): a passed test of 7+ gives 1CP
   if (passed && total >= 7 && u.abilities.some((a) => a.name === 'Dark Destiny')) {
-    s.players[u.owner].cp += 1;
-    log(s, `Dark Destiny: ${u.name} passed its Dark Pact test on ${total} → +1CP`, 'cp', u.owner);
-    notifyAbilityCpGain(s, u.owner, 1, 'Dark Destiny');
+    const got = gainCp(s, u.owner, 1);
+    if (got) { log(s, `Dark Destiny: ${u.name} passed its Dark Pact test on ${total} → +1CP`, 'cp', u.owner); notifyAbilityCpGain(s, u.owner, got, 'Dark Destiny'); }
   }
   return { passed, total };
 }

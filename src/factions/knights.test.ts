@@ -26,7 +26,7 @@ const game = (list: ArmyList, F: FactionData, seed = 3): GameState => createGame
 const unit = (s: GameState, owner: number, sheet: string) => s.units.find((u) => u.owner === owner && u.sources[0] === sheet)!;
 
 describe('Imperial Knights', () => {
-  it('Code Chivalric: a Deed and a Quality; legacy gives +2 OC; reclaim the realm fulfils at the end of the opponent’s turn (+2CP, Honoured)', () => {
+  it('Code Chivalric: a Deed and a Quality; legacy gives +2 OC; reclaim the realm fulfils at the end of the opponent’s turn (1CP: at most 1CP besides Core CP per round, Honoured)', () => {
     const s = game(with_(PRESETS.QI, 'Valourstrike Lance'), QI);
     s.phase = 'command'; s.active = 0;
     expect(pickDetChoice(s, 0, 'Code Chivalric', ['reclaim', 'eager'])).toBeNull();
@@ -37,7 +37,7 @@ describe('Imperial Knights', () => {
     s.active = 1;
     knightsTurnEnd(s);
     expect(s.players[0].knights?.honoured).toBe(true);
-    expect(s.players[0].cp).toBe(cp + 2);
+    expect(s.players[0].cp).toBe(cp + 1);
   });
   it('a Quality and a Deed must both be picked', () => {
     const s = game(with_(PRESETS.QI, 'Valourstrike Lance'), QI);

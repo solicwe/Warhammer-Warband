@@ -280,6 +280,7 @@ export interface UnitState {
   chargeOnly?: { turn: number; ids: string[] }; // this turn the charge must end engaged with one of these (Snarling Protector)
   chargeMust?: { turn: number; id: string }; // this turn any charge it makes must end engaged with this unit (Lethal Obsession)
   fightOnly?: { key: string; models: string[] }; // this phase only these models fight (Rise to the Challenge: the bearer fights again)
+  fightPart?: { key: string; done: string[]; left: Record<string, { w: string; n: number }> }; // a fight made in parts (04.02: each weapon may split its attacks over several engaged enemy units): models that have used all their attacks, and attacks a model still has to make with its chosen weapon
   noChargeTurn?: number; // turn in which this unit cannot declare a charge (Meteoric Descent …)
   fellBackFrom?: string[]; // enemy units engaged with this unit when it fell back this turn
   detRerolled?: string; // `${turn}:advance|charge`: free detachment re-roll used
@@ -467,6 +468,7 @@ export interface PlayerState {
   secByRound: number[];
   secFixedVp: Record<string, number>;
   secSwapUsed: boolean;
+  cpGain?: { round: number; n: number }; // CP gained outside the Command phase this battle round (at most 1: Event Companion)
   /** detachment stratagems the player lets the game use by itself when their moment comes (e.g. Vengeful Animus) */
   autoStrats?: string[];
   /** limited stratagems: id -> battle round it was last used ("once per battle round") or -1 (once per battle) */
@@ -562,6 +564,8 @@ export interface Pool {
   models: number; // attacking models
   /** the models firing it (where its shots start on the board) */
   fromIds?: string[];
+  /** melee: what each model of this pool used, so a fight can go on against the next target */
+  fightUse?: { id: string; w: string; left: number; extra: boolean }[];
   instances: { A: string; extras: string[]; flat: number }[]; // per weapon instance: A + rapid fire/blast/cleave
   attacks: number;
   attackNote: string;
@@ -686,6 +690,8 @@ export type Window =
   | { kind: 'smokescreen'; player: PlayerId }
   | { kind: 'heroicIntervention'; player: PlayerId }
   | { kind: 'counteroffensive'; player: PlayerId }
+  /** end of your own turn, after scoring: Tactical cards may be discarded (Event Companion); doing so gains 1CP once */
+  | { kind: 'discardCards'; player: PlayerId }
   /** abilities that let units react out of turn ("if an enemy unit ends a move within 8\", this unit can make a Normal move") */
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */

@@ -8,7 +8,7 @@ import { baitUnit, deployPosture, smartPlacement } from '../deploy';
 import { dist, polyCentroid } from '../../engine/geometry';
 import { detChoices, pickDetChoice } from '../../rules-engine/detachments';
 import {
-  autoApproach, autoCharge, autoPileMove, callWaaagh, discardSecondary, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
+  autoApproach, autoCharge, autoPileMove, callWaaagh, discardCards, swapSecondary, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode,
   declareCharge, deployUnit, endConsolidateStep, endPhase, endPileInStep, endScouts, fightCandidates, findPlacement, ingressUnit, levelOfControl, markFought,
   objectiveTerrain, openCounteroffensive, overwatchCandidates, pileInEligible, remainStationary, rerollCharge, rollAdvance, rollBattleShock, scoutUnits, scoutsOf,
   sendToReserves, setOathTarget, validateMove, validatePlacement, chooseFixedSecondaries, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup,
@@ -124,7 +124,7 @@ export function botManageCards(s: GameState, p: PlayerId) {
   for (const id of [...P.secActive]) {
     if (!dead(id)) continue;
     if (!P.secSwapUsed && P.cp >= 2 && s.phase === 'command' && s.active === p) swapSecondary(s, p, id);
-    else discardSecondary(s, p, id);
+    else discardCards(s, p, [id]);
   }
 }
 

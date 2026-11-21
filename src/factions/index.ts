@@ -13,7 +13,7 @@ import { heal, runActions, setBackUp, shockTest } from '../rules-engine/activati
 import { applyMortalWounds, killModel, onAttackFinished, onAttackStart, onMortalWounds } from '../engine/attack';
 import { rollExpr, rollN } from '../engine/dice';
 import { addTimed, cond, effectsFor, unitFlags } from '../rules-engine/effects';
-import { alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, tableH, tableW, unitById, unitDistance } from '../engine/state';
+import { gainCp, alive, boardUnits, emitReact, onBoard, engagedEnemies, log, other, phaseKey, tableH, tableW, unitById, unitDistance } from '../engine/state';
 import { unitVisibleTo } from '../engine/visibility';
 import { setUpAway, setUpNear, shootNow } from '../engine/game';
 import { unitInRange, zonePoly } from '../engine/missions';
@@ -368,8 +368,8 @@ on('modelKilled', (s, { u, killerId }) => {
 on('commandStart', (s, { p }) => {
   const P = s.players[p];
   if ((P.pestilence ?? 0) < 7 || !boardUnits(s, p).some((x) => x.abilities.some((a) => a.name === 'Tally of Pestilence'))) return;
-  P.pestilence = 0; P.cp += 1;
-  log(s, 'Tally of Pestilence: 7 enemy models destroyed → +1CP', 'cp', p);
+  P.pestilence = 0;
+  if (gainCp(s, p, 1)) log(s, 'Tally of Pestilence: 7 enemy models destroyed → +1CP', 'cp', p);
 });
 
 

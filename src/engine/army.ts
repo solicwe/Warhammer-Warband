@@ -949,17 +949,8 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
       ...joiners.flatMap((j, k) => makeModels(sheetOf(j), j, `${id}-l${k}`, false)),
     ];
     const core = coreAbilities(sheets);
-    // Category 8: Attached Unit Sync (shared movement, FNP, stealth)
+    // Attached units: each model keeps its own M characteristic (Core Rules, Different Move Characteristics); stealth is shared
     if (joiners.length > 0) {
-      const validMs = models.map((m) => m.profile.M).filter((m): m is number => typeof m === 'number');
-      if (validMs.length > 0) {
-        const maxM = Math.max(...validMs);
-        for (const m of models) {
-          if (typeof m.profile.M === 'number' && m.profile.M < maxM) {
-            m.profile.M = maxM;
-          }
-        }
-      }
       if (core.stealth === undefined && sheets.some((s) => s.keywords.includes('STEALTH'))) {
         core.stealth = true;
       }

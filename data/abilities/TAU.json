@@ -490,7 +490,8 @@
     "act": {
       "when": "selectedToShoot",
       "limit": "battle",
-      "label": "Nova Charge: ranged weapons have [DEVASTATING WOUNDS] this phase",
+      "pickWeapon": "ranged",
+      "label": "Nova Charge: one ranged weapon has [DEVASTATING WOUNDS] this phase",
       "botUse": "valuable",
       "do": [
         {
@@ -507,7 +508,7 @@
         }
       ]
     },
-    "note": "All its ranged weapons (the card: one weapon)",
+    "note": "The player picks the weapon",
     "status": "auto"
   },
   "Targeting Array": {
@@ -818,6 +819,7 @@
     "act": {
       "when": "oppChargeStart",
       "auto": true,
+      "ask": true,
       "target": {
         "side": "enemy",
         "range": 12,
@@ -825,8 +827,7 @@
         "units": [
           "!MONSTER",
           "!VEHICLE"
-        ],
-        "closest": true
+        ]
       },
       "do": [
         {
