@@ -1821,19 +1821,43 @@
       ],
       "composition": [
         {
-          "name": "Jakhal Pack Leader, 1 Dishonoured and 8 Jakhals",
+          "name": "Jakhal Pack Leader",
           "min": 1,
           "max": 1,
-          "text": "1 Jakhal Pack Leader, 1 Dishonoured and 8 Jakhals"
+          "text": "1 Jakhal Pack Leader"
+        },
+        {
+          "name": "Dishonoured",
+          "min": 1,
+          "max": 1,
+          "text": "1 Dishonoured"
+        },
+        {
+          "name": "Jakhals",
+          "min": 8,
+          "max": 8,
+          "text": "8 Jakhals"
         },
         {
           "text": "or:"
         },
         {
-          "name": "Jakhal Pack Leader, 2 Dishonoured and 17 Jakhals",
+          "name": "Jakhal Pack Leader",
           "min": 1,
           "max": 1,
-          "text": "1 Jakhal Pack Leader, 2 Dishonoured and 17 Jakhals"
+          "text": "1 Jakhal Pack Leader"
+        },
+        {
+          "name": "Dishonoured",
+          "min": 2,
+          "max": 2,
+          "text": "2 Dishonoured"
+        },
+        {
+          "name": "Jakhals",
+          "min": 17,
+          "max": 17,
+          "text": "17 Jakhals"
         }
       ],
       "loadout": {
@@ -1876,8 +1900,7 @@
           ],
           "choices": [
             [
-              "Skullsmasher",
-              "Mangler"
+              "Skullsmasher and mangler"
             ]
           ]
         },

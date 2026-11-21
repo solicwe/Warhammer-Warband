@@ -386,20 +386,6 @@
    ]
   },
   {
-   "name": "Wolf Scouts",
-   "weapons": [
-    {
-     "name": "Runic Stave",
-     "profiles": [
-      {
-       "name": "Runic Stave",
-       "D": "2"
-      }
-     ]
-    }
-   ]
-  },
-  {
    "name": "Wulfen",
    "models": [
     {
@@ -822,42 +808,6 @@
    ]
   },
   {
-   "name": "Deathwatch Veterans",
-   "weapons": [
-    {
-     "name": "Frag Cannon",
-     "profiles": [
-      {
-       "name": "Frag Cannon",
-       "skill": 3
-      }
-     ]
-    },
-    {
-     "name": "Boltgun",
-     "profiles": [
-      {
-       "name": "Boltgun",
-       "skill": 3
-      }
-     ]
-    },
-    {
-     "name": "Combi-weapon",
-     "profiles": [
-      {
-       "name": "purgatus",
-       "skill": 3
-      },
-      {
-       "name": "damnatus",
-       "skill": 3
-      }
-     ]
-    }
-   ]
-  },
-  {
    "name": "Fortis Kill Team",
    "weapons": [
     {
@@ -875,53 +825,6 @@
       {
        "name": "Superkrak Rocket Launcher",
        "skill": 3
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "Indomitor Kill Team",
-   "weapons": [
-    {
-     "name": "Deathwatch Heavy Bolter",
-     "profiles": [
-      {
-       "name": "Deathwatch Heavy Bolter",
-       "AP": -2,
-       "D": "3"
-      }
-     ]
-    },
-    {
-     "name": "Melta Rifle",
-     "profiles": [
-      {
-       "name": "hunter",
-       "S": 10
-      }
-     ]
-    },
-    {
-     "name": "Multi-melta",
-     "profiles": [
-      {
-       "name": "Multi-melta",
-       "skill": 3
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "name": "Spectrus Kill Team",
-   "weapons": [
-    {
-     "name": "Instigator Bolt Carbine",
-     "profiles": [
-      {
-       "name": "Instigator Bolt Carbine",
-       "skill": 2
       }
      ]
     }

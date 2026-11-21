@@ -1258,7 +1258,7 @@
           "who": "*",
           "replace": [
             "Tachyon arrow",
-            "Blade"
+            "Overlord’s blade"
           ],
           "choices": [
             [
@@ -1705,7 +1705,7 @@
           ],
           "choices": [
             [
-              "Blade"
+              "Overlord’s blade"
             ]
           ]
         },
@@ -6461,7 +6461,7 @@
           ],
           "choices": [
             [
-              "Blade"
+              "Lord’s blade"
             ]
           ]
         },
@@ -8026,7 +8026,10 @@
           "text": "1 model's gauss scalpel or tesla caster can be replaced with 1 atomiser beam and 1 nanoscarab projector.",
           "scope": "upTo",
           "who": "*",
-          "replace": [],
+          "replace": [
+            "Gauss scalpel",
+            "Tesla caster"
+          ],
           "choices": [
             [
               "Atomiser beam",
@@ -8039,7 +8042,10 @@
           "text": "1 model's gauss scalpel or tesla caster can be replaced with 1 accelerator mandible.",
           "scope": "upTo",
           "who": "*",
-          "replace": [],
+          "replace": [
+            "Gauss scalpel",
+            "Tesla caster"
+          ],
           "choices": [
             [
               "Accelerator mandible"

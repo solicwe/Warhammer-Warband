@@ -1914,7 +1914,10 @@
           "text": "Up to 2 Hearthkyn Warriors can each have their Autoch-pattern bolter or ion blaster replaced with one of the following (duplicates are not allowed):• 1 HYLas auto rifle • 1 HYLas rotary cannon • 1 L7 missile launcher • 1 EtaCarn plasma beamer • 1 magna-rail rifle",
           "scope": "upTo",
           "who": "Hearthkyn Warriors",
-          "replace": [],
+          "replace": [
+            "Autoch-pattern bolter",
+            "Ion blaster"
+          ],
           "choices": [
             [
               "HYLas auto rifle"
@@ -1938,7 +1941,10 @@
           "text": "Up to 2 Hearthkyn Warriors can each have their Autoch-pattern bolter or ion blaster replaced with 1 plasma knife.",
           "scope": "upTo",
           "who": "Hearthkyn Warriors",
-          "replace": [],
+          "replace": [
+            "Autoch-pattern bolter",
+            "Ion blaster"
+          ],
           "choices": [
             [
               "Plasma knife"
@@ -1958,7 +1964,7 @@
               "Ion blaster"
             ],
             [
-              "Pistol"
+              "Theyn’s pistol"
             ]
           ]
         },
@@ -1969,7 +1975,7 @@
           "replace": [],
           "choices": [
             [
-              "Melee weapon"
+              "Theyn’s melee weapon"
             ]
           ]
         }
@@ -2315,7 +2321,10 @@
           "text": "The Hesyr's concussion gauntlet or plasma blade gauntlet can be replaced with 1 graviton hammer.",
           "scope": "one",
           "who": "Hesyr",
-          "replace": [],
+          "replace": [
+            "Concussion gauntlet",
+            "Plasma blade gauntlet"
+          ],
           "choices": [
             [
               "Graviton hammer"
@@ -2559,17 +2568,17 @@
           "text": "For every 5 models in this unit, 1 model that is not equipped with a mole grenade launcher can have its heavy plasma axe or concussion maul replaced with 1 twin concussion gauntlet.",
           "scope": "perN",
           "who": "*",
-          "replace": [],
+          "replace": [
+            "Heavy plasma axe",
+            "Concussion maul"
+          ],
           "choices": [
             [
               "Twin concussion gauntlet"
             ]
           ],
           "per": 5,
-          "max": 1,
-          "requiresNot": [
-            "Mole grenade launcher"
-          ]
+          "max": 1
         },
         {
           "text": "For every 5 models in this unit, 1 model that is not equipped with a twin concussion gauntlet or a mole grenade launcher can be equipped with 1 mole grenade launcher.*",
@@ -3783,6 +3792,7 @@
           "who": "Hernkyn Yaegir",
           "replace": [
             "Bolt revolver",
+            "Plasma knife",
             "Bolt shotgun"
           ],
           "choices": [
@@ -3798,6 +3808,7 @@
           "who": "Hernkyn Yaegir",
           "replace": [
             "Bolt revolver",
+            "Plasma knife",
             "Bolt shotgun"
           ],
           "choices": [

@@ -1,5 +1,6 @@
 // Turns an army list (datasheet names + sizes + attachments) into UnitState objects.
 import detData from '../../data/detachment-rules.json';
+import wargearMeta from '../../data/wargear-meta.json';
 import { allyErrors, DETACHMENT_ALLIES, detachmentAllyOf, subPointsList } from './allies';
 export { subPointsList, type SubPointsItem } from './allies';
 import { exprAverage } from './dice';
@@ -206,7 +207,8 @@ export function baseShape(sheet: DatasheetData, profileIdx: number): { r: number
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
-const singular = (s: string) => norm(s).replace(/\*+/g, '').replace(/(ies)$/, 'y').replace(/men$/, 'man').replace(/s$/, '');
+// word by word: "Sisters Novitiate" = "Sister Novitiate", "Shock Troopers" = "Shock Trooper"
+const singular = (s: string) => norm(s).replace(/\*+/g, '').split(' ').map((w) => w.replace(/ies$/, 'y').replace(/men$/, 'man').replace(/([^s])s$/, '$1')).join(' ');
 
 function matchProfile(sheet: DatasheetData, name?: string): number {
   if (!name || sheet.models.length === 1) return 0;
@@ -246,7 +248,12 @@ function loadoutKey(k: string): { n: number; base: string } {
 function itemsOf(sheet: DatasheetData, key: string | undefined): string[] {
   const out: string[] = [];
   const from = new Map<string, string>(); // canonical item -> loadout text it came from
-  for (const it of key ? sheet.loadout[key] : []) {
+  // "Autoch-pattern bolt pistols, breacher ordnance" (one loadout entry, two weapons) is split, unless a weapon has that name
+  const entries = (key ? sheet.loadout[key] : []).flatMap((it) => {
+    const parts = it.split(/,\s*/);
+    return parts.length > 1 && !sheet.weapons.some((w) => wkey(w.name) === wkey(it)) && parts.every((p) => weaponNamed(sheet, canonItem(sheet, p))) ? parts : [it];
+  });
+  for (const it of entries) {
     const c = canonItem(sheet, it);
     if (from.has(c) && from.get(c) !== it) continue; // two different texts for the same weapon
     from.set(c, it);
@@ -295,7 +302,9 @@ function loadoutItemsFor(sheet: DatasheetData, compName: string | undefined, pro
     ?? parsed.find((p) => matchKey(p, true))?.k
     ?? parsed.find((p) => matchFuzzy(p))?.k;
   const out: string[][] = [];
-  for (const p of parsed.filter((x) => x.n && x.base !== 'model' && (matchKey(x, true) || matchFuzzy(x)))) {
+  // a model with its own line ("Havoc Champion") takes only that line, not "2 Havocs" through the unit's profile name
+  const ownLine = !!comp && parsed.some((p) => p.base === comp);
+  for (const p of parsed.filter((x) => x.n && x.base !== 'model' && (ownLine ? x.base === comp : matchKey(x, true) || matchFuzzy(x)))) {
     for (let i = 0; i < p.n && out.length < count; i++) out.push(itemsOf(sheet, p.k));
   }
   const rest = plain && loadoutKey(plain).n && out.length ? parsed.find((p) => p.base === 'model')?.k ?? plain : plain;
@@ -445,6 +454,32 @@ export function wargearMax(sheet: DatasheetData, o: WargearOption, size: number,
   }
 }
 
+/**
+ * The item a swap takes away, as the models carry it. The data does not always name it the same way: "multi-laser" for
+ * the Valkyrie's "Militarum multi-laser", "tool" for "twin torturer's tools", a typo ("Autoch-pattem"), "ranged weapon"
+ * for whatever gun the model has. null: no model has anything like it.
+ */
+function carriedName(sheet: DatasheetData, everything: Set<string>, r: string): string | null {
+  const k = wkey(r);
+  if (everything.has(k)) return r;
+  const all = [...everything];
+  if (/^(ranged|melee) weapons?$/i.test(r.trim())) {
+    const melee = /^melee/i.test(r.trim());
+    return all.find((x) => { const w = sheet.weapons.find((y) => wkey(y.name) === x); return w && (w.profiles[0].range === 'Melee') === melee; }) ?? null;
+  }
+  // one or two letters apart ("pattem" / "pattern", "tri-bade" / "tri-blade")
+  const near = (a: string, b: string) => {
+    if (Math.abs(a.length - b.length) > 2 || a.length < 6) return false;
+    let i = 0;
+    while (i < a.length && a[i] === b[i]) i++;
+    let j = 0;
+    while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+    return Math.max(a.length, b.length) - i - j <= 2;
+  };
+  return all.filter((x) => (k.length >= 5 && (x.includes(k) || k.includes(x))) || near(x, k))
+    .sort((a, b) => Math.abs(a.length - k.length) - Math.abs(b.length - k.length))[0] ?? null;
+}
+
 /** Apply wargear choices to the planned models (in option order, so "if equipped with X" sees earlier swaps). Returns what could not be applied. */
 function applyWargear(sheet: DatasheetData, plans: ModelPlan[], picks: WargearPick[]): string[] {
   const opts = sheet.wargearOptions ?? [];
@@ -455,7 +490,10 @@ function applyWargear(sheet: DatasheetData, plans: ModelPlan[], picks: WargearPi
     if (!o || pk.count <= 0) continue;
     const gain = choiceItems(o, pk);
     if (!gain.length) continue;
-    const need = o.replace.filter((r) => everything.has(wkey(r))); // ignore data quirks naming items no model has
+    // what the models carry goes; when they carry none of it, an item another option gives must be taken first
+    // ("its shuriken rifle", after the pistol was swapped for one); else it is a data quirk and nothing goes
+    const carried = o.replace.map((r) => carriedName(sheet, everything, r)).filter((r): r is string => !!r);
+    const need = carried.length ? carried : o.replace.filter((r) => opts.some((x) => x !== o && x.choices.some((c) => c.some((y) => wkey(y) === wkey(r)))));
     let left = pk.count;
 
     const perIt = optPerItem(o);
@@ -591,6 +629,72 @@ function weaponPower(w: WeaponData): number {
   })), 0);
 }
 
+const META = (wargearMeta as { units: Record<string, { models: number; items: Record<string, number> }> }).units;
+
+/**
+ * The loadout tournament players take most (data/wargear-meta.json, `npm run data:meta`), reached through the unit's
+ * own options: the change that brings the unit's items closest to it is made first, then the next, while one helps.
+ * Counts scale with the unit's size; only items the lists name are compared.
+ * Options that cost points are left for the player (owner, 21 Nov 2026).
+ * null when no list took the unit.
+ */
+export function metaWargear(sheet: DatasheetData, e: ArmyUnitEntry): ArmyUnitEntry | null {
+  const m = META[sheet.name];
+  if (!m || !sheet.wargearOptions?.length) return null;
+  const want = new Map<string, number>();
+  for (const [k, n] of Object.entries(m.items)) want.set(wkey(k), Math.round((n * e.models) / m.models));
+  const miss = (picks: WargearPick[]) => {
+    const plans = planModels(sheet, e.models, e.addons, e.comp);
+    applyWargear(sheet, plans, picks);
+    const have = new Map<string, number>();
+    for (const p of plans) for (const it of p.items) have.set(wkey(it), (have.get(wkey(it)) ?? 0) + 1);
+    // only items the lists name (0 = named elsewhere, not taken): a name the GW app spells differently is not counted
+    let d = 0;
+    for (const [k, n] of want) d += Math.abs((have.get(k) ?? 0) - n);
+    return d;
+  };
+  // what costs points is the player's choice: never taken here
+  const costs = (items: string[]) => items.some((n) => sheet.wargearCosts?.some((c) => wkey(c.name) === wkey(n) && c.pts > 0));
+  const taken = (n: string) => (want.get(wkey(n)) ?? 0) > 0;
+  const opts = sheet.wargearOptions ?? [];
+  const legal = (picks: WargearPick[]) => !wargearProblems(sheet, { ...e, wargear: picks }).length;
+  let picks: WargearPick[] = [];
+  let now = miss(picks);
+  for (let round = 0; round < 40 && now > 0; round++) {
+    let best: { picks: WargearPick[]; v: number } | null = null;
+    const tryOne = (next: WargearPick[]) => {
+      const kept = next.filter((p) => p.count > 0);
+      if (!legal(kept)) return;
+      const v = miss(kept);
+      if (v < (best?.v ?? now)) best = { picks: kept, v };
+    };
+    opts.forEach((o, i) => {
+      if (o.minModels && e.models < o.minModels) return;
+      const mine = picks.filter((p) => p.opt === i);
+      const rest = picks.filter((p) => p.opt !== i);
+      const max = wargearMax(sheet, o, e.models, e.addons, picks);
+      o.choices.forEach((items, ci) => {
+        // a swap is taken only for an item the lists take (a free gain of an item spelled otherwise proves nothing)
+        if (!items.length || costs(items) || !items.some(taken)) return;
+        const cur = mine.find((p) => p.choice === ci)?.count ?? 0;
+        const others = mine.filter((p) => p.choice !== ci);
+        tryOne([...rest, ...others, { opt: i, choice: ci, count: cur + 1 }]);
+        if (cur > 0) tryOne([...rest, ...others, { opt: i, choice: ci, count: cur - 1 }]);
+        for (const ot of others) tryOne([...rest, ...others.map((p) => (p === ot ? { ...p, count: p.count - 1 } : p)), { opt: i, choice: ci, count: cur + 1 }]);
+        if (max > cur + 1) tryOne([...rest, { opt: i, choice: ci, count: max }]); // a whole-unit swap in one step
+      });
+      if (o.pick && o.pickFrom?.length) {
+        const top = o.pickFrom.filter((n) => !costs([n]) && taken(n)).sort((a, b) => (want.get(wkey(b)) ?? 0) - (want.get(wkey(a)) ?? 0)).slice(0, o.pick);
+        if (top.length === o.pick) tryOne([...rest, { opt: i, choice: -1, count: 1, picks: top }]);
+      }
+    });
+    const b = best as { picks: WargearPick[]; v: number } | null;
+    if (!b) break;
+    picks = b.picks; now = b.v;
+  }
+  return { ...e, wargear: picks };
+}
+
 /**
  * The best free loadout for a new unit: every free option that adds a weapon (a hunter-killer missile, a rocket pod)
  * is taken, and a swap is made where the unit hits harder with it (a model shoots all its guns but fights with one
@@ -598,7 +702,10 @@ function weaponPower(w: WeaponData): number {
  * helps. Options that cost points, gear that isn't a weapon, and "pick two" lists are left for the player.
  */
 export function defaultWargear(sheet: DatasheetData | undefined, e: ArmyUnitEntry): ArmyUnitEntry {
-  if (!sheet?.wargearOptions?.length) return e;
+  if (!sheet) return e;
+  const meta = metaWargear(sheet, e);
+  if (meta) return meta;
+  if (!sheet.wargearOptions?.length) return e;
   const opts = sheet.wargearOptions;
   const costOf = (items: string[]) => items.reduce((a, n) => a + (sheet.wargearCosts?.find((c) => wkey(c.name) === wkey(n))?.pts ?? 0), 0);
   const isGear = (items: string[]) => items.some((n) => !weaponNamed(sheet, n));

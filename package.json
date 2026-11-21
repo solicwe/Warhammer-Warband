@@ -11,7 +11,8 @@
     "test:slow": "vitest run --config vitest.slow.config.ts",
     "data": "node scripts/build-data.mjs",
     "images": "node scripts/build-images.mjs",
-    "data:capture": "node scripts/capture-overrides.mjs"
+    "data:capture": "node scripts/capture-overrides.mjs",
+    "data:meta": "node scripts/wargear-meta.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

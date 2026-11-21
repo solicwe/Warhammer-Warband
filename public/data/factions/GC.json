@@ -1384,8 +1384,7 @@
           "who": "Acolyte Hybrids",
           "replace": [
             "Autopistol",
-            "Cult claws",
-            "Knife"
+            "Cult claws and knife"
           ],
           "choices": [
             [
@@ -1400,12 +1399,11 @@
           "scope": "one",
           "who": "Acolyte Leader",
           "replace": [
-            "Cult claws",
-            "Knife"
+            "Cult claws and knife"
           ],
           "choices": [
             [
-              "Bio-weapons"
+              "Leader’s bio-weapons"
             ]
           ]
         }
@@ -4814,12 +4812,11 @@
           "scope": "one",
           "who": "Acolyte Leader",
           "replace": [
-            "Cult claws",
-            "Knife"
+            "Cult claws and knife"
           ],
           "choices": [
             [
-              "Bio-weapons"
+              "Leader’s bio-weapons"
             ]
           ]
         }
@@ -5267,8 +5264,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Monstrous bonesword",
-            "Lash whip"
+            "Monstrous bonesword and lash whip"
           ],
           "choices": [
             [
@@ -7452,6 +7448,18 @@
           "max": 1
         },
         {
+          "text": "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 medi-pack.**",
+          "scope": "upTo",
+          "who": "Veteran Guardsman",
+          "replace": [],
+          "choices": [
+            [
+              "Medi-pack"
+            ]
+          ],
+          "max": 1
+        },
+        {
           "text": "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 regimental standard.**",
           "scope": "upTo",
           "who": "Veteran Guardsman",
@@ -9506,19 +9514,31 @@
       ],
       "composition": [
         {
-          "name": "Shock Trooper Sergeant and 9 Shock Troopers",
+          "name": "Shock Trooper Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Shock Trooper Sergeant and 9 Shock Troopers"
+          "text": "1 Shock Trooper Sergeant"
+        },
+        {
+          "name": "Shock Troopers",
+          "min": 9,
+          "max": 9,
+          "text": "9 Shock Troopers"
         },
         {
           "text": "OR"
         },
         {
-          "name": "Shock Trooper Sergeants and 18 Shock Troopers",
+          "name": "Shock Trooper Sergeants",
           "min": 2,
           "max": 2,
-          "text": "2 Shock Trooper Sergeants and 18 Shock Troopers"
+          "text": "2 Shock Trooper Sergeants"
+        },
+        {
+          "name": "Shock Troopers",
+          "min": 18,
+          "max": 18,
+          "text": "18 Shock Troopers"
         }
       ],
       "loadout": {
@@ -9600,7 +9620,7 @@
           ],
           "choices": [
             [
-              "Autogun",
+              "Sergeant's autogun",
               "Close combat weapon"
             ]
           ]
@@ -9864,19 +9884,31 @@
       ],
       "composition": [
         {
-          "name": "Jungle Fighter Sergeant and 9 Jungle Fighters",
+          "name": "Jungle Fighter Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Jungle Fighter Sergeant and 9 Jungle Fighters"
+          "text": "1 Jungle Fighter Sergeant"
+        },
+        {
+          "name": "Jungle Fighters",
+          "min": 9,
+          "max": 9,
+          "text": "9 Jungle Fighters"
         },
         {
           "text": "OR"
         },
         {
-          "name": "Jungle Fighter Sergeants and 18 Jungle Fighters",
+          "name": "Jungle Fighter Sergeants",
           "min": 2,
           "max": 2,
-          "text": "2 Jungle Fighter Sergeants and 18 Jungle Fighters"
+          "text": "2 Jungle Fighter Sergeants"
+        },
+        {
+          "name": "Jungle Fighters",
+          "min": 18,
+          "max": 18,
+          "text": "18 Jungle Fighters"
         }
       ],
       "loadout": {
@@ -10067,19 +10099,31 @@
       ],
       "composition": [
         {
-          "name": "Death Korps Watchmaster and 9 Death Korps Troopers",
+          "name": "Death Korps Watchmaster",
           "min": 1,
           "max": 1,
-          "text": "1 Death Korps Watchmaster and 9 Death Korps Troopers"
+          "text": "1 Death Korps Watchmaster"
+        },
+        {
+          "name": "Death Korps Troopers",
+          "min": 9,
+          "max": 9,
+          "text": "9 Death Korps Troopers"
         },
         {
           "text": "OR"
         },
         {
-          "name": "Death Korps Watchmasters and 18 Death Korps Troopers",
+          "name": "Death Korps Watchmasters",
           "min": 2,
           "max": 2,
-          "text": "2 Death Korps Watchmasters and 18 Death Korps Troopers"
+          "text": "2 Death Korps Watchmasters"
+        },
+        {
+          "name": "Death Korps Troopers",
+          "min": 18,
+          "max": 18,
+          "text": "18 Death Korps Troopers"
         }
       ],
       "loadout": {

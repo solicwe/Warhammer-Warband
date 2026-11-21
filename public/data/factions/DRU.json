@@ -2493,7 +2493,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Tools"
+            "Twin torturer’s tools"
           ],
           "choices": [
             [
@@ -2507,7 +2507,7 @@
           "scope": "one",
           "who": "Acothyst",
           "replace": [
-            "Tools"
+            "Twin torturer’s tools"
           ],
           "choices": [
             [
@@ -4469,6 +4469,38 @@
             ],
             [
               "Twin heat lance"
+            ]
+          ]
+        },
+        {
+          "text": "Any number of models can each replace one of their macro-scalpels with one of the following:• 1 Talos ichor injector • 1 twin liquifier gun",
+          "scope": "any",
+          "who": "*",
+          "replace": [
+            "Macro-scalpel"
+          ],
+          "choices": [
+            [
+              "Talos ichor injector"
+            ],
+            [
+              "Twin liquifier gun"
+            ]
+          ]
+        },
+        {
+          "text": "Any number of models can each replace one of their macro-scalpels with one of the following:• 1 chain flails • 1 Talos gauntlet",
+          "scope": "any",
+          "who": "*",
+          "replace": [
+            "Macro-scalpel"
+          ],
+          "choices": [
+            [
+              "Chain-flails"
+            ],
+            [
+              "Talos gauntlet"
             ]
           ]
         }
@@ -6459,11 +6491,11 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Blade"
+            "Troupe Master’s blade"
           ],
           "choices": [
             [
-              "Special weapon"
+              "Harlequin’s special weapon"
             ]
           ]
         }
@@ -7020,11 +7052,11 @@
           "scope": "any",
           "who": "*",
           "replace": [
-            "Blade"
+            "Harlequin’s blade"
           ],
           "choices": [
             [
-              "Special weapon"
+              "Harlequin’s special weapon"
             ]
           ]
         },
@@ -7033,7 +7065,7 @@
           "scope": "one",
           "who": "Lead Player",
           "replace": [
-            "Blade"
+            "Harlequin’s blade"
           ],
           "choices": [
             [
@@ -7526,7 +7558,10 @@
           "text": "For every 5 models in this unit, 1 Corsair Voidreaver's power sword or shuriken rifle can be replaced with one of the following:• 1 blaster • 1 shredder",
           "scope": "perN",
           "who": "Corsair Voidreaver",
-          "replace": [],
+          "replace": [
+            "Power sword",
+            "Shuriken rifle"
+          ],
           "choices": [
             [
               "Blaster"
@@ -8260,17 +8295,12 @@
       "isSupport": false,
       "points": [
         {
-          "label": "<div class=\"dsHeaderComp\">1 Voidscarred Felarch, 4 Corsair Voidscarred</div>",
+          "label": "",
           "options": [
             {
               "models": 5,
               "pts": 70
-            }
-          ]
-        },
-        {
-          "label": "<div class=\"dsHeaderComp\">1 Voidscarred Felarch, 5-9 Corsair Voidscarred, 0-1 Shade Runner, 0-1 Soul Weaver, 0-1 Way Seeker</div>",
-          "options": [
+            },
             {
               "models": 10,
               "pts": 140

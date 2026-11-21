@@ -102,6 +102,11 @@ function parseComposition(lines) {
   return lines
     .map((l) => htmlToText(l.description))
     .filter(Boolean)
+    // "1 Shock Trooper Sergeant and 9 Shock Troopers", "1 Jakhal Pack Leader, 1 Dishonoured and 8 Jakhals": one line each
+    .flatMap((text) => {
+      const parts = text.split(/,\s*|\s+and\s+(?=\d)/).map((p) => p.trim());
+      return parts.length > 1 && parts.every((p) => /^\d/.test(p)) ? parts : [text];
+    })
     .map((text) => {
       const m = /^(\d+)(?:\s*-\s*(\d+))?\s+(.+?)(?:\s+models?)?$/i.exec(text);
       if (!m) return { text };
@@ -131,12 +136,18 @@ const countOf = (s) => { const m = COUNT_RE.exec(s); return m ? Number(m[1]) || 
 const stripCount = (s) => s.replace(/^up to (\d+|\w+)\s+/i, '').replace(COUNT_RE, '').replace(/^additional\s+/i, '').replace(/[.;,:]+$/, '').trim();
 const ownerless = (x) => x.replace(/\*/g, '').replace(/\([^)]*\)?|\[[^\]]*\]?/g, '').replace(/^.*?(?:'s|\btheir|\bits)\s+/i, '').trim();
 const JUNK = /following|\bor\b|^unit$|^models?$|pistol\)|one of them|^different\b|\blist\b|duplicates|cannot be|more than|\bcan be\b|[()\]]/i;
+/** Weapon names with "and", a comma or an apostrophe in them ("Knives and Fists", "Bone cleaver, lash whip and rending
+ *  claws", "Dragon's breath flamer", "Exarch's death spinner"), set per datasheet: one item, its owner word kept. */
+let andNames = [];
+const escRe = (n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const keepAnd = (s) => andNames.reduce((t, n) => t.replace(new RegExp(escRe(n.replace(/’/g, "'")), 'gi'), (x) => x.replace(/ and /gi, ' \u0001 ').replace(/,/g, '\u0002').replace(/'/g, '\u0003')), s);
 /** "2 multi-meltas and 1 storm bolter" -> ['multi-meltas', 'multi-meltas', 'storm bolter'] (repeated for counts) */
-const items = (s) => s.split(/\s+and\s+|,\s*/).flatMap((raw) => {
-  const body = ownerless(raw);
+const items = (s) => keepAnd(s).split(/\s+and\s+|,\s*/).flatMap((raw) => {
+  const body = ownerless(raw.replace(/ \u0001 /g, ' and ').replace(/\u0002/g, ',')).replace(/\u0003/g, "'");
   const replacement = body.match(/\breplaced with\s+(.+)$/i);
   const x = stripCount(replacement?.[1] ?? body);
-  if (!x || x.length > 40 || JUNK.test(x)) return [];
+  const named = andNames.some((n) => n.replace(/’/g, "'").toLowerCase() === x.toLowerCase());
+  if (!x || (!named && (x.length > 40 || JUNK.test(x)))) return [];
   return Array(Math.min(countOf(body), 6)).fill(x);
 });
 
@@ -153,12 +164,17 @@ export function canonWeapon(name, weapons) {
   return name.charAt(0).toUpperCase() + name.slice(1); // equipment (shield, banner ...), not a weapon
 }
 
+/** "X or Y can be replaced": whichever alternative the model carries is removed. */
+const orItems = (s) => keepAnd(s).split(/\s+or\s+/).flatMap(items);
 /** "The Intercessor Sergeant’s bolt rifle can be replaced with one of the following: • 1 power fist …" -> structured option.
  *  scope: one (this model / the named model), upTo N models, perN (for every N models, `max` of them), any number, all.
  *  stack: "This model can be equipped with up to 4 X" (count = copies on one model). pick: "two different weapons from the following list". */
 export function parseWargearOption(text, weapons = []) {
   let t = text.replace(/\s+/g, ' ').replace(/’/g, "'").trim();
   if (!t || /^none$/i.test(t) || /^\*/.test(t)) return null;
+  andNames = weapons.map((w) => w.name).filter((n) => / and |,|['’]/i.test(n));
+  // "can be equipped 1 medi-pack" (a word missing in the export)
+  t = t.replace(/can be equipped (\d|one|a|an) /i, 'can be equipped with $1 ');
   const opt = { text: t, scope: 'one', who: '*', replace: [], choices: [] };
   let m;
   // conditions first: "If this unit contains 12 models, …" / "If the Reiver Sergeant is equipped with 1 bolt carbine, it can be equipped with …"
@@ -197,8 +213,9 @@ export function parseWargearOption(text, weapons = []) {
   if (opt.who === '*' && (m = t.match(/^For every \w+ ([A-Z][\w' -]+?) in (?:this|the) unit/))) opt.who = whoClean(m[1]);
   // what is replaced: "have their X replaced", "X's Y can be replaced", "can replace its X with …"
   let choiceBody = null;
-  if ((m = t.match(/can (?:each )?replace (?:its|their) (.+?) with (.+)$/i))) { opt.replace = items(m[1]); choiceBody = m[2]; }
-  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|s'|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = items(m[1]);
+  // "can each replace one of their macro-scalpels with …" (Talos) as well as "can replace its X with …"
+  if ((m = t.match(/can (?:each )?replace (?:its|their|one of (?:its|their)) (.+?) with (.+)$/i))) { opt.replace = orItems(m[1]); choiceBody = m[2]; }
+  else if ((m = t.match(/have (?:their|its) (.+?) replaced/i)) || (m = t.match(/(?:'s|s'|their|its) (.+?) (?:can )?(?:each )?(?:be )?replaced/i))) opt.replace = orItems(m[1]);
   // "… replaced with 1 twin lightning claws, or two different weapons from the following list: • …"
   if ((m = t.match(/(two|three|2|3) different (?:weapons|items) from the following list:?\*?\s*(.+)$/i))) {
     opt.pick = Number(m[1]) || WORDS[m[1].toLowerCase()];
@@ -214,8 +231,11 @@ export function parseWargearOption(text, weapons = []) {
       choiceBody = after ? after[1] : null;
     }
     if (choiceBody !== null) {
+      const listed = /\b(?:one|1) of the following\b/i.test(t);
       choiceBody = choiceBody.replace(/^(?:one|1) of the following:?\s*/i, '');
       if (choiceBody.includes('•')) opt.choices = choiceBody.split('•').map((x) => x.trim()).filter(Boolean).map(items);
+      // "one of the following: 1 Boltgun and 1 Storm Shield, 1 Power Weapon and 1 Storm Shield" (no bullets)
+      else if (listed) opt.choices = keepAnd(choiceBody.split(/\.\s/)[0]).split(/,\s*(?:or\s+)?|\s+or\s+/).map(items);
       else opt.choices = [items(choiceBody.split(/\.\s/)[0])];
     }
   }
@@ -258,6 +278,9 @@ function parsePoints(rows) {
   const filled = tiers.filter((t) => t.options.length);
   const uniq = [];
   for (const t of filled) if (!uniq.some((u) => u.label === t.label && JSON.stringify(u.options) === JSON.stringify(t.options))) uniq.push(t);
+  // headers that name the models ("1 Voidscarred Felarch, 4 Corsair Voidscarred" / "... 5-9 Corsair Voidscarred") are
+  // unit sizes, not price tiers: one tier, so the 10-model unit can be taken
+  if (uniq.length > 1 && uniq.every((t) => /dsHeaderComp/.test(t.label ?? ''))) uniq.splice(0, uniq.length, { label: '', options: uniq.flatMap((t) => t.options) });
   const wg = [];
   for (const w of wargear) if (!wg.some((x) => x.name.toLowerCase() === w.name.toLowerCase())) wg.push(w);
   return { tiers: uniq, wargear: wg };
@@ -506,7 +529,7 @@ function build() {
       console.log(`applied overrides for ${f.id}`);
     }
     // a newer book as a ListForge pack replaces the Wahapedia datasheets / rules / detachments (data/packs)
-    const pf = packFile(path.join(ROOT, 'data/packs'), f.id);
+    const pf = process.env.SKIP_PACKS ? '' : packFile(path.join(ROOT, 'data/packs'), f.id); // SKIP_PACKS=1: Wahapedia only
     if (fs.existsSync(pf)) {
       const waha = faction;
       faction = factionFromPack(pf, faction, sub);
@@ -519,6 +542,17 @@ function build() {
         const common = [...rules].find((r) => faction.datasheets.filter((x) => x.abilities.some((a) => a.name === r)).length > faction.datasheets.length / 2);
         if (common && !own.some((a) => a.name === common)) own.push(faction.datasheets.flatMap((x) => x.abilities).find((a) => a.name === common));
         faction.datasheets.push({ ...d, abilities: own });
+      }
+      // the pack lists fixed loadouts for some units (Deathwatch Veterans as 'Veteran w/ boltgun and power weapon' models): where
+      // Wahapedia gives more wargear options, its models, loadout, weapons and options are used so the weapons can be chosen
+      // (owner, 21 Nov 2026); the pack's abilities, keywords and points stay
+      for (const d of faction.datasheets) {
+        const w = waha.datasheets.find((x) => normName(x.name) === normName(d.name));
+        // more choices in all (a pack's one option with 27 whole loadouts, the Lieutenant's, is richer than Wahapedia's 8 choices)
+        const choices = (x) => (x.wargearOptions ?? []).reduce((n, o) => n + (o.choices?.length ?? 0) + (o.pickFrom?.length ?? 0), 0);
+        if (!w || choices(w) <= choices(d)) continue;
+        for (const k of ['models', 'composition', 'loadout', 'loadoutText', 'options', 'wargearOptions', 'weapons', 'wargearCosts']) if (w[k] !== undefined) d[k] = w[k];
+        d.wargearFrom = 'wahapedia';
       }
       console.log(`built ${f.id} from ${faction.source.pack} (revision ${faction.source.revision})`);
     }
@@ -551,5 +585,8 @@ function build() {
   console.log(`built ${index.factions.length} factions (data ${lastUpdate}); left out ${dropped} non-11th-edition (Legends / Forge World / old index) datasheets`);
 }
 
-if (process.argv.includes('--fetch')) await fetchAll();
-build();
+// run as a script (not when another script imports parseWargearOption to test it)
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv.includes('--fetch')) await fetchAll();
+  build();
+}

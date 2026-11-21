@@ -6,6 +6,7 @@
 | อยากแก้อะไร | ไฟล์ |
 |---|---|
 | ค่าบนการ์ด (M/T/Sv/W, อาวุธ, แต้ม, keyword) | `data/overrides/<FACTION>.json` (ดู `data/overrides/README.md`) — อย่าแก้ `public/data/factions/*.json` ตรง ๆ เพราะถูกสร้างใหม่จาก Wahapedia |
+| wargear เริ่มต้นของ unit ใหม่ (ตาม meta ทัวร์นาเมนต์) | `data/wargear-meta.json` สร้างด้วย `npm run data:meta` (ดึงลิสต์ GT จาก listhammer.info, แคชใน `node_modules/.cache/listhammer`); โค้ดคือ `metaWargear` ใน `src/engine/army.ts` ตัวเลือกที่เสีย point ไม่ใส่ให้ |
 | **Space Marines (Codex 2026)** | `data/packs/SM.listforge-pack.json` (ไฟล์ ListForge) + `data/packs/SM.cards.txt` (การ์ด stratagem) — `npm run data` สร้าง SM จาก pack นี้แทน Wahapedia (ดู `scripts/pack.mjs`) |
 | **Adeptus Custodes (Codex 2026)** | `data/packs/AC.listforge-pack.json` — Martial Ka'tah (readied) อยู่ใน `data/detachment-rules.json` key `Martial Ka'tah` |
 | **Thousand Sons (Faction Pack v1.3)** | ค่าที่ pack เปลี่ยน (T, inferno S/AP, stratagem) อยู่ใน `data/overrides/TS.json`; Rituals (Cabal of Sorcerers) อยู่ใน `src/factions/rituals.ts` + bot ใน `src/ai/botRituals.ts`; Flow of Magic ใน `src/factions/flow.ts` |

@@ -243,5 +243,5 @@ describe('Chaos Space Marines in a game', () => {
     while (s.phase !== 'gameover' && steps < 15000) { botAct(s); steps++; }
     expect(s.phase).toBe('gameover');
     expect(s.log.some((l) => /makes a Dark Pact/.test(l.text) && l.player === 0)).toBe(true);
-  }, 180000);
+  }, 300000); // alone it takes about 110 s; four test workers at once pushed it past 180 s
 });

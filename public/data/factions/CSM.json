@@ -7212,7 +7212,10 @@
           "text": "Any number of Havocs can each have their Havoc autocannon or Havoc lascannon replaced with one of the following:• 1 Havoc autocannon • 1 Havoc heavy bolter • 1 Havoc lascannon • 1 Havoc missile launcher • 1 Havoc reaper chaincannon",
           "scope": "any",
           "who": "Havocs",
-          "replace": [],
+          "replace": [
+            "Havoc autocannon",
+            "Havoc lascannon"
+          ],
           "choices": [
             [
               "Havoc autocannon"

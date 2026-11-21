@@ -4171,7 +4171,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Vindictor"
+            "Zealot’s vindictor"
           ],
           "choices": [
             [
@@ -4910,8 +4910,7 @@
           "choices": [
             [
               "Stalker-pattern boltgun",
-              "Knives",
-              "Fists"
+              "Knives and Fists"
             ]
           ],
           "per": 5,
@@ -4928,8 +4927,7 @@
           "choices": [
             [
               "Deathwatch shotgun",
-              "Knives",
-              "Fists"
+              "Knives and Fists"
             ]
           ],
           "per": 5,
@@ -4946,7 +4944,9 @@
           "choices": [
             [
               "Boltgun",
-              "Storm Shield",
+              "Storm Shield"
+            ],
+            [
               "Power weapon",
               "Storm Shield"
             ]
@@ -4991,8 +4991,7 @@
           "choices": [
             [
               "Infernus Heavy Bolter",
-              "Knives",
-              "Fists"
+              "Knives and Fists"
             ]
           ],
           "per": 5,
@@ -5009,8 +5008,7 @@
           "choices": [
             [
               "Frag cannon",
-              "Knives",
-              "Fists"
+              "Knives and Fists"
             ]
           ],
           "per": 5,
@@ -7290,7 +7288,9 @@
           ],
           "choices": [
             [
-              "Frag Cannon",
+              "Frag Cannon"
+            ],
+            [
               "Hellstorm Bolt Rifle",
               "Grenade Launcher"
             ]

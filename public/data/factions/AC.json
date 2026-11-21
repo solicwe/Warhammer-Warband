@@ -1779,22 +1779,7 @@
       ],
       "models": [
         {
-          "name": "Sentinel Guard",
-          "M": 8,
-          "T": 7,
-          "Sv": 2,
-          "InSv": 4,
-          "W": 5,
-          "Ld": 5,
-          "OC": 3,
-          "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
-          }
-        },
-        {
-          "name": "Sentinel Guard with Vexilla",
+          "name": "Custodian Guard",
           "M": 8,
           "T": 7,
           "Sv": 2,
@@ -1812,28 +1797,21 @@
       "composition": [
         {
           "name": "Sentinel Guard",
-          "min": 2,
+          "min": 3,
           "max": 3,
-          "text": "2-3 Sentinel Guard"
-        },
-        {
-          "name": "Sentinel Guard with Vexilla",
-          "min": 0,
-          "max": 1,
-          "text": "0-1 Sentinel Guard with Vexilla"
+          "text": "3 Sentinel Guard models"
         }
       ],
       "loadout": {
-        "Sentinel Guard": [
-          "sentinel blade"
-        ],
-        "Sentinel Guard with Vexilla": [
-          "sentinel blade",
-          "vexilla"
+        "*": [
+          "Praesidium Shield",
+          "Sentinel Blade"
         ]
       },
-      "loadoutText": "Sentinel Guard: sentinel blade. Sentinel Guard with Vexilla: sentinel blade, vexilla",
-      "options": [],
+      "loadoutText": "Every model is equipped with: 1 Praesidium Shield; 1 Sentinel Blade.",
+      "options": [
+        "1 model can be equipped with 1 Vexilla."
+      ],
       "weapons": [
         {
           "name": "Sentinel Blade",
@@ -1916,13 +1894,28 @@
           ]
         }
       ],
-      "wargearOptions": [],
+      "wargearOptions": [
+        {
+          "text": "1 model can be equipped with 1 Vexilla.",
+          "scope": "upTo",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Vexilla"
+            ]
+          ],
+          "max": 1
+        }
+      ],
       "maxPerArmy": 3,
       "dupTax": {
         "pts": 30,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Sentinel-Guard-Sodality"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Sentinel-Guard-Sodality",
+      "wargearCosts": [],
+      "wargearFrom": "wahapedia"
     },
     {
       "id": "000004251",
@@ -1953,48 +1946,25 @@
             "h": 40,
             "text": "40mm"
           }
-        },
-        {
-          "name": "Custodian Guard with Vexilla",
-          "M": 8,
-          "T": 7,
-          "Sv": 2,
-          "InSv": 4,
-          "W": 5,
-          "Ld": 5,
-          "OC": 3,
-          "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
-          }
         }
       ],
       "composition": [
         {
           "name": "Custodian Guard",
-          "min": 2,
+          "min": 3,
           "max": 3,
-          "text": "2-3 Custodian Guard"
-        },
-        {
-          "name": "Custodian Guard with Vexilla",
-          "min": 0,
-          "max": 1,
-          "text": "0-1 Custodian Guard with Vexilla"
+          "text": "3 Custodian Guard models"
         }
       ],
       "loadout": {
-        "Custodian Guard": [
-          "guardian spear"
-        ],
-        "Custodian Guard with Vexilla": [
-          "guardian spear",
-          "vexilla"
+        "*": [
+          "Guardian Spear"
         ]
       },
-      "loadoutText": "Custodian Guard: guardian spear. Custodian Guard with Vexilla: guardian spear, vexilla",
-      "options": [],
+      "loadoutText": "Every model is equipped with: 1 Guardian Spear.",
+      "options": [
+        "1 model can be equipped with 1 Vexilla."
+      ],
       "weapons": [
         {
           "name": "Guardian Spear",
@@ -2072,13 +2042,28 @@
           ]
         }
       ],
-      "wargearOptions": [],
+      "wargearOptions": [
+        {
+          "text": "1 model can be equipped with 1 Vexilla.",
+          "scope": "upTo",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Vexilla"
+            ]
+          ],
+          "max": 1
+        }
+      ],
       "maxPerArmy": 6,
       "dupTax": {
         "pts": 30,
         "from": 3
       },
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Custodian-Guard-Sodality"
+      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Custodian-Guard-Sodality",
+      "wargearCosts": [],
+      "wargearFrom": "wahapedia"
     },
     {
       "id": "000001450",

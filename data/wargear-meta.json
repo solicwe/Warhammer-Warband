@@ -1,0 +1,9456 @@
+{
+ "source": "listhammer.info: 11th edition GT army lists (event player lists)",
+ "date": "2026-11-21",
+ "lists": 2668,
+ "note": "models: most played unit size; items: the most played loadout at that size (whole unit, counted; 0 = named in other lists, not in this one); lists: how many lists took the unit; same: how many of them had exactly this loadout",
+ "units": {
+  "Abaddon The Despoiler": {
+   "models": 1,
+   "lists": 9,
+   "same": 9,
+   "items": {
+    "Drach’nyen": 1,
+    "Talon of Horus": 1
+   }
+  },
+  "Aberrants": {
+   "models": 10,
+   "lists": 25,
+   "same": 19,
+   "items": {
+    "Aberrant weapons": 10
+   }
+  },
+  "Abominant": {
+   "models": 1,
+   "lists": 27,
+   "same": 27,
+   "items": {
+    "Power sledgehammer": 1
+   }
+  },
+  "Acastus Knight Porphyrion": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Acastus autocannon": 0,
+    "Helios defence missiles": 1,
+    "Lascannon": 2,
+    "Titanic feet": 1,
+    "Twin magna lascannon": 2
+   }
+  },
+  "Accursed Cultists": {
+   "models": 16,
+   "lists": 9,
+   "same": 6,
+   "items": {
+    "Blasphemous appendages": 10,
+    "Hideous mutations": 6
+   }
+  },
+  "Achilles Ridgerunners": {
+   "models": 1,
+   "lists": 55,
+   "same": 35,
+   "items": {
+    "Armoured hull": 1,
+    "Flare launcher": 0,
+    "Heavy mining laser": 0,
+    "Heavy mortar": 1,
+    "Spotter": 0,
+    "Survey augur": 1,
+    "Twin heavy stubber": 1
+   }
+  },
+  "Acolyte Hybrids With Autopistols": {
+   "models": 5,
+   "lists": 32,
+   "same": 18,
+   "items": {
+    "Autopistol": 1,
+    "Cult claws and knife": 1,
+    "Cult icon": 1,
+    "Heavy mining tool": 3,
+    "Leader’s bio-weapons": 1
+   }
+  },
+  "Acolyte Hybrids With Hand Flamers": {
+   "models": 5,
+   "lists": 44,
+   "same": 17,
+   "items": {
+    "Cult claws and knife": 4,
+    "Cult icon": 1,
+    "Demolition charges": 0,
+    "Hand flamer": 4,
+    "Leader’s bio-weapons": 1
+   }
+  },
+  "Acolyte Iconward": {
+   "models": 1,
+   "lists": 13,
+   "same": 12,
+   "items": {
+    "Autopistol": 1,
+    "Cult claws": 1
+   }
+  },
+  "Adrax Agatone": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Drakkis": 1,
+    "Malleus Noctum": 1
+   }
+  },
+  "Aestred Thurga And Agathae Dolan": {
+   "models": 2,
+   "lists": 13,
+   "same": 13,
+   "items": {
+    "Blade of Vigil": 1,
+    "Bolt pistol": 2,
+    "Scribe’s staff": 1
+   }
+  },
+  "Aethon Shaan": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Claws of Severax": 1,
+    "Heavy Bolt Pistol": 1
+   }
+  },
+  "Aggressor Squad": {
+   "models": 6,
+   "lists": 36,
+   "same": 21,
+   "items": {
+    "Auto Boltstorm Gauntlets": 0,
+    "Flamestorm Gauntlets": 6,
+    "Fragstorm Grenade Launcher": 0,
+    "Twin Power Fists": 6
+   }
+  },
+  "Ahriman": {
+   "models": 1,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Black Staff of Ahriman": 1,
+    "Inferno bolt pistol": 1,
+    "Transmogrifying Blast": 1
+   }
+  },
+  "Allarus Custodians": {
+   "models": 3,
+   "lists": 251,
+   "same": 84,
+   "items": {
+    "Balistus Grenade Launcher": 3,
+    "Castellan Axe": 0,
+    "Guardian Spear": 3,
+    "vexilla": 1
+   }
+  },
+  "Anathema Psykana Rhino": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Armoured Tracks": 1,
+    "Hunter-killer Missile": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Ancient": {
+   "models": 1,
+   "lists": 22,
+   "same": 13,
+   "items": {
+    "Bolt Pistol": 1,
+    "Bolt Rifle": 1,
+    "Ceramite Fists": 1,
+    "Power Weapon": 0
+   }
+  },
+  "Ancient In Terminator Armour": {
+   "models": 1,
+   "lists": 153,
+   "same": 140,
+   "items": {
+    "Master-crafted Power Weapon": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Angron": {
+   "models": 1,
+   "lists": 119,
+   "same": 116,
+   "items": {
+    "Samni’arius and Spinegrinder": 1
+   }
+  },
+  "Annihilation Barge": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Armoured bulk": 1,
+    "Gauss cannon": 1,
+    "Twin tesla destructor": 1
+   }
+  },
+  "Apothecary": {
+   "models": 1,
+   "lists": 44,
+   "same": 41,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Reductor Pistol": 1,
+    "Servo-armature": 1
+   }
+  },
+  "Apothecary Biologis": {
+   "models": 1,
+   "lists": 14,
+   "same": 14,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Servo-armature": 1
+   }
+  },
+  "Aquila Kill Team": {
+   "models": 5,
+   "lists": 8,
+   "same": 2,
+   "items": {
+    "Astartes Grenade Launcher": 0,
+    "Bolt Pistol": 3,
+    "Deathwatch Marksman Bolt Carbine": 1,
+    "Frag Cannon": 0,
+    "Heavy Thunder Hammer": 1,
+    "Hellstorm Bolt Rifle": 0,
+    "Infernus Heavy Bolter": 1,
+    "Plasma pistol": 1,
+    "Power Weapon": 1,
+    "Special-issue Bolt Pistol": 1,
+    "Stalker Bolt Rifle": 1,
+    "Xenophase Blade": 0
+   }
+  },
+  "Aquilon Terminators with Solarite Power Gauntlets": {
+   "models": 3,
+   "lists": 30,
+   "same": 29,
+   "items": {
+    "Adrathic Combi-destructor": 3,
+    "Solarite Power Gauntlet": 3
+   }
+  },
+  "Aquilon Terminators with Solarite Power Talons": {
+   "models": 3,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Infernus Firepike": 3,
+    "Lastrum Storm Bolter": 0,
+    "Solarite Power Talon": 3
+   }
+  },
+  "Archaeopter Stratoraptor": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured hull": 1,
+    "Chaff launcher": 1,
+    "Cognis heavy stubber": 2,
+    "Heavy phosphor blaster": 2,
+    "Twin cognis lascannon": 1
+   }
+  },
+  "Archon": {
+   "models": 1,
+   "lists": 47,
+   "same": 43,
+   "items": {
+    "Agoniser": 0,
+    "Huskblade": 1,
+    "Master-crafted power weapon": 0,
+    "Soul trap": 1,
+    "Splinter pistol": 0,
+    "shadowfield": 1
+   }
+  },
+  "Arco-flagellants": {
+   "models": 10,
+   "lists": 16,
+   "same": 9,
+   "items": {
+    "Arco-flails": 10
+   }
+  },
+  "Arjac Rockfist": {
+   "models": 1,
+   "lists": 26,
+   "same": 26,
+   "items": {
+    "Foehammer": 1
+   }
+  },
+  "Arkanyst Evaluator": {
+   "models": 1,
+   "lists": 23,
+   "same": 22,
+   "items": {
+    "Close combat weapon": 1,
+    "Transmatter inverter": 1
+   }
+  },
+  "Armiger Helverin": {
+   "models": 1,
+   "lists": 29,
+   "same": 28,
+   "items": {
+    "Armiger autocannon": 2,
+    "Armoured feet": 1,
+    "Meltagun": 0,
+    "Questoris heavy stubber": 1
+   }
+  },
+  "Armiger Moirax": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Armoured feet": 1,
+    "Conversion beam cannon": 0,
+    "Rad cleanser": 1,
+    "Siege claw": 1,
+    "Volkite veuglaire": 1
+   }
+  },
+  "Armiger Warglaive": {
+   "models": 1,
+   "lists": 47,
+   "same": 32,
+   "items": {
+    "Meltagun": 1,
+    "Questoris heavy stubber": 0,
+    "Reaper chain-cleaver": 1,
+    "Thermal spear": 1
+   }
+  },
+  "Armoured Sentinels": {
+   "models": 1,
+   "lists": 8,
+   "same": 5,
+   "items": {
+    "Autocannon": 0,
+    "Close combat weapon": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 1,
+    "Missile launcher": 0,
+    "Sentinel chainsaw": 1
+   }
+  },
+  "Artillery Team": {
+   "models": 1,
+   "lists": 8,
+   "same": 6,
+   "items": {
+    "Crew close combat weapons": 1,
+    "Heavy mortar": 0,
+    "Lasgun": 1,
+    "Siege cannon": 1
+   }
+  },
+  "Asmodai": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Crozius Arcanum and Power Weapon": 1,
+    "Heavy Bolt Pistol": 1
+   }
+  },
+  "Assault Intercessor Squad": {
+   "models": 5,
+   "lists": 56,
+   "same": 11,
+   "items": {
+    "Chainsword": 4,
+    "Hand Flamer": 0,
+    "Heavy Bolt Pistol": 4,
+    "Plasma Pistol": 1,
+    "Power Fist": 1,
+    "Power Weapon": 0,
+    "Thunder Hammer": 0
+   }
+  },
+  "Assault Intercessors With Jump Packs": {
+   "models": 5,
+   "lists": 72,
+   "same": 21,
+   "items": {
+    "Chainsword": 4,
+    "Hand Flamer": 0,
+    "Heavy Bolt Pistol": 3,
+    "Plasma Pistol": 2,
+    "Power Fist": 1,
+    "Power Weapon": 0
+   }
+  },
+  "Astorath": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "The Executioner's Axe": 0
+   }
+  },
+  "Astraeus": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured Hull": 1,
+    "Astareus Las-ripper": 2,
+    "Ironhail Heavy Stubber": 2,
+    "Storm Bolter": 1,
+    "Twin Lascannon": 1,
+    "Twin Macro-accelerator Cannon": 1
+   }
+  },
+  "Asurmen": {
+   "models": 1,
+   "lists": 10,
+   "same": 8,
+   "items": {
+    "Bloody Twins": 1,
+    "Sword of Asur": 1
+   }
+  },
+  "Atalan Jackals": {
+   "models": 5,
+   "lists": 21,
+   "same": 16,
+   "items": {
+    "Atalan power weapon": 2,
+    "Atalan small arms": 4,
+    "Close combat weapon": 3,
+    "Grenade launcher": 1,
+    "Heavy stubber": 0,
+    "Mining laser": 1
+   }
+  },
+  "Attilan Rough Riders": {
+   "models": 5,
+   "lists": 15,
+   "same": 5,
+   "items": {
+    "Goad lance": 0,
+    "Hunting lance": 5,
+    "Lasgun": 5,
+    "Laspistol": 5,
+    "Power sabre": 1,
+    "Steed’s hooves": 5
+   }
+  },
+  "Autarch": {
+   "models": 1,
+   "lists": 10,
+   "same": 7,
+   "items": {
+    "Banshee blade": 0,
+    "Dragon fusion gun": 1,
+    "Star glaive": 1
+   }
+  },
+  "Autarch Wayleaper": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Dragon fusion gun": 1,
+    "Star glaive": 1
+   }
+  },
+  "Avatar of Khaine": {
+   "models": 1,
+   "lists": 47,
+   "same": 47,
+   "items": {
+    "The Wailing Doom": 1
+   }
+  },
+  "Azrael": {
+   "models": 1,
+   "lists": 43,
+   "same": 42,
+   "items": {
+    "Lion's Wrath": 1,
+    "The Sword of Secrets": 1
+   }
+  },
+  "Baal Predator": {
+   "models": 1,
+   "lists": 63,
+   "same": 52,
+   "items": {
+    "Armoured Tracks": 1,
+    "Baal Flamestorm Cannon": 1,
+    "Heavy Bolter": 0,
+    "Heavy Flamer": 2,
+    "Hunter-killer Missile": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Baharroth": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Fury of the Tempest": 1,
+    "Shining Blade": 1
+   }
+  },
+  "Ballistus Dreadnought": {
+   "models": 1,
+   "lists": 72,
+   "same": 64,
+   "items": {
+    "Armoured Feet": 1,
+    "Ballistus Lascannon": 1,
+    "Ballistus Missile Launcher": 1,
+    "Storm Bolters": 1
+   }
+  },
+  "Baneblade": {
+   "models": 1,
+   "lists": 9,
+   "same": 7,
+   "items": {
+    "Armoured tracks": 1,
+    "Baneblade cannon": 1,
+    "Coaxial autocannon": 1,
+    "Demolisher cannon": 1,
+    "Heavy stubber": 1,
+    "Lascannon": 4,
+    "Twin heavy bolter": 5
+   }
+  },
+  "Banesword": {
+   "models": 1,
+   "lists": 10,
+   "same": 8,
+   "items": {
+    "Armoured tracks": 1,
+    "Lascannon": 4,
+    "Quake cannon": 1,
+    "Twin heavy bolter": 5,
+    "Twin heavy flamer": 0
+   }
+  },
+  "Bannernob": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Kustom Choppa": 1,
+    "Shoota": 1
+   }
+  },
+  "Barbgaunts": {
+   "models": 5,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Barblauncher": 5,
+    "Chitinous claws and teeth": 5
+   }
+  },
+  "Basilisk": {
+   "models": 1,
+   "lists": 7,
+   "same": 4,
+   "items": {
+    "Armoured tracks": 1,
+    "Earthshaker cannon": 1,
+    "Heavy bolter": 1,
+    "Heavy flamer": 0,
+    "Hunter-killer missile": 1
+   }
+  },
+  "Battle Sisters Squad": {
+   "models": 10,
+   "lists": 30,
+   "same": 16,
+   "items": {
+    "Artificer-crafted storm bolter": 0,
+    "Bolt pistol": 10,
+    "Boltgun": 7,
+    "Close combat weapon": 10,
+    "Combi-weapon": 0,
+    "Condemnor boltgun": 0,
+    "Inferno pistol": 1,
+    "Meltagun": 1,
+    "Ministorum flamer": 0,
+    "Ministorum heavy flamer": 0,
+    "Multi-melta": 1,
+    "Plasma pistol": 0,
+    "Power weapon": 1,
+    "Simulacrum imperialis": 1
+   }
+  },
+  "Battlewagon": {
+   "models": 1,
+   "lists": 43,
+   "same": 38,
+   "items": {
+    "Big Shoota": 4,
+    "Crushin’ Bulk": 1,
+    "Grabbin’ Klaw": 1,
+    "Wreckin’ Ball": 1
+   }
+  },
+  "Be’lakor": {
+   "models": 1,
+   "lists": 18,
+   "same": 18,
+   "items": {
+    "Betraying Shades": 1,
+    "The Blade of Shadows": 1
+   }
+  },
+  "Beast Snagga Boyz": {
+   "models": 10,
+   "lists": 44,
+   "same": 16,
+   "items": {
+    "Choppa": 9,
+    "Power Snappa": 1,
+    "Slugga": 10,
+    "Thump Gun": 0
+   }
+  },
+  "Beastboss": {
+   "models": 1,
+   "lists": 24,
+   "same": 24,
+   "items": {
+    "Beast Snagga Klaw and Beastchoppa": 1,
+    "Shoota": 1
+   }
+  },
+  "Beastboss on Squigosaur": {
+   "models": 1,
+   "lists": 34,
+   "same": 17,
+   "items": {
+    "Beastchoppa": 1,
+    "Slugga": 1,
+    "Squigosaur’s Jaws": 1,
+    "Thump Gun": 1
+   }
+  },
+  "Beasts Of Nurgle": {
+   "models": 1,
+   "lists": 56,
+   "same": 46,
+   "items": {
+    "Putrid appendages": 1
+   }
+  },
+  "Belial": {
+   "models": 1,
+   "lists": 15,
+   "same": 15,
+   "items": {
+    "Master-crafted Storm Bolter": 1,
+    "The Sword of Silence": 1
+   }
+  },
+  "Belisarius Cawl": {
+   "models": 1,
+   "lists": 66,
+   "same": 63,
+   "items": {
+    "Arc scourge": 1,
+    "Cawl’s Omnissian axe": 1,
+    "Mechadendrite hive": 1,
+    "Solar atomiser": 1
+   }
+  },
+  "Benefictus": {
+   "models": 1,
+   "lists": 39,
+   "same": 38,
+   "items": {
+    "Close combat weapon": 1,
+    "Psionic Cascade": 1
+   }
+  },
+  "Berehk Stornbröw": {
+   "models": 1,
+   "lists": 23,
+   "same": 22,
+   "items": {
+    "Kromlôk’s Revenge": 1,
+    "Warforge Gauntlets": 1
+   }
+  },
+  "Big Mek": {
+   "models": 1,
+   "lists": 37,
+   "same": 15,
+   "items": {
+    "Drilla": 1,
+    "Kustom Mega-blasta": 0,
+    "Power Klaw": 0,
+    "Traktor Blasta": 1
+   }
+  },
+  "Big Mek Dakkarig": {
+   "models": 1,
+   "lists": 152,
+   "same": 150,
+   "items": {
+    "Blitzkannon": 1,
+    "Multi-busta Launcha": 1,
+    "Stompy Feet": 1
+   }
+  },
+  "Big Mek In Mega Armour": {
+   "models": 1,
+   "lists": 28,
+   "same": 20,
+   "items": {
+    "Kombi-weapon": 0,
+    "Kustom Force Field": 0,
+    "Kustom Mega-blasta": 1,
+    "Kustom Shoota": 0,
+    "Power Klaw": 1,
+    "Tellyport Blasta": 1
+   }
+  },
+  "Big Mek With Shokk Attack Gun": {
+   "models": 1,
+   "lists": 59,
+   "same": 57,
+   "items": {
+    "Big Mek’s Toolz": 1,
+    "Shokk Attack Gun": 1
+   }
+  },
+  "Bigboss": {
+   "models": 1,
+   "lists": 20,
+   "same": 20,
+   "items": {
+    "Big Choppa": 1,
+    "Slugga": 1
+   }
+  },
+  "Biologus Putrifier": {
+   "models": 1,
+   "lists": 26,
+   "same": 26,
+   "items": {
+    "Hyper blight grenades": 1,
+    "Injector pistol": 1,
+    "Plague knives": 1
+   }
+  },
+  "Biophagus": {
+   "models": 1,
+   "lists": 42,
+   "same": 42,
+   "items": {
+    "Autopistol": 1,
+    "Chemical vials": 1,
+    "Injector goad": 1
+   }
+  },
+  "Biovores": {
+   "models": 1,
+   "lists": 105,
+   "same": 102,
+   "items": {
+    "Chitin-barbed limbs": 1,
+    "Spore Mine launcher": 1
+   }
+  },
+  "Bjorn The Fell-handed": {
+   "models": 1,
+   "lists": 20,
+   "same": 16,
+   "items": {
+    "Assault Cannon": 0,
+    "Heavy Flamer": 1,
+    "Helfrost Cannon": 1,
+    "Multi-melta": 0,
+    "Trueclaw": 1
+   }
+  },
+  "Blade Champion": {
+   "models": 1,
+   "lists": 30,
+   "same": 28,
+   "items": {
+    "Vaultswords": 1
+   }
+  },
+  "Bladeguard Ancient": {
+   "models": 1,
+   "lists": 28,
+   "same": 28,
+   "items": {
+    "Heavy Bolt Pistol": 1,
+    "Relics of Battle": 1
+   }
+  },
+  "Bladeguard Veteran Squad": {
+   "models": 6,
+   "lists": 168,
+   "same": 65,
+   "items": {
+    "Heavy Bolt Pistol": 5,
+    "Master-crafted Power Sword": 6,
+    "Neo-volkite Pistol": 0,
+    "Plasma Pistol": 1
+   }
+  },
+  "Blightlord Terminators": {
+   "models": 10,
+   "lists": 27,
+   "same": 11,
+   "items": {
+    "Blight launcher": 2,
+    "Bubotic blade": 10,
+    "Combi-bolter": 4,
+    "Flail of corruption": 0,
+    "Plague spewer": 2,
+    "Reaper autocannon": 2
+   }
+  },
+  "Blitza-bommer": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured Impact": 1,
+    "Big Shoota": 1,
+    "Dual Supa-shoota": 1
+   }
+  },
+  "Blood Angels Captain": {
+   "models": 1,
+   "lists": 6,
+   "same": 5,
+   "items": {
+    "Inferno Pistol": 1,
+    "Power Fist": 1,
+    "Relic Weapon": 0
+   }
+  },
+  "Blood Claws": {
+   "models": 10,
+   "lists": 15,
+   "same": 7,
+   "items": {
+    "Bolt Pistol": 9,
+    "Chainsword": 9,
+    "Plasma Pistol": 1,
+    "Power Weapon": 1
+   }
+  },
+  "Bloodcrushers": {
+   "models": 6,
+   "lists": 55,
+   "same": 44,
+   "items": {
+    "Daemonic icon": 1,
+    "Hellblade": 6,
+    "Instrument of Chaos": 1,
+    "Juggernaut’s bladed horn": 6
+   }
+  },
+  "Bloodletters": {
+   "models": 10,
+   "lists": 64,
+   "same": 51,
+   "items": {
+    "Daemonic icon": 1,
+    "Hellblade": 10,
+    "Instrument of Chaos": 1
+   }
+  },
+  "Bloodmaster": {
+   "models": 1,
+   "lists": 27,
+   "same": 27,
+   "items": {
+    "Blade of blood": 1
+   }
+  },
+  "Bloodthirster": {
+   "models": 1,
+   "lists": 28,
+   "same": 25,
+   "items": {
+    "Axe of Khorne": 0,
+    "Great axe of Khorne": 1,
+    "Hellfire breath": 1,
+    "Lash of Khorne": 0
+   }
+  },
+  "Blue Horrors": {
+   "models": 10,
+   "lists": 13,
+   "same": 13,
+   "items": {
+    "Blue claws": 10,
+    "Coruscating Blue Flames": 10
+   }
+  },
+  "Boss Snikrot": {
+   "models": 1,
+   "lists": 25,
+   "same": 22,
+   "items": {
+    "Mork’s Teef": 1,
+    "Slugga": 1
+   }
+  },
+  "Boyz": {
+   "models": 20,
+   "lists": 85,
+   "same": 10,
+   "items": {
+    "Big Choppa": 2,
+    "Big Shoota": 2,
+    "Burna": 2,
+    "Choppa": 18,
+    "Kombi-rokkit": 0,
+    "Kombi-skorcha": 0,
+    "Kustom Choppa": 0,
+    "Kustom Shoota": 0,
+    "Power Klaw": 0,
+    "Rokkit Launcha": 2,
+    "Shoota": 12,
+    "Slugga": 18
+   }
+  },
+  "Breacher Team": {
+   "models": 10,
+   "lists": 36,
+   "same": 20,
+   "items": {
+    "Close combat weapon": 10,
+    "Guardian drone": 1,
+    "Gun drone": 1,
+    "Marker drone": 0,
+    "Pulse blaster": 10,
+    "Pulse pistol": 10,
+    "Shield drone": 0,
+    "Support turret": 1
+   }
+  },
+  "Breaka Boyz": {
+   "models": 6,
+   "lists": 11,
+   "same": 6,
+   "items": {
+    "Choppa": 1,
+    "Knucklebustas": 0,
+    "Rokkit Pistol": 1,
+    "Smash Hammer": 5,
+    "Tankhammer": 1
+   }
+  },
+  "Broadside Battlesuits": {
+   "models": 2,
+   "lists": 87,
+   "same": 21,
+   "items": {
+    "Crushing bulk": 2,
+    "Heavy rail rifle": 2,
+    "High-yield missile pods": 0,
+    "Marker drone": 0,
+    "Missile drone": 4,
+    "Seeker missile": 2,
+    "Shield drone": 0,
+    "Twin plasma rifle": 0,
+    "Twin smart missile system": 0,
+    "Weapon support system": 2
+   }
+  },
+  "Brôkhyr Iron-master": {
+   "models": 5,
+   "lists": 13,
+   "same": 13,
+   "items": {
+    "Autoch-pattern bolt pistol": 1,
+    "Close combat weapon": 2,
+    "Graviton hammer": 1,
+    "Graviton rifle": 1,
+    "Las-beam cutter": 1,
+    "Manipulator arms": 1,
+    "Plasma torch": 1
+   }
+  },
+  "Brôkhyr Thunderkyn": {
+   "models": 6,
+   "lists": 107,
+   "same": 59,
+   "items": {
+    "Bolt cannon": 0,
+    "Close combat weapon": 6,
+    "Graviton blast cannon": 0,
+    "SP conversion beamer": 6
+   }
+  },
+  "Broodlord": {
+   "models": 1,
+   "lists": 26,
+   "same": 24,
+   "items": {
+    "Broodlord claws and talons": 1
+   }
+  },
+  "Brother-captain": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Nemesis force weapon": 1,
+    "Psycannon": 1
+   }
+  },
+  "Brotherhood Chaplain": {
+   "models": 1,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Crozius arcanum": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Brotherhood Librarian": {
+   "models": 1,
+   "lists": 21,
+   "same": 8,
+   "items": {
+    "Combi-weapon": 1,
+    "Nemesis force weapon": 1,
+    "Storm bolter": 0,
+    "Vortex of Doom": 1
+   }
+  },
+  "Brotherhood Techmarine": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Forge bolter": 1,
+    "Grav-pistol": 1,
+    "Omnissian power axe": 1,
+    "Servo-arms": 1
+   }
+  },
+  "Brotherhood Terminator Squad": {
+   "models": 4,
+   "lists": 51,
+   "same": 16,
+   "items": {
+    "Incinerator": 1,
+    "Nemesis force weapon": 4,
+    "Psilencer": 0,
+    "Psycannon": 0,
+    "Storm bolter": 2
+   }
+  },
+  "Brutalis Dreadnought": {
+   "models": 1,
+   "lists": 80,
+   "same": 65,
+   "items": {
+    "Bolt Rifles": 1,
+    "Brutalis Fists": 1,
+    "Brutalis Talons": 0,
+    "Twin Heavy Bolter": 0,
+    "Twin Icarus Ironhail Heavy Stubber": 1,
+    "Twin Multi-melta": 1
+   }
+  },
+  "Bullgryn Squad": {
+   "models": 6,
+   "lists": 31,
+   "same": 28,
+   "items": {
+    "Brute shield": 6,
+    "Bullgryn maul": 6,
+    "Close combat weapon": 6,
+    "Grenadier gauntlet": 0,
+    "Slabshield": 0
+   }
+  },
+  "Buri Aegnirssen": {
+   "models": 1,
+   "lists": 49,
+   "same": 48,
+   "items": {
+    "Autoch-pattern bolt pistol": 1,
+    "Bane": 1
+   }
+  },
+  "Burning Chariot": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Fire of Tzeentch": 1,
+    "Flamer mouths": 1,
+    "Screamer bites": 1
+   }
+  },
+  "C’tan Shard of the Deceiver": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Cosmic insanity": 1,
+    "Golden fists": 1
+   }
+  },
+  "C’tan Shard of the Nightbringer": {
+   "models": 1,
+   "lists": 45,
+   "same": 45,
+   "items": {
+    "Gaze of death": 1,
+    "Scythe of the Nightbringer": 1
+   }
+  },
+  "C’tan Shard of the Void Dragon": {
+   "models": 1,
+   "lists": 66,
+   "same": 65,
+   "items": {
+    "Canoptek tail blades": 1,
+    "Spear of the Void Dragon": 1,
+    "Voltaic storm": 1
+   }
+  },
+  "Caanok Var": {
+   "models": 1,
+   "lists": 25,
+   "same": 23,
+   "items": {
+    "Axiom": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Cadian Castellan": {
+   "models": 1,
+   "lists": 6,
+   "same": 3,
+   "items": {
+    "Chainsword": 0,
+    "Laspistol": 0,
+    "Plasma pistol": 1,
+    "Power fist": 1,
+    "Power weapon": 0
+   }
+  },
+  "Cadian Command Squad": {
+   "models": 5,
+   "lists": 29,
+   "same": 10,
+   "items": {
+    "Bolt pistol": 0,
+    "Chainsword": 0,
+    "Close combat weapon": 3,
+    "Lasgun": 3,
+    "Laspistol": 0,
+    "Meltagun": 0,
+    "Plasma gun": 0,
+    "Plasma pistol": 2,
+    "Power fist": 2,
+    "Power weapon": 0,
+    "Regimental standard": 1,
+    "master vox": 1
+   }
+  },
+  "Cadian Heavy Weapons Squad": {
+   "models": 3,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Lascannon": 3,
+    "Laspistol": 3,
+    "Weapons team close combat weapons": 3
+   }
+  },
+  "Cadian Recon Squad": {
+   "models": 10,
+   "lists": 8,
+   "same": 3,
+   "items": {
+    "Autostubber": 1,
+    "Close combat weapon": 10,
+    "Lasgun": 6,
+    "Laspistol": 1,
+    "Long-las": 1,
+    "Meltagun": 1,
+    "Missile launcher": 1,
+    "Plasma gun": 0,
+    "Vox-caster": 1,
+    "Vox-relay beacon": 1
+   }
+  },
+  "Cadian Shock Troops": {
+   "models": 10,
+   "lists": 41,
+   "same": 12,
+   "items": {
+    "Bolt pistol": 0,
+    "Chainsword": 0,
+    "Close combat weapon": 10,
+    "Grenade launcher": 0,
+    "Lasgun": 7,
+    "Laspistol": 0,
+    "Meltagun": 1,
+    "Plasma gun": 1,
+    "Sergeant's autogun": 1,
+    "Vox-caster": 1
+   }
+  },
+  "Cadre Fireblade": {
+   "models": 1,
+   "lists": 25,
+   "same": 19,
+   "items": {
+    "Close combat weapon": 1,
+    "Fireblade pulse rifle": 1,
+    "Gun drone": 2,
+    "Marker drone": 0,
+    "Shield drone": 0
+   }
+  },
+  "Caladius Annihilator Grav-tank": {
+   "models": 1,
+   "lists": 87,
+   "same": 80,
+   "items": {
+    "Arachnus Blaze Carronade": 1,
+    "Armoured Hull": 1,
+    "Twin Lastrum Bolt Cannon": 1,
+    "Twin Neutronium Cascade Projectors": 0
+   }
+  },
+  "Caladius Grav-tank": {
+   "models": 1,
+   "lists": 9,
+   "same": 9,
+   "items": {
+    "Armoured Hull": 1,
+    "Twin Lastrum Bolt Cannon": 1
+   }
+  },
+  "Callidus Assassin": {
+   "models": 1,
+   "lists": 59,
+   "same": 58,
+   "items": {
+    "Neural shredder": 1,
+    "Phase sword and poison blades": 1
+   }
+  },
+  "Canis Rex": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Freedom’s Hand": 1,
+    "Las-impulsor": 1,
+    "Questoris multi-laser": 1
+   }
+  },
+  "Canoness": {
+   "models": 1,
+   "lists": 29,
+   "same": 9,
+   "items": {
+    "Blessed blade": 0,
+    "Bolt pistol": 0,
+    "Condemnor boltgun": 0,
+    "Hallowed Chainsword": 0,
+    "Inferno pistol": 0,
+    "Null rod": 0,
+    "Plasma pistol": 1,
+    "Power weapon": 1,
+    "Rod of office": 1
+   }
+  },
+  "Canoness with Jump Pack": {
+   "models": 1,
+   "lists": 19,
+   "same": 19,
+   "items": {
+    "Blessed halberd": 1
+   }
+  },
+  "Canoptek Doomstalker": {
+   "models": 1,
+   "lists": 23,
+   "same": 23,
+   "items": {
+    "Doomsday blaster": 1,
+    "Doomstalker limbs": 1,
+    "Twin gauss flayer": 1
+   }
+  },
+  "Canoptek Macrocytes": {
+   "models": 5,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Accelerator mandible": 1,
+    "Atomiser beam": 1,
+    "Claws": 5,
+    "Gauss scalpel": 3,
+    "Nanoscarab projector": 1
+   }
+  },
+  "Canoptek Reanimator": {
+   "models": 1,
+   "lists": 72,
+   "same": 71,
+   "items": {
+    "Atomiser beam": 2,
+    "Reanimator’s claws": 1
+   }
+  },
+  "Canoptek Scarab Swarms": {
+   "models": 3,
+   "lists": 43,
+   "same": 41,
+   "items": {
+    "Feeder mandibles": 3
+   }
+  },
+  "Canoptek Spyders": {
+   "models": 1,
+   "lists": 8,
+   "same": 3,
+   "items": {
+    "Automaton claws": 1,
+    "Fabricator claw array": 0,
+    "Gloom prism": 0,
+    "Particle beamer": 2
+   }
+  },
+  "Canoptek Tomb Crawlers": {
+   "models": 2,
+   "lists": 12,
+   "same": 6,
+   "items": {
+    "Claws": 2,
+    "Transdimensional isolator": 1,
+    "Twin gauss reaper": 1
+   }
+  },
+  "Canoptek Wraiths": {
+   "models": 6,
+   "lists": 55,
+   "same": 43,
+   "items": {
+    "Particle caster": 6,
+    "Transdimensional beamer": 0,
+    "Vicious claws": 6,
+    "Whip coils": 0
+   }
+  },
+  "Captain": {
+   "models": 1,
+   "lists": 30,
+   "same": 13,
+   "items": {
+    "Heavy Bolt Pistol": 1,
+    "Master-crafted Bolter": 0,
+    "Master-crafted Power Weapon": 1,
+    "Plasma Pistol": 0,
+    "Power Fist": 0,
+    "Relic Shield": 1
+   }
+  },
+  "Captain In Gravis Armour": {
+   "models": 1,
+   "lists": 49,
+   "same": 18,
+   "items": {
+    "Boltstorm Gauntlet": 1,
+    "Master-crafted Heavy Bolt Rifle": 0,
+    "Master-crafted Power Weapon": 0,
+    "Relic Blade": 1,
+    "Relic Chainsword": 0,
+    "Relic Power Fist": 0
+   }
+  },
+  "Captain In Phobos Armour": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Bolt Pistol": 1,
+    "Combat Knife": 1,
+    "Instigator Bolt Carbine": 1
+   }
+  },
+  "Captain In Terminator Armour": {
+   "models": 1,
+   "lists": 31,
+   "same": 11,
+   "items": {
+    "Combi-weapon": 1,
+    "Relic Fist": 1,
+    "Relic Weapon": 0,
+    "Storm Bolter": 0
+   }
+  },
+  "Captain on Bike": {
+   "models": 1,
+   "lists": 72,
+   "same": 48,
+   "items": {
+    "Heavy Bolt Pistol": 0,
+    "Master-crafted Power Weapon": 0,
+    "Plasma Pistol": 1,
+    "Thunder Hammer": 1,
+    "Twin Bolt Rifle": 1
+   }
+  },
+  "Captain Titus": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Bolt Pistol": 1,
+    "Master-crafted Bolter": 1,
+    "Master-crafted Chainsword": 1
+   }
+  },
+  "Captain With Jump Pack": {
+   "models": 1,
+   "lists": 96,
+   "same": 75,
+   "items": {
+    "Chainsword": 0,
+    "Hand Flamer": 0,
+    "Plasma Pistol": 0,
+    "Power Fist": 0,
+    "Relic Shield": 1,
+    "Relic Weapon": 0,
+    "Thunder Hammer": 1
+   }
+  },
+  "Carnifexes": {
+   "models": 2,
+   "lists": 10,
+   "same": 1,
+   "items": {
+    "Bio-plasma": 2,
+    "Carnifex crushing claws": 2,
+    "Carnifex extra scything talons": 0,
+    "Carnifex scything talons": 0,
+    "Chitinous claws and teeth": 2,
+    "Deathspitters with slimer maggots": 0,
+    "Heavy venom cannon": 2,
+    "Spine banks": 2,
+    "Stranglethorn cannon": 0
+   }
+  },
+  "Castellan": {
+   "models": 1,
+   "lists": 39,
+   "same": 39,
+   "items": {
+    "Combi-weapon": 1,
+    "Master-crafted Power Weapon": 1
+   }
+  },
+  "Castellan Crowe": {
+   "models": 1,
+   "lists": 33,
+   "same": 33,
+   "items": {
+    "Black Blade of Antwyr": 1,
+    "Purifying Flame": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Castigator": {
+   "models": 1,
+   "lists": 126,
+   "same": 99,
+   "items": {
+    "Armoured tracks": 1,
+    "Castigator autocannons": 1,
+    "Castigator battle cannon": 0,
+    "Heavy bolter": 3,
+    "Hunter-killer missile": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Catachan Heavy Weapons Squad": {
+   "models": 3,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Lascannon": 3,
+    "Lasgun": 3,
+    "Weapons team close combat weapons": 3
+   }
+  },
+  "Catachan Jungle Fighters": {
+   "models": 10,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Close combat weapon": 10,
+    "Flamer": 2,
+    "Lasgun": 7,
+    "Laspistol": 1,
+    "Vox-caster": 1
+   }
+  },
+  "Cato Sicarius": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Artisan Plasma Pistol": 1,
+    "Talassarian Tempest Blade": 1
+   }
+  },
+  "Celestian Insidiants": {
+   "models": 10,
+   "lists": 27,
+   "same": 19,
+   "items": {
+    "Blessed sword": 2,
+    "Condemnor bolt pistol": 3,
+    "Denuncia oratory": 1,
+    "Inferno pistol": 1,
+    "Ministorum hand flamer": 2,
+    "Null mace": 7,
+    "Simulacrum imperialis": 1,
+    "Virge of admonition": 1
+   }
+  },
+  "Celestian Sacresants": {
+   "models": 10,
+   "lists": 41,
+   "same": 16,
+   "items": {
+    "Anointed halberd": 0,
+    "Bolt pistol": 9,
+    "Hallowed mace": 9,
+    "Inferno pistol": 1,
+    "Ministorum hand flamer": 0,
+    "Plasma pistol": 0,
+    "Spear of the faithful": 1
+   }
+  },
+  "Centaur RSV": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Armoured hull": 1,
+    "Pintle-mounted heavy stubber": 1
+   }
+  },
+  "Cerastus Knight Atrapos": {
+   "models": 1,
+   "lists": 19,
+   "same": 19,
+   "items": {
+    "Atrapos lascutter": 1,
+    "Graviton singularity cannon": 1
+   }
+  },
+  "Cerastus Knight Castigator": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Castigator bolt cannon": 1,
+    "Tempest warblade": 1
+   }
+  },
+  "Cerastus Knight Lancer": {
+   "models": 1,
+   "lists": 23,
+   "same": 23,
+   "items": {
+    "Cerastus shock lance": 1
+   }
+  },
+  "Changecaster": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Arcane Fireball": 1,
+    "Herald combat weapon": 1
+   }
+  },
+  "Chaos Bikers": {
+   "models": 3,
+   "lists": 53,
+   "same": 20,
+   "items": {
+    "Accursed weapon": 0,
+    "Astartes chainsword": 2,
+    "Bolt pistol": 0,
+    "Chaos icon": 1,
+    "Close combat weapon": 3,
+    "Combi-bolter": 3,
+    "Combi-weapon": 0,
+    "Flamer": 0,
+    "Meltagun": 2,
+    "Plasma gun": 0,
+    "Power fist": 1
+   }
+  },
+  "Chaos Cerastus Knight Atrapos": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Atrapos lascutter": 1,
+    "Graviton singularity cannon": 1
+   }
+  },
+  "Chaos Cerastus Knight Castigator": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Castigator bolt cannon": 1,
+    "Tempest warblade": 1
+   }
+  },
+  "Chaos Cerastus Knight Lancer": {
+   "models": 1,
+   "lists": 7,
+   "same": 6,
+   "items": {
+    "Cerastus shock lance": 1
+   }
+  },
+  "Chaos Land Raider": {
+   "models": 1,
+   "lists": 15,
+   "same": 14,
+   "items": {
+    "Armoured tracks": 1,
+    "Combi-bolter": 1,
+    "Havoc launcher": 1,
+    "Soulshatter lascannon": 2,
+    "Twin heavy bolter": 1
+   }
+  },
+  "Chaos Lord": {
+   "models": 1,
+   "lists": 18,
+   "same": 14,
+   "items": {
+    "Daemon hammer": 1,
+    "Plasma pistol": 1,
+    "Power fist": 0
+   }
+  },
+  "Chaos Lord In Terminator Armour": {
+   "models": 1,
+   "lists": 8,
+   "same": 3,
+   "items": {
+    "Chainfist": 0,
+    "Combi-bolter": 1,
+    "Combi-weapon": 0,
+    "Exalted weapon": 0,
+    "Paired accursed weapons": 0,
+    "Power fist": 1
+   }
+  },
+  "Chaos Lord with Jump Pack": {
+   "models": 1,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Plasma pistol": 1,
+    "Power fist": 1,
+    "Twin lightning claws": 0
+   }
+  },
+  "Chaos Predator Annihilator": {
+   "models": 1,
+   "lists": 8,
+   "same": 7,
+   "items": {
+    "Armoured tracks": 1,
+    "Combi-bolter": 0,
+    "Havoc launcher": 1,
+    "Lascannon": 2,
+    "Predator twin lascannon": 1
+   }
+  },
+  "Chaos Predator Destructor": {
+   "models": 1,
+   "lists": 12,
+   "same": 8,
+   "items": {
+    "Armoured tracks": 1,
+    "Combi-bolter": 1,
+    "Combi-weapon": 0,
+    "Havoc launcher": 1,
+    "Heavy bolter": 0,
+    "Lascannon": 2,
+    "Predator autocannon": 1
+   }
+  },
+  "Chaos Rhino": {
+   "models": 1,
+   "lists": 380,
+   "same": 291,
+   "items": {
+    "Armoured tracks": 1,
+    "Combi-bolter": 2,
+    "Combi-weapon": 0,
+    "Havoc launcher": 1
+   }
+  },
+  "Chaos Spawn": {
+   "models": 2,
+   "lists": 160,
+   "same": 156,
+   "items": {
+    "Hideous mutations": 2
+   }
+  },
+  "Chaos Terminator Squad": {
+   "models": 10,
+   "lists": 61,
+   "same": 29,
+   "items": {
+    "Accursed weapon": 2,
+    "Chainfist": 2,
+    "Combi-bolter": 8,
+    "Combi-weapon": 0,
+    "Heavy flamer": 0,
+    "Paired accursed weapons": 0,
+    "Power fist": 6,
+    "Reaper autocannon": 2
+   }
+  },
+  "Chaos Terminators": {
+   "models": 5,
+   "lists": 43,
+   "same": 17,
+   "items": {
+    "Accursed weapon": 0,
+    "Chainfist": 2,
+    "Combi-bolter": 6,
+    "Combi-weapon": 0,
+    "Heavy flamer": 0,
+    "Paired accursed weapons": 2,
+    "Power fist": 6,
+    "Reaper autocannon": 2
+   }
+  },
+  "Chaos Vindicator": {
+   "models": 1,
+   "lists": 18,
+   "same": 8,
+   "items": {
+    "Armoured tracks": 1,
+    "Combi-bolter": 1,
+    "Combi-weapon": 0,
+    "Demolisher cannon": 1,
+    "Havoc launcher": 1
+   }
+  },
+  "Chaplain": {
+   "models": 1,
+   "lists": 19,
+   "same": 18,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Crozius Arcanum": 1
+   }
+  },
+  "Chaplain Grimaldus": {
+   "models": 4,
+   "lists": 25,
+   "same": 25,
+   "items": {
+    "Artificer Crozius": 1,
+    "Plasma Pistol": 1
+   }
+  },
+  "Chaplain In Terminator Armour": {
+   "models": 1,
+   "lists": 45,
+   "same": 24,
+   "items": {
+    "Crozius Arcanum": 1,
+    "Relic Shield": 1,
+    "Storm Bolter": 0
+   }
+  },
+  "Chaplain On Bike": {
+   "models": 1,
+   "lists": 132,
+   "same": 126,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Crozius Arcanum": 1,
+    "Twin Bolt Rifle": 1
+   }
+  },
+  "Chaplain With Jump Pack": {
+   "models": 1,
+   "lists": 12,
+   "same": 11,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Crozius Arcanum": 1
+   }
+  },
+  "Chief Librarian Mephiston": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Fury of the Ancients": 1,
+    "Plasma Pistol": 1,
+    "Vitarus": 1
+   }
+  },
+  "Chief Librarian Tigurius": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Bolt Pistol": 1,
+    "Rod of Tigurius": 1,
+    "Storm of the Emperor's Wrath": 1
+   }
+  },
+  "Chimera": {
+   "models": 1,
+   "lists": 15,
+   "same": 9,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 0,
+    "Heavy flamer": 2,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lasgun array": 1
+   }
+  },
+  "Chosen": {
+   "models": 5,
+   "lists": 47,
+   "same": 12,
+   "items": {
+    "Accursed weapon": 3,
+    "Bolt pistol": 3,
+    "Boltgun": 2,
+    "Chaos icon": 1,
+    "Combi-weapon": 2,
+    "Paired accursed weapons": 1,
+    "Plasma pistol": 2,
+    "Power fist": 1
+   }
+  },
+  "Chronomancer": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Chronomancer’s stave": 1
+   }
+  },
+  "Clamavus": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Autopistol": 1,
+    "Close combat weapon": 1
+   }
+  },
+  "Clanblade": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Drakesteed Fangs and Talons": 1,
+    "Moonblades": 1,
+    "Solar Carbine": 1
+   }
+  },
+  "Commander Dante": {
+   "models": 1,
+   "lists": 33,
+   "same": 33,
+   "items": {
+    "The Axe Mortalis": 1
+   }
+  },
+  "Commander Farsight": {
+   "models": 1,
+   "lists": 60,
+   "same": 60,
+   "items": {
+    "Dawn Blade": 1,
+    "High-intensity plasma rifle": 1
+   }
+  },
+  "Commander In Coldstar Battlesuit": {
+   "models": 1,
+   "lists": 117,
+   "same": 20,
+   "items": {
+    "Airbursting fragmentation projector": 0,
+    "Battlesuit fists": 1,
+    "Battlesuit support system": 0,
+    "Burst cannon": 0,
+    "Cyclic ion blaster": 0,
+    "Fusion blaster": 4,
+    "Gun drone": 0,
+    "High-output burst cannon": 0,
+    "Marker drone": 0,
+    "Missile pod": 0,
+    "Plasma rifle": 0,
+    "Shield drone": 2,
+    "Shield generator": 0,
+    "T’au flamer": 0,
+    "Weapon support system": 0
+   }
+  },
+  "Commander In Enforcer Battlesuit": {
+   "models": 1,
+   "lists": 68,
+   "same": 9,
+   "items": {
+    "Airbursting fragmentation projector": 0,
+    "Battlesuit fists": 1,
+    "Burst cannon": 0,
+    "Cyclic ion blaster": 0,
+    "Fusion blaster": 0,
+    "Gun drone": 0,
+    "Marker drone": 1,
+    "Missile pod": 4,
+    "Plasma rifle": 0,
+    "Shield drone": 1,
+    "Shield generator": 0,
+    "T’au flamer": 0,
+    "Weapon support system": 0
+   }
+  },
+  "Commander Shadowsun": {
+   "models": 1,
+   "lists": 20,
+   "same": 19,
+   "items": {
+    "Battlesuit fists": 1,
+    "Flechette launcher": 1,
+    "High-energy fusion blaster": 2,
+    "Light missile pod": 1,
+    "Pulse pistol": 1,
+    "advanced guardian drone": 1
+   }
+  },
+  "Commissar": {
+   "models": 1,
+   "lists": 27,
+   "same": 22,
+   "items": {
+    "Bolt pistol": 0,
+    "Chainsword": 0,
+    "Plasma pistol": 1,
+    "Power weapon": 1
+   }
+  },
+  "Commissar Graves": {
+   "models": 1,
+   "lists": 6,
+   "same": 5,
+   "items": {
+    "Armoured hull": 1,
+    "Chiron gatling cannon": 1,
+    "Enforcer crew": 1,
+    "Power sword and Manus Mortis": 1,
+    "Prefectus heavy stubber": 2,
+    "aquiline prow": 1
+   }
+  },
+  "Commissar Yarrick": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Bale Eye": 1,
+    "Laspistol": 1,
+    "Power klaw": 1,
+    "Power sword": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Company Heroes": {
+   "models": 4,
+   "lists": 139,
+   "same": 136,
+   "items": {
+    "Combat Knife": 3,
+    "Master-crafted Bolt Pistol": 4,
+    "Master-crafted Bolt Rifle": 2,
+    "Master-crafted Heavy Bolter": 1,
+    "Master-crafted Power Weapon": 1
+   }
+  },
+  "Contemptor-Achillus Dreadnought": {
+   "models": 1,
+   "lists": 13,
+   "same": 9,
+   "items": {
+    "Adrathic Combi-destructor": 0,
+    "Dreadspear": 1,
+    "Lastrum Storm Bolter": 0,
+    "Twin Infernus Incinerator": 2
+   }
+  },
+  "Contemptor-Galatus Dreadnought": {
+   "models": 1,
+   "lists": 154,
+   "same": 142,
+   "items": {
+    "Warblade": 1
+   }
+  },
+  "Contorted Epitome": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Coiled tentacles": 1,
+    "Ravaging claws": 1
+   }
+  },
+  "Coronus Grav-carrier": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured Hull": 1,
+    "Twin Arachnus Blaze Cannon": 1,
+    "Twin Lastrum Bolt Cannon": 1
+   }
+  },
+  "Corpuscarii Electro-priests": {
+   "models": 10,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Electrostatic gauntlets": 10
+   }
+  },
+  "Corsair Skyreavers": {
+   "models": 5,
+   "lists": 21,
+   "same": 13,
+   "items": {
+    "Blast pistol": 1,
+    "Blaster": 1,
+    "Close combat weapon": 2,
+    "Corsair blade": 3,
+    "Flamer": 0,
+    "Fusion gun": 1,
+    "Neuro disruptor": 0,
+    "Shredder": 0,
+    "Shuriken pistol": 2
+   }
+  },
+  "Corsair Voidreavers": {
+   "models": 5,
+   "lists": 40,
+   "same": 10,
+   "items": {
+    "Blaster": 1,
+    "Close combat weapon": 5,
+    "Mistshield": 1,
+    "Neuro disruptor": 1,
+    "Power sword": 4,
+    "Shredder": 0,
+    "Shuriken cannon": 0,
+    "Shuriken pistol": 3,
+    "Shuriken rifle": 0,
+    "Wraithcannon": 0
+   }
+  },
+  "Corsair Voidscarred": {
+   "models": 5,
+   "lists": 8,
+   "same": 2,
+   "items": {
+    "Blaster": 2,
+    "Close combat weapon": 7,
+    "Executioner": 1,
+    "Faolchú": 1,
+    "Fusion pistol": 0,
+    "Mistshield": 1,
+    "Neuro disruptor": 1,
+    "Paired Hekatarii blades": 1,
+    "Power sword": 5,
+    "Shuriken pistol": 6,
+    "Shuriken rifle": 0,
+    "Witch staff": 1,
+    "Wraithcannon": 1,
+    "channeller stones": 1
+   }
+  },
+  "Corvus Blackstar": {
+   "models": 1,
+   "lists": 5,
+   "same": 4,
+   "items": {
+    "Armoured Hull": 1,
+    "Auspex Array": 1,
+    "Hurricane Bolter": 1,
+    "Stormstrike Missile Launcher": 2,
+    "Twin Assault Cannon": 0,
+    "Twin Lascannon": 1
+   }
+  },
+  "Crisis Fireknife Battlesuits": {
+   "models": 3,
+   "lists": 98,
+   "same": 34,
+   "items": {
+    "Battlesuit fists": 3,
+    "Gun drone": 3,
+    "Marker drone": 0,
+    "Missile pod": 0,
+    "Plasma rifle": 6,
+    "Shield drone": 3
+   }
+  },
+  "Crisis Starscythe Battlesuits": {
+   "models": 3,
+   "lists": 75,
+   "same": 30,
+   "items": {
+    "Battlesuit fists": 3,
+    "Burst cannon": 6,
+    "Gun drone": 3,
+    "Marker drone": 0,
+    "Shield drone": 3,
+    "T’au flamer": 0
+   }
+  },
+  "Crisis Sunforge Battlesuits": {
+   "models": 3,
+   "lists": 104,
+   "same": 46,
+   "items": {
+    "Battlesuit fists": 3,
+    "Fusion blaster": 6,
+    "Gun drone": 2,
+    "Marker drone": 1,
+    "Shield drone": 3
+   }
+  },
+  "Cronos": {
+   "models": 1,
+   "lists": 40,
+   "same": 21,
+   "items": {
+    "Spirit syphon": 1,
+    "Spirit vortex": 0,
+    "Spirit-leech tentacles": 1
+   }
+  },
+  "Crusade Ancient": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Bolt Pistol": 1,
+    "Master-crafted Power Weapon": 1
+   }
+  },
+  "Crusader Squad": {
+   "models": 10,
+   "lists": 49,
+   "same": 6,
+   "items": {
+    "Bolt Pistol": 9,
+    "Bolt Rifle": 0,
+    "Close combat weapon": 5,
+    "Combat Knife": 0,
+    "Hand Flamer": 0,
+    "Heavy Bolt Pistol": 6,
+    "Initiate Chainsword": 3,
+    "Master-crafted Power Weapon": 1,
+    "Neophyte Chainsword": 4,
+    "Power Fist": 2,
+    "Shotgun": 0
+   }
+  },
+  "Cryptothralls": {
+   "models": 2,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Scouring eye": 2,
+    "Scythed limbs": 2
+   }
+  },
+  "Cthonian Beserks": {
+   "models": 5,
+   "lists": 64,
+   "same": 11,
+   "items": {
+    "Concussion maul": 5,
+    "Heavy plasma axe": 0,
+    "Mole grenade launcher": 0,
+    "Twin concussion gauntlet": 0
+   }
+  },
+  "Cthonian Earthshakers": {
+   "models": 2,
+   "lists": 8,
+   "same": 7,
+   "items": {
+    "Autoch-pattern bolt pistol": 4,
+    "Breacher ordnance": 0,
+    "Plasma picks": 2,
+    "Tremor shells": 2
+   }
+  },
+  "Culexus Assassin": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Animus speculum": 1,
+    "Life-draining touch": 1
+   }
+  },
+  "Cultist Firebrand": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Balefire pike": 1,
+    "Close combat weapon": 1
+   }
+  },
+  "Cultist Mob": {
+   "models": 10,
+   "lists": 144,
+   "same": 111,
+   "items": {
+    "Autopistol": 10,
+    "Bolt pistol": 0,
+    "Brutal assault weapon": 10
+   }
+  },
+  "Custodian Guard Sodality": {
+   "models": 3,
+   "lists": 75,
+   "same": 49,
+   "items": {
+    "Guardian Spear": 3,
+    "Vexilla": 1
+   }
+  },
+  "Custodian Wardens": {
+   "models": 5,
+   "lists": 59,
+   "same": 16,
+   "items": {
+    "Castellan Axe": 0,
+    "Guardian Spear": 5,
+    "vexilla": 1
+   }
+  },
+  "Cybernetica Datasmith": {
+   "models": 1,
+   "lists": 81,
+   "same": 77,
+   "items": {
+    "Mechanicus pistol": 1,
+    "Power fist": 1
+   }
+  },
+  "Cypher": {
+   "models": 1,
+   "lists": 17,
+   "same": 15,
+   "items": {
+    "Cypher’s bolt pistol": 1,
+    "Cypher’s plasma pistol": 1
+   }
+  },
+  "D-cannon Platform": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Close combat weapon": 1,
+    "D-cannon": 1,
+    "Shuriken catapult": 1
+   }
+  },
+  "Daemon Prince of Chaos": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince Of Chaos With Wings": {
+   "models": 1,
+   "lists": 11,
+   "same": 11,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Khorne": {
+   "models": 1,
+   "lists": 36,
+   "same": 34,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Khorne with Wings": {
+   "models": 1,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Nurgle": {
+   "models": 1,
+   "lists": 26,
+   "same": 26,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Nurgle with Wings": {
+   "models": 1,
+   "lists": 23,
+   "same": 21,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Slaanesh": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Slaanesh with Wings": {
+   "models": 1,
+   "lists": 51,
+   "same": 47,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Tzeentch": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Dark Blessing": 1,
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemon Prince of Tzeentch with Wings": {
+   "models": 1,
+   "lists": 23,
+   "same": 22,
+   "items": {
+    "Dark Blessing": 1,
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Daemonettes": {
+   "models": 10,
+   "lists": 33,
+   "same": 31,
+   "items": {
+    "Daemonic icon": 1,
+    "Instrument of Chaos": 1,
+    "Slashing claws": 10
+   }
+  },
+  "Daemonifuge": {
+   "models": 2,
+   "lists": 7,
+   "same": 5,
+   "items": {
+    "Bolt pistol": 1,
+    "Sanctity": 1,
+    "The Outcast’s Weapons": 1
+   }
+  },
+  "Dark Apostle": {
+   "models": 3,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Accursed crozius": 1,
+    "Bolt pistol": 1,
+    "Close combat weapon": 2
+   }
+  },
+  "Dark Commune": {
+   "models": 5,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Autopistol": 2,
+    "Chaos icon.": 1,
+    "Close combat weapon": 2,
+    "Commune blade": 2,
+    "Commune stave": 1,
+    "Warp Curse": 1
+   }
+  },
+  "Dark Reapers": {
+   "models": 5,
+   "lists": 21,
+   "same": 14,
+   "items": {
+    "Close combat weapon": 5,
+    "Missile launcher": 1,
+    "Reaper launcher": 4,
+    "Tempest launcher": 0
+   }
+  },
+  "Darkstrider": {
+   "models": 1,
+   "lists": 44,
+   "same": 44,
+   "items": {
+    "Close combat weapon": 1,
+    "Shade": 1
+   }
+  },
+  "Darnath Lysander": {
+   "models": 1,
+   "lists": 24,
+   "same": 24,
+   "items": {
+    "Fist of Dorn": 1
+   }
+  },
+  "Death Company Captain": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Inferno Pistol": 1,
+    "Relic Weapon": 1
+   }
+  },
+  "Death Company Captain with Jump Pack": {
+   "models": 1,
+   "lists": 8,
+   "same": 5,
+   "items": {
+    "Plasma Pistol": 0,
+    "Power Fist": 0,
+    "Relic Shield": 1,
+    "Relic Weapon": 0,
+    "Thunder Hammer": 1
+   }
+  },
+  "Death Company Dreadnought": {
+   "models": 1,
+   "lists": 44,
+   "same": 34,
+   "items": {
+    "Blood Fist Bolt Rifles": 1,
+    "Blood Fists": 1,
+    "Blood Talons": 0,
+    "Twin Heavy Bolter": 0,
+    "Twin Icarus Ironhail Heavy Stubber": 1,
+    "Twin Multi-melta": 1
+   }
+  },
+  "Death Company Marines": {
+   "models": 5,
+   "lists": 3,
+   "same": 1,
+   "items": {
+    "Chainsword": 3,
+    "Eviscerator": 1,
+    "Heavy Bolt Pistol": 4,
+    "Inferno Pistol": 1,
+    "Plasma Pistol": 0,
+    "Power Fist": 1,
+    "Thunder Hammer": 0
+   }
+  },
+  "Death Company Marines With Jump Packs": {
+   "models": 10,
+   "lists": 27,
+   "same": 7,
+   "items": {
+    "Chainsword": 2,
+    "Eviscerator": 2,
+    "Hand Flamer": 2,
+    "Heavy Bolt Pistol": 2,
+    "Inferno Pistol": 2,
+    "Plasma Pistol": 4,
+    "Power Fist": 2,
+    "Power Weapon": 4
+   }
+  },
+  "Death Jester": {
+   "models": 1,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Jester’s blade": 1,
+    "Shrieker cannon": 1,
+    "flip belt": 1
+   }
+  },
+  "Death Korps Of Krieg": {
+   "models": 10,
+   "lists": 21,
+   "same": 9,
+   "items": {
+    "Bolt pistol": 0,
+    "Chainsword": 0,
+    "Close combat weapon": 9,
+    "Death Korps medi-pack": 1,
+    "Grenade launcher": 0,
+    "Lasgun": 7,
+    "Laspistol": 0,
+    "Long-las": 0,
+    "Meltagun": 1,
+    "Plasma gun": 1,
+    "Plasma pistol": 1,
+    "Power weapon": 1,
+    "Vox-caster": 1
+   }
+  },
+  "Death Riders": {
+   "models": 5,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Death Rider lascarbine": 5,
+    "Frag lance": 5,
+    "Power sabre": 5
+   }
+  },
+  "Deathleaper": {
+   "models": 1,
+   "lists": 28,
+   "same": 28,
+   "items": {
+    "Lictor claws and talons": 1
+   }
+  },
+  "Deathmarks": {
+   "models": 5,
+   "lists": 15,
+   "same": 15,
+   "items": {
+    "Close combat weapon": 5,
+    "Synaptic disintegrator": 5
+   }
+  },
+  "Deathshroud Terminators": {
+   "models": 3,
+   "lists": 78,
+   "same": 46,
+   "items": {
+    "Icon of despair": 0,
+    "Manreaper": 3,
+    "Plaguespurt gauntlet": 4
+   }
+  },
+  "Deathstrike": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured tracks": 1,
+    "Deathstrike missile": 1,
+    "Heavy flamer": 1
+   }
+  },
+  "Deathwatch Kill Team": {
+   "models": 5,
+   "lists": 7,
+   "same": 2,
+   "items": {
+    "Black Shield blades": 0,
+    "Boltgun": 0,
+    "Combi-weapon": 0,
+    "Frag cannon": 2,
+    "Heavy Thunder Hammer": 0,
+    "Infernus Heavy Bolter": 2,
+    "Knives and Fists": 0,
+    "Power weapon": 1,
+    "Stalker-pattern boltgun": 0,
+    "Storm Shield": 0,
+    "Xenophase blade": 1
+   }
+  },
+  "Deathwatch Terminator Squad": {
+   "models": 5,
+   "lists": 229,
+   "same": 69,
+   "items": {
+    "Assault Cannon": 0,
+    "Chainfist": 3,
+    "Cyclone Missile Launcher": 0,
+    "Plasma Cannon": 3,
+    "Power Fist": 0,
+    "Storm Bolter": 0,
+    "Storm Shield": 2,
+    "Thunder Hammer": 2,
+    "Twin Lightning Claws": 0
+   }
+  },
+  "Deathwatch Veterans": {
+   "models": 10,
+   "lists": 32,
+   "same": 3,
+   "items": {
+    "Black Shield Blades": 1,
+    "Boltgun": 0,
+    "Combi-weapon": 1,
+    "Frag Cannon": 2,
+    "Heavy Thunder Hammer": 4,
+    "Infernus Heavy Bolter": 0,
+    "Knives and Fists": 2,
+    "Power Weapon": 2,
+    "Storm Shield": 2,
+    "Xenophase Blade": 1
+   }
+  },
+  "Deathwing Knights": {
+   "models": 5,
+   "lists": 107,
+   "same": 56,
+   "items": {
+    "Great Weapon of the Unforgiven": 1,
+    "Mace of Absolution": 4,
+    "Power Weapon": 0,
+    "Relic Weapon": 0,
+    "Watcher in the Dark": 1
+   }
+  },
+  "Deathwing Terminator Squad": {
+   "models": 10,
+   "lists": 21,
+   "same": 2,
+   "items": {
+    "Assault Cannon": 0,
+    "Chainfist": 0,
+    "Cyclone Missile Launcher": 0,
+    "Plasma Cannon": 2,
+    "Power Fist": 10,
+    "Power Weapon": 0,
+    "Storm Bolter": 8,
+    "Watcher in the Dark": 1
+   }
+  },
+  "Decimus Kill Team": {
+   "models": 5,
+   "lists": 13,
+   "same": 5,
+   "items": {
+    "Bolt Pistol": 3,
+    "Combat Knife": 0,
+    "Deathwatch Marksman Bolt Carbine": 1,
+    "Frag Cannon": 0,
+    "Heavy Thunder Hammer": 1,
+    "Infernus Heavy Bolter": 1,
+    "Plasma Incinerator": 1,
+    "Plasma Pistol": 1,
+    "Power Weapon": 1,
+    "Special-issue Bolt Pistol": 1,
+    "Stalker Bolt Rifle": 0,
+    "Xenophase Blade": 0
+   }
+  },
+  "Deff Dread": {
+   "models": 1,
+   "lists": 16,
+   "same": 10,
+   "items": {
+    "Dread Klaws": 1,
+    "Extra Klaw": 2,
+    "Kustom Mega-blasta": 0,
+    "Rokkit Launcha": 0,
+    "Skorcha": 0
+   }
+  },
+  "Deffkilla Wartrike": {
+   "models": 1,
+   "lists": 31,
+   "same": 29,
+   "items": {
+    "Boomstikks": 1,
+    "Killa Jet": 1,
+    "Snagga Klaw": 1
+   }
+  },
+  "Deffkoptas": {
+   "models": 3,
+   "lists": 83,
+   "same": 39,
+   "items": {
+    "Choppa": 3,
+    "Kustom Mega-blasta": 0,
+    "Rokkit Launcha": 3,
+    "Slugga": 3,
+    "Spinnin’ Blades": 3
+   }
+  },
+  "Defiler": {
+   "models": 1,
+   "lists": 260,
+   "same": 111,
+   "items": {
+    "Ectoplasma destructor": 1,
+    "Electroscourge": 0,
+    "Excruciator cannon": 2,
+    "Hades battle cannon": 0,
+    "Hades lascannon": 0,
+    "Heavy baleflamer": 0,
+    "Heavy missile launcher": 0,
+    "Heavy reaper autocannon": 2,
+    "Magma cutters": 0,
+    "Shearing claws": 1
+   }
+  },
+  "Desolation Squad": {
+   "models": 5,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Bolt Pistol": 5,
+    "Castellan Launcher": 5,
+    "Ceramite Fists": 5,
+    "Superfrag Rocket Launcher": 5
+   }
+  },
+  "Devilfish": {
+   "models": 1,
+   "lists": 30,
+   "same": 18,
+   "items": {
+    "Accelerator burst cannon": 1,
+    "Armoured hull": 1,
+    "Seeker missile": 2,
+    "Smart missile system": 0,
+    "Twin pulse carbine": 2
+   }
+  },
+  "Dialogus": {
+   "models": 1,
+   "lists": 3,
+   "same": 2,
+   "items": {
+    "Bolt pistol": 1,
+    "Dialogus staff": 1
+   }
+  },
+  "Dire Avengers": {
+   "models": 5,
+   "lists": 11,
+   "same": 8,
+   "items": {
+    "Avenger shuriken catapult": 6,
+    "Close combat weapon": 5
+   }
+  },
+  "Dogmata": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Bolt pistol": 1,
+    "Mace of the righteous": 1
+   }
+  },
+  "Dominion Squad": {
+   "models": 10,
+   "lists": 98,
+   "same": 49,
+   "items": {
+    "Artificer-crafted storm bolter": 0,
+    "Bolt pistol": 10,
+    "Boltgun": 5,
+    "Chainsword": 0,
+    "Close combat weapon": 10,
+    "Combi-weapon": 0,
+    "Condemnor boltgun": 0,
+    "Inferno pistol": 0,
+    "Meltagun": 0,
+    "Ministorum flamer": 4,
+    "Ministorum hand flamer": 1,
+    "Plasma pistol": 0,
+    "Power weapon": 1,
+    "Simulacrum imperialis": 1
+   }
+  },
+  "Doom Scythe": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Armoured bulk": 1,
+    "Heavy death ray": 1,
+    "Twin tesla destructor": 1
+   }
+  },
+  "Doomhammer": {
+   "models": 1,
+   "lists": 6,
+   "same": 4,
+   "items": {
+    "Armoured tracks": 1,
+    "Lascannon": 4,
+    "Magma cannon": 1,
+    "Twin heavy bolter": 5,
+    "Twin heavy flamer": 0
+   }
+  },
+  "Doomsday Ark": {
+   "models": 1,
+   "lists": 23,
+   "same": 23,
+   "items": {
+    "Armoured bulk": 1,
+    "Doomsday cannon": 1,
+    "Gauss flayer array": 2
+   }
+  },
+  "Dragon Knights": {
+   "models": 6,
+   "lists": 13,
+   "same": 7,
+   "items": {
+    "Drakesteed Fangs and Talons": 6,
+    "Laser Lance": 6,
+    "Solar Carbine": 6
+   }
+  },
+  "Drazhar": {
+   "models": 1,
+   "lists": 37,
+   "same": 33,
+   "items": {
+    "Executioner’s demiklaives": 1
+   }
+  },
+  "Drop Pod": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {}
+  },
+  "Eightbound": {
+   "models": 3,
+   "lists": 175,
+   "same": 161,
+   "items": {
+    "Chainblades": 3
+   }
+  },
+  "Einhyr Champion": {
+   "models": 1,
+   "lists": 27,
+   "same": 17,
+   "items": {
+    "Autoch-pattern combi-bolter": 1,
+    "Darkstar axe": 0,
+    "Mass hammer": 1,
+    "Teleport crest": 0,
+    "Weavefield crest": 1
+   }
+  },
+  "Einhyr Hearthguard": {
+   "models": 10,
+   "lists": 106,
+   "same": 34,
+   "items": {
+    "Concussion gauntlet": 9,
+    "EtaCarn plasma gun": 10,
+    "Exoarmour grenade launcher": 10,
+    "Graviton hammer": 1,
+    "Plasma blade gauntlet": 0,
+    "Teleport crest": 0,
+    "Volkanite disintegrator": 0,
+    "Weavefield crest": 1
+   }
+  },
+  "Eldrad Ulthran": {
+   "models": 1,
+   "lists": 33,
+   "same": 31,
+   "items": {
+    "Mind War": 1,
+    "Shuriken pistol": 1,
+    "Staff of Ulthamar and witchblade": 0
+   }
+  },
+  "Eliminator Squad": {
+   "models": 3,
+   "lists": 33,
+   "same": 29,
+   "items": {
+    "Bolt Pistol": 3,
+    "Bolt Sniper Rifle": 0,
+    "Ceramite Fists": 3,
+    "Instigator Bolt Carbine": 0,
+    "Las Fusil": 3
+   }
+  },
+  "Emperor’s Champion": {
+   "models": 1,
+   "lists": 33,
+   "same": 33,
+   "items": {
+    "Black Sword": 1,
+    "Bolt Pistol": 1
+   }
+  },
+  "Epidemius": {
+   "models": 1,
+   "lists": 9,
+   "same": 9,
+   "items": {
+    "Balesword and Nurgling attendants": 1
+   }
+  },
+  "Eradicator Squad with Heavy Bolters": {
+   "models": 3,
+   "lists": 40,
+   "same": 22,
+   "items": {
+    "Bolt Pistol": 3,
+    "Ceramite Fists": 3,
+    "Heavy Bolter": 3
+   }
+  },
+  "Eradicator Squad with Melta Rifles": {
+   "models": 3,
+   "lists": 430,
+   "same": 382,
+   "items": {
+    "Bolt Pistol": 3,
+    "Ceramite Fists": 3,
+    "Melta Rifle": 2,
+    "Multi-melta": 1
+   }
+  },
+  "Ethereal": {
+   "models": 1,
+   "lists": 15,
+   "same": 7,
+   "items": {
+    "Gun drone": 0,
+    "Honour stave": 1,
+    "Hover drone": 1,
+    "Marker drone": 1,
+    "Shield drone": 1
+   }
+  },
+  "Eversor Assassin": {
+   "models": 1,
+   "lists": 17,
+   "same": 15,
+   "items": {
+    "Executioner pistol": 1,
+    "Power sword and neuro gauntlet": 1
+   }
+  },
+  "Exalted Eightbound": {
+   "models": 3,
+   "lists": 150,
+   "same": 127,
+   "items": {
+    "Chainblades": 3
+   }
+  },
+  "Exalted Flamer": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Fire of Tzeentch": 1,
+    "Flamer mouths": 1
+   }
+  },
+  "Exalted Sorcerer": {
+   "models": 1,
+   "lists": 13,
+   "same": 9,
+   "items": {
+    "Astral Blast": 1,
+    "Force weapon": 1,
+    "Inferno bolt pistol": 1,
+    "Prosperine khopesh": 0
+   }
+  },
+  "Exalted Sorcerer on Disc of Tzeentch": {
+   "models": 1,
+   "lists": 13,
+   "same": 7,
+   "items": {
+    "Arcane Fire": 1,
+    "Force weapon": 1,
+    "Inferno bolt pistol": 1,
+    "Prosperine khopesh": 1
+   }
+  },
+  "Execrator": {
+   "models": 1,
+   "lists": 9,
+   "same": 8,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Crozius Arcanum": 1,
+    "Master-crafted Power Weapon": 1
+   }
+  },
+  "Exocrine": {
+   "models": 1,
+   "lists": 49,
+   "same": 48,
+   "items": {
+    "Bio-plasmic cannon": 1,
+    "Powerful limbs": 1
+   }
+  },
+  "Exorcist": {
+   "models": 1,
+   "lists": 30,
+   "same": 26,
+   "items": {
+    "Armoured tracks": 1,
+    "Exorcist missile launcher": 1,
+    "Heavy bolter": 1,
+    "Hunter-killer missile": 1
+   }
+  },
+  "Ezekiel": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Mind Wipe": 1,
+    "The Deliverer": 1,
+    "Traitor's Bane": 1
+   }
+  },
+  "Fabius Bile": {
+   "models": 2,
+   "lists": 30,
+   "same": 25,
+   "items": {
+    "Chirurgeon": 1,
+    "Rod of Torment": 1,
+    "Surgeon Acolyte’s tools": 1,
+    "Xyclos Needler": 1
+   }
+  },
+  "Falcon": {
+   "models": 1,
+   "lists": 20,
+   "same": 19,
+   "items": {
+    "Bright lance": 1,
+    "Pulse laser": 1,
+    "Shuriken cannon": 1,
+    "Twin shuriken catapult": 0,
+    "Wraithbone hull": 1
+   }
+  },
+  "Farseer": {
+   "models": 1,
+   "lists": 18,
+   "same": 15,
+   "items": {
+    "Eldritch Storm": 1,
+    "Shuriken pistol": 1,
+    "Singing spear": 1,
+    "Witchblade": 0
+   }
+  },
+  "Farseer Skyrunner": {
+   "models": 1,
+   "lists": 64,
+   "same": 51,
+   "items": {
+    "Eldritch Storm": 1,
+    "Shuriken pistol": 1,
+    "Singing spear": 1,
+    "Twin shuriken catapult": 1,
+    "Witchblade": 0
+   }
+  },
+  "Fateskimmer": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Arcane Fireball": 1,
+    "Herald combat weapon": 1,
+    "Screamer bites": 1
+   }
+  },
+  "Fellgor Beastmen": {
+   "models": 10,
+   "lists": 7,
+   "same": 4,
+   "items": {
+    "Autopistol": 9,
+    "Bolt pistol": 0,
+    "Chainsword": 1,
+    "Close combat weapon": 7,
+    "Corrupted stave": 1,
+    "Great weapon": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Fenrisian Wolves": {
+   "models": 5,
+   "lists": 33,
+   "same": 33,
+   "items": {
+    "Teeth and Claws": 5
+   }
+  },
+  "Field Ordnance Battery": {
+   "models": 2,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Battery close combat weapons": 2,
+    "Bombast field gun": 2,
+    "Lasgun": 2,
+    "Laspistol": 2
+   }
+  },
+  "Fiends": {
+   "models": 3,
+   "lists": 23,
+   "same": 13,
+   "items": {
+    "Barbed tail and dissecting claws": 3
+   }
+  },
+  "Fire Dragons": {
+   "models": 5,
+   "lists": 40,
+   "same": 20,
+   "items": {
+    "Close combat weapon": 5,
+    "Dragon axe": 0,
+    "Dragon fusion gun": 4,
+    "Dragon fusion pistol": 0,
+    "Exarch’s Dragon fusion gun": 0,
+    "Firepike": 1
+   }
+  },
+  "Fire Prism": {
+   "models": 1,
+   "lists": 28,
+   "same": 26,
+   "items": {
+    "Prism cannon": 1,
+    "Shuriken cannon": 1,
+    "Twin shuriken catapult": 0,
+    "Wraithbone hull": 1
+   }
+  },
+  "Firesight Team": {
+   "models": 1,
+   "lists": 11,
+   "same": 11,
+   "items": {
+    "Close combat weapons": 1,
+    "Longshot pulse rifles": 1,
+    "Pulse pistol": 1
+   }
+  },
+  "Firestrike Servo-turrets": {
+   "models": 2,
+   "lists": 14,
+   "same": 6,
+   "items": {
+    "Hovering Bulk": 2,
+    "Twin Firestrike Autocannon": 2,
+    "Twin Firestrike Las-talon": 0
+   }
+  },
+  "Flamers": {
+   "models": 3,
+   "lists": 13,
+   "same": 12,
+   "items": {
+    "Flamer mouths": 3,
+    "Flickering Flames": 3
+   }
+  },
+  "Flash Gitz": {
+   "models": 10,
+   "lists": 59,
+   "same": 42,
+   "items": {
+    "Choppa": 10,
+    "Snazzgun": 10
+   }
+  },
+  "Flawless Blades": {
+   "models": 3,
+   "lists": 122,
+   "same": 73,
+   "items": {
+    "Blissblade": 3,
+    "Bolt pistol": 3
+   }
+  },
+  "Flayed Ones": {
+   "models": 5,
+   "lists": 64,
+   "same": 64,
+   "items": {
+    "Flayer claws": 5
+   }
+  },
+  "Flesh Hounds": {
+   "models": 5,
+   "lists": 71,
+   "same": 68,
+   "items": {
+    "Burning roar": 1,
+    "Gore-drenched fangs": 5,
+    "collar of Khorne.": 5
+   }
+  },
+  "Fluxmaster": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Arcane Fireball": 1,
+    "Herald combat weapon": 1
+   }
+  },
+  "Foetid Bloat-drone": {
+   "models": 1,
+   "lists": 18,
+   "same": 12,
+   "items": {
+    "Fleshmower": 1,
+    "Plague probe": 1,
+    "Plaguespitter": 0
+   }
+  },
+  "Foetid Bloat-drone with Heavy Blight Launcher": {
+   "models": 1,
+   "lists": 50,
+   "same": 46,
+   "items": {
+    "Heavy blight launcher": 1,
+    "Plague probe": 1
+   }
+  },
+  "Forgefiend": {
+   "models": 1,
+   "lists": 123,
+   "same": 61,
+   "items": {
+    "Armoured limbs": 0,
+    "Ectoplasma cannon": 1,
+    "Forgefiend jaws": 0,
+    "Hades autocannon": 2
+   }
+  },
+  "Fortis Kill Team": {
+   "models": 10,
+   "lists": 8,
+   "same": 5,
+   "items": {
+    "Astartes Grenade Launcher": 2,
+    "Bolt Pistol": 9,
+    "Castellan Launcher": 2,
+    "Deathwatch Bolt Rifle": 4,
+    "Plasma Incinerator": 4,
+    "Plasma Pistol": 1,
+    "Power Fist": 1,
+    "Pyreblaster": 0,
+    "Superkrak Rocket Launcher": 1,
+    "Vengor Launcher": 1
+   }
+  },
+  "Foul Blightspawn": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Close combat weapon": 1,
+    "Plague sprayer": 1
+   }
+  },
+  "Fuegan": {
+   "models": 1,
+   "lists": 27,
+   "same": 22,
+   "items": {
+    "Fire Axe": 1,
+    "Searsong": 1
+   }
+  },
+  "Fulgrim": {
+   "models": 1,
+   "lists": 18,
+   "same": 17,
+   "items": {
+    "Daemonic blades": 1,
+    "Malefic lash": 1,
+    "Serpentine tail": 1
+   }
+  },
+  "Gargantuan Squiggoth": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Huge tusks": 1,
+    "Supa-kannon": 1
+   }
+  },
+  "Gargoyles": {
+   "models": 10,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Blinding venom": 10,
+    "Fleshborer": 10
+   }
+  },
+  "Gaunt’s Ghosts": {
+   "models": 6,
+   "lists": 33,
+   "same": 32,
+   "items": {
+    "Bolt pistol": 1,
+    "Bragg’s autocannon": 1,
+    "Corbec’s hot-shot lascarbine": 1,
+    "Gaunt’s chainsword": 1,
+    "Larkin’s long-las": 1,
+    "Lascarbine": 1,
+    "Mkoll’s straight silver knife": 1,
+    "Rawne’s lascarbine": 1,
+    "Straight silver knife": 4
+   }
+  },
+  "Genestealers": {
+   "models": 10,
+   "lists": 32,
+   "same": 27,
+   "items": {
+    "Genestealer claws and talons": 10
+   }
+  },
+  "Geomancer": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Tremorglaive": 1
+   }
+  },
+  "Ghazghkull Thraka": {
+   "models": 1,
+   "lists": 88,
+   "same": 81,
+   "items": {
+    "Adamantine ’Eadbutt": 1,
+    "Gork’s Klaw": 1,
+    "Mork’s Roar": 1
+   }
+  },
+  "Ghost Ark": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Armoured bulk": 1,
+    "Gauss flayer array": 2
+   }
+  },
+  "Ghostkeel Battlesuit": {
+   "models": 1,
+   "lists": 47,
+   "same": 22,
+   "items": {
+    "Battlesuit support system": 1,
+    "Cyclic ion raker": 0,
+    "Fusion collider": 1,
+    "Ghostkeel fists": 1,
+    "Twin T’au flamer": 0,
+    "Twin fusion blaster": 1
+   }
+  },
+  "Gladiator Lancer": {
+   "models": 1,
+   "lists": 35,
+   "same": 27,
+   "items": {
+    "Armoured Hull": 1,
+    "Defensive Array": 1,
+    "Laser Destroyer": 1
+   }
+  },
+  "Gladiator Reaper": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Armoured Hull": 1,
+    "Defensive Array": 1,
+    "Twin Heavy Onslaught Gatling Cannon": 1
+   }
+  },
+  "Gladiator Valiant": {
+   "models": 1,
+   "lists": 19,
+   "same": 14,
+   "items": {
+    "Armoured Hull": 1,
+    "Defensive Array": 1,
+    "Multi-melta": 2,
+    "Twin Las-talon": 1
+   }
+  },
+  "Goliath Rockgrinder": {
+   "models": 1,
+   "lists": 7,
+   "same": 3,
+   "items": {
+    "Clearance incinerator": 0,
+    "Demolition charge cache": 1,
+    "Drilldozer blade": 1,
+    "Heavy mining laser": 1,
+    "Heavy stubber": 1
+   }
+  },
+  "Goliath Truck": {
+   "models": 1,
+   "lists": 20,
+   "same": 16,
+   "items": {
+    "Armoured hull": 1,
+    "Demolition charge cache": 1,
+    "Heavy stubber": 1,
+    "Twin autocannon": 1
+   }
+  },
+  "Goremongers": {
+   "models": 8,
+   "lists": 72,
+   "same": 53,
+   "items": {
+    "Autopistol": 8,
+    "Blood harpoon": 0,
+    "Chainblade": 8,
+    "Close combat weapon": 8
+   }
+  },
+  "Gorkanaut": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Deffstorm Mega-shoota": 1,
+    "Dual Big Shoota": 2,
+    "Klaw of Gork": 1,
+    "Rokkit Launcha": 2,
+    "Skorcha": 1
+   }
+  },
+  "Grand Master": {
+   "models": 1,
+   "lists": 10,
+   "same": 8,
+   "items": {
+    "Incinerator": 0,
+    "Nemesis force weapon": 1,
+    "Psycannon": 1,
+    "Storm bolter": 0
+   }
+  },
+  "Grand Master In Nemesis Dreadknight": {
+   "models": 1,
+   "lists": 79,
+   "same": 73,
+   "items": {
+    "Fragstorm grenade launcher": 1,
+    "Gatling psilencer": 0,
+    "Heavy incinerator": 0,
+    "Heavy psycannon": 1,
+    "Nemesis daemon greathammer": 1,
+    "Nemesis greatsword": 0,
+    "Sublimator": 1
+   }
+  },
+  "Grand Master Voldus": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Malleus Argyrum": 1,
+    "Searing Purity": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Great Unclean One": {
+   "models": 1,
+   "lists": 30,
+   "same": 14,
+   "items": {
+    "Bileblade": 0,
+    "Bilesword": 1,
+    "Doomsday bell": 0,
+    "Plague flail": 1,
+    "Putrid vomit": 1
+   }
+  },
+  "Gretchin": {
+   "models": 10,
+   "lists": 339,
+   "same": 284,
+   "items": {
+    "Grot Blasta": 10,
+    "Scavenged Shivs": 10
+   }
+  },
+  "Grey Hunters": {
+   "models": 10,
+   "lists": 46,
+   "same": 22,
+   "items": {
+    "Bolt Carbine": 10,
+    "Bolt Pistol": 9,
+    "Chainsword": 9,
+    "Plasma Pistol": 1,
+    "Power Fist": 1,
+    "Power Weapon": 0
+   }
+  },
+  "Grey Knights Terminator Squad": {
+   "models": 5,
+   "lists": 3,
+   "same": 2,
+   "items": {
+    "Incinerator": 0,
+    "Narthecium": 1,
+    "Nemesis force weapon": 5,
+    "Psycannon": 1,
+    "Storm bolter": 3
+   }
+  },
+  "Grimnyr": {
+   "models": 3,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Ancestral Wrath": 1,
+    "Ancestral ward stave": 1,
+    "Autoch-pattern bolter": 2,
+    "Close combat weapon": 2
+   }
+  },
+  "Guardian Defenders": {
+   "models": 11,
+   "lists": 13,
+   "same": 12,
+   "items": {
+    "Bright lance": 1,
+    "Close combat weapon": 11,
+    "Shuriken cannon": 0,
+    "Shuriken catapult": 10
+   }
+  },
+  "Gunwagon": {
+   "models": 1,
+   "lists": 40,
+   "same": 24,
+   "items": {
+    "Big Shoota": 4,
+    "Crushin’ Bulk": 1,
+    "Grabbin’ Klaw": 1,
+    "Killkannon": 0,
+    "Lobba": 1,
+    "Wreckin’ Ball": 1,
+    "Zzap Gun": 1
+   }
+  },
+  "Gyrfalcon Jetbike Sodality": {
+   "models": 2,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Adrathic Devastator": 2,
+    "Solarite Power Lance": 0
+   }
+  },
+  "Haemonculus": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Haemonculus tools and scissorhands": 1,
+    "Stinger pistol": 1
+   }
+  },
+  "Hammerhead Gunship": {
+   "models": 1,
+   "lists": 24,
+   "same": 13,
+   "items": {
+    "Accelerator burst cannon": 2,
+    "Armoured hull": 1,
+    "Ion cannon": 1,
+    "Railgun": 0,
+    "Seeker missile": 2,
+    "Smart missile system": 0
+   }
+  },
+  "Hand of the Archon": {
+   "models": 10,
+   "lists": 18,
+   "same": 6,
+   "items": {
+    "Blast pistol": 1,
+    "Blaster": 1,
+    "Close combat weapon": 9,
+    "Dark lance": 1,
+    "Kabalite icon": 1,
+    "Pain sculptors": 1,
+    "Phantasm grenade launcher": 0,
+    "Power weapon": 1,
+    "Razorflail": 1,
+    "Shardcarbine": 1,
+    "Shredder": 0,
+    "Splinter cannon": 0,
+    "Splinter pistol": 1,
+    "Splinter rifle": 4,
+    "Stimm-needler": 1,
+    "Stinger pistol": 0
+   }
+  },
+  "Haruspex": {
+   "models": 1,
+   "lists": 38,
+   "same": 36,
+   "items": {
+    "Grasping tongue": 1,
+    "Ravenous maw": 1,
+    "Shovelling claws": 1
+   }
+  },
+  "Hastarii Exterminators": {
+   "models": 5,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Close-combat weapon": 4,
+    "Eradication caster": 5,
+    "Hastarii arc blaster": 5,
+    "Power weapon": 1
+   }
+  },
+  "Hastarii Fusiliers": {
+   "models": 5,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Close-combat weapon": 4,
+    "Hastarii phosphor blaster": 5,
+    "Neutron fusil": 5,
+    "Power weapon": 1
+   }
+  },
+  "Havocs": {
+   "models": 5,
+   "lists": 6,
+   "same": 1,
+   "items": {
+    "Accursed weapon": 0,
+    "Astartes chainsword": 0,
+    "Close combat weapon": 4,
+    "Flamer": 0,
+    "Havoc autocannon": 0,
+    "Havoc heavy bolter": 0,
+    "Havoc lascannon": 4,
+    "Meltagun": 0,
+    "Plasma gun": 1,
+    "Plasma pistol": 0,
+    "Power fist": 1
+   }
+  },
+  "Hearthkyn Warriors": {
+   "models": 10,
+   "lists": 50,
+   "same": 4,
+   "items": {
+    "Autoch-pattern bolt pistol": 10,
+    "Autoch-pattern bolter": 5,
+    "Close combat weapon": 10,
+    "EtaCarn plasma beamer": 0,
+    "HYLas auto rifle": 1,
+    "HYLas rotary cannon": 1,
+    "Ion blaster": 0,
+    "L7 missile launcher": 0,
+    "Magna-rail rifle": 0,
+    "Plasma knife": 2,
+    "Theyn’s melee weapon": 1,
+    "Theyn’s pistol": 1,
+    "weavefield crest": 1
+   }
+  },
+  "Heavy Intercessor Squad": {
+   "models": 5,
+   "lists": 58,
+   "same": 40,
+   "items": {
+    "Bolt Pistol": 5,
+    "Ceramite Fists": 5,
+    "Heavy Bolt Rifle": 4,
+    "Heavy Bolter": 1
+   }
+  },
+  "Hekaton Land Fortress": {
+   "models": 1,
+   "lists": 95,
+   "same": 43,
+   "items": {
+    "Armoured wheels": 1,
+    "Cyclic ion cannon": 0,
+    "Heavy magna-rail cannon": 1,
+    "Hekaton warhead": 0,
+    "MATR autocannon": 1,
+    "Panspectral scanner": 1,
+    "SP heavy conversion beamer": 0,
+    "Twin bolt cannon": 2,
+    "pan spectral scanner": 0
+   }
+  },
+  "Helbrute": {
+   "models": 1,
+   "lists": 37,
+   "same": 12,
+   "items": {
+    "Close combat weapon": 1,
+    "Combi-bolter": 0,
+    "Heavy flamer": 1,
+    "Helbrute fist": 1,
+    "Helbrute hammer": 1,
+    "Missile launcher": 0,
+    "Multi-melta": 0,
+    "Power scourge": 0,
+    "Twin lascannon": 0
+   }
+  },
+  "Heldrake": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Baleflamer": 1,
+    "Heldrake claws": 1
+   }
+  },
+  "Hellblaster Squad": {
+   "models": 5,
+   "lists": 25,
+   "same": 8,
+   "items": {
+    "Bolt Pistol": 4,
+    "Ceramite Fists": 5,
+    "Plasma Incinerator": 5,
+    "Plasma Pistol": 1
+   }
+  },
+  "Hellflayers": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Lashes of torment": 1,
+    "Seeker tongues": 1,
+    "Slashing claws": 1
+   }
+  },
+  "Hellhammer": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Armoured tracks": 1,
+    "Coaxial autocannon": 1,
+    "Demolisher cannon": 1,
+    "Heavy stubber": 1,
+    "Hellhammer cannon": 1,
+    "Lascannon": 4,
+    "Twin heavy bolter": 5
+   }
+  },
+  "Hellhound": {
+   "models": 1,
+   "lists": 36,
+   "same": 9,
+   "items": {
+    "Armoured tracks": 1,
+    "Chem cannon": 0,
+    "Heavy bolter": 0,
+    "Heavy flamer": 1,
+    "Hunter-killer missile": 1,
+    "Inferno cannon": 1,
+    "Melta cannon": 0,
+    "Multi-melta": 0
+   }
+  },
+  "Hellions": {
+   "models": 10,
+   "lists": 52,
+   "same": 11,
+   "items": {
+    "Hellglaive": 10,
+    "Phantasm grenade launcher": 1,
+    "Power weapon": 1,
+    "Splinter pistol": 1,
+    "Splinter pods": 10,
+    "Stunclaw": 0
+   }
+  },
+  "Heretic Astartes Daemon Prince": {
+   "models": 1,
+   "lists": 4,
+   "same": 3,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Heretic Astartes Daemon Prince With Wings": {
+   "models": 1,
+   "lists": 13,
+   "same": 13,
+   "items": {
+    "Hellforged weapons": 1,
+    "Infernal cannon": 1
+   }
+  },
+  "Hernkyn Pioneers": {
+   "models": 3,
+   "lists": 106,
+   "same": 61,
+   "items": {
+    "Bolt revolver": 3,
+    "Bolt shotgun": 3,
+    "HYLas rotary cannon": 1,
+    "Ion beamer": 0,
+    "Magna-coil autocannon": 3,
+    "Multiwave comms array": 0,
+    "Panspectral scanner": 1,
+    "Plasma knife": 3,
+    "Rollbar searchlight": 1
+   }
+  },
+  "Hernkyn Yaegirs": {
+   "models": 10,
+   "lists": 69,
+   "same": 42,
+   "items": {
+    "APM launcher": 1,
+    "Bolt revolver": 8,
+    "Bolt shotgun": 0,
+    "Close combat weapon": 10,
+    "Magna-coil rifle": 1,
+    "Plasma knife": 8
+   }
+  },
+  "Hexmark Destroyer": {
+   "models": 1,
+   "lists": 26,
+   "same": 26,
+   "items": {
+    "Close combat weapon": 1,
+    "Enmitic disintegrator pistols": 1
+   }
+  },
+  "High Marshal Helbrecht": {
+   "models": 1,
+   "lists": 43,
+   "same": 43,
+   "items": {
+    "Ferocity": 1,
+    "Sword of the High Marshals": 1
+   }
+  },
+  "Hippogriff AFV": {
+   "models": 1,
+   "lists": 13,
+   "same": 4,
+   "items": {
+    "Armoured hull": 1,
+    "Melta cannon": 1,
+    "Meltagun": 1,
+    "Vigilator cannon": 0
+   }
+  },
+  "Hive Guard": {
+   "models": 6,
+   "lists": 17,
+   "same": 15,
+   "items": {
+    "Chitinous claws and teeth": 6,
+    "Impaler cannon": 0,
+    "Shockcannon": 6
+   }
+  },
+  "Hive Tyrant": {
+   "models": 1,
+   "lists": 46,
+   "same": 26,
+   "items": {
+    "Heavy venom cannon": 0,
+    "Monstrous bonesword and lash whip": 1,
+    "Monstrous scything talons": 1,
+    "Stranglethorn cannon": 0
+   }
+  },
+  "Hormagaunts": {
+   "models": 10,
+   "lists": 105,
+   "same": 73,
+   "items": {
+    "Hormagaunt talons": 10
+   }
+  },
+  "Horticulous Slimux": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Acidic maw": 1,
+    "Lopping shears": 1
+   }
+  },
+  "Hospitaller": {
+   "models": 1,
+   "lists": 40,
+   "same": 33,
+   "items": {
+    "Bolt pistol": 1,
+    "Chirurgeon’s tools": 1
+   }
+  },
+  "Howling Banshees": {
+   "models": 5,
+   "lists": 54,
+   "same": 33,
+   "items": {
+    "Banshee blade": 4,
+    "Executioner": 1,
+    "Mirrorswords": 0,
+    "Shuriken pistol": 5
+   }
+  },
+  "Hunta Rig": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Butcha Boyz": 1,
+    "Savage Horns and Hooves": 1,
+    "Saw Blades": 1,
+    "Stikka Kannon": 1,
+    "’Eavy Lobba": 1
+   }
+  },
+  "Huron Blackheart": {
+   "models": 1,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Tyrant’s Claw and exalted power weapon": 1,
+    "Tyrant’s Claw heavy flamer": 1
+   }
+  },
+  "Hybrid Metamorphs": {
+   "models": 10,
+   "lists": 27,
+   "same": 18,
+   "items": {
+    "Autopistol": 0,
+    "Cult icon": 1,
+    "Hand flamer": 9,
+    "Leader’s bio-weapons": 0,
+    "Leader’s cult weapons": 1,
+    "Metamorph mutations": 9
+   }
+  },
+  "Hydra": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 1,
+    "Hunter-killer missile": 1,
+    "Hydra autocannon": 1
+   }
+  },
+  "Hyperadapted Raveners": {
+   "models": 5,
+   "lists": 86,
+   "same": 84,
+   "items": {
+    "Prime claws and talons": 1,
+    "Ravener heavy claws and talons": 4,
+    "Venom bolt": 1
+   }
+  },
+  "Icon Bearer": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Boltgun": 1,
+    "Plague knife": 1
+   }
+  },
+  "Illuminor Szeras": {
+   "models": 1,
+   "lists": 33,
+   "same": 32,
+   "items": {
+    "Eldritch lance": 1,
+    "Impaling legs": 1
+   }
+  },
+  "Imagifier": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Bolt pistol": 1,
+    "Boltgun": 1,
+    "Close combat weapon": 1
+   }
+  },
+  "Immolator": {
+   "models": 1,
+   "lists": 122,
+   "same": 96,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 1,
+    "Hunter-killer missile": 1,
+    "Immolation flamers": 1,
+    "Twin heavy bolter": 0,
+    "Twin multi-melta": 0
+   }
+  },
+  "Immortals": {
+   "models": 10,
+   "lists": 72,
+   "same": 31,
+   "items": {
+    "Close combat weapon": 10,
+    "Gauss blaster": 10,
+    "Tesla carbine": 0
+   }
+  },
+  "Imotekh The Stormlord": {
+   "models": 1,
+   "lists": 48,
+   "same": 48,
+   "items": {
+    "Gauntlet of Fire": 1,
+    "Staff of the Destroyer": 1
+   }
+  },
+  "Imperial Navy Breachers": {
+   "models": 10,
+   "lists": 23,
+   "same": 8,
+   "items": {
+    "Autopistol": 0,
+    "Bolt pistol": 0,
+    "Chainfist": 0,
+    "Close combat weapon": 10,
+    "Demolition charge": 1,
+    "Meltagun": 1,
+    "Navis heavy shotgun": 1,
+    "Navis las-volley": 0,
+    "Navis shotgun": 8,
+    "Plasma gun": 0,
+    "Power weapon": 0,
+    "endurant shield": 1
+   }
+  },
+  "Imperial Rhino": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Armoured tracks": 1,
+    "Hunter-killer missile": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Impulsor": {
+   "models": 1,
+   "lists": 421,
+   "same": 190,
+   "items": {
+    "Armoured Hull": 1,
+    "Bellicatus Missile Array": 0,
+    "Fragstorm Grenade Launchers": 0,
+    "Ironhail Heavy Stubber": 1,
+    "Ironhail Skytalon Array": 0,
+    "Orbital Comms Array": 0,
+    "Shield Dome": 1,
+    "Storm Bolters": 1
+   }
+  },
+  "Inceptor Squad": {
+   "models": 3,
+   "lists": 159,
+   "same": 80,
+   "items": {
+    "Assault Bolters": 0,
+    "Ceramite Fists": 3,
+    "Plasma Exterminators": 3
+   }
+  },
+  "Incubi": {
+   "models": 5,
+   "lists": 86,
+   "same": 54,
+   "items": {
+    "Demiklaives": 1,
+    "Incubi Shrine token": 1,
+    "Klaive": 4
+   }
+  },
+  "Incursor Squad": {
+   "models": 5,
+   "lists": 246,
+   "same": 241,
+   "items": {
+    "Bolt Pistol": 5,
+    "Occulus Bolt Carbine": 5,
+    "Paired Combat Blades": 5
+   }
+  },
+  "Indomitor Kill Team": {
+   "models": 10,
+   "lists": 52,
+   "same": 22,
+   "items": {
+    "Auto Boltstorm Gauntlets": 0,
+    "Bolt Pistol": 7,
+    "Ceramite Fists": 0,
+    "Deathwatch Heavy Bolt Rifle": 2,
+    "Deathwatch Heavy Bolter": 2,
+    "Flamestorm Gauntlets": 3,
+    "Fragstorm Grenade Launcher": 0,
+    "Melta Rifle": 2,
+    "Multi-melta": 1,
+    "Twin Power Fists": 3
+   }
+  },
+  "Infernal Enrapturess": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Heartstring lyre": 1,
+    "Ravaging claws": 1
+   }
+  },
+  "Infernal Master": {
+   "models": 1,
+   "lists": 11,
+   "same": 10,
+   "items": {
+    "Fires of the Abyss": 1,
+    "Force weapon": 1,
+    "Inferno bolt pistol": 1
+   }
+  },
+  "Infernus Squad": {
+   "models": 5,
+   "lists": 35,
+   "same": 18,
+   "items": {
+    "Bolt Pistol": 5,
+    "Ceramite Fists": 5,
+    "Pyreblaster": 5
+   }
+  },
+  "Infiltrator Squad": {
+   "models": 5,
+   "lists": 23,
+   "same": 14,
+   "items": {
+    "Bolt Pistol": 5,
+    "Ceramite Fists": 5,
+    "Helix Gauntlet": 1,
+    "Marksman Bolt Carbine": 5
+   }
+  },
+  "Infractors": {
+   "models": 5,
+   "lists": 135,
+   "same": 47,
+   "items": {
+    "Bolt pistol": 4,
+    "Duelling sabre": 4,
+    "Icon of excess": 1,
+    "Plasma pistol": 1,
+    "Power sword": 0,
+    "Rapture lash": 1
+   }
+  },
+  "Inner Circle Companions": {
+   "models": 6,
+   "lists": 51,
+   "same": 39,
+   "items": {
+    "Calibanite Greatsword": 6,
+    "Heavy Bolt Pistol": 6
+   }
+  },
+  "Inquisitor": {
+   "models": 1,
+   "lists": 18,
+   "same": 14,
+   "items": {
+    "Bolt pistol": 0,
+    "Combi-weapon": 1,
+    "Force weapon": 1,
+    "Psychic Shock Wave": 1,
+    "Psychic gifts": 1
+   }
+  },
+  "Inquisitor Coteaz": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Bolt pistol": 1,
+    "Glovodan psyber-eagle": 1,
+    "Nemesis daemon hammer": 1,
+    "Psychic Blast": 1
+   }
+  },
+  "Inquisitor Draxus": {
+   "models": 1,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Dirgesinger": 1,
+    "Power fist": 1,
+    "Psychic Tempest": 1
+   }
+  },
+  "Inquisitor Greyfax": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Castigation": 1,
+    "Condemnor stake": 1,
+    "Master-crafted power sword": 1
+   }
+  },
+  "Inquisitor Kroyle": {
+   "models": 1,
+   "lists": 11,
+   "same": 10,
+   "items": {
+    "Butcher blade": 1,
+    "Garralisk's claws and teeth": 1,
+    "Jindarii tox-cycler": 1,
+    "Stubcarbine": 1
+   }
+  },
+  "Inquisitorial Agents": {
+   "models": 6,
+   "lists": 29,
+   "same": 7,
+   "items": {
+    "Agent firearm": 5,
+    "Agent melee weapon": 6,
+    "Eviscerator": 1,
+    "Heavy bolter": 0,
+    "Multi-melta": 1,
+    "Mystic stave": 1,
+    "Plasma pistol": 1,
+    "Tome-skull": 1
+   }
+  },
+  "Inquisitorial Chimera": {
+   "models": 1,
+   "lists": 12,
+   "same": 8,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 0,
+    "Heavy flamer": 2,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lasgun array": 1
+   }
+  },
+  "Interceptor Squad": {
+   "models": 5,
+   "lists": 51,
+   "same": 35,
+   "items": {
+    "Close combat weapon": 0,
+    "Incinerator": 0,
+    "Nemesis force weapon": 5,
+    "Psycannon": 0,
+    "Storm bolter": 5
+   }
+  },
+  "Intercessor Squad": {
+   "models": 5,
+   "lists": 144,
+   "same": 39,
+   "items": {
+    "Bolt Pistol": 5,
+    "Bolt Rifle": 5,
+    "Chainsword": 0,
+    "Grenade Launcher": 1,
+    "Hand Flamer": 0,
+    "Knives and Fists": 4,
+    "Plasma Pistol": 0,
+    "Power Fist": 1,
+    "Power Weapon": 0,
+    "Thunder Hammer": 0
+   }
+  },
+  "Intranzia Fraye": {
+   "models": 1,
+   "lists": 56,
+   "same": 53,
+   "items": {
+    "Heavy bolter": 2,
+    "Mace of Saint Praxedes": 1,
+    "Melta missile array": 1,
+    "Ministorum heavy flamer": 2,
+    "Throne of Blame": 1
+   }
+  },
+  "Invader ATVs": {
+   "models": 1,
+   "lists": 40,
+   "same": 24,
+   "items": {
+    "Armoured Impact": 1,
+    "Bolt Pistol": 1,
+    "Multi-melta": 1,
+    "Onslaught Gatling Cannon": 0,
+    "Twin Bolt Rifle": 1
+   }
+  },
+  "Invictor Tactical Warsuit": {
+   "models": 1,
+   "lists": 26,
+   "same": 17,
+   "items": {
+    "Fragstorm Grenade Launcher": 1,
+    "Heavy Bolter": 1,
+    "Incendium Cannon": 1,
+    "Invictor Fist": 1,
+    "Ironhail Heavy Stubbers": 1,
+    "Twin Ironhail Autocannon": 0
+   }
+  },
+  "Iron Father Feirros": {
+   "models": 1,
+   "lists": 34,
+   "same": 30,
+   "items": {
+    "Bolt Pistol": 1,
+    "Gorgon's Wrath": 1,
+    "Harrowhand": 1,
+    "Medusan Manipuli": 1
+   }
+  },
+  "Iron Priest": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Helfrost Pistol": 1,
+    "Tempest Hammer and Servo-arm": 1
+   }
+  },
+  "Ironkin Steeljacks with Heavy Volkanite Disintegrators": {
+   "models": 6,
+   "lists": 25,
+   "same": 19,
+   "items": {
+    "Autoch-pattern bolter": 0,
+    "Heavy volkanite disintegrator": 6,
+    "Plasma knife": 6,
+    "Plasma sword": 0,
+    "preymark crest": 1
+   }
+  },
+  "Ironkin Steeljacks with Melee Weapons": {
+   "models": 3,
+   "lists": 36,
+   "same": 22,
+   "items": {
+    "Autoch-pattern bolter": 3,
+    "Concussion gauntlet": 0,
+    "Plasma sword": 3,
+    "preymark crest": 1
+   }
+  },
+  "Ironstrider Ballistarii": {
+   "models": 3,
+   "lists": 100,
+   "same": 68,
+   "items": {
+    "Ironstrider feet": 3,
+    "Twin cognis autocannon": 3,
+    "Twin cognis lascannon": 0
+   }
+  },
+  "Jackal Alphus": {
+   "models": 1,
+   "lists": 6,
+   "same": 4,
+   "items": {
+    "Autopistol": 1,
+    "Close combat weapon": 1,
+    "Cult sniper rifle": 1
+   }
+  },
+  "Jain Zar": {
+   "models": 1,
+   "lists": 36,
+   "same": 31,
+   "items": {
+    "Blade of Destruction": 1,
+    "Silent Death": 1
+   }
+  },
+  "Jakhals": {
+   "models": 10,
+   "lists": 202,
+   "same": 132,
+   "items": {
+    "Autopistol": 9,
+    "Chainblades": 8,
+    "Icon of Khorne": 1,
+    "Mauler chainblade": 1,
+    "Paired manglers": 0,
+    "Skullsmasher and mangler": 1
+   }
+  },
+  "Judiciar": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Executioner Relic Blade": 1
+   }
+  },
+  "Junith Eruita": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Mace of Castigation": 1,
+    "Twin Ministorum heavy flamer": 1
+   }
+  },
+  "Kabalite Warriors": {
+   "models": 10,
+   "lists": 32,
+   "same": 25,
+   "items": {
+    "Blast pistol": 1,
+    "Blaster": 1,
+    "Close combat weapon": 9,
+    "Dark lance": 1,
+    "Kabalite icon": 0,
+    "Phantasm grenade launcher": 1,
+    "Power weapon": 1,
+    "Shredder": 1,
+    "Splinter cannon": 1,
+    "Splinter rifle": 5
+   }
+  },
+  "Kâhl": {
+   "models": 1,
+   "lists": 65,
+   "same": 28,
+   "items": {
+    "Autoch-pattern combi-bolter": 0,
+    "Forgewrought plasma axe": 0,
+    "Mass gauntlet": 1,
+    "Rampart crest": 0,
+    "Teleport crest": 1,
+    "Volkanite disintegrator": 1
+   }
+  },
+  "Kairos Fateweaver": {
+   "models": 1,
+   "lists": 11,
+   "same": 11,
+   "items": {
+    "Infernal Gateway": 1,
+    "Staff of Tomorrow": 1
+   }
+  },
+  "Kaius Konorius": {
+   "models": 1,
+   "lists": 21,
+   "same": 21,
+   "items": {
+    "Heavy Bolt Pistol": 1,
+    "Severance and Rebuke": 1
+   }
+  },
+  "Kapricus Carrier": {
+   "models": 1,
+   "lists": 68,
+   "same": 46,
+   "items": {
+    "Armoured hull": 1,
+    "Magna-coil autocannon": 1,
+    "Smoke launcher": 1,
+    "Twin magna-coil autocannon": 1
+   }
+  },
+  "Kapricus Defenders": {
+   "models": 1,
+   "lists": 20,
+   "same": 12,
+   "items": {
+    "Armoured hull": 1,
+    "HYLas rotary cannon": 1,
+    "Smoke launcher": 1,
+    "Twin magna-coil autocannon": 1
+   }
+  },
+  "Karanak": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Brass Collar of Bloody Vengeance": 1,
+    "Scalding roar": 1,
+    "Soul-rending fangs": 1
+   }
+  },
+  "Kasrkin": {
+   "models": 10,
+   "lists": 28,
+   "same": 21,
+   "items": {
+    "Chainsword": 0,
+    "Close combat weapon": 9,
+    "Flamer": 0,
+    "Grenade launcher": 0,
+    "Hot-shot lasgun": 3,
+    "Hot-shot laspistol": 1,
+    "Hot-shot marksman rifle": 1,
+    "Hot-shot volley gun": 0,
+    "Melta mine": 1,
+    "Meltagun": 2,
+    "Plasma gun": 2,
+    "Plasma pistol": 1,
+    "Power weapon": 1,
+    "Vox-caster": 1
+   }
+  },
+  "Kastelan Robots": {
+   "models": 4,
+   "lists": 81,
+   "same": 33,
+   "items": {
+    "Close combat weapon": 0,
+    "Heavy phosphor blaster": 4,
+    "Incendine combustor": 0,
+    "Kastelan fist": 0,
+    "Kastelan phosphor blaster": 0,
+    "Twin Kastelan fist": 4,
+    "Twin Kastelan phosphor blaster": 0
+   }
+  },
+  "Kataphron Breachers": {
+   "models": 6,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Arc claw": 0,
+    "Heavy arc rifle": 6,
+    "Hydraulic claw": 6
+   }
+  },
+  "Kataphron Destroyers": {
+   "models": 6,
+   "lists": 5,
+   "same": 1,
+   "items": {
+    "Close combat weapon": 6,
+    "Cognis flamer": 6,
+    "Heavy grav-cannon": 6,
+    "Kataphron plasma culverin": 0,
+    "Phosphor blaster": 0
+   }
+  },
+  "Kayvaan Shrike": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Blackout": 1,
+    "Raven's Talons": 1
+   }
+  },
+  "Keeper Of Secrets": {
+   "models": 1,
+   "lists": 10,
+   "same": 4,
+   "items": {
+    "Living whip": 1,
+    "Phantasmagoria": 1,
+    "Ritual knife": 0,
+    "Shining aegis": 0,
+    "Snapping claws": 1,
+    "Witstealer sword": 1
+   }
+  },
+  "Kelermorph": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Close combat weapon": 1,
+    "Liberator autostubs": 1
+   }
+  },
+  "Khârn The Betrayer": {
+   "models": 1,
+   "lists": 111,
+   "same": 108,
+   "items": {
+    "Gorechild": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Kharseth": {
+   "models": 1,
+   "lists": 15,
+   "same": 15,
+   "items": {
+    "Dread of the Deep Void": 1,
+    "Waystave": 1
+   }
+  },
+  "Khorne Berzerkers": {
+   "models": 10,
+   "lists": 246,
+   "same": 168,
+   "items": {
+    "Bolt pistol": 7,
+    "Chainblade": 8,
+    "Icon of Khorne": 1,
+    "Khornate eviscerator": 2,
+    "Plasma pistol": 3
+   }
+  },
+  "Khorne Lord Of Skulls": {
+   "models": 1,
+   "lists": 3,
+   "same": 2,
+   "items": {
+    "Daemongore cannon": 1,
+    "Gorestorm cannon": 0,
+    "Great cleaver of Khorne": 1,
+    "Skullhurler": 1
+   }
+  },
+  "Kill Rig": {
+   "models": 1,
+   "lists": 34,
+   "same": 34,
+   "items": {
+    "Butcha Boyz": 1,
+    "Savage Horns and Hooves": 1,
+    "Saw Blades": 1,
+    "Stikka Kannon": 1,
+    "Wurrtower": 1,
+    "’Eavy Lobba": 1
+   }
+  },
+  "Killa Kans": {
+   "models": 6,
+   "lists": 55,
+   "same": 36,
+   "items": {
+    "Kan Blasta": 6,
+    "Kan Klaw": 6
+   }
+  },
+  "Knight Abominant": {
+   "models": 1,
+   "lists": 9,
+   "same": 8,
+   "items": {
+    "Balemace": 1,
+    "Diabolus heavy stubber": 1,
+    "Electroscourge": 1,
+    "Volkite combustor": 1
+   }
+  },
+  "Knight Castellan": {
+   "models": 1,
+   "lists": 43,
+   "same": 39,
+   "items": {
+    "Plasma decimator": 1,
+    "Shieldbreaker missile launcher": 2,
+    "Titanic feet": 1,
+    "Twin meltagun": 2,
+    "Twin siegebreaker cannon": 1,
+    "Volcano lance": 1
+   }
+  },
+  "Knight Crusader": {
+   "models": 1,
+   "lists": 26,
+   "same": 14,
+   "items": {
+    "Avenger gatling cannon": 1,
+    "Heavy flamer": 1,
+    "Ironstorm missile pod": 0,
+    "Meltagun": 0,
+    "Questoris heavy stubber": 2,
+    "Rapid-fire battle cannon": 1,
+    "Stormspear rocket pod": 1,
+    "Thermal cannon": 0,
+    "Titanic feet": 1,
+    "Twin Icarus autocannon": 0
+   }
+  },
+  "Knight Defender": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Conversion beam obliterator": 1,
+    "Phosphor blaster": 1,
+    "Plasma executor": 1,
+    "Titanic feet": 1,
+    "Twin incendine combustor": 1
+   }
+  },
+  "Knight Desecrator": {
+   "models": 1,
+   "lists": 7,
+   "same": 5,
+   "items": {
+    "Desecrator laser destructor": 1,
+    "Diabolus heavy stubber": 1,
+    "Reaper chainsword": 1,
+    "Warpstrike claw": 0
+   }
+  },
+  "Knight Despoiler": {
+   "models": 1,
+   "lists": 50,
+   "same": 28,
+   "items": {
+    "Daemonbreath meltagun": 0,
+    "Daemonbreath thermal cannon": 0,
+    "Despoiler battle cannon": 2,
+    "Despoiler gatling cannon": 0,
+    "Diabolus heavy stubber": 3,
+    "Havoc missile pod": 0,
+    "Heavy darkflamer": 0,
+    "Ruinspear rocket pod": 1,
+    "Titanic feet": 1
+   }
+  },
+  "Knight Destrier": {
+   "models": 1,
+   "lists": 29,
+   "same": 21,
+   "items": {
+    "Bellatus reaper chainsword": 0,
+    "Chastiser gatling cannon": 1,
+    "Frag bombard": 1,
+    "Questoris heavy stubber": 1,
+    "Thundershock spear": 0,
+    "Titanic feet": 1
+   }
+  },
+  "Knight Errant": {
+   "models": 1,
+   "lists": 13,
+   "same": 5,
+   "items": {
+    "Meltagun": 1,
+    "Questoris heavy stubber": 0,
+    "Reaper chainsword": 0,
+    "Stormspear rocket pod": 1,
+    "Thermal cannon": 1,
+    "Thunderstrike gauntlet": 1
+   }
+  },
+  "Knight Gallant": {
+   "models": 1,
+   "lists": 15,
+   "same": 9,
+   "items": {
+    "Meltagun": 1,
+    "Questoris heavy stubber": 0,
+    "Reaper chainsword": 1,
+    "Stormspear rocket pod": 1,
+    "Thunderstrike gauntlet": 1,
+    "Twin Icarus autocannon": 0
+   }
+  },
+  "Knight Paladin": {
+   "models": 1,
+   "lists": 10,
+   "same": 5,
+   "items": {
+    "Meltagun": 0,
+    "Questoris heavy stubber": 2,
+    "Rapid-fire battle cannon": 1,
+    "Reaper chainsword": 0,
+    "Stormspear rocket pod": 1,
+    "Thunderstrike gauntlet": 1
+   }
+  },
+  "Knight Preceptor": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Las-impulsor": 1,
+    "Meltagun": 0,
+    "Questoris heavy stubber": 1,
+    "Reaper chainsword": 1,
+    "Stormspear rocket pod": 1,
+    "Thunderstrike gauntlet": 0
+   }
+  },
+  "Knight Rampager": {
+   "models": 1,
+   "lists": 12,
+   "same": 11,
+   "items": {
+    "Diabolus heavy stubber": 1,
+    "Reaper chainsword": 1,
+    "Warpstrike claw": 1
+   }
+  },
+  "Knight Ruinator": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Darkflame lance": 1,
+    "Fellbore": 1,
+    "Terrorpulse missiles": 1
+   }
+  },
+  "Knight Tyrant": {
+   "models": 1,
+   "lists": 15,
+   "same": 10,
+   "items": {
+    "Brimstone volcano lance": 1,
+    "Darkflame cannon": 0,
+    "Ectoplasma decimator": 1,
+    "Gheiststrike missile launcher": 2,
+    "Titanic feet": 1,
+    "Twin Desecrator cannon": 1,
+    "Twin daemonbreath meltagun": 2,
+    "Warpshock harpoon": 0
+   }
+  },
+  "Knight Valiant": {
+   "models": 1,
+   "lists": 6,
+   "same": 5,
+   "items": {
+    "Conflagration cannon": 1,
+    "Shieldbreaker missile launcher": 2,
+    "Thundercoil harpoon": 1,
+    "Titanic feet": 1,
+    "Twin meltagun": 2,
+    "Twin siegebreaker cannon": 1
+   }
+  },
+  "Knight Warden": {
+   "models": 1,
+   "lists": 12,
+   "same": 4,
+   "items": {
+    "Avenger gatling cannon": 1,
+    "Heavy flamer": 1,
+    "Ironstorm missile pod": 0,
+    "Meltagun": 0,
+    "Questoris heavy stubber": 1,
+    "Reaper chainsword": 1,
+    "Stormspear rocket pod": 1,
+    "Thunderstrike gauntlet": 0,
+    "Twin Icarus autocannon": 0
+   }
+  },
+  "Knight-Centura": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Executioner Greatblade": 1
+   }
+  },
+  "Kommandos": {
+   "models": 10,
+   "lists": 25,
+   "same": 14,
+   "items": {
+    "Big Choppa": 0,
+    "Breacha Ram": 1,
+    "Burna": 1,
+    "Choppa": 8,
+    "Kustom Shoota": 2,
+    "Power Klaw": 1,
+    "Rokkit Launcha": 1,
+    "Slugga": 10
+   }
+  },
+  "Kor’sarro Khan": {
+   "models": 1,
+   "lists": 19,
+   "same": 17,
+   "items": {
+    "Anzuq": 1,
+    "Bolt Pistol": 1,
+    "Moonfang": 1
+   }
+  },
+  "Kravek Morne": {
+   "models": 1,
+   "lists": 43,
+   "same": 42,
+   "items": {
+    "Baleflamer": 1,
+    "Combi-bolter": 1,
+    "Last Argument and power fist": 1,
+    "Servo-harness": 1
+   }
+  },
+  "Krieg Combat Engineers": {
+   "models": 5,
+   "lists": 49,
+   "same": 15,
+   "items": {
+    "Autopistol": 1,
+    "Close combat weapon": 4,
+    "Combat shotgun": 2,
+    "Flamer": 1,
+    "Hand flamer": 1,
+    "Plasma pistol": 0,
+    "Power weapon": 1,
+    "Remote mine": 1,
+    "Trench club": 0
+   }
+  },
+  "Krieg Command Squad": {
+   "models": 6,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Boltgun": 1,
+    "Chainsword": 1,
+    "Close combat weapon": 4,
+    "Lasgun": 2,
+    "Laspistol": 3,
+    "Plasma gun": 0,
+    "Plasma pistol": 0,
+    "Power fist": 0,
+    "Power weapon": 1
+   }
+  },
+  "Krieg Heavy Weapons Squad": {
+   "models": 4,
+   "lists": 4,
+   "same": 2,
+   "items": {
+    "Close combat weapon": 4,
+    "Krieg heavy flamer": 3,
+    "Lascannon": 0,
+    "Laspistol": 4,
+    "Twin Krieg heavy stubber": 0
+   }
+  },
+  "Kroot Carnivores": {
+   "models": 10,
+   "lists": 65,
+   "same": 25,
+   "items": {
+    "Close combat weapon": 10,
+    "Kroot carbine": 1,
+    "Kroot pistol": 1,
+    "Kroot rifle": 8,
+    "Tanglebomb launcher": 1
+   }
+  },
+  "Kroot Farstalkers": {
+   "models": 12,
+   "lists": 13,
+   "same": 7,
+   "items": {
+    "Close combat weapon": 9,
+    "Dvorgite skinner": 1,
+    "Farstalker firearm": 8,
+    "Kroot pistol": 10,
+    "Londaxi tribalest": 0,
+    "Pech'ra": 1,
+    "Ripping fangs": 2,
+    "Ritual blade": 1,
+    "T’au-tech rifle": 1
+   }
+  },
+  "Kroot Flesh Shaper": {
+   "models": 1,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Kroot scattergun": 1,
+    "Twin ritualistic blades": 1
+   }
+  },
+  "Kroot Hounds": {
+   "models": 5,
+   "lists": 22,
+   "same": 22,
+   "items": {
+    "Ripping fangs": 5
+   }
+  },
+  "Kroot Lone-Spear": {
+   "models": 1,
+   "lists": 11,
+   "same": 10,
+   "items": {
+    "Blast javelin": 1,
+    "Close combat weapon": 1,
+    "Hunting javelin": 1,
+    "Kalamandra’s bite": 1,
+    "Kroot long gun": 0
+   }
+  },
+  "Kroot Trail Shaper": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Kroot rifle": 1,
+    "Shaper’s blade": 1
+   }
+  },
+  "Kroot War Shaper": {
+   "models": 1,
+   "lists": 11,
+   "same": 11,
+   "items": {
+    "Dart-bow and tri-blade": 1,
+    "Kroot pistol": 1,
+    "Shaper’s blade": 1
+   }
+  },
+  "Krootox Rampagers": {
+   "models": 6,
+   "lists": 29,
+   "same": 22,
+   "items": {
+    "Kroot pistol and hunting javelins": 6,
+    "Rampager fists": 6,
+    "hunting blades": 6
+   }
+  },
+  "Krootox Riders": {
+   "models": 3,
+   "lists": 21,
+   "same": 17,
+   "items": {
+    "Close combat weapon": 3,
+    "Krootox fists": 3,
+    "Repeater cannon": 3,
+    "Tanglecannon": 0
+   }
+  },
+  "Lady Malys": {
+   "models": 1,
+   "lists": 40,
+   "same": 34,
+   "items": {
+    "Lady’s Blade": 1,
+    "Razor fan": 1
+   }
+  },
+  "Land Raider": {
+   "models": 1,
+   "lists": 19,
+   "same": 15,
+   "items": {
+    "Armoured tracks": 1,
+    "Godhammer lascannon": 2,
+    "Hunter-killer missile": 1,
+    "Multi-melta": 1,
+    "Storm bolter": 1,
+    "Twin heavy bolter": 1
+   }
+  },
+  "Land Raider Crusader": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Armoured tracks": 1,
+    "Hunter-killer missile": 1,
+    "Hurricane bolter": 2,
+    "Multi-melta": 1,
+    "Storm bolter": 1,
+    "Twin assault cannon": 1
+   }
+  },
+  "Land Raider Redeemer": {
+   "models": 1,
+   "lists": 82,
+   "same": 71,
+   "items": {
+    "Armoured tracks": 1,
+    "Flamestorm cannon": 2,
+    "Hunter-killer missile": 1,
+    "Multi-melta": 1,
+    "Storm bolter": 1,
+    "Twin assault cannon": 1
+   }
+  },
+  "Land Speeder": {
+   "models": 1,
+   "lists": 224,
+   "same": 147,
+   "items": {
+    "Armoured Impact": 1,
+    "Multi-melta": 1,
+    "Onslaught Gatling Cannon": 1,
+    "Pyrecannon": 0,
+    "Stormfury Missile Launcher": 1
+   }
+  },
+  "Land Speeder Vengeance": {
+   "models": 1,
+   "lists": 172,
+   "same": 78,
+   "items": {
+    "Assault Cannon": 0,
+    "Close Combat Weapon": 0,
+    "Heavy Bolter": 1,
+    "Plasma Storm Battery": 1
+   }
+  },
+  "Lazarus": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Bolt Pistol": 1,
+    "Enmity’s Edge": 1
+   }
+  },
+  "Legionaries": {
+   "models": 5,
+   "lists": 43,
+   "same": 11,
+   "items": {
+    "Accursed weapon": 0,
+    "Astartes chainsword": 2,
+    "Bolt pistol": 4,
+    "Boltgun": 0,
+    "Chaos icon": 1,
+    "Close combat weapon": 5,
+    "Flamer": 0,
+    "Heavy bolter": 0,
+    "Heavy melee weapon": 2,
+    "Lascannon": 1,
+    "Meltagun": 0,
+    "Missile launcher": 0,
+    "Plasma gun": 0,
+    "Plasma pistol": 1
+   }
+  },
+  "Lelith Hesperax": {
+   "models": 1,
+   "lists": 37,
+   "same": 37,
+   "items": {
+    "Lelith’s blades": 1
+   }
+  },
+  "Leman Russ Battle Tank": {
+   "models": 1,
+   "lists": 28,
+   "same": 10,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 1,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 0,
+    "Leman Russ battle cannon": 1,
+    "Multi-melta": 2,
+    "Plasma cannon": 0
+   }
+  },
+  "Leman Russ Commander": {
+   "models": 1,
+   "lists": 11,
+   "same": 6,
+   "items": {
+    "Armoured tracks": 1,
+    "Exterminator autocannon": 1,
+    "Heavy bolter": 3,
+    "Heavy flamer": 0,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 0,
+    "Leman Russ battle cannon": 0
+   }
+  },
+  "Leman Russ Demolisher": {
+   "models": 1,
+   "lists": 12,
+   "same": 7,
+   "items": {
+    "Armoured tracks": 1,
+    "Demolisher battle cannon": 1,
+    "Heavy bolter": 0,
+    "Heavy flamer": 0,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 1,
+    "Multi-melta": 2
+   }
+  },
+  "Leman Russ Eradicator": {
+   "models": 1,
+   "lists": 6,
+   "same": 3,
+   "items": {
+    "Armoured tracks": 1,
+    "Eradicator nova cannon": 1,
+    "Heavy bolter": 3,
+    "Heavy flamer": 0,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 0
+   }
+  },
+  "Leman Russ Executioner": {
+   "models": 1,
+   "lists": 3,
+   "same": 1,
+   "items": {
+    "Armoured tracks": 1,
+    "Executioner plasma cannon": 1,
+    "Heavy bolter": 2,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 1,
+    "Multi-melta": 0,
+    "Plasma cannon": 0
+   }
+  },
+  "Leman Russ Exterminator": {
+   "models": 1,
+   "lists": 29,
+   "same": 12,
+   "items": {
+    "Armoured tracks": 1,
+    "Exterminator autocannon": 1,
+    "Heavy bolter": 3,
+    "Heavy flamer": 0,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 0,
+    "Multi-melta": 0,
+    "Plasma cannon": 0,
+    "Storm bolter": 0
+   }
+  },
+  "Leman Russ Punisher": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy flamer": 3,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Punisher gatling cannon": 1
+   }
+  },
+  "Leman Russ Vanquisher": {
+   "models": 1,
+   "lists": 23,
+   "same": 7,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 3,
+    "Heavy flamer": 0,
+    "Heavy stubber": 1,
+    "Hunter-killer missile": 1,
+    "Lascannon": 0,
+    "Multi-melta": 0,
+    "Plasma cannon": 0,
+    "Vanquisher battle cannon": 1
+   }
+  },
+  "Lemartes": {
+   "models": 1,
+   "lists": 18,
+   "same": 17,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "The Blood Crozius": 1
+   }
+  },
+  "Leystalker": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Drakesteed Fangs and Talons": 1,
+    "Hunting Blades": 1,
+    "Long Rifle": 1
+   }
+  },
+  "Lhykhis": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Brood Twain": 1,
+    "Spider’s Fangs": 1,
+    "Weaverender": 1
+   }
+  },
+  "Librarian": {
+   "models": 1,
+   "lists": 30,
+   "same": 28,
+   "items": {
+    "Bolt Pistol": 1,
+    "Force Weapon": 1,
+    "Smite": 1
+   }
+  },
+  "Librarian In Phobos Armour": {
+   "models": 1,
+   "lists": 121,
+   "same": 118,
+   "items": {
+    "Bolt Pistol": 1,
+    "Force Weapon": 1,
+    "Smite": 1
+   }
+  },
+  "Librarian In Terminator Armour": {
+   "models": 1,
+   "lists": 24,
+   "same": 19,
+   "items": {
+    "Force Weapon": 1,
+    "Smite": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Lictor": {
+   "models": 1,
+   "lists": 56,
+   "same": 53,
+   "items": {
+    "Lictor claws and talons": 1
+   }
+  },
+  "Lieutenant": {
+   "models": 1,
+   "lists": 34,
+   "same": 12,
+   "items": {
+    "Bolt Pistol": 0,
+    "Ceramite Fists": 0,
+    "Heavy Bolt Pistol": 0,
+    "Master-crafted Bolter": 0,
+    "Master-crafted Power Weapon": 1,
+    "Neo-volkite Pistol": 1,
+    "Plasma Pistol": 0,
+    "Power Fist": 0,
+    "Storm Shield": 1
+   }
+  },
+  "Lieutenant In Phobos Armour": {
+   "models": 1,
+   "lists": 10,
+   "same": 6,
+   "items": {
+    "Master-crafted Bolt Carbine": 0,
+    "Monomolecular Combat Blades": 1,
+    "Special-issue Bolt Pistol": 1
+   }
+  },
+  "Lieutenant with Combi-weapon": {
+   "models": 1,
+   "lists": 25,
+   "same": 25,
+   "items": {
+    "Combi-weapon": 1,
+    "Paired Combat Blades": 1
+   }
+  },
+  "Lion El’jonson": {
+   "models": 1,
+   "lists": 75,
+   "same": 71,
+   "items": {
+    "Arma Luminis": 1,
+    "Fealty": 1
+   }
+  },
+  "Locus": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Locus blades": 1
+   }
+  },
+  "Logan Grimnar": {
+   "models": 1,
+   "lists": 67,
+   "same": 64,
+   "items": {
+    "Axe Morkai": 1,
+    "Storm Bolter": 1,
+    "Tyrnak and Fenrir": 1
+   }
+  },
+  "Lokhust Destroyers": {
+   "models": 6,
+   "lists": 71,
+   "same": 68,
+   "items": {
+    "Close combat weapon": 6,
+    "Gauss cannon": 6
+   }
+  },
+  "Lokhust Heavy Destroyers": {
+   "models": 3,
+   "lists": 49,
+   "same": 16,
+   "items": {
+    "Close combat weapon": 3,
+    "Enmitic exterminator": 3,
+    "Gauss destructor": 0
+   }
+  },
+  "Lokhust Lord": {
+   "models": 1,
+   "lists": 83,
+   "same": 75,
+   "items": {
+    "Lord’s blade": 1,
+    "Resurrection orb": 1,
+    "Staff of light": 0
+   }
+  },
+  "Lord Discordant On Helstalker": {
+   "models": 1,
+   "lists": 17,
+   "same": 11,
+   "items": {
+    "Baleflamer": 1,
+    "Bladed limbs": 1,
+    "Bolt pistol": 1,
+    "Helstalker autocannon": 0,
+    "Impaler chainglaive": 1,
+    "Magma cutter": 1,
+    "Techno-virus injector": 0
+   }
+  },
+  "Lord Exultant": {
+   "models": 1,
+   "lists": 127,
+   "same": 114,
+   "items": {
+    "Bolt pistol": 1,
+    "Close combat weapon": 1,
+    "Phoenix power spear": 1,
+    "Plasma pistol": 0,
+    "Rapture lash": 1
+   }
+  },
+  "Lord Invocatus": {
+   "models": 1,
+   "lists": 61,
+   "same": 61,
+   "items": {
+    "Bladed horn": 1,
+    "Bolt pistol": 1,
+    "Coward’s Bane": 1
+   }
+  },
+  "Lord Kakophonist": {
+   "models": 1,
+   "lists": 20,
+   "same": 14,
+   "items": {
+    "Close combat weapon": 1,
+    "Power sword": 0,
+    "Screamer pistol": 2
+   }
+  },
+  "Lord Marshal Dreir": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Laspistol": 1,
+    "Sabre of Sacrifice": 1,
+    "Savage claws": 1
+   }
+  },
+  "Lord of Change": {
+   "models": 1,
+   "lists": 32,
+   "same": 30,
+   "items": {
+    "Baleful sword": 0,
+    "Bolt of Change": 1,
+    "Rod of sorcery": 1,
+    "Staff of Tzeentch": 1
+   }
+  },
+  "Lord of Contagion": {
+   "models": 1,
+   "lists": 76,
+   "same": 74,
+   "items": {
+    "Manreaper": 1
+   }
+  },
+  "Lord of Poxes": {
+   "models": 1,
+   "lists": 8,
+   "same": 8,
+   "items": {
+    "Great plague blade": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Lord of Virulence": {
+   "models": 1,
+   "lists": 30,
+   "same": 29,
+   "items": {
+    "Power fist": 1,
+    "Twin plague spewer": 1
+   }
+  },
+  "Lord on Juggernaut": {
+   "models": 1,
+   "lists": 49,
+   "same": 46,
+   "items": {
+    "Bladed horn": 1,
+    "Exalted chainblade": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Lord Solar Leontus": {
+   "models": 1,
+   "lists": 30,
+   "same": 29,
+   "items": {
+    "Conquest": 1,
+    "Konstantin’s hooves": 1,
+    "Sol’s Righteous Gaze": 1
+   }
+  },
+  "Lucius the Eternal": {
+   "models": 1,
+   "lists": 51,
+   "same": 48,
+   "items": {
+    "Blade of the Laer": 1,
+    "Lash of Torment": 1
+   }
+  },
+  "Lychguard": {
+   "models": 10,
+   "lists": 36,
+   "same": 28,
+   "items": {
+    "Dispersion shield": 10,
+    "Hyperphase sword": 10,
+    "Warscythe": 0
+   }
+  },
+  "Magnus The Red": {
+   "models": 1,
+   "lists": 28,
+   "same": 27,
+   "items": {
+    "Blade of Magnus": 1,
+    "Gaze of Magnus": 1,
+    "Tzeentch’s Firestorm": 1
+   }
+  },
+  "Magus": {
+   "models": 1,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Autopistol": 1,
+    "Magus stave": 0,
+    "force stave": 1
+   }
+  },
+  "Maleceptor": {
+   "models": 1,
+   "lists": 112,
+   "same": 111,
+   "items": {
+    "Massive scything talons": 1,
+    "Psychic overload": 1
+   }
+  },
+  "Malignant Plaguecaster": {
+   "models": 1,
+   "lists": 136,
+   "same": 130,
+   "items": {
+    "Bolt pistol": 1,
+    "Corrupted staff": 1,
+    "Plague Wind": 1
+   }
+  },
+  "Mandrakes": {
+   "models": 5,
+   "lists": 44,
+   "same": 44,
+   "items": {
+    "Baleblast": 5,
+    "Glimmersteel blade": 5
+   }
+  },
+  "Marneus Calgar": {
+   "models": 1,
+   "lists": 85,
+   "same": 82,
+   "items": {
+    "Gauntlets of Ultramar": 1
+   }
+  },
+  "Marshal": {
+   "models": 1,
+   "lists": 15,
+   "same": 10,
+   "items": {
+    "Combi-weapon": 1,
+    "Master-crafted Power Weapon": 1,
+    "Plasma Pistol": 0
+   }
+  },
+  "Master Of Executions": {
+   "models": 1,
+   "lists": 104,
+   "same": 100,
+   "items": {
+    "Axe of dismemberment": 1,
+    "Bolt pistol": 1
+   }
+  },
+  "Master Of Possession": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Bolt pistol": 1,
+    "Rite of Possession": 1,
+    "Staff of possession": 1
+   }
+  },
+  "Masters of the Maelstrom": {
+   "models": 5,
+   "lists": 37,
+   "same": 32,
+   "items": {
+    "Absolvor bolt pistol": 1,
+    "Axe of Ending": 1,
+    "Bionic gauntlet": 1,
+    "Bolt pistol": 1,
+    "Force stave": 1,
+    "Laspistol": 1,
+    "Londaxi maimer": 1,
+    "Mind Wrench": 1,
+    "Power sabre": 1,
+    "Reductor array": 1
+   }
+  },
+  "Maugan Ra": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Maugetar": 1
+   }
+  },
+  "Maulerfiend": {
+   "models": 1,
+   "lists": 102,
+   "same": 67,
+   "items": {
+    "Lasher tendrils": 0,
+    "Magma cutters": 2,
+    "Maulerfiend fists": 1
+   }
+  },
+  "Mawloc": {
+   "models": 1,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Distensible jaw": 1,
+    "Mawloc scything talons": 1
+   }
+  },
+  "Meganobz": {
+   "models": 5,
+   "lists": 149,
+   "same": 51,
+   "items": {
+    "Killsaw": 0,
+    "Kombi-weapon": 0,
+    "Kustom Shoota": 0,
+    "Power Klaw": 0,
+    "Twin Killsaws": 5
+   }
+  },
+  "Mek": {
+   "models": 1,
+   "lists": 59,
+   "same": 53,
+   "items": {
+    "Kustom Mega-slugga": 1,
+    "Mek’s Toolz": 1
+   }
+  },
+  "Mek Gunz": {
+   "models": 1,
+   "lists": 7,
+   "same": 2,
+   "items": {
+    "Bubblechukka": 0,
+    "Kustom Mega-kannon": 1,
+    "Scavenged Shivs": 1,
+    "Smasha Gun": 0
+   }
+  },
+  "Memnyr Strategist": {
+   "models": 1,
+   "lists": 60,
+   "same": 60,
+   "items": {
+    "Autoch-pattern bolt pistol": 1,
+    "Close combat weapon": 1
+   }
+  },
+  "Miasmic Malignifier": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Miasmic gouts": 1
+   }
+  },
+  "Militarum Tempestus Command Squad": {
+   "models": 5,
+   "lists": 37,
+   "same": 12,
+   "items": {
+    "Bolt pistol": 0,
+    "Close combat weapon": 4,
+    "Command rod": 1,
+    "Grenade launcher": 0,
+    "Hot-shot lasgun": 1,
+    "Hot-shot laspistol": 1,
+    "Hot-shot volley gun": 1,
+    "Master vox": 0,
+    "Medi-pack": 1,
+    "Meltagun": 1,
+    "Plasma gun": 1,
+    "Plasma pistol": 0,
+    "Regimental standard": 0,
+    "Tempestus dagger": 1
+   }
+  },
+  "Ministorum Priest": {
+   "models": 1,
+   "lists": 22,
+   "same": 21,
+   "items": {
+    "Holy pistol": 0,
+    "Power weapon": 0,
+    "Zealot’s vindictor": 1
+   }
+  },
+  "Monolith": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Death ray": 4,
+    "Particle whip": 1,
+    "Portal of exile": 1
+   }
+  },
+  "Morkanaut": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Dual Big Shoota": 2,
+    "Klaw of Mork": 1,
+    "Kustom Mega-blasta": 1,
+    "Kustom Mega-zappa": 1,
+    "Rokkit Launcha": 2
+   }
+  },
+  "Mortarion": {
+   "models": 1,
+   "lists": 67,
+   "same": 66,
+   "items": {
+    "Lantern": 1,
+    "Rotwind": 1,
+    "Silence": 1
+   }
+  },
+  "Mortifiers": {
+   "models": 2,
+   "lists": 37,
+   "same": 17,
+   "items": {
+    "Anchorite sarcophagus": 1,
+    "Heavy bolter": 4,
+    "Mortifier flamer": 0,
+    "Penitent buzz-blade": 0,
+    "Penitent flail": 0,
+    "Twin penitent buzz-blades": 2
+   }
+  },
+  "Morvenn Vahl": {
+   "models": 1,
+   "lists": 59,
+   "same": 56,
+   "items": {
+    "Fidelis": 1,
+    "Lance of Illumination": 1,
+    "Paragon missile launcher": 1
+   }
+  },
+  "Mozrog Skragbad": {
+   "models": 1,
+   "lists": 39,
+   "same": 36,
+   "items": {
+    "Big Chompa’s Jaws": 1,
+    "Gutrippa": 1,
+    "Thump Gun": 1
+   }
+  },
+  "Murderfang": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Heavy Flamer": 1,
+    "Murderclaws": 1,
+    "Storm Bolter": 1
+   }
+  },
+  "Mutalith Vortex Beast": {
+   "models": 1,
+   "lists": 14,
+   "same": 14,
+   "items": {
+    "Betentacled maw": 1,
+    "Mutalith claws": 1,
+    "Warp vortex": 1
+   }
+  },
+  "Mutilators": {
+   "models": 3,
+   "lists": 71,
+   "same": 68,
+   "items": {
+    "Fleshmetal weapons": 3
+   }
+  },
+  "Myphitic Blight-hauler": {
+   "models": 1,
+   "lists": 175,
+   "same": 164,
+   "items": {
+    "Bile spurt": 1,
+    "Gnashing maw": 1,
+    "Missile launcher": 1,
+    "Multi-melta": 1
+   }
+  },
+  "Navigator": {
+   "models": 1,
+   "lists": 42,
+   "same": 42,
+   "items": {
+    "Force-orb cane": 1,
+    "Laspistol": 1
+   }
+  },
+  "Nazdreg": {
+   "models": 1,
+   "lists": 72,
+   "same": 68,
+   "items": {
+    "Kustom Blasta X": 1,
+    "Moonchewa": 1
+   }
+  },
+  "Necron Warriors": {
+   "models": 10,
+   "lists": 23,
+   "same": 9,
+   "items": {
+    "Close combat weapon": 10,
+    "Gauss flayer": 10,
+    "Gauss reaper": 0
+   }
+  },
+  "Nekrosor Ammentar": {
+   "models": 1,
+   "lists": 67,
+   "same": 57,
+   "items": {
+    "Blade tail and whip coils": 1,
+    "Enmitic disintegrators": 1,
+    "Unmaker Gauntlet": 1,
+    "nullstone field generator": 0
+   }
+  },
+  "Nemesis Claw": {
+   "models": 5,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Accursed weapon": 1,
+    "Astartes chainsword": 1,
+    "Bolt pistol": 4,
+    "Close combat weapon": 4,
+    "Nostraman chainglaive": 1,
+    "Paired accursed weapons": 1,
+    "Plasma pistol": 1,
+    "Power fist": 1,
+    "Voice eater": 1
+   }
+  },
+  "Nemesis Dreadknight": {
+   "models": 1,
+   "lists": 29,
+   "same": 13,
+   "items": {
+    "Gatling psilencer": 0,
+    "Heavy incinerator": 1,
+    "Heavy psycannon": 1,
+    "Nemesis daemon greathammer": 1,
+    "Nemesis greatsword": 0
+   }
+  },
+  "Neophyte Hybrids": {
+   "models": 20,
+   "lists": 55,
+   "same": 28,
+   "items": {
+    "Anointed pistol": 0,
+    "Autopistol": 20,
+    "Close combat weapon": 20,
+    "Cult icon": 1,
+    "Flamer": 0,
+    "Grenade launcher": 2,
+    "Heavy stubber": 0,
+    "Hybrid firearm": 12,
+    "Mining laser": 2,
+    "Power weapon": 0,
+    "Seismic cannon": 2,
+    "Webber": 2
+   }
+  },
+  "Nephilim Jetfighter": {
+   "models": 1,
+   "lists": 13,
+   "same": 7,
+   "items": {
+    "Armoured Hull": 1,
+    "Avenger Mega Bolter": 1,
+    "Blacksword Missiles": 1,
+    "Nephilim Lascannons": 0,
+    "Twin Heavy Bolter": 1
+   }
+  },
+  "Neurogaunts": {
+   "models": 11,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Chitinous claws and teeth": 11
+   }
+  },
+  "Neurolictor": {
+   "models": 1,
+   "lists": 94,
+   "same": 91,
+   "items": {
+    "Piercing claws and talons": 1
+   }
+  },
+  "Neurotyrant": {
+   "models": 1,
+   "lists": 37,
+   "same": 35,
+   "items": {
+    "Neurotyrant claws and lashes": 1,
+    "Psychic scream": 1
+   }
+  },
+  "Nexos": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Autopistol": 1,
+    "Close combat weapon": 1
+   }
+  },
+  "Night Scythe": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Armoured bulk": 1,
+    "Twin tesla destructor": 1
+   }
+  },
+  "Njal Stormcaller": {
+   "models": 1,
+   "lists": 9,
+   "same": 8,
+   "items": {
+    "Bolt Pistol": 1,
+    "Living Lightning": 1,
+    "Staff of the Stormcaller": 1
+   }
+  },
+  "Nobz": {
+   "models": 5,
+   "lists": 42,
+   "same": 7,
+   "items": {
+    "Big Choppa": 0,
+    "Big Skorcha": 0,
+    "Kombi-rokkit": 5,
+    "Kustom Choppa": 0,
+    "Kustom Krumpa": 5,
+    "Kustom Shoota": 0,
+    "Paired Krumpas": 0
+   }
+  },
+  "Noise Marines": {
+   "models": 6,
+   "lists": 46,
+   "same": 38,
+   "items": {
+    "Blastmaster": 2,
+    "Close combat weapon": 6,
+    "Power sword": 0,
+    "Screamer pistol": 0,
+    "Sonic blaster": 4
+   }
+  },
+  "Nork Deddog": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Huge knife": 1,
+    "Ripper gun": 1
+   }
+  },
+  "Norn Assimilator": {
+   "models": 1,
+   "lists": 63,
+   "same": 59,
+   "items": {
+    "Monstrous scything talons": 1,
+    "Toxinjector Harpoon": 1
+   }
+  },
+  "Norn Emissary": {
+   "models": 1,
+   "lists": 73,
+   "same": 72,
+   "items": {
+    "Monstrous rending claws": 1,
+    "Monstrous scything talons": 1,
+    "Psychic Tendril": 1
+   }
+  },
+  "Noxious Blightbringer": {
+   "models": 1,
+   "lists": 58,
+   "same": 56,
+   "items": {
+    "Cursed plague bell": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Nurglings": {
+   "models": 3,
+   "lists": 80,
+   "same": 57,
+   "items": {
+    "Diseased claws and teeth": 3
+   }
+  },
+  "Obelisk": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured bulk": 1,
+    "Tesla sphere": 4
+   }
+  },
+  "Obliterators": {
+   "models": 2,
+   "lists": 25,
+   "same": 25,
+   "items": {
+    "Crushing fists": 2,
+    "Fleshmetal guns": 2
+   }
+  },
+  "Ogryn Bodyguard": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Close combat weapon": 1,
+    "Huge knife": 1,
+    "Ripper gun": 1
+   }
+  },
+  "Ogryn Squad": {
+   "models": 3,
+   "lists": 8,
+   "same": 6,
+   "items": {
+    "Ripper gun": 3
+   }
+  },
+  "Old One Eye": {
+   "models": 1,
+   "lists": 19,
+   "same": 19,
+   "items": {
+    "Old One Eye’s claws and talons": 1
+   }
+  },
+  "Onager Dunecrawler": {
+   "models": 1,
+   "lists": 90,
+   "same": 48,
+   "items": {
+    "Broad spectrum data-tether": 1,
+    "Cognis heavy stubber": 1,
+    "Dunecrawler legs": 1,
+    "Eradication beamer": 0,
+    "Neutron laser": 0,
+    "Twin Onager heavy phosphor blaster": 1
+   }
+  },
+  "Ophydian Destroyers": {
+   "models": 3,
+   "lists": 83,
+   "same": 79,
+   "items": {
+    "Ophydian hyperphase weapons": 3
+   }
+  },
+  "Orikan The Diviner": {
+   "models": 1,
+   "lists": 12,
+   "same": 12,
+   "items": {
+    "Staff of Tomorrow": 1
+   }
+  },
+  "Outrider Squad": {
+   "models": 3,
+   "lists": 350,
+   "same": 186,
+   "items": {
+    "Chainsword": 2,
+    "Heavy Bolt Pistol": 2,
+    "Plasma Pistol": 1,
+    "Power Weapon": 0,
+    "Thunder Hammer": 1,
+    "Twin Bolt Rifle": 3
+   }
+  },
+  "Overlord": {
+   "models": 1,
+   "lists": 44,
+   "same": 35,
+   "items": {
+    "Overlord’s blade": 0,
+    "Resurrection orb": 1,
+    "Tachyon arrow": 0,
+    "Voidscythe": 1
+   }
+  },
+  "Overlord with translocation shroud": {
+   "models": 1,
+   "lists": 26,
+   "same": 25,
+   "items": {
+    "Overlord's blade": 1,
+    "resurrection orb": 1
+   }
+  },
+  "Painboss": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Beast Snagga Klaw": 1
+   }
+  },
+  "Painboy": {
+   "models": 1,
+   "lists": 21,
+   "same": 20,
+   "items": {
+    "Dok’s Toolz": 1,
+    "’Urty Syringe": 1
+   }
+  },
+  "Paladin Squad": {
+   "models": 5,
+   "lists": 36,
+   "same": 6,
+   "items": {
+    "Incinerator": 3,
+    "Nemesis force weapon": 5,
+    "Psilencer": 0,
+    "Psycannon": 0,
+    "Storm bolter": 1
+   }
+  },
+  "Palatine": {
+   "models": 1,
+   "lists": 15,
+   "same": 15,
+   "items": {
+    "Palatine blade": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Pallas Grav-attack": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured Hull": 1,
+    "Twin Arachnus Blaze Cannon": 1
+   }
+  },
+  "Paragon Warsuits": {
+   "models": 3,
+   "lists": 63,
+   "same": 19,
+   "items": {
+    "Bolt pistol": 3,
+    "Heavy bolter": 0,
+    "Multi-melta": 3,
+    "Paragon grenade launchers": 3,
+    "Paragon storm bolters": 0,
+    "Paragon war blade": 3,
+    "Paragon war mace": 0
+   }
+  },
+  "Parasite Of Mortrex": {
+   "models": 1,
+   "lists": 5,
+   "same": 4,
+   "items": {
+    "Barbed ovipositor": 1,
+    "Clawed limbs": 1
+   }
+  },
+  "Pathfinder Team": {
+   "models": 10,
+   "lists": 109,
+   "same": 25,
+   "items": {
+    "Close combat weapon": 10,
+    "Drone burst cannon": 0,
+    "Grav-inhibitor drone": 1,
+    "Gun drone": 0,
+    "Ion rifle": 0,
+    "Marker drone": 0,
+    "Pulse carbine": 7,
+    "Pulse pistol": 10,
+    "Rail rifle": 3,
+    "Recon drone": 0,
+    "Semi-automatic grenade launcher": 1,
+    "Shield drone": 2
+   }
+  },
+  "Patriarch": {
+   "models": 1,
+   "lists": 21,
+   "same": 21,
+   "items": {
+    "Patriarch’s claws": 1
+   }
+  },
+  "Penitent Engines": {
+   "models": 1,
+   "lists": 9,
+   "same": 8,
+   "items": {
+    "Penitent flamers": 1,
+    "Twin penitent buzz-blades": 1
+   }
+  },
+  "Pink Horrors": {
+   "models": 10,
+   "lists": 13,
+   "same": 7,
+   "items": {
+    "Coruscating Pink Flames": 10,
+    "Daemonic icon": 0,
+    "Instrument of Chaos": 0,
+    "Pink claws": 10
+   }
+  },
+  "Piranhas": {
+   "models": 1,
+   "lists": 31,
+   "same": 29,
+   "items": {
+    "Armoured hull": 1,
+    "Piranha fusion blaster": 1,
+    "Seeker missile": 2,
+    "Twin pulse carbine": 2
+   }
+  },
+  "Plague Drones": {
+   "models": 3,
+   "lists": 4,
+   "same": 3,
+   "items": {
+    "Daemonic icon": 1,
+    "Death’s heads": 3,
+    "Foul mouthparts": 3,
+    "Instrument of Chaos": 1,
+    "Plaguesword": 3
+   }
+  },
+  "Plague Marines": {
+   "models": 5,
+   "lists": 96,
+   "same": 17,
+   "items": {
+    "Blight launcher": 1,
+    "Boltgun": 1,
+    "Bubotic weapons": 0,
+    "Heavy plague weapon": 0,
+    "Icon of despair": 0,
+    "Meltagun": 0,
+    "Plague belcher": 0,
+    "Plague knives": 4,
+    "Plague spewer": 1,
+    "Plasma gun": 2,
+    "Plasma pistol": 0,
+    "Power fist": 1
+   }
+  },
+  "Plague Surgeon": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Balesword": 1,
+    "Bolt pistol": 1
+   }
+  },
+  "Plaguebearers": {
+   "models": 10,
+   "lists": 83,
+   "same": 58,
+   "items": {
+    "Daemonic icon": 1,
+    "Instrument of Chaos": 1,
+    "Plaguesword": 10
+   }
+  },
+  "Plagueburst Crawler": {
+   "models": 1,
+   "lists": 22,
+   "same": 17,
+   "items": {
+    "Armoured tracks": 1,
+    "Entropy cannon": 2,
+    "Heavy slugger": 1,
+    "Plagueburst mortar": 1,
+    "Plaguespitter": 0,
+    "Rothail volley gun": 0
+   }
+  },
+  "Plasmancer": {
+   "models": 1,
+   "lists": 49,
+   "same": 46,
+   "items": {
+    "Plasmic lance": 1
+   }
+  },
+  "Possessed": {
+   "models": 10,
+   "lists": 50,
+   "same": 27,
+   "items": {
+    "Chaos icon": 1,
+    "Hideous mutations": 10
+   }
+  },
+  "Poxbringer": {
+   "models": 1,
+   "lists": 23,
+   "same": 23,
+   "items": {
+    "Foul balesword": 1
+   }
+  },
+  "Poxwalkers": {
+   "models": 10,
+   "lists": 241,
+   "same": 173,
+   "items": {
+    "Improvised weapon": 10
+   }
+  },
+  "Primaris Psyker": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Force weapon": 1,
+    "Laspistol": 1,
+    "Psychic Maelstrom": 1
+   }
+  },
+  "Primus": {
+   "models": 1,
+   "lists": 14,
+   "same": 13,
+   "items": {
+    "Cult bonesword": 1,
+    "Scoped needle pistol": 1,
+    "Toxin injector claw": 1
+   }
+  },
+  "Prince Yriel": {
+   "models": 1,
+   "lists": 12,
+   "same": 9,
+   "items": {
+    "Eye of Wrath": 1,
+    "Shuriken pistol": 1,
+    "Spear of Twilight": 1
+   }
+  },
+  "Prosecutor Squad": {
+   "models": 4,
+   "lists": 188,
+   "same": 141,
+   "items": {
+    "Boltgun": 4,
+    "Gun Stock": 4
+   }
+  },
+  "Psychomancer": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Abyssal lance": 1
+   }
+  },
+  "Psychophage": {
+   "models": 1,
+   "lists": 44,
+   "same": 41,
+   "items": {
+    "Psychoclastic torrent": 1,
+    "Talons and betentacled maw": 1
+   }
+  },
+  "Pteraxii Skystalkers": {
+   "models": 5,
+   "lists": 43,
+   "same": 36,
+   "items": {
+    "Close combat weapon": 4,
+    "Flechette blaster": 1,
+    "Flechette carbine": 4,
+    "Taser goad": 1
+   }
+  },
+  "Pteraxii Sterylizors": {
+   "models": 5,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Flechette blaster": 1,
+    "Phosphor torch": 4,
+    "Pteraxii talons": 5,
+    "Taser goad": 1
+   }
+  },
+  "Purestrain Genestealers": {
+   "models": 5,
+   "lists": 54,
+   "same": 32,
+   "items": {
+    "Cult claws and talons": 5
+   }
+  },
+  "Purgation Squad": {
+   "models": 5,
+   "lists": 18,
+   "same": 13,
+   "items": {
+    "Close combat weapon": 4,
+    "Incinerator": 0,
+    "Nemesis force weapon": 1,
+    "Psilencer": 0,
+    "Psycannon": 4,
+    "Storm bolter": 1
+   }
+  },
+  "Purifier Squad": {
+   "models": 10,
+   "lists": 78,
+   "same": 33,
+   "items": {
+    "Close combat weapon": 4,
+    "Incinerator": 0,
+    "Nemesis force weapon": 6,
+    "Psycannon": 4,
+    "Purifying Flame": 10,
+    "Storm bolter": 6
+   }
+  },
+  "Pyrovores": {
+   "models": 3,
+   "lists": 45,
+   "same": 21,
+   "items": {
+    "Chitin-barbed limbs": 3,
+    "Flamespurt": 3
+   }
+  },
+  "Ragnar Blackmane": {
+   "models": 1,
+   "lists": 14,
+   "same": 13,
+   "items": {
+    "Bolt Pistol": 1,
+    "Frostfang": 1
+   }
+  },
+  "Raider": {
+   "models": 1,
+   "lists": 63,
+   "same": 56,
+   "items": {
+    "Bladevanes and chainsnares": 1,
+    "Dark lance": 1,
+    "Disintegrator cannon": 0
+   }
+  },
+  "Rangers": {
+   "models": 5,
+   "lists": 46,
+   "same": 45,
+   "items": {
+    "Close combat weapon": 5,
+    "Long rifle": 5,
+    "Shuriken pistol": 5
+   }
+  },
+  "Raptors": {
+   "models": 5,
+   "lists": 12,
+   "same": 2,
+   "items": {
+    "Accursed weapon": 0,
+    "Astartes chainsword": 0,
+    "Bolt pistol": 4,
+    "Close combat weapon": 2,
+    "Flamer": 0,
+    "Heavy melee weapon": 3,
+    "Meltagun": 1,
+    "Mutations": 0,
+    "Plasma gun": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Ratlings": {
+   "models": 5,
+   "lists": 10,
+   "same": 9,
+   "items": {
+    "Close combat weapon": 5,
+    "Demolition gear": 0,
+    "Ratling Battlemutt": 0,
+    "Sniper rifle": 5,
+    "Tankstopper rifle": 0
+   }
+  },
+  "Ravager": {
+   "models": 1,
+   "lists": 38,
+   "same": 24,
+   "items": {
+    "Bladevanes": 1,
+    "Dark lance": 0,
+    "Disintegrator cannon": 3
+   }
+  },
+  "Raveners": {
+   "models": 5,
+   "lists": 71,
+   "same": 71,
+   "items": {
+    "Ravener claws and talons": 5
+   }
+  },
+  "Ravenwing Black Knights": {
+   "models": 3,
+   "lists": 56,
+   "same": 14,
+   "items": {
+    "Bolt Pistol": 3,
+    "Corvus Hammer": 3,
+    "Grenade Launcher": 0,
+    "Plasma Talon": 3
+   }
+  },
+  "Ravenwing Command Squad": {
+   "models": 3,
+   "lists": 108,
+   "same": 51,
+   "items": {
+    "Bolt Pistol": 3,
+    "Corvus Hammer": 2,
+    "Grenade Launcher": 0,
+    "Master-crafted Power Weapon": 1,
+    "Plasma Talon": 3
+   }
+  },
+  "Ravenwing Dark Talon": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured Hull": 1,
+    "Hurricane Bolter": 2,
+    "Rift Cannon": 1
+   }
+  },
+  "Ravenwing Darkshroud": {
+   "models": 1,
+   "lists": 12,
+   "same": 7,
+   "items": {
+    "Assault Cannon": 1,
+    "Heavy Bolter": 0
+   }
+  },
+  "Razorback": {
+   "models": 1,
+   "lists": 24,
+   "same": 24,
+   "items": {
+    "Armoured tracks": 1,
+    "Hunter-killer missile": 1,
+    "Storm bolter": 1,
+    "Twin lascannon": 1
+   }
+  },
+  "Razorwing Jetfighter": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Bladed wings": 1,
+    "Dark Lance": 2,
+    "Razorwing missiles": 1,
+    "Splinter cannon": 1
+   }
+  },
+  "Reavers": {
+   "models": 3,
+   "lists": 48,
+   "same": 23,
+   "items": {
+    "Bladevanes": 3,
+    "Blaster": 0,
+    "Cluster caltrops": 1,
+    "Grav-talon": 0,
+    "Heat lance": 1,
+    "Splinter pistol": 3,
+    "Splinter rifle": 2
+   }
+  },
+  "Red Corsairs Raiders": {
+   "models": 5,
+   "lists": 29,
+   "same": 13,
+   "items": {
+    "Bolt pistol": 4,
+    "Boltgun": 4,
+    "Hand flamer": 1,
+    "Meltagun": 1,
+    "Power fist": 1,
+    "Reaver’s blade": 4
+   }
+  },
+  "Red Corsairs Reave-Captain": {
+   "models": 1,
+   "lists": 4,
+   "same": 3,
+   "items": {
+    "Bolt pistol": 1,
+    "Plasma pistol": 1,
+    "Power maul": 1,
+    "Power sword": 0
+   }
+  },
+  "Redemptor Dreadnought": {
+   "models": 1,
+   "lists": 90,
+   "same": 47,
+   "items": {
+    "Fragstorm Grenade Launchers": 0,
+    "Heavy Flamer": 0,
+    "Heavy Onslaught Gatling Cannon": 0,
+    "Icarus Rocket Pod": 1,
+    "Macro Plasma Incinerator": 1,
+    "Onslaught Gatling Cannon": 1,
+    "Redemptor Fist": 1,
+    "Storm Bolters": 1
+   }
+  },
+  "Reductus Saboteur": {
+   "models": 1,
+   "lists": 18,
+   "same": 17,
+   "items": {
+    "Autopistol": 1,
+    "Close combat weapon": 1,
+    "Demolition charges": 1,
+    "Remote explosives": 1
+   }
+  },
+  "Reiver Squad": {
+   "models": 5,
+   "lists": 178,
+   "same": 119,
+   "items": {
+    "Bolt Carbine": 5,
+    "Grapnel Launchers": 1,
+    "Grav-chutes": 1,
+    "Monomolecular Combat Knife": 5,
+    "Special-issue Bolt Pistol": 5
+   }
+  },
+  "Rendmaster On Blood Throne": {
+   "models": 1,
+   "lists": 42,
+   "same": 41,
+   "items": {
+    "Attendants’ hellblades": 1,
+    "Blade of blood": 1
+   }
+  },
+  "Repentia Squad": {
+   "models": 10,
+   "lists": 39,
+   "same": 36,
+   "items": {
+    "Bolt pistol": 1,
+    "Neural whips": 1,
+    "Penitent eviscerator": 9
+   }
+  },
+  "Repulsor": {
+   "models": 1,
+   "lists": 20,
+   "same": 7,
+   "items": {
+    "Armoured Hull": 1,
+    "Defensive Array": 1,
+    "Heavy Onslaught Gatling Cannon": 0,
+    "Hunter-slayer Missile": 1,
+    "Las-talon": 1,
+    "Twin Heavy Bolter": 0,
+    "Twin Lascannon": 1
+   }
+  },
+  "Repulsor Executioner": {
+   "models": 1,
+   "lists": 116,
+   "same": 80,
+   "items": {
+    "Armoured Hull": 1,
+    "Defensive Array": 1,
+    "Heavy Laser Destroyer": 1,
+    "Heavy Onslaught Gatling Cannon": 1,
+    "Macro Plasma Incinerator": 0,
+    "Twin Heavy Bolter": 1
+   }
+  },
+  "Retributor Squad": {
+   "models": 5,
+   "lists": 19,
+   "same": 5,
+   "items": {
+    "Bolt pistol": 5,
+    "Boltgun": 0,
+    "Close combat weapon": 5,
+    "Combi-weapon": 0,
+    "Heavy bolter": 0,
+    "Inferno pistol": 0,
+    "Ministorum heavy flamer": 0,
+    "Multi-melta": 4,
+    "Plasma pistol": 1,
+    "Power weapon": 1
+   }
+  },
+  "Rhino": {
+   "models": 1,
+   "lists": 38,
+   "same": 32,
+   "items": {
+    "Armoured tracks": 1,
+    "Hunter-killer missile": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Ripper Swarms": {
+   "models": 1,
+   "lists": 13,
+   "same": 11,
+   "items": {
+    "Chitinous claws and teeth": 1,
+    "Spinemaws": 0
+   }
+  },
+  "Riptide Battlesuit": {
+   "models": 1,
+   "lists": 53,
+   "same": 31,
+   "items": {
+    "Heavy burst cannon": 0,
+    "Ion accelerator": 1,
+    "Riptide fists": 1,
+    "Twin fusion blaster": 0,
+    "Twin plasma rifle": 1,
+    "Twin smart missile system": 0
+   }
+  },
+  "Roboute Guilliman": {
+   "models": 1,
+   "lists": 82,
+   "same": 70,
+   "items": {
+    "Emperor's Sword": 1,
+    "Hand of Dominion": 1
+   }
+  },
+  "Rogal Dorn Battle Tank": {
+   "models": 1,
+   "lists": 15,
+   "same": 13,
+   "items": {
+    "Armoured tracks": 1,
+    "Coaxial autocannon": 1,
+    "Heavy bolter": 0,
+    "Heavy stubber": 1,
+    "Meltagun": 2,
+    "Multi-melta": 2,
+    "Oppressor cannon": 1,
+    "Pulveriser cannon": 1,
+    "Twin battle cannon": 0
+   }
+  },
+  "Rogal Dorn Commander": {
+   "models": 1,
+   "lists": 35,
+   "same": 20,
+   "items": {
+    "Armoured tracks": 1,
+    "Castigator gatling cannon": 0,
+    "Coaxial autocannon": 1,
+    "Heavy bolter": 0,
+    "Heavy stubber": 1,
+    "Meltagun": 2,
+    "Multi-melta": 2,
+    "Oppressor cannon": 1,
+    "Pulveriser cannon": 1,
+    "Twin battle cannon": 0
+   }
+  },
+  "Rogue Trader Entourage": {
+   "models": 4,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Close combat weapon": 2,
+    "Dartmask": 1,
+    "Death Cult power blade": 1,
+    "Household pistol": 1,
+    "Laspistol": 1,
+    "Monomolecular cane-rapier": 1,
+    "Voltaic pistol": 1,
+    "healing serum": 1
+   }
+  },
+  "Rotigus": {
+   "models": 1,
+   "lists": 26,
+   "same": 25,
+   "items": {
+    "Gnarlrod": 1,
+    "Streams of brackish filth": 1
+   }
+  },
+  "Royal Warden": {
+   "models": 1,
+   "lists": 14,
+   "same": 14,
+   "items": {
+    "Close combat weapon": 1,
+    "Relic gauss blaster": 1
+   }
+  },
+  "Rubric Marines": {
+   "models": 5,
+   "lists": 70,
+   "same": 39,
+   "items": {
+    "Close combat weapon": 4,
+    "Force weapon": 1,
+    "Icon of flame": 1,
+    "Inferno bolt pistol": 0,
+    "Inferno boltgun": 0,
+    "Malefic Curse": 1,
+    "Soulreaper cannon": 1,
+    "Warpflame pistol": 1,
+    "Warpflamer": 3
+   }
+  },
+  "Rukkatrukk Squigbuggies": {
+   "models": 1,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Saw Blades": 1,
+    "Sawn-off Shotgun": 1,
+    "Squig Launchas": 1
+   }
+  },
+  "Runtherd": {
+   "models": 1,
+   "lists": 26,
+   "same": 24,
+   "items": {
+    "Runtherd’s Toolz": 1,
+    "Slugga": 1
+   }
+  },
+  "Sagitaur": {
+   "models": 1,
+   "lists": 60,
+   "same": 30,
+   "items": {
+    "Armoured wheels": 1,
+    "HYLas beam cannon": 1,
+    "L7 missile launcher": 0,
+    "MATR autocannon": 0,
+    "Sagitaur missile launcher": 0,
+    "Twin bolt cannon": 1
+   }
+  },
+  "Saint Celestine": {
+   "models": 3,
+   "lists": 5,
+   "same": 5,
+   "items": {
+    "Bolt pistol": 2,
+    "Power weapon": 2,
+    "The Ardent Blade": 1
+   }
+  },
+  "Sammael": {
+   "models": 1,
+   "lists": 65,
+   "same": 62,
+   "items": {
+    "Bolt Pistol": 1,
+    "Master-crafted Plasma Cannon": 1,
+    "The Raven Sword": 1,
+    "Twin Storm Bolter": 1
+   }
+  },
+  "Sanctifiers": {
+   "models": 9,
+   "lists": 15,
+   "same": 12,
+   "items": {
+    "Burning hands": 1,
+    "Close combat weapon": 3,
+    "Death Cult blades": 1,
+    "Holy fire": 2,
+    "Ministorum flamer": 1,
+    "Ministorum hand flamer": 5,
+    "Plasma gun": 1,
+    "Salvationist medikit": 1,
+    "Sanctifier melee weapon": 4,
+    "Simulacrum imperialis": 1
+   }
+  },
+  "Sanctus": {
+   "models": 1,
+   "lists": 10,
+   "same": 9,
+   "items": {
+    "Close combat weapon": 0,
+    "Cult sniper rifle": 0,
+    "Sanctus bio-dagger": 1
+   }
+  },
+  "Sanguinary Guard": {
+   "models": 6,
+   "lists": 134,
+   "same": 81,
+   "items": {
+    "Angelus Boltgun": 4,
+    "Encarmine Weapon": 6,
+    "Inferno Pistol": 2
+   }
+  },
+  "Sanguinary Priest": {
+   "models": 1,
+   "lists": 33,
+   "same": 28,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Chainsword": 1
+   }
+  },
+  "Scarab Occult Terminators": {
+   "models": 10,
+   "lists": 38,
+   "same": 32,
+   "items": {
+    "Force weapon": 1,
+    "Hellfyre missile rack": 2,
+    "Inferno combi-bolter": 8,
+    "Malefic Curse": 1,
+    "Prosperine khopesh": 9,
+    "Soulreaper cannon": 2
+   }
+  },
+  "Scourges with Heavy Weapons": {
+   "models": 5,
+   "lists": 97,
+   "same": 64,
+   "items": {
+    "Blast pistol": 0,
+    "Close combat weapon": 5,
+    "Dark lance": 4,
+    "Heat lance": 0,
+    "Power weapon": 0,
+    "Shardcarbine": 1,
+    "Splinter cannon": 0,
+    "Splinter pistol": 0
+   }
+  },
+  "Scourges with Shardcarbines": {
+   "models": 5,
+   "lists": 17,
+   "same": 7,
+   "items": {
+    "Blast pistol": 0,
+    "Blaster": 0,
+    "Close combat weapon": 5,
+    "Power weapon": 0,
+    "Shardcarbine": 4,
+    "Shredder": 1
+   }
+  },
+  "Scout Sentinels": {
+   "models": 1,
+   "lists": 51,
+   "same": 33,
+   "items": {
+    "Autocannon": 0,
+    "Close combat weapon": 1,
+    "Heavy flamer": 0,
+    "Hunter-killer missile": 1,
+    "Lascannon": 1,
+    "Missile launcher": 0,
+    "Plasma cannon": 0,
+    "Sentinel chainsaw": 1
+   }
+  },
+  "Scout Squad": {
+   "models": 5,
+   "lists": 457,
+   "same": 51,
+   "items": {
+    "Bolt Pistol": 5,
+    "Boltgun": 3,
+    "Chainsword": 1,
+    "Combat Knife": 4,
+    "Heavy Bolter": 1,
+    "Missile Launcher": 0,
+    "Shotgun": 0,
+    "Sniper Rifle": 1
+   }
+  },
+  "Screamer-killer": {
+   "models": 1,
+   "lists": 29,
+   "same": 27,
+   "items": {
+    "Bio-plasmic scream": 1,
+    "Screamer-killer talons": 1
+   }
+  },
+  "Screamers": {
+   "models": 3,
+   "lists": 19,
+   "same": 11,
+   "items": {
+    "Lamprey bite": 3
+   }
+  },
+  "Seekers": {
+   "models": 5,
+   "lists": 14,
+   "same": 9,
+   "items": {
+    "Daemonic icon": 1,
+    "Instrument of Chaos": 1,
+    "Lashing tongue": 5,
+    "Slashing claws": 5
+   }
+  },
+  "Sekhetar Robots": {
+   "models": 2,
+   "lists": 38,
+   "same": 12,
+   "items": {
+    "Close combat weapon": 2,
+    "Heavy warpflamer": 2,
+    "Hellfyre missile rack": 2,
+    "Power claw": 2,
+    "Pyreflux meltagun": 0,
+    "Warpflame projector": 2
+   }
+  },
+  "Sentinel Guard Sodality": {
+   "models": 3,
+   "lists": 41,
+   "same": 30,
+   "items": {
+    "Praesidium Shield": 3,
+    "Sentinel Blade": 3,
+    "Vexilla": 1
+   }
+  },
+  "Seraphim Squad": {
+   "models": 5,
+   "lists": 34,
+   "same": 20,
+   "items": {
+    "Bolt pistol": 4,
+    "Close combat weapon": 5,
+    "Inferno pistol": 0,
+    "Ministorum hand flamer": 4,
+    "Plasma pistol": 1,
+    "Power weapon": 1
+   }
+  },
+  "Serberys Raiders": {
+   "models": 3,
+   "lists": 24,
+   "same": 14,
+   "items": {
+    "Cavalry sabre and clawed limbs": 3,
+    "Enhanced data-tether": 0,
+    "Galvanic carbine": 3,
+    "Mechanicus pistol": 1
+   }
+  },
+  "Serberys Sulphurhounds": {
+   "models": 3,
+   "lists": 3,
+   "same": 2,
+   "items": {
+    "Cavalry arc maul": 1,
+    "Clawed limbs": 3,
+    "Mechanicus pistol": 1,
+    "Phosphor blast carbine": 0,
+    "Phosphor pistol": 4,
+    "Sulphur breath": 3
+   }
+  },
+  "Servitor Battleclade": {
+   "models": 9,
+   "lists": 67,
+   "same": 61,
+   "items": {
+    "Dataspikes": 1,
+    "Heavy arc rifle": 1,
+    "Heavy bolter": 1,
+    "Incendine igniter": 3,
+    "Mechanicus pistol": 1,
+    "Meltagun": 1,
+    "Phosphor blaster": 2,
+    "Servo-claw": 8
+   }
+  },
+  "Shadow Weaver Platform": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Close combat weapon": 1,
+    "Shadow weaver": 1,
+    "Shuriken catapult": 1
+   }
+  },
+  "Shadowseer": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Miststave": 1,
+    "Neuro disruptor": 1,
+    "flip belt": 1
+   }
+  },
+  "Shadowsword": {
+   "models": 1,
+   "lists": 4,
+   "same": 3,
+   "items": {
+    "Armoured tracks": 1,
+    "Lascannon": 4,
+    "Twin heavy bolter": 5,
+    "Twin heavy flamer": 0,
+    "Volcano cannon": 1
+   }
+  },
+  "Shalaxi Helbane": {
+   "models": 1,
+   "lists": 12,
+   "same": 11,
+   "items": {
+    "Lash of Slaanesh": 1,
+    "Pavane of Slaanesh": 1,
+    "Snapping claws": 1,
+    "Soulpiercer": 1
+   }
+  },
+  "Shield-Captain": {
+   "models": 1,
+   "lists": 42,
+   "same": 30,
+   "items": {
+    "Castellan Axe": 0,
+    "Eternity-pattern Paragon Blade": 1,
+    "Praesidium Shield": 1,
+    "Pyrithite Spear": 0
+   }
+  },
+  "Shield-Captain in Allarus Terminator Armour": {
+   "models": 1,
+   "lists": 30,
+   "same": 17,
+   "items": {
+    "Balistus Grenade Launcher": 1,
+    "Castellan Axe": 1,
+    "Guardian Spear": 0
+   }
+  },
+  "Shield-Captain on Dawneagle Jetbike": {
+   "models": 1,
+   "lists": 34,
+   "same": 18,
+   "items": {
+    "Hurricane Bolter": 0,
+    "Interceptor Lance": 1,
+    "Salvo Launcher": 0
+   }
+  },
+  "Shining Spears": {
+   "models": 3,
+   "lists": 35,
+   "same": 27,
+   "items": {
+    "Laser lance": 2,
+    "Shimmershield": 1,
+    "Shuriken cannon": 1,
+    "Star lance": 1,
+    "Twin shuriken catapult": 2
+   }
+  },
+  "Shroud Runners": {
+   "models": 3,
+   "lists": 13,
+   "same": 11,
+   "items": {
+    "Close combat weapon": 3,
+    "Long rifle": 3,
+    "Scatter laser": 3,
+    "Shuriken pistol": 3
+   }
+  },
+  "Sicarian Infiltrators": {
+   "models": 5,
+   "lists": 62,
+   "same": 52,
+   "items": {
+    "Flechette blaster": 5,
+    "Power weapon": 0,
+    "Stubcarbine": 0,
+    "Taser goad": 5
+   }
+  },
+  "Sicarian Ruststalkers": {
+   "models": 5,
+   "lists": 34,
+   "same": 10,
+   "items": {
+    "Transonic blades": 0,
+    "Transonic blades and chordclaw": 1,
+    "Transonic razor and chordclaw": 4
+   }
+  },
+  "Sisters Novitiate Squad": {
+   "models": 10,
+   "lists": 21,
+   "same": 10,
+   "items": {
+    "Autogun": 0,
+    "Autopistol": 9,
+    "Bolt pistol": 0,
+    "Boltgun": 0,
+    "Close combat weapon": 5,
+    "Ministorum flamer": 2,
+    "Novitiate melee weapons": 5,
+    "Plasma pistol": 1,
+    "Power weapon": 1,
+    "Sacred banner": 1,
+    "Simulacrum imperialis": 1
+   }
+  },
+  "Sisters of Battle Immolator": {
+   "models": 1,
+   "lists": 20,
+   "same": 9,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy bolter": 1,
+    "Hunter-killer missile": 1,
+    "Immolation flamers": 1,
+    "Twin heavy bolter": 0,
+    "Twin multi-melta": 0
+   }
+  },
+  "Sisters of Battle Squad": {
+   "models": 10,
+   "lists": 19,
+   "same": 11,
+   "items": {
+    "Bolt pistol": 10,
+    "Boltgun": 7,
+    "Close combat weapon": 10,
+    "Combi-weapon": 0,
+    "Condemnor boltgun": 0,
+    "Inferno pistol": 1,
+    "Meltagun": 1,
+    "Ministorum heavy flamer": 0,
+    "Multi-melta": 1,
+    "Plasma pistol": 0,
+    "Power weapon": 1,
+    "Simulacrum imperialis": 1
+   }
+  },
+  "Skarbrand": {
+   "models": 1,
+   "lists": 40,
+   "same": 39,
+   "items": {
+    "Bellow of endless fury": 1,
+    "Slaughter and Carnage": 1
+   }
+  },
+  "Skitarii Marshal": {
+   "models": 1,
+   "lists": 27,
+   "same": 27,
+   "items": {
+    "Control stave": 1,
+    "Mechanicus pistol": 1
+   }
+  },
+  "Skitarii Rangers": {
+   "models": 10,
+   "lists": 149,
+   "same": 65,
+   "items": {
+    "Alpha combat weapon": 1,
+    "Arc rifle": 1,
+    "Close combat weapon": 10,
+    "Enhanced data-tether": 0,
+    "Galvanic rifle": 7,
+    "Mechanicus pistol": 0,
+    "Omnispex": 1,
+    "Plasma caliver": 1,
+    "Transuranic arquebus": 1
+   }
+  },
+  "Skitarii Vanguard": {
+   "models": 10,
+   "lists": 46,
+   "same": 13,
+   "items": {
+    "Alpha combat weapon": 1,
+    "Arc rifle": 1,
+    "Close combat weapon": 10,
+    "Mechanicus pistol": 0,
+    "Omnispex": 1,
+    "Plasma caliver": 1,
+    "Radium carbine": 7,
+    "Transuranic arquebus": 1
+   }
+  },
+  "Skorpekh Destroyers": {
+   "models": 3,
+   "lists": 77,
+   "same": 61,
+   "items": {
+    "Skorpekh hyperphase weapons": 3
+   }
+  },
+  "Skorpekh Lord": {
+   "models": 1,
+   "lists": 76,
+   "same": 75,
+   "items": {
+    "Enmitic annihilator": 1,
+    "Flensing claw": 1,
+    "Hyperphase harvester": 1
+   }
+  },
+  "Skorpius Disintegrator": {
+   "models": 1,
+   "lists": 137,
+   "same": 126,
+   "items": {
+    "Armoured hull": 1,
+    "Belleros energy cannon": 0,
+    "Cognis heavy stubber": 3,
+    "Disruptor missile launcher": 1,
+    "Ferrumite cannon": 1
+   }
+  },
+  "Skorpius Dunerider": {
+   "models": 1,
+   "lists": 23,
+   "same": 23,
+   "items": {
+    "Armoured hull": 1,
+    "Cognis heavy stubber array": 1
+   }
+  },
+  "Skull Cannon": {
+   "models": 1,
+   "lists": 43,
+   "same": 43,
+   "items": {
+    "Attendants’ hellblades": 1,
+    "Biting maw": 1,
+    "Skull cannon": 1
+   }
+  },
+  "Skullmaster": {
+   "models": 1,
+   "lists": 37,
+   "same": 36,
+   "items": {
+    "Blade of blood": 1,
+    "Juggernaut’s bladed horn": 1
+   }
+  },
+  "Skulltaker": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "The Slayer Sword": 1
+   }
+  },
+  "Sky Ray Gunship": {
+   "models": 1,
+   "lists": 10,
+   "same": 6,
+   "items": {
+    "Accelerator burst cannon": 2,
+    "Armoured hull": 1,
+    "Seeker missile rack": 1,
+    "Smart missile system": 0
+   }
+  },
+  "Skyweavers": {
+   "models": 4,
+   "lists": 12,
+   "same": 9,
+   "items": {
+    "Close combat weapon": 4,
+    "Shuriken cannon": 0,
+    "Skyweaver haywire cannon": 4,
+    "Star bolas": 0,
+    "Zephyrglaive": 4
+   }
+  },
+  "Slaughterbound": {
+   "models": 1,
+   "lists": 222,
+   "same": 217,
+   "items": {
+    "Lacerator and daemonic claw": 1
+   }
+  },
+  "Sloppity Bilepiper": {
+   "models": 1,
+   "lists": 16,
+   "same": 16,
+   "items": {
+    "Marotter": 1
+   }
+  },
+  "Sly Marbo": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Envenomed blade": 1,
+    "Ripper pistol": 1
+   }
+  },
+  "Solitaire": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Solitaire weapons": 1
+   }
+  },
+  "Sorcerer": {
+   "models": 1,
+   "lists": 41,
+   "same": 37,
+   "items": {
+    "Bolt pistol": 0,
+    "Force weapon": 1
+   }
+  },
+  "Sorcerer In Terminator Armour": {
+   "models": 1,
+   "lists": 78,
+   "same": 37,
+   "items": {
+    "Chaos familiar": 0,
+    "Combi-bolter": 0,
+    "Combi-weapon": 0,
+    "Force weapon": 1,
+    "Infernal Gaze": 0
+   }
+  },
+  "Sororitas Rhino": {
+   "models": 1,
+   "lists": 21,
+   "same": 20,
+   "items": {
+    "Armoured tracks": 1,
+    "Hunter-killer missile": 1,
+    "Storm bolter": 1
+   }
+  },
+  "Soul Grinder": {
+   "models": 1,
+   "lists": 6,
+   "same": 2,
+   "items": {
+    "Harvester cannon": 1,
+    "Iron claw": 1,
+    "Phlegm bombardment": 0,
+    "Scream of despair": 0,
+    "Warp gaze": 1,
+    "Warpclaw": 0,
+    "Warpsword": 1
+   }
+  },
+  "Spectrus Kill Team": {
+   "models": 10,
+   "lists": 5,
+   "same": 3,
+   "items": {
+    "Bolt Pistol": 10,
+    "Ceramite Fists": 0,
+    "Combat Knife": 0,
+    "Deathwatch Marksman Bolt Carbine": 3,
+    "Deathwatch Occulus Bolt Carbine": 4,
+    "Helix Gauntlet": 1,
+    "Instigator Bolt Carbine": 1,
+    "Las Fusil": 2,
+    "Paired Combat Blades": 4,
+    "Special-issue Bolt Pistol": 0
+   }
+  },
+  "Spiritseer": {
+   "models": 1,
+   "lists": 36,
+   "same": 36,
+   "items": {
+    "Shuriken pistol": 1,
+    "Witch staff": 1
+   }
+  },
+  "Spoilpox Scrivener": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Disgusting sneezes": 1,
+    "Plaguesword and distended maw": 1
+   }
+  },
+  "Squighog Boyz": {
+   "models": 4,
+   "lists": 10,
+   "same": 10,
+   "items": {
+    "Big Choppa": 1,
+    "Saddlegit’s Shiv": 3,
+    "Slugga": 1,
+    "Squig’s Jaws": 4,
+    "Stikka": 3
+   }
+  },
+  "Starfangs": {
+   "models": 1,
+   "lists": 6,
+   "same": 6,
+   "items": {
+    "Disintegrator cannon": 1,
+    "Starfang grenade launcher": 1,
+    "Wraithbone hull": 1
+   }
+  },
+  "Starweaver": {
+   "models": 1,
+   "lists": 20,
+   "same": 20,
+   "items": {
+    "Close combat weapon": 1,
+    "Shuriken cannon": 2
+   }
+  },
+  "Stealth Battlesuits": {
+   "models": 5,
+   "lists": 138,
+   "same": 117,
+   "items": {
+    "Battlesuit fists": 5,
+    "Burst cannon": 3,
+    "Fusion blaster": 2,
+    "Gun drone": 1,
+    "Homing beacon": 1,
+    "Marker drone": 1,
+    "Pulse pistol": 1
+   }
+  },
+  "Sternguard Veteran Squad": {
+   "models": 10,
+   "lists": 27,
+   "same": 5,
+   "items": {
+    "Artificer Firearm": 8,
+    "Bolt Pistol": 10,
+    "Ceramite Fists": 9,
+    "Chainsword": 0,
+    "Heavy Bolter": 2,
+    "Power Fist": 1,
+    "Power Weapon": 0,
+    "Pyrecannon": 0
+   }
+  },
+  "Stompa": {
+   "models": 1,
+   "lists": 18,
+   "same": 18,
+   "items": {
+    "Big Shoota": 5,
+    "Deffkannon and Supa-rokkits": 1,
+    "Mega-choppa": 1,
+    "Skorcha": 1,
+    "Supa-gatler": 1
+   }
+  },
+  "Stonesinger": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Drakesteed Fangs and Talons": 1,
+    "Solar Carbine": 1,
+    "Song of Waning": 1,
+    "Stone Stave": 1,
+    "Venomcrest Spit": 1
+   }
+  },
+  "Storm Guardians": {
+   "models": 11,
+   "lists": 16,
+   "same": 15,
+   "items": {
+    "Close combat weapon": 9,
+    "Flamer": 2,
+    "Fusion gun": 2,
+    "Power sword": 2,
+    "Serpent shield": 1,
+    "Shuriken pistol": 6
+   }
+  },
+  "Storm Speeder Hailstrike": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Armoured Impact": 1,
+    "Fragstorm Grenade Launchers": 1,
+    "Ironhail Heavy Stubber Array": 1,
+    "Onslaught Gatling Cannon": 1
+   }
+  },
+  "Storm Speeder Hammerstrike": {
+   "models": 1,
+   "lists": 22,
+   "same": 19,
+   "items": {
+    "Armoured Impact": 1,
+    "Hammerstrike Missile Launcher": 1,
+    "Krakstorm Grenade Launchers": 1,
+    "Melta Destroyer": 1
+   }
+  },
+  "Storm Speeder Thunderstrike": {
+   "models": 1,
+   "lists": 229,
+   "same": 182,
+   "items": {
+    "Armoured Impact": 1,
+    "Stormfury Missile Launcher": 1,
+    "Thunderstrike Icarus Rocket Pod": 1,
+    "Thunderstrike Las-talon": 1
+   }
+  },
+  "Stormboyz": {
+   "models": 5,
+   "lists": 24,
+   "same": 18,
+   "items": {
+    "Choppa": 4,
+    "Kustom Choppa": 0,
+    "Power Klaw": 1,
+    "Slugga": 5
+   }
+  },
+  "Stormlord": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Armoured tracks": 1,
+    "Heavy stubber": 2,
+    "Lascannon": 4,
+    "Twin heavy bolter": 5,
+    "Vulcan mega-bolter": 1
+   }
+  },
+  "Stormraven Gunship": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Armoured hull": 1,
+    "Hurricane bolter": 2,
+    "Stormstrike missile launcher": 2,
+    "Twin heavy plasma cannon": 1,
+    "Twin multi-melta": 1
+   }
+  },
+  "Stormsurge": {
+   "models": 1,
+   "lists": 4,
+   "same": 1,
+   "items": {
+    "Cluster rocket system": 1,
+    "Destroyer missiles": 1,
+    "Pulse blast cannon": 1,
+    "Pulse driver cannon": 0,
+    "Thunderous footfalls": 1,
+    "Twin T’au flamer": 0,
+    "Twin airbursting fragmentation projector": 0,
+    "Twin burst cannon": 1,
+    "Twin smart missile system": 2
+   }
+  },
+  "Stormsword": {
+   "models": 1,
+   "lists": 9,
+   "same": 6,
+   "items": {
+    "Armoured tracks": 1,
+    "Lascannon": 4,
+    "Stormsword siege cannon": 1,
+    "Twin heavy bolter": 5,
+    "Twin heavy flamer": 0
+   }
+  },
+  "Strike Squad": {
+   "models": 5,
+   "lists": 66,
+   "same": 39,
+   "items": {
+    "Close combat weapon": 0,
+    "Incinerator": 0,
+    "Nemesis force weapon": 5,
+    "Psycannon": 0,
+    "Storm bolter": 5
+   }
+  },
+  "Strike Team": {
+   "models": 10,
+   "lists": 19,
+   "same": 7,
+   "items": {
+    "Close combat weapon": 10,
+    "Guardian drone": 1,
+    "Gun drone": 0,
+    "Marker drone": 1,
+    "Pulse pistol": 10,
+    "Pulse rifle": 10,
+    "Shield drone": 0,
+    "Support turret": 1
+   }
+  },
+  "Striking Scorpions": {
+   "models": 5,
+   "lists": 14,
+   "same": 9,
+   "items": {
+    "Biting blade": 1,
+    "Scorpion chainsword": 4,
+    "Scorpion’s claw": 0,
+    "Shuriken pistol": 5
+   }
+  },
+  "Subductor Squad": {
+   "models": 11,
+   "lists": 30,
+   "same": 30,
+   "items": {
+    "Arbites shotpistol": 10,
+    "Mechanical bite": 1,
+    "Shock maul": 10
+   }
+  },
+  "Suboden Khan": {
+   "models": 1,
+   "lists": 22,
+   "same": 20,
+   "items": {
+    "Heavy Bolt Pistol": 1,
+    "Onslaught Gatling Cannon": 1,
+    "Power Sword": 1,
+    "Stormtooth": 1
+   }
+  },
+  "Succubus": {
+   "models": 1,
+   "lists": 58,
+   "same": 57,
+   "items": {
+    "Archite glaive and agoniser": 1
+   }
+  },
+  "Swooping Hawks": {
+   "models": 5,
+   "lists": 32,
+   "same": 19,
+   "items": {
+    "Close combat weapon": 5,
+    "Exarch’s lasblaster": 0,
+    "Hawk’s talon": 1,
+    "Lasblaster": 4
+   }
+  },
+  "Sword Brethren Squad": {
+   "models": 5,
+   "lists": 32,
+   "same": 6,
+   "items": {
+    "Heavy Bolt Pistol": 2,
+    "Master-crafted Power Weapon": 4,
+    "Plasma Pistol": 1,
+    "Pyre Pistol": 0,
+    "Thunder Hammer": 1,
+    "Twin Lightning Claws": 0
+   }
+  },
+  "Sydonian Dragoons With Taser Lances": {
+   "models": 3,
+   "lists": 21,
+   "same": 12,
+   "items": {
+    "Phosphor serpenta": 3,
+    "Taser lance": 3
+   }
+  },
+  "Sydonian Skatros": {
+   "models": 1,
+   "lists": 10,
+   "same": 9,
+   "items": {
+    "Mechanicus pistol": 1,
+    "Radium jezzail": 1,
+    "Skatros transuranic arquebus": 0,
+    "Sydonian feet": 1
+   }
+  },
+  "Syll’esske": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Axe of Dominion": 1,
+    "Cacophonic choir": 1,
+    "Scourging whip": 1
+   }
+  },
+  "Tallyman": {
+   "models": 1,
+   "lists": 39,
+   "same": 38,
+   "items": {
+    "Close combat weapon": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Talonstrike Kill Team": {
+   "models": 10,
+   "lists": 23,
+   "same": 8,
+   "items": {
+    "Assault Bolters": 5,
+    "Ceramite Fists": 0,
+    "Chainsword": 0,
+    "Heavy Bolt Pistol": 2,
+    "Plasma Exterminators": 0,
+    "Plasma Pistol": 3,
+    "Power Fist": 1,
+    "Power Weapon": 0
+   }
+  },
+  "Talos": {
+   "models": 2,
+   "lists": 30,
+   "same": 9,
+   "items": {
+    "Macro-scalpel": 0,
+    "Talos gauntlet": 2,
+    "Talos ichor injector": 0,
+    "Twin haywire blaster": 0,
+    "Twin heat lance": 2,
+    "Twin liquifier gun": 2
+   }
+  },
+  "Tankbustas": {
+   "models": 6,
+   "lists": 127,
+   "same": 37,
+   "items": {
+    "Busta Rokkit Launcha": 5,
+    "Choppa": 1,
+    "Gitstikka": 5,
+    "Pulsa Rokkit": 0,
+    "Rokkit Pistol": 2,
+    "Smash Hammer": 0
+   }
+  },
+  "Taurox": {
+   "models": 1,
+   "lists": 13,
+   "same": 11,
+   "items": {
+    "Armoured tracks": 1,
+    "Storm bolter": 1,
+    "Twin autocannon": 1
+   }
+  },
+  "Taurox Prime": {
+   "models": 1,
+   "lists": 3,
+   "same": 2,
+   "items": {
+    "Armoured tracks": 1,
+    "Storm bolter": 1,
+    "Taurox gatling cannon": 1,
+    "Twin Taurox hot-shot volley gun": 1
+   }
+  },
+  "Tech-priest Dominus": {
+   "models": 1,
+   "lists": 9,
+   "same": 6,
+   "items": {
+    "Eradication ray": 0,
+    "Macrostubber": 1,
+    "Omnissian axe": 1,
+    "Phosphor serpenta": 0,
+    "Volkite blaster": 1
+   }
+  },
+  "Tech-priest Enginseer": {
+   "models": 1,
+   "lists": 157,
+   "same": 87,
+   "items": {
+    "Mechanicus pistol": 1,
+    "Omnissian axe": 1,
+    "Servo-arm": 1
+   }
+  },
+  "Tech-priest Manipulus": {
+   "models": 1,
+   "lists": 11,
+   "same": 6,
+   "items": {
+    "Magnarail lance": 1,
+    "Omnissian staff": 1,
+    "Transonic cannon": 0
+   }
+  },
+  "Techmarine": {
+   "models": 1,
+   "lists": 79,
+   "same": 60,
+   "items": {
+    "Forge Bolter": 1,
+    "Grav-pistol": 1,
+    "Omnissian Power Axe and Servo-arm": 1
+   }
+  },
+  "Technoarcheologist": {
+   "models": 1,
+   "lists": 12,
+   "same": 12,
+   "items": {
+    "Mechanicus pistol": 1,
+    "Servo-arc claw": 1
+   }
+  },
+  "Technomancer": {
+   "models": 1,
+   "lists": 57,
+   "same": 56,
+   "items": {
+    "Staff of light": 1
+   }
+  },
+  "Telemon Heavy Dreadnought": {
+   "models": 1,
+   "lists": 127,
+   "same": 104,
+   "items": {
+    "Adrathic Desolator": 0,
+    "Arachnus Storm Cannon": 0,
+    "Caestus Fist": 0,
+    "Dual Caestus Fists": 1,
+    "Iliastus Accelerator Culverin": 0,
+    "Spiculus Bolt Launcher": 1,
+    "Twin Neutronium Cascade Projectors": 2
+   }
+  },
+  "Tempestus Aquilons": {
+   "models": 10,
+   "lists": 14,
+   "same": 4,
+   "items": {
+    "Bolt pistol": 0,
+    "Close combat weapon": 10,
+    "Hot-shot lascarbine": 8,
+    "Hot-shot laspistol": 0,
+    "Hot-shot long-las": 1,
+    "Melta carbine": 0,
+    "Plasma carbine": 1,
+    "Power weapon": 0,
+    "Sentry flamer": 0,
+    "Sentry hot-shot volley gun": 1
+   }
+  },
+  "Tempestus Scions": {
+   "models": 10,
+   "lists": 46,
+   "same": 11,
+   "items": {
+    "Chainsword": 0,
+    "Close combat weapon": 9,
+    "Grenade launcher": 0,
+    "Hot-shot lasgun": 5,
+    "Hot-shot laspistol": 0,
+    "Hot-shot volley gun": 0,
+    "Meltagun": 2,
+    "Plasma gun": 2,
+    "Plasma pistol": 1,
+    "Power fist": 1,
+    "Power weapon": 0,
+    "Vox-caster": 0
+   }
+  },
+  "Termagants": {
+   "models": 10,
+   "lists": 16,
+   "same": 9,
+   "items": {
+    "Chitinous claws and teeth": 10,
+    "Fleshborer": 10,
+    "Shardlauncher": 0,
+    "Spike rifle": 0,
+    "Strangleweb": 0,
+    "Termagant devourer": 0,
+    "Termagant spinefists": 0
+   }
+  },
+  "Terminator Assault Squad": {
+   "models": 10,
+   "lists": 192,
+   "same": 66,
+   "items": {
+    "Storm Shield": 10,
+    "Thunder Hammer": 10,
+    "Twin Lightning Claws": 0
+   }
+  },
+  "Terminator Squad": {
+   "models": 10,
+   "lists": 74,
+   "same": 13,
+   "items": {
+    "Assault Cannon": 0,
+    "Chainfist": 0,
+    "Cyclone Missile Launcher": 2,
+    "Heavy Flamer": 0,
+    "Power Fist": 10,
+    "Power Weapon": 0,
+    "Storm Bolter": 10
+   }
+  },
+  "Tervigon": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Massive scything talons": 1,
+    "Stinger salvoes": 1
+   }
+  },
+  "Tesseract Vault": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Antimatter Meteor": 1,
+    "Armoured bulk": 1,
+    "Cosmic Fire": 1,
+    "Time’s Arrow": 1
+   }
+  },
+  "The Blue Scribes": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Sharp quills": 1
+   }
+  },
+  "The Changeling": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Infernal Flames": 1,
+    "The Trickster’s Staff": 1
+   }
+  },
+  "The Masque Of Slaanesh": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Serrated claws": 1
+   }
+  },
+  "The Red Terror": {
+   "models": 1,
+   "lists": 66,
+   "same": 65,
+   "items": {
+    "Gaping maw": 1,
+    "Scything talons": 1
+   }
+  },
+  "The Sanguinor": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Encarmine Broadsword": 1
+   }
+  },
+  "The Silent King": {
+   "models": 3,
+   "lists": 17,
+   "same": 17,
+   "items": {
+    "Annihilator beam": 2,
+    "Armoured bulk": 2,
+    "Sceptre of Eternal Glory": 1,
+    "Staff of Stars": 1,
+    "Weapons of the Final Triarch": 1
+   }
+  },
+  "The Swarmlord": {
+   "models": 1,
+   "lists": 63,
+   "same": 61,
+   "items": {
+    "Bone sabres": 1,
+    "Synaptic pulse": 1
+   }
+  },
+  "The Twin Lance": {
+   "models": 2,
+   "lists": 66,
+   "same": 61,
+   "items": {
+    "Fusion eliminator": 1,
+    "Ion scattercannon": 1,
+    "MV15 gun drone": 2,
+    "Shardstorm burst system": 2,
+    "Twin pulse blaster": 0,
+    "XV pulse pistol": 2
+   }
+  },
+  "The Visarch": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Asu-var": 1
+   }
+  },
+  "The Yncarne": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Swirling soul energy": 1,
+    "Vilith-zhar": 1
+   }
+  },
+  "Thulia Ghuld": {
+   "models": 1,
+   "lists": 76,
+   "same": 71,
+   "items": {
+    "Jericho-class conversion resonator": 1,
+    "Rod of the War Forge": 1
+   }
+  },
+  "Thunderwolf Cavalry": {
+   "models": 6,
+   "lists": 90,
+   "same": 46,
+   "items": {
+    "Bolt Pistol": 0,
+    "Boltgun": 6,
+    "Plasma Pistol": 0,
+    "Wolf Guard Weapon": 6
+   }
+  },
+  "Tomb Blades": {
+   "models": 6,
+   "lists": 35,
+   "same": 19,
+   "items": {
+    "Close combat weapon": 6,
+    "Nebuloscope": 6,
+    "Particle beamer": 6,
+    "Shadowloom": 0,
+    "Shieldvanes": 0,
+    "Twin gauss blaster": 0,
+    "Twin tesla carbine": 0
+   }
+  },
+  "Tor Garadon": {
+   "models": 1,
+   "lists": 20,
+   "same": 20,
+   "items": {
+    "Artificer Grav-gun": 1,
+    "Hand of Defiance": 1
+   }
+  },
+  "Tormentbringer": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Lashes of torment": 1,
+    "Seeker tongues": 1,
+    "Slashing claws": 1
+   }
+  },
+  "Tormentors": {
+   "models": 5,
+   "lists": 89,
+   "same": 48,
+   "items": {
+    "Bolt pistol": 0,
+    "Boltgun": 2,
+    "Close combat weapon": 4,
+    "Icon of excess": 1,
+    "Meltagun": 1,
+    "Plasma gun": 1,
+    "Plasma pistol": 1,
+    "Power sword": 1,
+    "Rapture lash": 0
+   }
+  },
+  "Toxicrene": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Massive toxic lashes": 1
+   }
+  },
+  "Traitor Guardsmen Squad": {
+   "models": 10,
+   "lists": 20,
+   "same": 6,
+   "items": {
+    "Boltgun": 0,
+    "Close combat weapon": 9,
+    "Corrupted pistol": 1,
+    "Cultist grenade launcher": 1,
+    "Cultist sniper rifle": 0,
+    "Flamer": 0,
+    "Lasgun": 6,
+    "Meltagun": 1,
+    "Plasma gun": 1,
+    "Power weapon": 1
+   }
+  },
+  "Trajann Valoris": {
+   "models": 1,
+   "lists": 135,
+   "same": 127,
+   "items": {
+    "Eagle's Scream": 1,
+    "Watcher's Axe": 1
+   }
+  },
+  "Tranceweaver": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Ravaging claws": 1
+   }
+  },
+  "Transcendent C’tan": {
+   "models": 1,
+   "lists": 12,
+   "same": 12,
+   "items": {
+    "Crackling tendrils": 1,
+    "Seismic assault": 1
+   }
+  },
+  "Trazyn The Infinite": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Empathic Obliterator": 1
+   }
+  },
+  "Triarch Praetorians": {
+   "models": 5,
+   "lists": 11,
+   "same": 8,
+   "items": {
+    "Particle caster": 0,
+    "Rod of covenant": 5,
+    "Voidblade": 0
+   }
+  },
+  "Triarch Stalker": {
+   "models": 1,
+   "lists": 14,
+   "same": 11,
+   "items": {
+    "Heat ray": 1,
+    "Heavy gauss cannon array": 0,
+    "Stalker’s forelimbs": 1
+   }
+  },
+  "Triumph Of Saint Katherine": {
+   "models": 1,
+   "lists": 21,
+   "same": 21,
+   "items": {
+    "Bolt pistols": 1,
+    "Relic weapons": 1
+   }
+  },
+  "Troupe": {
+   "models": 5,
+   "lists": 46,
+   "same": 25,
+   "items": {
+    "Fusion pistol": 2,
+    "Harlequin’s blade": 4,
+    "Harlequin’s special weapon": 0,
+    "Neuro disruptor": 2,
+    "Power sword": 1,
+    "Shuriken pistol": 1
+   }
+  },
+  "Troupe Master": {
+   "models": 1,
+   "lists": 23,
+   "same": 20,
+   "items": {
+    "Fusion pistol": 1,
+    "Troupe Master’s blade": 1,
+    "flip belt": 1
+   }
+  },
+  "Trukk": {
+   "models": 1,
+   "lists": 79,
+   "same": 52,
+   "items": {
+    "Buzzsaw": 0,
+    "Dual Big Shoota": 0,
+    "Grabbin’ Klaw": 1,
+    "Rokkit Launcha": 1,
+    "Spiked Ram": 1
+   }
+  },
+  "Trygon": {
+   "models": 1,
+   "lists": 34,
+   "same": 34,
+   "items": {
+    "Bio-electric pulse": 1,
+    "Trygon scything talons": 1
+   }
+  },
+  "Typhus": {
+   "models": 1,
+   "lists": 78,
+   "same": 74,
+   "items": {
+    "Lakrimae": 1
+   }
+  },
+  "Tyranid Prime with Lash Whip": {
+   "models": 1,
+   "lists": 110,
+   "same": 110,
+   "items": {
+    "Lash whip": 1,
+    "Rending claw": 1,
+    "Scything talons": 1
+   }
+  },
+  "Tyranid Warriors With Melee Bio-weapons": {
+   "models": 3,
+   "lists": 11,
+   "same": 7,
+   "items": {
+    "Tyranid Warrior claws and talons": 3
+   }
+  },
+  "Tyranid Warriors With Ranged Bio-weapons": {
+   "models": 3,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Barbed strangler": 1,
+    "Deathspitter": 1,
+    "Tyranid Warrior claws and talons": 3,
+    "Venom cannon": 1
+   }
+  },
+  "Tyrannofex": {
+   "models": 1,
+   "lists": 75,
+   "same": 49,
+   "items": {
+    "Acid spray": 1,
+    "Powerful limbs": 1,
+    "Rupture cannon": 0,
+    "Stinger salvoes": 1
+   }
+  },
+  "Tyrant Guard": {
+   "models": 3,
+   "lists": 28,
+   "same": 6,
+   "items": {
+    "Bone cleaver, lash whip and rending claws": 0,
+    "Crushing claws and rending claws": 0,
+    "Scything talons and rending claws": 3
+   }
+  },
+  "Tzaangor Enlightened": {
+   "models": 3,
+   "lists": 31,
+   "same": 26,
+   "items": {
+    "Divining spear": 3
+   }
+  },
+  "Tzaangor Enlightened with Fatecaster Greatbows": {
+   "models": 3,
+   "lists": 43,
+   "same": 38,
+   "items": {
+    "Close combat weapon": 3,
+    "Fatecaster greatbow": 3
+   }
+  },
+  "Tzaangor Shaman": {
+   "models": 1,
+   "lists": 20,
+   "same": 20,
+   "items": {
+    "Baleful Devolution": 1,
+    "Force stave": 1
+   }
+  },
+  "Tzaangors": {
+   "models": 10,
+   "lists": 29,
+   "same": 13,
+   "items": {
+    "Autopistol": 0,
+    "Brayhorn": 1,
+    "Chainsword": 0,
+    "Herd banner": 1,
+    "Tzaangor blades": 10
+   }
+  },
+  "Ulrik The Slayer": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Plasma Pistol": 1
+   }
+  },
+  "Ursula Creed": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Duty and Vengeance": 1,
+    "Power weapon": 1
+   }
+  },
+  "Ûthar the Destined": {
+   "models": 1,
+   "lists": 51,
+   "same": 50,
+   "items": {
+    "Blade of the Ancestors": 1,
+    "Volkanite disintegrator": 1,
+    "rampart crest": 1
+   }
+  },
+  "Valerian": {
+   "models": 1,
+   "lists": 15,
+   "same": 15,
+   "items": {
+    "Gnosis": 1
+   }
+  },
+  "Vanguard Veteran Squad With Jump Packs": {
+   "models": 5,
+   "lists": 43,
+   "same": 17,
+   "items": {
+    "Combat Shield": 5,
+    "Heavy Bolt Pistol": 0,
+    "Master-crafted Power Weapon": 4,
+    "Plasma Pistol": 0,
+    "Power Fist": 0,
+    "Relic Blade": 0,
+    "Thunder Hammer": 1
+   }
+  },
+  "Vashtorr The Arkifane": {
+   "models": 1,
+   "lists": 11,
+   "same": 11,
+   "items": {
+    "Vashtorr’s claw": 1,
+    "Vashtorr’s hammer": 1
+   }
+  },
+  "Venatari with Verutum Lances": {
+   "models": 3,
+   "lists": 65,
+   "same": 64,
+   "items": {
+    "Verutum Lance": 3
+   }
+  },
+  "Venerable Dreadnought": {
+   "models": 1,
+   "lists": 11,
+   "same": 9,
+   "items": {
+    "Dreadnought combat weapon": 0,
+    "Heavy flamer": 1,
+    "Heavy plasma cannon": 0,
+    "Storm bolter": 0
+   }
+  },
+  "Venom": {
+   "models": 1,
+   "lists": 148,
+   "same": 148,
+   "items": {
+    "Bladevanes": 1,
+    "Splinter cannon": 2
+   }
+  },
+  "Venomcrawler": {
+   "models": 1,
+   "lists": 17,
+   "same": 17,
+   "items": {
+    "Excruciator cannon": 2,
+    "Soulflayer tendrils and claws": 1
+   }
+  },
+  "Venomthropes": {
+   "models": 3,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Toxic lashes": 3
+   }
+  },
+  "Vertus Praetors": {
+   "models": 2,
+   "lists": 59,
+   "same": 17,
+   "items": {
+    "Hurricane Bolter": 0,
+    "Interceptor Lance": 2,
+    "Salvo Launcher": 0
+   }
+  },
+  "Vespid Stingwings": {
+   "models": 5,
+   "lists": 43,
+   "same": 41,
+   "items": {
+    "Neutron blaster": 5,
+    "Neutron grenade launcher": 0,
+    "Neutron rail rifle": 0,
+    "Stingwing claws": 5,
+    "T’au flamer": 0
+   }
+  },
+  "Victrix Honour Guard": {
+   "models": 6,
+   "lists": 34,
+   "same": 22,
+   "items": {
+    "Blades of Honour": 1,
+    "Master-crafted Bolt Carbine": 5,
+    "Master-crafted Power Weapon": 5,
+    "banner of Macragge": 1
+   }
+  },
+  "Vigilant Squad": {
+   "models": 11,
+   "lists": 4,
+   "same": 3,
+   "items": {
+    "Arbites combat shotgun": 8,
+    "Arbites grenade launcher": 1,
+    "Arbites shotpistol": 10,
+    "Close combat weapon": 10,
+    "Executioner shotgun": 0,
+    "Heavy stubber": 1,
+    "Mechanical bite": 1
+   }
+  },
+  "Vigilator Squad": {
+   "models": 5,
+   "lists": 19,
+   "same": 14,
+   "items": {
+    "Executioner Greatblade": 5
+   }
+  },
+  "Vindicare Assassin": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Exitus pistol": 1,
+    "Exitus rifle": 1,
+    "Vindicare combat knife": 1
+   }
+  },
+  "Voidraven Bomber": {
+   "models": 1,
+   "lists": 2,
+   "same": 2,
+   "items": {
+    "Bladed wings": 1,
+    "Void lance": 2,
+    "Voidraven missiles": 1
+   }
+  },
+  "Voidsmen-at-arms": {
+   "models": 6,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Artificer shotgun": 1,
+    "Close combat weapon": 5,
+    "Lasgun": 3,
+    "Laspistol": 5,
+    "Vicious bite": 1,
+    "Voidsman rotor cannon": 1
+   }
+  },
+  "Von Ryan’s Leapers": {
+   "models": 3,
+   "lists": 110,
+   "same": 100,
+   "items": {
+    "Leaper’s talons": 3
+   }
+  },
+  "Vulkan He’stan": {
+   "models": 1,
+   "lists": 19,
+   "same": 18,
+   "items": {
+    "Bolt Pistol": 1,
+    "Gauntlet of the Forge": 1,
+    "Spear of Vulkan": 1
+   }
+  },
+  "Vypers": {
+   "models": 1,
+   "lists": 9,
+   "same": 8,
+   "items": {
+    "Bright lance": 1,
+    "Missile launcher": 1,
+    "Shuriken cannon": 0,
+    "Wraithbone hull": 1
+   }
+  },
+  "War Dog Brigand": {
+   "models": 1,
+   "lists": 128,
+   "same": 63,
+   "items": {
+    "Armoured feet": 1,
+    "Avenger chaincannon": 1,
+    "Daemonbreath spear": 1,
+    "Diabolus heavy stubber": 1,
+    "Havoc multi-launcher": 0
+   }
+  },
+  "War Dog Executioner": {
+   "models": 1,
+   "lists": 103,
+   "same": 63,
+   "items": {
+    "Armoured feet": 1,
+    "Daemonbreath meltagun": 0,
+    "Diabolus heavy stubber": 1,
+    "War Dog autocannon": 2
+   }
+  },
+  "War Dog Huntsman": {
+   "models": 1,
+   "lists": 25,
+   "same": 23,
+   "items": {
+    "Daemonbreath meltagun": 1,
+    "Daemonbreath spear": 1,
+    "Diabolus heavy stubber": 0,
+    "Reaper chaintalon": 1
+   }
+  },
+  "War Dog Karnivore": {
+   "models": 1,
+   "lists": 200,
+   "same": 105,
+   "items": {
+    "Diabolus heavy stubber": 1,
+    "Havoc multi-launcher": 0,
+    "Reaper chaintalon": 1,
+    "Slaughterclaw": 1
+   }
+  },
+  "War Dog Stalker": {
+   "models": 1,
+   "lists": 71,
+   "same": 24,
+   "items": {
+    "Avenger chaincannon": 0,
+    "Daemonbreath spear": 1,
+    "Diabolus heavy stubber": 0,
+    "Havoc multi-launcher": 1,
+    "Reaper chaintalon": 0,
+    "Slaughterclaw": 1
+   }
+  },
+  "War Walkers": {
+   "models": 1,
+   "lists": 36,
+   "same": 10,
+   "items": {
+    "Bright lance": 2,
+    "Missile launcher": 0,
+    "Scatter laser": 0,
+    "Shuriken cannon": 0,
+    "Starcannon": 0,
+    "War Walker feet": 1
+   }
+  },
+  "Warbikers": {
+   "models": 3,
+   "lists": 39,
+   "same": 24,
+   "items": {
+    "Choppa": 2,
+    "Dual Dakkagun": 2,
+    "Dual Kombi-rokkit": 1,
+    "Kustom Choppa": 1
+   }
+  },
+  "Warboss": {
+   "models": 1,
+   "lists": 102,
+   "same": 53,
+   "items": {
+    "Kombi-rokkit": 1,
+    "Kombi-skorcha": 0,
+    "Kustom Choppa": 0,
+    "Kustom Shoota": 0,
+    "Power Klaw": 1
+   }
+  },
+  "Warboss In Mega Armour": {
+   "models": 1,
+   "lists": 37,
+   "same": 36,
+   "items": {
+    "Big Shoota": 1,
+    "’Uge Choppa": 1
+   }
+  },
+  "Wardens of Ultramar": {
+   "models": 6,
+   "lists": 44,
+   "same": 39,
+   "items": {
+    "Archeotech Laspistol": 3,
+    "Astropathic Blast": 1,
+    "Bolt Rifle": 1,
+    "Ceramite Fists": 1,
+    "Force Stave": 1,
+    "Heavy Bolt Pistol": 1,
+    "Master-crafted Power Weapon": 1,
+    "Power Weapon": 2,
+    "Ultramarian Combat Weapons": 1
+   }
+  },
+  "Warlock": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Destructor": 1,
+    "Shuriken pistol": 1,
+    "Witchblade": 1
+   }
+  },
+  "Warlock Conclave": {
+   "models": 4,
+   "lists": 21,
+   "same": 15,
+   "items": {
+    "Destructor": 4,
+    "Shuriken pistol": 4,
+    "Singing spear": 4,
+    "Witchblade": 0
+   }
+  },
+  "Warlock Skyrunners": {
+   "models": 1,
+   "lists": 9,
+   "same": 4,
+   "items": {
+    "Destructor": 1,
+    "Shuriken pistol": 1,
+    "Singing spear": 1,
+    "Twin shuriken catapult": 1,
+    "Witchblade": 0
+   }
+  },
+  "Warp Spiders": {
+   "models": 5,
+   "lists": 34,
+   "same": 13,
+   "items": {
+    "Close combat weapon": 5,
+    "Death spinner": 4,
+    "Death weavers": 0,
+    "Exarch’s death spinner": 0,
+    "Powerblade array": 1,
+    "Powerblades": 0,
+    "Spinneret rifle": 0
+   }
+  },
+  "Warp Talons": {
+   "models": 5,
+   "lists": 7,
+   "same": 4,
+   "items": {
+    "Warp claws": 5
+   }
+  },
+  "Warpsmith": {
+   "models": 1,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Flamer tendril": 1,
+    "Forge weapon": 1,
+    "Melta tendril": 1,
+    "Plasma pistol": 1
+   }
+  },
+  "Wartrakks": {
+   "models": 1,
+   "lists": 26,
+   "same": 24,
+   "items": {
+    "Kustom Choppa": 1,
+    "Kustom Shoota": 1,
+    "Multi-busta Launcha": 1
+   }
+  },
+  "Watch Captain Artemis": {
+   "models": 1,
+   "lists": 7,
+   "same": 7,
+   "items": {
+    "Hellfire Extremis": 1,
+    "Master-crafted power weapon": 1
+   }
+  },
+  "Watch Master": {
+   "models": 1,
+   "lists": 19,
+   "same": 19,
+   "items": {
+    "Vigil spear": 1
+   }
+  },
+  "Wave Serpent": {
+   "models": 1,
+   "lists": 14,
+   "same": 12,
+   "items": {
+    "Shuriken cannon": 1,
+    "Twin bright lance": 1,
+    "Twin shuriken catapult": 0,
+    "Wraithbone hull": 1
+   }
+  },
+  "Wazbom Blastajet": {
+   "models": 1,
+   "lists": 33,
+   "same": 17,
+   "items": {
+    "Armoured Impact": 1,
+    "Blastajet Force Field": 1,
+    "Dual Supa-shoota": 1,
+    "Dual Tellyport Mega-blasta": 1,
+    "Dual Wazbom Mega-kannon": 0,
+    "Smasha Gun": 1
+   }
+  },
+  "Wazdakka Gutsmek": {
+   "models": 1,
+   "lists": 37,
+   "same": 36,
+   "items": {
+    "Fixit’s Wrench": 1,
+    "Grabba Dragga": 1,
+    "Psyko-gatler": 1,
+    "Speeding Bulk and Flaming Exhaust": 1
+   }
+  },
+  "Weirdboy": {
+   "models": 1,
+   "lists": 4,
+   "same": 4,
+   "items": {
+    "Copper Staff": 1,
+    "Power Vomit": 1
+   }
+  },
+  "Windriders": {
+   "models": 6,
+   "lists": 24,
+   "same": 12,
+   "items": {
+    "Close combat weapon": 6,
+    "Shuriken cannon": 6
+   }
+  },
+  "Winged Hive Tyrant": {
+   "models": 1,
+   "lists": 9,
+   "same": 7,
+   "items": {
+    "Heavy venom cannon": 0,
+    "Monstrous bonesword and lash whip": 1,
+    "Tyrant talons": 1
+   }
+  },
+  "Winged Tyranid Prime": {
+   "models": 1,
+   "lists": 3,
+   "same": 3,
+   "items": {
+    "Prime talons": 1
+   }
+  },
+  "Witchseeker Squad": {
+   "models": 5,
+   "lists": 204,
+   "same": 113,
+   "items": {
+    "Flamer": 5,
+    "Gun Stock": 5
+   }
+  },
+  "Wolf Guard Battle Leader": {
+   "models": 1,
+   "lists": 35,
+   "same": 24,
+   "items": {
+    "Master-crafted Power Weapon": 0,
+    "Plasma Pistol": 0,
+    "Storm Shield": 1,
+    "Thunder Hammer": 1
+   }
+  },
+  "Wolf Guard Headtakers": {
+   "models": 6,
+   "lists": 42,
+   "same": 11,
+   "items": {
+    "Heavy Bolt Pistol": 6,
+    "Master-crafted Power Weapon": 6,
+    "Paired Master-crafted Power Weapons": 0,
+    "Storm Shield": 6,
+    "Teeth and Claws": 0
+   }
+  },
+  "Wolf Guard Terminators": {
+   "models": 10,
+   "lists": 58,
+   "same": 17,
+   "items": {
+    "Assault Cannon": 2,
+    "Master-crafted Power Weapon": 7,
+    "Power Fist": 2,
+    "Relic Great Axe": 0,
+    "Storm Bolter": 0,
+    "Storm Shield": 7,
+    "Twin Lightning Claws": 0
+   }
+  },
+  "Wolf Priest": {
+   "models": 1,
+   "lists": 25,
+   "same": 24,
+   "items": {
+    "Absolvor Bolt Pistol": 1,
+    "Crozius Arcanum": 1
+   }
+  },
+  "Wolf Scouts": {
+   "models": 6,
+   "lists": 13,
+   "same": 6,
+   "items": {
+    "Bolt Pistol": 1,
+    "Combat Knife": 3,
+    "Haywire Mine": 0,
+    "Plasma Gun": 1,
+    "Plasma Pistol": 3,
+    "Power Weapon": 1,
+    "Runic Stave": 1,
+    "Teeth and Claws": 1,
+    "Thunderclap": 1
+   }
+  },
+  "Wracks": {
+   "models": 5,
+   "lists": 8,
+   "same": 2,
+   "items": {
+    "Hexrifle": 1,
+    "Liquifier gun": 1,
+    "Ossefactor": 1,
+    "Power weapon": 1,
+    "Stinger pistol": 1,
+    "Torturer’s tools": 3,
+    "Twin torturer’s tools": 1
+   }
+  },
+  "Wraithblades": {
+   "models": 5,
+   "lists": 32,
+   "same": 27,
+   "items": {
+    "Forceshield": 5,
+    "Ghostaxe": 5,
+    "Ghostswords": 0
+   }
+  },
+  "Wraithguard": {
+   "models": 5,
+   "lists": 26,
+   "same": 24,
+   "items": {
+    "Close combat weapon": 5,
+    "D-scythe": 5,
+    "Wraithcannon": 0
+   }
+  },
+  "Wraithknight": {
+   "models": 1,
+   "lists": 2,
+   "same": 1,
+   "items": {
+    "Heavy wraithcannon": 1,
+    "Shuriken cannon": 0,
+    "Starcannon": 2,
+    "Suncannon": 1,
+    "Titanic feet": 1
+   }
+  },
+  "Wraithknight with Ghostglaive": {
+   "models": 1,
+   "lists": 9,
+   "same": 7,
+   "items": {
+    "Scattershield": 1,
+    "Shuriken cannon": 0,
+    "Starcannon": 2,
+    "Titanic ghostglaive": 1
+   }
+  },
+  "Wraithlord": {
+   "models": 1,
+   "lists": 45,
+   "same": 44,
+   "items": {
+    "Bright lance": 2,
+    "Flamer": 2,
+    "Ghostglaive": 1,
+    "Shuriken catapult": 0,
+    "Wraithbone fists": 1
+   }
+  },
+  "Wulfen": {
+   "models": 5,
+   "lists": 8,
+   "same": 5,
+   "items": {
+    "Death totem": 1,
+    "Stormfrag Auto-launcher": 4,
+    "Wulfen Weapons": 5
+   }
+  },
+  "Wulfen with Storm Shields": {
+   "models": 10,
+   "lists": 45,
+   "same": 26,
+   "items": {
+    "Death totem": 1,
+    "Stormfrag Auto-launcher": 9,
+    "Thunder Hammer": 10
+   }
+  },
+  "Wyches": {
+   "models": 10,
+   "lists": 132,
+   "same": 120,
+   "items": {
+    "Blast pistol": 1,
+    "Gladiatorial weapons": 3,
+    "Hekatarii blade": 6,
+    "Power weapon": 1,
+    "Splinter pistol": 6
+   }
+  },
+  "Ynnari Kabalite Warriors": {
+   "models": 10,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Blast pistol": 1,
+    "Blaster": 1,
+    "Close combat weapon": 9,
+    "Dark lance": 1,
+    "Phantasm grenade launcher": 1,
+    "Shredder": 1,
+    "Splinter cannon": 1,
+    "Splinter rifle": 5,
+    "Sybarite weapon": 1
+   }
+  },
+  "Ynnari Reavers": {
+   "models": 3,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Agoniser": 1,
+    "Bladevanes": 3,
+    "Cluster caltrops": 1,
+    "Heat lance": 1,
+    "Splinter pistol": 3,
+    "Splinter rifle": 2
+   }
+  },
+  "Ynnari Venom": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Bladevanes": 1,
+    "Splinter cannon": 2
+   }
+  },
+  "Yvraine": {
+   "models": 1,
+   "lists": 1,
+   "same": 1,
+   "items": {
+    "Kha-vir": 1,
+    "Storm of Whispers": 1
+   }
+  },
+  "Zephyrim Squad": {
+   "models": 5,
+   "lists": 15,
+   "same": 11,
+   "items": {
+    "Bolt pistol": 4,
+    "Plasma pistol": 1,
+    "Power weapon": 5,
+    "Sacred banner": 1
+   }
+  },
+  "Zoanthropes": {
+   "models": 3,
+   "lists": 68,
+   "same": 42,
+   "items": {
+    "Chitinous claws and teeth": 3,
+    "Warp Blast": 3
+   }
+  },
+  "Zodgrod Wortsnagga": {
+   "models": 1,
+   "lists": 17,
+   "same": 16,
+   "items": {
+    "Da Grabzappa": 1,
+    "Squigstoppa": 1
+   }
+  }
+ }
+}

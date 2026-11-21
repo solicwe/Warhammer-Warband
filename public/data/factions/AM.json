@@ -8790,7 +8790,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Vindictor"
+            "Zealot’s vindictor"
           ],
           "choices": [
             [
@@ -10774,19 +10774,31 @@
       ],
       "composition": [
         {
-          "name": "Shock Trooper Sergeant and 9 Shock Troopers",
+          "name": "Shock Trooper Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Shock Trooper Sergeant and 9 Shock Troopers"
+          "text": "1 Shock Trooper Sergeant"
+        },
+        {
+          "name": "Shock Troopers",
+          "min": 9,
+          "max": 9,
+          "text": "9 Shock Troopers"
         },
         {
           "text": "OR"
         },
         {
-          "name": "Shock Trooper Sergeants and 18 Shock Troopers",
+          "name": "Shock Trooper Sergeants",
           "min": 2,
           "max": 2,
-          "text": "2 Shock Trooper Sergeants and 18 Shock Troopers"
+          "text": "2 Shock Trooper Sergeants"
+        },
+        {
+          "name": "Shock Troopers",
+          "min": 18,
+          "max": 18,
+          "text": "18 Shock Troopers"
         }
       ],
       "loadout": {
@@ -10868,7 +10880,7 @@
           ],
           "choices": [
             [
-              "Autogun",
+              "Sergeant's autogun",
               "Close combat weapon"
             ]
           ]
@@ -11131,19 +11143,31 @@
       ],
       "composition": [
         {
-          "name": "Jungle Fighter Sergeant and 9 Jungle Fighters",
+          "name": "Jungle Fighter Sergeant",
           "min": 1,
           "max": 1,
-          "text": "1 Jungle Fighter Sergeant and 9 Jungle Fighters"
+          "text": "1 Jungle Fighter Sergeant"
+        },
+        {
+          "name": "Jungle Fighters",
+          "min": 9,
+          "max": 9,
+          "text": "9 Jungle Fighters"
         },
         {
           "text": "OR"
         },
         {
-          "name": "Jungle Fighter Sergeants and 18 Jungle Fighters",
+          "name": "Jungle Fighter Sergeants",
           "min": 2,
           "max": 2,
-          "text": "2 Jungle Fighter Sergeants and 18 Jungle Fighters"
+          "text": "2 Jungle Fighter Sergeants"
+        },
+        {
+          "name": "Jungle Fighters",
+          "min": 18,
+          "max": 18,
+          "text": "18 Jungle Fighters"
         }
       ],
       "loadout": {
@@ -15909,6 +15933,18 @@
           "choices": [
             [
               "Master vox"
+            ]
+          ],
+          "max": 1
+        },
+        {
+          "text": "1 Veteran Guardsman equipped with a lasgun can be equipped with 1 medi-pack.**",
+          "scope": "upTo",
+          "who": "Veteran Guardsman",
+          "replace": [],
+          "choices": [
+            [
+              "Medi-pack"
             ]
           ],
           "max": 1

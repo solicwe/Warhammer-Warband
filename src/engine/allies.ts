@@ -9,6 +9,8 @@ export interface AllySource {
   rule: string;
   army: (factionId: string, group?: string) => boolean;
   unit: (d: DatasheetData) => boolean;
+  /** allied datasheets that copy a unit of another book: not offered to that book's own armies (owner, 21 Nov 2026) */
+  notFor?: Record<string, string[]>;
 }
 
 const has = (d: DatasheetData, k: string) => d.keywords.includes(k);
@@ -16,7 +18,9 @@ const has = (d: DatasheetData, k: string) => d.keywords.includes(k);
 export const ALLIES: AllySource[] = [
   { id: 'QI', rule: 'Freeblades', army: (id, g) => g === 'Imperium' && id !== 'QI', unit: (d) => has(d, 'TITANIC') || has(d, 'ARMIGER') },
   { id: 'TL', rule: 'Titanic Support', army: (id, g) => g === 'Imperium' && id !== 'TL', unit: () => true },
-  { id: 'AoI', rule: 'Assigned Agents', army: (id, g) => g === 'Imperium' && id !== 'AoI', unit: () => true },
+  { id: 'AoI', rule: 'Assigned Agents', army: (id, g) => g === 'Imperium' && id !== 'AoI', unit: () => true,
+    // the Ordos' requisitioned squads: a Space Marine army has its own Deathwatch, Grey Knights and Sisters their own squads
+    notFor: { 'Deathwatch Kill Team': ['SM'], 'Aquila Kill Team': ['SM'], 'Grey Knights Terminator Squad': ['GK'], 'Sisters of Battle Squad': ['AS'], 'Sisters of Battle Immolator': ['AS'] } },
   { id: 'QT', rule: 'Dreadblades', army: (id, g) => g === 'Chaos' && id !== 'QT', unit: (d) => has(d, 'TITANIC') || has(d, 'WAR DOG') },
   // no Daemonic Pact: a Chaos army brings only Chaos Knights as allies (owner, 20 Nov 2026)
 ];
@@ -36,7 +40,7 @@ export function withAllies(f: FactionData, allies: { src: AllySource; data: Fact
   const extra: DatasheetData[] = [];
   for (const { src, data } of allies) {
     for (const d of data.datasheets) {
-      if (names.has(d.name) || !src.unit(d)) continue;
+      if (names.has(d.name) || !src.unit(d) || src.notFor?.[d.name]?.includes(f.id)) continue;
       names.add(d.name);
       extra.push({ ...d, ally: src.id, allyName: data.name });
     }

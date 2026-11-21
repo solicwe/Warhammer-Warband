@@ -931,8 +931,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Monstrous bonesword",
-            "Lash whip"
+            "Monstrous bonesword and lash whip"
           ],
           "choices": [
             [
@@ -2317,18 +2316,14 @@
           "scope": "any",
           "who": "*",
           "replace": [
-            "Scything talons",
-            "Rending claws"
+            "Scything talons and rending claws"
           ],
           "choices": [
             [
-              "Bone cleaver",
-              "Lash whip",
-              "Rending claws"
+              "Bone cleaver, lash whip and rending claws"
             ],
             [
-              "Crushing claws",
-              "Rending claws"
+              "Crushing claws and rending claws"
             ]
           ]
         }
@@ -5729,8 +5724,7 @@
           "scope": "one",
           "who": "*",
           "replace": [
-            "Monstrous bonesword",
-            "Lash whip"
+            "Monstrous bonesword and lash whip"
           ],
           "choices": [
             [

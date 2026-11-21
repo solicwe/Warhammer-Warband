@@ -56,3 +56,12 @@ describe('allied units', () => {
   });
 
 });
+
+// Owner, 21 Nov 2026: an army is not offered allied copies of its own units (Space Marines have their own Deathwatch)
+it('Assigned Agents leaves out the requisitioned squads an army already has', () => {
+  const sm = merged('SM', 'Imperium').datasheets.map((d) => d.name);
+  expect(sm).not.toContain('Deathwatch Kill Team');
+  expect(merged('GK', 'Imperium').datasheets.map((d) => d.name)).not.toContain('Grey Knights Terminator Squad');
+  expect(merged('AS', 'Imperium').datasheets.map((d) => d.name)).not.toContain('Sisters of Battle Squad');
+  expect(merged('AM', 'Imperium').datasheets.map((d) => d.name)).toContain('Deathwatch Kill Team');
+});
