@@ -3602,6 +3602,282 @@
     }
    },
    "seconds": 826
+  },
+  {
+   "date": "2026-11-21",
+   "label": "before 21 Nov (d12259e)",
+   "commit": "d12259e",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 15,
+   "draw": 0,
+   "loss": 33,
+   "score": 0.313,
+   "elo": -137,
+   "ci": [
+    -262,
+    -39
+   ],
+   "margin": -6.4,
+   "rating": 1421,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -42.3
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -24
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -17.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -45
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -7
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 47
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -7
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -16
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "CD": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -14
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 38.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 42.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 48
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -10
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 24.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0,
+     "margin": -17
+    },
+    "WE": {
+     "games": 2,
+     "score": 0,
+     "margin": -15
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -47
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -26
+    }
+   },
+   "seconds": 552
+  },
+  {
+   "date": "2026-11-21",
+   "label": "fight in parts, CP cap, whole-deck squads ride (21 Nov)",
+   "commit": "d53f08c",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 16,
+   "draw": 0,
+   "loss": 32,
+   "score": 0.333,
+   "elo": -120,
+   "ci": [
+    -241,
+    -23
+   ],
+   "margin": -9,
+   "rating": 1438,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -40.7
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -21.7
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -17.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -27
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -16
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -7.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -6.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -19.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 44.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 36
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 33
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -8
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -13.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -29
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 35.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -49.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -18
+    }
+   },
+   "seconds": 537
   }
  ]
 }

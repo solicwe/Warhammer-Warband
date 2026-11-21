@@ -43,7 +43,7 @@ function runWorker(job) {
     const file = path.join(TMP, `job-${Math.random().toString(36).slice(2)}.json`);
     job.out = `${file}.out`;
     fs.writeFileSync(file, JSON.stringify(job));
-    const p = spawn('npx', ['vitest', 'run', '--config', 'vitest.slow.config.ts', 'src/engine/tune.test.ts', '--reporter=dot'], { env: { ...process.env, TUNE_JOB: file }, stdio: 'ignore' });
+    const p = spawn('npx', ['vitest', 'run', '--config', 'vitest.slow.config.ts', 'src/engine/tune.test.ts', '--reporter=dot'], { env: { ...process.env, TUNE_JOB: file }, stdio: 'ignore', shell: process.platform === 'win32' }); // Windows: npx is npx.cmd, found only through a shell
     p.on('exit', () => {
       try { resolve(JSON.parse(fs.readFileSync(job.out, 'utf8'))); } catch { resolve(job.games.map(() => ({ error: 'worker failed' }))); }
     });
