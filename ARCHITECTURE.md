@@ -153,7 +153,11 @@ scored in `botMove.ts` with weights from `data/bot-weights.json` (tuned by `scri
 than 150 models brought) it plans with a quicker search so a 2000-point game does not freeze. `botPlan.ts` gives
 every unit a role for the turn (home, anchor on an objective, hammer that hunts, screen, firebase, support, taxi);
 each objective gets a holder before units go hunting (`pointsFirst`), unless the Idle tactic is `assault`.
-`botLook.ts` plays a few copies of the turn in different styles and keeps the best. `botStrats.ts` spends CP, `botPlus.ts` handles choices (doctrines,
+`botLook.ts` plays a few copies of the turn in different styles and keeps the best. At the expert level only,
+`botTurnPlan.ts` plans the turn the way a tournament player does: just enough OC to each objective from the
+cheapest units that reach it, the enemy models that must die for an objective to change hands, the screen in front
+of a planned charge, cards for the units left free, and screens round the home objective against Deep Strike;
+movement, target choice, charges and the secondaries read it. `botStrats.ts` spends CP, `botPlus.ts` handles choices (doctrines,
 abilities with a decision). In the browser the bot thinks in a Web Worker (`ui/lookWorker.ts`) so the screen stays
 live; a step the worker has not answered in 90 s is played on the main thread. Idle mode hands the player's side to
 the same code. The live bot is measured against a frozen copy in `src/ai/baseline/` (`arena.test.ts`,

@@ -5810,6 +5810,286 @@
    },
    "seconds": 1757,
    "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "expert vs normal, before turn plan (fec7f1b)",
+   "commit": "fec7f1b",
+   "lookahead": true,
+   "games": 96,
+   "errors": 0,
+   "win": 46,
+   "draw": 3,
+   "loss": 47,
+   "score": 0.495,
+   "elo": -4,
+   "ci": [
+    -74,
+    67
+   ],
+   "margin": 0,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 5,
+     "score": 0.8,
+     "margin": 11.8
+    },
+    "AE": {
+     "games": 4,
+     "score": 0,
+     "margin": -33.3
+    },
+    "QT": {
+     "games": 4,
+     "score": 0.38,
+     "margin": -12.8
+    },
+    "DRU": {
+     "games": 4,
+     "score": 0.63,
+     "margin": -11
+    },
+    "GK": {
+     "games": 5,
+     "score": 0.6,
+     "margin": 5.8
+    },
+    "LoV": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -3
+    },
+    "SM": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 10.5
+    },
+    "TYR": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 21.5
+    },
+    "AC": {
+     "games": 5,
+     "score": 0.2,
+     "margin": -10.2
+    },
+    "AM": {
+     "games": 4,
+     "score": 0.13,
+     "margin": -18.8
+    },
+    "CSM": {
+     "games": 4,
+     "score": 0.5,
+     "margin": -17.8
+    },
+    "EC": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 22.8
+    },
+    "AoI": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -10.5
+    },
+    "NEC": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 6.5
+    },
+    "TAU": {
+     "games": 4,
+     "score": 0,
+     "margin": -22.3
+    },
+    "WE": {
+     "games": 4,
+     "score": 0.75,
+     "margin": -1
+    },
+    "TS": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 21.5
+    },
+    "QI": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -4.5
+    },
+    "GC": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 9.5
+    },
+    "CD": {
+     "games": 5,
+     "score": 0.6,
+     "margin": -1.4
+    },
+    "AdM": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 15.8
+    },
+    "DG": {
+     "games": 4,
+     "score": 0.5,
+     "margin": -14.8
+    },
+    "ORK": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 34
+    }
+   },
+   "seconds": 5711,
+   "kind": "levels",
+   "level": "expert",
+   "vsLevel": "normal"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "expert vs normal, turn plan (uncommitted on fec7f1b; pair margin -1.4 +- 4.0 against 0.0 before)",
+   "commit": "fec7f1b+",
+   "lookahead": true,
+   "games": 96,
+   "errors": 0,
+   "win": 45,
+   "draw": 1,
+   "loss": 50,
+   "score": 0.474,
+   "elo": -18,
+   "ci": [
+    -89,
+    52
+   ],
+   "margin": -0.7,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 5,
+     "score": 0.8,
+     "margin": 8.4
+    },
+    "AE": {
+     "games": 4,
+     "score": 0,
+     "margin": -21.8
+    },
+    "QT": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -13.3
+    },
+    "DRU": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -3
+    },
+    "GK": {
+     "games": 5,
+     "score": 0.4,
+     "margin": 4.6
+    },
+    "LoV": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 3
+    },
+    "SM": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 4
+    },
+    "TYR": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 23
+    },
+    "AC": {
+     "games": 5,
+     "score": 0,
+     "margin": -25.2
+    },
+    "AM": {
+     "games": 4,
+     "score": 0.5,
+     "margin": -15.3
+    },
+    "CSM": {
+     "games": 4,
+     "score": 0.63,
+     "margin": 2.5
+    },
+    "EC": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 19
+    },
+    "AoI": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -5.3
+    },
+    "NEC": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 1.5
+    },
+    "TAU": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -35.3
+    },
+    "WE": {
+     "games": 4,
+     "score": 0.25,
+     "margin": -3.5
+    },
+    "TS": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 17.3
+    },
+    "QI": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 4.5
+    },
+    "GC": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 2.5
+    },
+    "CD": {
+     "games": 5,
+     "score": 0.4,
+     "margin": -2.4
+    },
+    "AdM": {
+     "games": 4,
+     "score": 0.5,
+     "margin": 4.3
+    },
+    "DG": {
+     "games": 4,
+     "score": 0.5,
+     "margin": -3.5
+    },
+    "ORK": {
+     "games": 4,
+     "score": 0.75,
+     "margin": 20.5
+    }
+   },
+   "seconds": 5677,
+   "kind": "levels",
+   "level": "expert",
+   "vsLevel": "normal"
   }
  ]
 }

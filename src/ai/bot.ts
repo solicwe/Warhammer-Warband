@@ -36,7 +36,8 @@ import { secondaryChance, secondaryDead } from '../engine/secondaries';
 import {
   centre, isBrawler, lockValue, maxRange, meleeKills, moveOf, oc, rangedKills, objectiveNeeds, objPoint, onObjective, p2d6, perModel, shotValue as shotWorth, unitValue,
 } from './botEval';
-import { arrivalStrike, bestArrival, bestFallBack, bestMove, canLeave, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
+import { arrivalStrike, bestArrival, bestFallBack, bestMove, canLeave, cardJobs, ctxFor, movesTowards, planMove, scoreSpot } from './botMove';
+import { isExpert, turnPlan } from './botTurnPlan';
 import {
   botCounteroffensive, botCrushingImpact, botEpicChallenge, botExplosives, botHeroic, botOffensiveStratagem, botRapidIngress, botSmokescreen, isBot, wantsBravery,
 } from './botStrats';
@@ -170,8 +171,19 @@ export function botManageCards(s: GameState, p: PlayerId) {
   }
 }
 
-// dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now)
-const cardIsDead = (s: GameState, p: PlayerId, id: string) => secondaryDead(s, p, id) || (s.round < lastRound(s) && secondaryChance(s, p, id) < 0.2);
+/** Cards that need a unit somewhere (an area, an objective, a board edge): cardJobs sends one. */
+const PLACE_CARDS = ['behind-enemy-lines', 'outflank', 'centre-ground', 'beacon', 'plunder', 'cleanse', 'a-tempting-target'];
+// dead, or very unlikely to score this turn: the slot is better used by a fresh card next turn (and +1CP now). The
+// expert lets go sooner (a fresh card scores about half the time), and of a place card no free unit can reach
+export const cardIsDead = (s: GameState, p: PlayerId, id: string) => {
+  if (secondaryDead(s, p, id)) return true;
+  if (s.round >= lastRound(s)) return false;
+  const chance = secondaryChance(s, p, id);
+  if (chance < 0.2) return true;
+  if (!isExpert(s, p) || botOff('tpCards')) return false;
+  if (chance < 0.3) return true;
+  return PLACE_CARDS.includes(id) && chance < 0.5 && ![...cardJobs(s, p).values()].some((j) => j.card === id);
+};
 
 // at the end of its own turn, after scoring, the bot discards the cards that cannot score (Event Companion)
 setEndOfTurnDiscardHook((s, p) => s.players[p].secMode !== 'tactical' || s.botIgnoresCards?.includes(p) ? [] : s.players[p].secActive.filter((id) => cardIsDead(s, p, id)));
@@ -719,6 +731,7 @@ export function botChargeOne(s: GameState, eager = false): boolean {
     const gunsLost = brawler || bigGuns || s.round >= lastRound(s) ? 0 : Math.max(0, ...boardUnits(s, other(u.owner)).map((e) => Math.min(alive(e).length, rangedKills(u, e)) * perModel(e))) * 0.6;
     // what the enemy answers with: Fire Overwatch from its best gun in range, a Heroic Intervention from a fighter nearby
     const threat = chargeAnswer(s, u);
+    const tp = botOff('tpCharge') ? null : turnPlan(s, u.owner);
     const value = (e: UnitState) => {
       let v = meleeKills(u, e) * perModel(e) - meleeKills(e, u) * perModel(u) * 0.5 + (s.players[u.owner].oathTarget === e.id ? 8 : 0) - gunsLost;
       // a gun line we tie up can't shoot next turn (a cheap unit traded for its shooting)
@@ -727,6 +740,13 @@ export function botChargeOne(s: GameState, eager = false): boolean {
       if (isBrawler(s, e) && unitDistance(u, e) <= moveOf(e) + 12) v += meleeKills(e, u) * perModel(u) * 0.4;
       // an objective they hold: our models on it contest it
       if (s.objectives.some((o) => onObjective(s, e, o))) v += 10;
+      if (tp) {
+        // the expert's plan: the target it lined this charge up for (its screen shot first), and no second charger
+        // into a unit ours already in melee with it are enough to finish
+        if (tp.charges.get(u.id) === e.id) v += 12;
+        const on = boardUnits(s, u.owner).filter((f) => f.id !== u.id && engagedEnemies(s, f).some((x) => x.id === e.id));
+        if (v > 0 && on.reduce((a, f) => a + meleeKills(f, e), 0) >= alive(e).length * 1.2) v *= 0.3;
+      }
       return v;
     };
     const best = [...enemies].sort((a, b) => value(b) * p2d6(unitDistance(u, b)) - value(a) * p2d6(unitDistance(u, a)))[0];

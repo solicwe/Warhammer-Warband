@@ -12,6 +12,7 @@ description: Change, measure or debug Warhammer Warband's bot (movement, roles, 
 | Entry | `src/ai/bot.ts` | `botStep(s, p)` plays one step for side p; `botShouldAct`; shooting order (`botShootOne`) |
 | Movement | `src/ai/botMove.ts` | scores places to move with weights from `data/bot-weights.json`; quick planning on big boards (`bigBoard`: more than 150 models brought; `isFastPlanning`) |
 | Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)`: objectives get holders before units hunt unless `s.idleTactic === 'assault'` |
+| Turn plan (expert only) | `src/ai/botTurnPlan.ts` | `turnPlan(s, p)`: just enough OC per objective from the cheapest units (`post`, `covered`), models to kill for an objective to change hands or to clear a charge's screen (`kills`, read by `shotValue`), one charger per target (`charges`); cards go to units it left free, the expert discards cards under a 30% chance, and screens its home objective against Deep Strike. Null for every other level. Parts off: `BOT_OFF=turnplan,tpPosts,tpKills,tpCharge,tpCards,tpHome` |
 | Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue, assault); `chooseTurnStyle` plays copies of the turn to pick one |
 | CP and stratagems | `src/ai/botStrats.ts` | which stratagem, when; re-rolls |
 | Choices | `src/ai/botPlus.ts`, `botRituals.ts` | doctrines, abilities with a decision, Rituals |
@@ -66,4 +67,10 @@ look-ahead tries; phones skip the look-ahead.
   like the others +0.5 +- 3.4, wargear as the meta +4.4 +- 5.1 (none of them proven). Before the change the live bot
   lost mostly primary VP in rounds 3-5 (48 games, `src/zz` VP split); after it, it still wins only 42% of games
   against the October baseline (-58 Elo) though its VP margin is close to level (-3.3 +- 4.2 VP per pair).
+- Expert turn plan (23 Nov 2026, `botTurnPlan.ts`): expert against normal, pair margin -1.4 +- 4.0 VP over 96 games
+  with `--look` (0.0 before) and +2.6 +- 5.3 over 48 games without; kept for its coordinated play, not for strength.
+  Measure expert against normal with `src/zz` games that set `s.botLevels` and play `botAct` with the lookahead off:
+  before the plan both levels played the same moves, so every pair came out at exactly 0 and the after run alone is
+  the effect. `chooseTurnStyle` skips the lookahead when the game has 20 units or more, so `elo.mjs --look` hardly
+  tests the lookahead (the app's worker calls `lookAhead` directly and does think).
 - `node scripts/elo.mjs` failed on Windows until 21 Nov 2026 (`spawn npx ENOENT`; fixed with `shell: true` on win32), so no Elo was measured between 9 Oct and 21 Nov. To tell whether a change hurt the bot, run the same seed on the commit before it as well (a `git -c core.longpaths=true worktree add` in a short path such as `C:/Users/prem2/wtb`, with a junction to `node_modules`) and compare the two runs, not the run with the October numbers. On 21 Nov both were near 32% against the October baseline: the drop came between October and 20 Nov, not from that day's rules.

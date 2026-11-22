@@ -9,6 +9,7 @@ import { levelOfControl, objectiveTerrain } from '../engine/game';
 import { alive, boardUnits, other } from '../engine/state';
 import { isMelee } from '../engine/weapons';
 import { botOff } from './botWeights';
+import { planKillBonus } from './botTurnPlan';
 import type { GameState, ObjectiveState, PlayerId, UnitState, WeaponProfileData } from '../engine/types';
 
 export const centre = (u: UnitState) => polyCentroid(alive(u));
@@ -155,6 +156,8 @@ export function shotValue(s: GameState, u: UnitState, t: UnitState, ev: number, 
   const onObj = s.objectives.some((o) => onObjective(s, t, o));
   if (onObj) v *= 1.25;
   if (isBrawler(s, t) && gap < 14) v *= 1.2; // threatens us next turn
+  // the expert's turn plan (botTurnPlan.ts): models that must die for an objective to change hands, a charge's screen
+  v += planKillBonus(s, u.owner, t, kills);
   if (!botOff('targets')) {
     // what it would do to us next turn: each model killed takes its share of that away
     v += unitPunch(s, t) * (kills / Math.max(1, left)) * 0.5;

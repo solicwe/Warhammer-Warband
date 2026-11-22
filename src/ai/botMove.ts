@@ -18,6 +18,7 @@ import {
   centre, chargeValue, isBrawler, maxRange, meleeKills, moveOf, objPoint, oc, objectiveNeeds, p2d6, perModel, rangedKills, securesObjectives, shotValue, unitValue,
 } from './botEval';
 import { getArchetypeForPlayer, isScreeningUnit, needsDeepStrikeScreening } from './factionArchetypes';
+import { isExpert, turnPlan } from './botTurnPlan';
 import type { GameState, ModelState, MoveKind, PlayerId, Pt, UnitState } from '../engine/types';
 import {
   determineMoveStance, getThreatGrid, isInForbiddenFootprintZone, pushOutOfFootprint,
@@ -392,7 +393,7 @@ const cardCache = new WeakMap<GameState, { key: string; jobs: Map<string, { aim:
  * unit that gets there soonest takes each card, the way a player sends a cheap squad to score a card while the army
  * fights. Cards about killing are left to the target choice.
  */
-function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }> {
+export function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: string; done: (u: UnitState) => boolean }> {
   const BOARD_W = tableW(s), BOARD_H = tableH(s);
   const P = s.players[p];
   const key = `${s.turn}|${s.phase}|${p}|${P.secActive.join(',')}|${boardUnits(s, p).map((u) => u.id + ':' + alive(u).length).join(',')}`;
@@ -403,8 +404,10 @@ function cardJobs(s: GameState, p: PlayerId): Map<string, { aim: Pt; card: strin
     const quarters = quarterJobs(s, p);
     // the squad kept on the home objective stays there (a card is no reason to give up home)
     const plan = armyPlan(s, p);
+    // the expert sends units its turn plan has not already sent to an objective
+    const tp = botOff('tpCards') ? null : turnPlan(s, p);
     const free = boardUnits(s, p).filter((u) => !u.transport && !isEngaged(s, u) && !hasKw(u, 'AIRCRAFT') && !hasKw(u, 'MONSTER') && !quarters.has(u.id)
-      && unitValue(u) <= 150 && !(isBrawler(s, u) && unitValue(u) > 90) && !followedJob(plan, u.id)?.keep);
+      && unitValue(u) <= 150 && !(isBrawler(s, u) && unitValue(u) > 90) && !followedJob(plan, u.id)?.keep && !tp?.post.has(u.id));
     const mine = zonePoly(s, p), theirs = zonePoly(s, other(p));
     const centreB = { x: BOARD_W / 2, y: BOARD_H / 2 };
     const wholly = (u: UnitState, poly: Pt[]) => alive(u).every((m) => pointInPoly(m, poly));
@@ -456,10 +459,11 @@ function denialFor(s: GameState, u: UnitState, ctx: Ctx): Ctx['denial'] {
   const waiting = s.units.filter((e) => e.owner !== u.owner && e.status === 'reserves' && hasDeepStrike(s, e)).reduce((a, e) => a + unitValue(e), 0);
   if (waiting < 100) return undefined;
   const guarded = boardUnits(s, u.owner).filter((f) => f.id !== u.id && unitValue(f) >= 150 && !f.transport);
-  if (!guarded.length) return undefined;
+  // the expert also keeps them off its home objective (a unit dropped there steals it)
+  const home = isExpert(s, u.owner) && !botOff('tpHome') ? s.objectives.filter((o) => o.type === 'home' && o.owner === u.owner).map((o) => objPoint(s, o)) : [];
+  if (!guarded.length && !home.length) return undefined;
   const pts: Pt[] = [];
-  for (const f of guarded) {
-    const c = centre(f);
+  for (const c of [...guarded.map(centre), ...home]) {
     for (const R of [7, 11]) for (let k = 0; k < 10; k++) {
       const p = { x: c.x + Math.cos((k / 10) * Math.PI * 2) * R, y: c.y + Math.sin((k / 10) * Math.PI * 2) * R };
       if (p.x > 1 && p.y > 1 && p.x < W - 1 && p.y < H - 1 && !pts.some((q) => dist(q, p) < 2.5)) pts.push(p);
@@ -522,6 +526,22 @@ export function ctxFor(s: GameState, u: UnitState): Ctx {
       // a unit sent to hold one objective doesn't wander to the others that need bodies
       if (job.post && (job.role === 'home' || job.role === 'anchor')) ctx.ocNeed = ctx.ocNeed.filter((q) => dist(q, job.post!) < 0.5);
       else if (job.role === 'screen' || job.role === 'hammer') ctx.ocNeed = s.round >= 2 ? ctx.ocNeed.filter((q) => dist(q, centre(u)) <= moveOf(u) + 3) : [];
+    }
+  }
+  // the expert's turn plan (botTurnPlan.ts): the objective this unit is sent to, and the ones others already cover
+  const tp = job?.keep ? null : turnPlan(s, u.owner);
+  if (tp && s.phase === 'movement') {
+    const post = tp.post.get(u.id);
+    if (post) {
+      const home = s.objectives.some((o) => o.type === 'home' && o.owner === u.owner && dist(objPoint(s, o), post) < 0.5);
+      ctx.post = post;
+      ctx.role = home ? 'home' : 'anchor';
+      ctx.holder = true;
+      ctx.ocNeed = [post];
+    } else {
+      // enough OC is on its way there: this unit does its own job instead of piling on
+      ctx.ocNeed = ctx.ocNeed.filter((q) => !tp.covered.some((c) => dist(c, q) < 0.5));
+      if (ctx.post && tp.covered.some((c) => dist(c, ctx.post!) < 0.5)) ctx.post = undefined;
     }
   }
   if (oc(u) > 0 && !u.battleShocked && securesObjectives(s, u)) {
