@@ -101,6 +101,8 @@ const deckShooters = (s: GameState, t: UnitState, cargo: UnitState[]) => !!t.cor
 const deckWhole = (s: GameState, t: UnitState, u: UnitState) => deckShooters(s, t, [u]) && (t.core.firingDeck ?? 0) >= alive(u).length;
 /** Late in the battle an objective that needs bodies still gets them out. */
 const lateNeed = (s: GameState, d: number | undefined, reach: number) => pace(s) >= 3 && d !== undefined && d <= reach;
+/** Drop Pod Assault, Aerial Seeding: "This unit must start the battle in Strategic Reserves". */
+const mustStartInReserves = (u: UnitState) => u.abilities.some((a) => /must start the battle in (?:strategic )?reserves/i.test(a.text ?? ''));
 
 export function botDeploy(s: GameState) {
   const p = s.deployTurn;
@@ -114,14 +116,16 @@ export function botDeploy(s: GameState) {
       .sort((a, b) => (t.core.firingDeck ? deckScore(b, t.core.firingDeck).total - deckScore(a, t.core.firingDeck).total : 0) || Number(isBrawler(s, b)) - Number(isBrawler(s, a)) || unitValue(b) - unitValue(a));
     if (riders.length && !embarkUnit(s, riders[0], t, true)) return;
   }
-  // Battle formation, once, before setting anything up: deep strikers start in Reserves while there is room (none
-  // when every unit is to deploy on the field)
+  // Battle formation, once, before setting anything up: only units whose datasheet says they must start in Reserves
+  // (Drop Pod, Tyrannocyte) go there. Holding deep strikers back as well cost the bot about 5 VP a game against the
+  // October bot (+10.8 +- 4.3 VP per pair of games, 96 games, 22 Nov 2026): they arrived late and did little while
+  // the rest of the army fought short-handed
   if (!(s.reservesDeclared ?? []).includes(p)) {
     const cap = armyPoints(s, p) * RULES.reserves.maxPointsFraction;
     let used = reservesPoints(s, p);
     const ids: string[] = [];
     if (!(s.deployAllOnField ?? []).includes(p)) {
-      for (const x of s.units.filter((y) => y.owner === p && y.status === 'pending' && hasDeepStrike(s, y))) {
+      for (const x of s.units.filter((y) => y.owner === p && y.status === 'pending' && mustStartInReserves(y))) {
         if (used + x.pts > cap) continue;
         used += x.pts; ids.push(x.id);
       }

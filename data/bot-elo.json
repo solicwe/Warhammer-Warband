@@ -3878,6 +3878,1938 @@
     }
    },
    "seconds": 537
+  },
+  {
+   "date": "2026-11-21",
+   "label": "meta wargear (3216cbb) s7000",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 19,
+   "draw": 0,
+   "loss": 29,
+   "score": 0.396,
+   "elo": -73,
+   "ci": [
+    -184,
+    24
+   ],
+   "margin": -6.1,
+   "rating": 1485,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -14.7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -19.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -15.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -28.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0,
+     "margin": -8.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 50.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 21
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -11
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -30.7
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -54
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 25
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -27.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -39.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -5.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 9.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -13
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -18
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 37.5
+    }
+   },
+   "seconds": 1836
+  },
+  {
+   "date": "2026-11-21",
+   "label": "meta wargear (3216cbb) s9000",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 19,
+   "draw": 1,
+   "loss": 28,
+   "score": 0.406,
+   "elo": -66,
+   "ci": [
+    -175,
+    31
+   ],
+   "margin": -8,
+   "rating": 1492,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 1.7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -7.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -22
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -16.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0,
+     "margin": -9
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -57
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 8
+    },
+    "TS": {
+     "games": 2,
+     "score": 0,
+     "margin": -6
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -29.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -24
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -50.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 31
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -4
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -41.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -44
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 0
+    }
+   },
+   "seconds": 1624
+  },
+  {
+   "date": "2026-11-21",
+   "label": "before meta wargear (13cc182) s7000",
+   "commit": "13cc182",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 23,
+   "draw": 1,
+   "loss": 24,
+   "score": 0.49,
+   "elo": -7,
+   "ci": [
+    -109,
+    93
+   ],
+   "margin": -3,
+   "rating": 1551,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.67,
+     "margin": -9.3
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -16.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 35.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -20
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -13
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -7.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 25
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 36.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -7.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 28
+    },
+    "NEC": {
+     "games": 2,
+     "score": 1,
+     "margin": 3
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -8.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -24
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -30.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 29.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -44.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -57.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0,
+     "margin": -8
+    },
+    "CD": {
+     "games": 2,
+     "score": 0.25,
+     "margin": -9.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 53.5
+    }
+   },
+   "seconds": 1784
+  },
+  {
+   "date": "2026-11-21",
+   "label": "before meta wargear (13cc182) s9000",
+   "commit": "13cc182",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 17,
+   "draw": 1,
+   "loss": 30,
+   "score": 0.365,
+   "elo": -97,
+   "ci": [
+    -211,
+    1
+   ],
+   "margin": -6.6,
+   "rating": 1461,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -28.3
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 18.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -19
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 13
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "SM": {
+     "games": 2,
+     "score": 0,
+     "margin": -9.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -8
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 20.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -29
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 19.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -31
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -43
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 17.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -9.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 16.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -9.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 8.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -37.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -14
+    },
+    "ORK": {
+     "games": 2,
+     "score": 1,
+     "margin": 20
+    }
+   },
+   "seconds": 1539
+  },
+  {
+   "date": "2026-11-22",
+   "label": "A: no archetype nudges s7000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 20,
+   "draw": 0,
+   "loss": 28,
+   "score": 0.417,
+   "elo": -58,
+   "ci": [
+    -166,
+    39
+   ],
+   "margin": -6.6,
+   "baseline": 1558,
+   "factions": {
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -31
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -3.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -30.3
+    },
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -25.3
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 7.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -27.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -29
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -54
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -0.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 46
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -14.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -34
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -17
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 25.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -11.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 18
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 30
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -40.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 31
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 8.5
+    }
+   },
+   "seconds": 3705,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "A: no archetype nudges s9000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 19,
+   "draw": 1,
+   "loss": 28,
+   "score": 0.406,
+   "elo": -66,
+   "ci": [
+    -175,
+    31
+   ],
+   "margin": -7.1,
+   "baseline": 1558,
+   "factions": {
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -48
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -24
+    },
+    "AS": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 0.7
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 29
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -4
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -10.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -50.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 13.5
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "EC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -15.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -28.5
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 0.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -16.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "TS": {
+     "games": 2,
+     "score": 0,
+     "margin": -6
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0,
+     "margin": -17.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2.5
+    }
+   },
+   "seconds": 3974,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-21",
+   "label": "B: October squad layouts s7000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 20,
+   "draw": 1,
+   "loss": 27,
+   "score": 0.427,
+   "elo": -51,
+   "ci": [
+    -158,
+    47
+   ],
+   "margin": -4.5,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -26.3
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 31.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -14.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -34.7
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -17
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.25,
+     "margin": -12
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 16.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -33.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -18.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -11.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 8.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -13
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -29.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    }
+   },
+   "seconds": 3383,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-21",
+   "label": "B: October squad layouts s9000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 21,
+   "draw": 0,
+   "loss": 27,
+   "score": 0.438,
+   "elo": -44,
+   "ci": [
+    -150,
+    55
+   ],
+   "margin": -3.1,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -17
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 27
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 21
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -17.3
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -0.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 28.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 19.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -7.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -56
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -16.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "GC": {
+     "games": 2,
+     "score": 1,
+     "margin": 2
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -17.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 4
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 13.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -26
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -3
+    }
+   },
+   "seconds": 3671,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-21",
+   "label": "C: no Reserves at deployment s7000 (uncommitted test on 3216cbb; shipped as the next commit, the same 24 games checked)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 21,
+   "draw": 0,
+   "loss": 27,
+   "score": 0.438,
+   "elo": -44,
+   "ci": [
+    -150,
+    55
+   ],
+   "margin": -3.4,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -14.7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -13
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -15.5
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0,
+     "margin": -8.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 21
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -0.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 4
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -34.3
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -41
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 37.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -27.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -14
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 9.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 20.5
+    }
+   },
+   "seconds": 2026,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-21",
+   "label": "C: no Reserves at deployment s9000 (uncommitted test on 3216cbb; shipped as the next commit, the same 24 games checked)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 19,
+   "draw": 0,
+   "loss": 29,
+   "score": 0.396,
+   "elo": -73,
+   "ci": [
+    -184,
+    24
+   ],
+   "margin": 0.2,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 1.7
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -22
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -19
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 9.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -16
+    },
+    "WE": {
+     "games": 2,
+     "score": 1,
+     "margin": 18.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 27.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0,
+     "margin": -13.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -28.3
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -46.5
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 44.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -4
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -4
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -9
+    },
+    "GC": {
+     "games": 2,
+     "score": 0,
+     "margin": -18
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 14.5
+    }
+   },
+   "seconds": 2144,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "V1: arrival spot scored s7000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 19,
+   "draw": 1,
+   "loss": 28,
+   "score": 0.406,
+   "elo": -66,
+   "ci": [
+    -175,
+    31
+   ],
+   "margin": -7.3,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -14.7
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 25
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -21
+    },
+    "DG": {
+     "games": 2,
+     "score": 0,
+     "margin": -5.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -15.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -32.3
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -29.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 9.5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0,
+     "margin": -8.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 50
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 21
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -44.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    },
+    "CD": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0,
+     "margin": -28
+    },
+    "TS": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 8.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 21
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -54
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -27.5
+    }
+   },
+   "seconds": 1723,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "V1: arrival spot scored s9000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 21,
+   "draw": 1,
+   "loss": 26,
+   "score": 0.448,
+   "elo": -36,
+   "ci": [
+    -141,
+    62
+   ],
+   "margin": -6.3,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.67,
+     "margin": 1.7
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 31
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 26
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -22
+    },
+    "AM": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -24
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 1,
+     "margin": 28
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 15
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 3.5
+    },
+    "TYR": {
+     "games": 2,
+     "score": 0,
+     "margin": -9
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -23
+    },
+    "AC": {
+     "games": 2,
+     "score": 0,
+     "margin": -44.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0,
+     "margin": -45
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.75,
+     "margin": 8
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 6
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5.5
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -17.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6.5
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 0
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -50.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -4
+    }
+   },
+   "seconds": 1824,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "V4: no Reserves + October layouts s7000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 21,
+   "draw": 1,
+   "loss": 26,
+   "score": 0.448,
+   "elo": -36,
+   "ci": [
+    -141,
+    62
+   ],
+   "margin": -2.1,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0.33,
+     "margin": -26.3
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 39
+    },
+    "AE": {
+     "games": 2,
+     "score": 0,
+     "margin": -10.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -6.5
+    },
+    "QT": {
+     "games": 2,
+     "score": 1,
+     "margin": 13
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -32
+    },
+    "GK": {
+     "games": 2,
+     "score": 0,
+     "margin": -37
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.25,
+     "margin": -12
+    },
+    "LoV": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 16.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 16.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0,
+     "margin": -16.5
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -5
+    },
+    "CD": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "WE": {
+     "games": 2,
+     "score": 1,
+     "margin": 22
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 18.5
+    },
+    "GC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -2
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 8.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -10.5
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 19.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -11
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0,
+     "margin": -25
+    }
+   },
+   "seconds": 1607,
+   "kind": "experiment"
+  },
+  {
+   "date": "2026-11-22",
+   "label": "V4: no Reserves + October layouts s9000 (uncommitted test on 3216cbb)",
+   "commit": "3216cbb",
+   "lookahead": false,
+   "games": 48,
+   "errors": 0,
+   "win": 24,
+   "draw": 1,
+   "loss": 23,
+   "score": 0.51,
+   "elo": 7,
+   "ci": [
+    -93,
+    109
+   ],
+   "margin": -2.1,
+   "baseline": 1558,
+   "factions": {
+    "AS": {
+     "games": 3,
+     "score": 0,
+     "margin": -17
+    },
+    "EC": {
+     "games": 2,
+     "score": 1,
+     "margin": 39.5
+    },
+    "AE": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -12.5
+    },
+    "DG": {
+     "games": 2,
+     "score": 1,
+     "margin": 21
+    },
+    "QT": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -1
+    },
+    "DRU": {
+     "games": 2,
+     "score": 0,
+     "margin": -24.5
+    },
+    "AM": {
+     "games": 3,
+     "score": 0,
+     "margin": -32.3
+    },
+    "GK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 7.5
+    },
+    "AdM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 5
+    },
+    "LoV": {
+     "games": 2,
+     "score": 1,
+     "margin": 28.5
+    },
+    "SM": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -13
+    },
+    "TYR": {
+     "games": 2,
+     "score": 1,
+     "margin": 21.5
+    },
+    "TAU": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2
+    },
+    "AC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -14.5
+    },
+    "CD": {
+     "games": 2,
+     "score": 1,
+     "margin": 3.5
+    },
+    "WE": {
+     "games": 2,
+     "score": 0.25,
+     "margin": -2.5
+    },
+    "TS": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -11
+    },
+    "GC": {
+     "games": 2,
+     "score": 1,
+     "margin": 10
+    },
+    "QI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -17.5
+    },
+    "NEC": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 1
+    },
+    "ORK": {
+     "games": 2,
+     "score": 0.5,
+     "margin": 2.5
+    },
+    "CSM": {
+     "games": 2,
+     "score": 0,
+     "margin": -19.5
+    },
+    "AoI": {
+     "games": 2,
+     "score": 0.5,
+     "margin": -3
+    }
+   },
+   "seconds": 1757,
+   "kind": "experiment"
   }
  ]
 }
