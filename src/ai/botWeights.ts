@@ -18,6 +18,12 @@ export const DEFAULT_W = {
   chargeNonBrawler: 0.5,
   heavyStill: 1.1,
   advanceMargin: 3, // an Advance must beat a Normal move by this much
+  // the expert's turn plan (botTurnPlan.ts)
+  planFlip: 40, // points of damage that killing the models keeping an objective theirs is worth, per objective
+  planScreen: 0.5, // share of a planned charge's worth that clearing its screen is worth
+  planThreat: 0.5, // share of the OC enemy units can walk onto an objective with that the plan answers
+  planSpare: 0, // extra OC sent over what is needed, as a share of it (holders get shot in the enemy's turn)
+  planDeny: 0.5, // share of the VP an objective is worth to the enemy's mission that taking it from them is worth
 };
 export type BotW = typeof DEFAULT_W;
 

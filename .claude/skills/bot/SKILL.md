@@ -12,7 +12,7 @@ description: Change, measure or debug Warhammer Warband's bot (movement, roles, 
 | Entry | `src/ai/bot.ts` | `botStep(s, p)` plays one step for side p; `botShouldAct`; shooting order (`botShootOne`) |
 | Movement | `src/ai/botMove.ts` | scores places to move with weights from `data/bot-weights.json`; quick planning on big boards (`bigBoard`: more than 150 models brought; `isFastPlanning`) |
 | Army plan | `src/ai/botPlan.ts` | `armyPlan(s, p)` gives each unit a role: home, anchor (holds an objective), hammer (hunts), screen, firebase, support, taxi; `stanceFor`; `pointsFirst(s)`: objectives get holders before units hunt unless `s.idleTactic === 'assault'` |
-| Turn plan (expert only) | `src/ai/botTurnPlan.ts` | `turnPlan(s, p)`: just enough OC per objective from the cheapest units (`post`, `covered`), models to kill for an objective to change hands or to clear a charge's screen (`kills`, read by `shotValue`), one charger per target (`charges`); cards go to units it left free, the expert discards cards under a 30% chance, and screens its home objective against Deep Strike. Null for every other level. Parts off: `BOT_OFF=turnplan,tpPosts,tpKills,tpCharge,tpCards,tpHome` |
+| Turn plan (expert only) | `src/ai/botTurnPlan.ts` | `turnPlan(s, p)`: just enough OC per objective from the cheapest units (`post`, `covered`), models to kill for an objective to change hands or to clear a charge's screen (`kills`, read by `shotValue`), one charger per target (`charges`); cards go to units it left free, the expert discards cards under a 30% chance, and screens its home objective against Deep Strike. Null for every other level. An objective is worth the VP the primary mission pays for it (`objectiveValue`) plus part of what it pays the enemy; weights `planFlip`, `planScreen`, `planThreat`, `planSpare`, `planDeny` in `botWeights.ts`. Parts off: `BOT_OFF=turnplan,tpPosts,tpKills,tpCharge,tpCards,tpHome`. Expert against normal: `src/zz` games with `s.botLevels` set and the lookahead off |
 | Turn styles | `src/ai/botLook.ts` | `STYLES` (steady, aggressive, careful, objectives, hunt, rogue, assault); `chooseTurnStyle` plays copies of the turn to pick one |
 | CP and stratagems | `src/ai/botStrats.ts` | which stratagem, when; re-rolls |
 | Choices | `src/ai/botPlus.ts`, `botRituals.ts` | doctrines, abilities with a decision, Rituals |
@@ -73,4 +73,12 @@ look-ahead tries; phones skip the look-ahead.
   before the plan both levels played the same moves, so every pair came out at exactly 0 and the after run alone is
   the effect. `chooseTurnStyle` skips the lookahead when the game has 20 units or more, so `elo.mjs --look` hardly
   tests the lookahead (the app's worker calls `lookAhead` directly and does think).
+- Turn plan, second round (24 Nov 2026): each objective is worth the VP the primary mission pays for it
+  (`objectiveValue`: this turn's rules and the next Command phase's, what this objective adds to what is held
+  elsewhere) plus half what it pays the enemy (`planDeny`). Expert over normal, 96 games on seeds 7000+9000:
+  +6.4 +- 3.6 VP per pair; confirmed on seed 11000 against the first plan, +5.9 +- 4.5. Did not help: switching
+  off the kill list, `planSpare` 0.5 or 1, `planDeny` 1. One seed set of 48 games can swing +12 / -12 for the same
+  code: always use two seed sets, and confirm a winner on a third. Games stay deterministic with the lookahead off
+  (4 of 4 re-run games gave the same margins). Expert still loses heavily on missions built on actions and markers
+  (Vital Link, Vanguard Operation, Secure Asset, Consecrate): the plan does not know them.
 - `node scripts/elo.mjs` failed on Windows until 21 Nov 2026 (`spawn npx ENOENT`; fixed with `shell: true` on win32), so no Elo was measured between 9 Oct and 21 Nov. To tell whether a change hurt the bot, run the same seed on the commit before it as well (a `git -c core.longpaths=true worktree add` in a short path such as `C:/Users/prem2/wtb`, with a junction to `node_modules`) and compare the two runs, not the run with the October numbers. On 21 Nov both were near 32% against the October baseline: the drop came between October and 20 Nov, not from that day's rules.

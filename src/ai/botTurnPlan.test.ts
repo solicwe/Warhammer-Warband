@@ -7,6 +7,7 @@ import { botMoveOne, cardIsDead } from './bot';
 import { objPoint, shotValue, unitPunch } from './botEval';
 import { cardJobs, ctxFor } from './botMove';
 import { armyPlan } from './botPlan';
+import { setBotWeights } from './botWeights';
 import { turnPlan } from './botTurnPlan';
 import { autoList } from '../engine/autoList';
 import { botAct } from './bot';
@@ -82,6 +83,30 @@ describe('turn plan: objectives', () => {
     put(s, unitOf(s, 1, 0).id, far);
     expect(postedTo(s, at)).toHaveLength(0);
     expect(turnPlan(s, 0)!.orders.some((x) => x.o.id === o.id)).toBe(false);
+  });
+
+  it('values objectives by what its primary mission pays: no squad for its own home when the mission leaves it out', () => {
+    // ten Intercessors: too many points to be the squad the army plan keeps on home all game
+    const s = game([['Intercessor Squad', 10, 160]], [['Boyz', 10, 90]]);
+    const home = s.objectives.find((o) => o.type === 'home' && o.owner === 0)!;
+    const at = objPoint(s, home);
+    s.objectives = [home];
+    put(s, unitOf(s, 0, 0).id, { x: at.x + 5, y: at.y });
+    put(s, unitOf(s, 1, 0).id, { x: 57, y: 41 });
+    s.players[0].primaryId = 'immovable-object'; // 5VP per objective, excluding your home
+    s.players[1].primaryId = 'immovable-object';
+    setBotWeights(0, { planDeny: 0 });
+    expect(postedTo(s, at)).toHaveLength(0);
+    // the enemy's mission pays for it: holding it keeps those VP from them
+    setBotWeights(0, { planDeny: 0.5 });
+    expect(postedTo(structuredClone(s), at)).toHaveLength(1);
+    setBotWeights(0);
+    const t = game([['Intercessor Squad', 10, 160]], [['Boyz', 10, 90]]);
+    t.objectives = [t.objectives.find((o) => o.type === 'home' && o.owner === 0)!];
+    put(t, unitOf(t, 0, 0).id, { x: at.x + 5, y: at.y });
+    put(t, unitOf(t, 1, 0).id, { x: 57, y: 41 });
+    t.players[0].primaryId = 'battlefield-dominance'; // 3VP per objective, home included
+    expect(postedTo(t, at)).toHaveLength(1);
   });
 
   it('the squad it sends ends its move on the objective', () => {

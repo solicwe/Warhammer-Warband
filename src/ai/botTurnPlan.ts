@@ -8,12 +8,13 @@
 // plans this way: every other level returns null and plays as before. The plan is made again each phase and whenever a
 // model dies or arrives, from where the armies stand then; it takes a few milliseconds even in a 2000-point game.
 import { dist, pointInPoly, pointSegDist } from '../engine/geometry';
+import { primaryById } from '../engine/config';
 import { chargeEligibility } from '../engine/game';
 import { objectivePolys } from '../engine/missions';
-import { alive, boardUnits, hasKw, isEngaged, lastRound, other, pace, unitDistance } from '../engine/state';
+import { alive, boardUnits, hasKw, isEngaged, lastRound, other, unitDistance } from '../engine/state';
 import { centre, isBrawler, lockValue, meleeKills, moveOf, objPoint, oc, p2d6, perModel, unitPunch, unitValue } from './botEval';
 import { armyPlan, followedJob, homeScoresVp } from './botPlan';
-import { botOff } from './botWeights';
+import { botOff, W } from './botWeights';
 import type { GameState, ModelState, ObjectiveState, PlayerId, Pt, UnitState } from '../engine/types';
 
 /** An objective the plan takes or holds: the units sent there, the OC it needs and the OC they bring. */
@@ -34,10 +35,7 @@ export interface TurnPlan {
 
 export const isExpert = (s: GameState, p: PlayerId) => ((s.botLevels as Partial<Record<PlayerId, string>> | undefined)?.[p] ?? s.botLevel) === 'expert';
 
-/** Kills that change an objective's hands are worth about this many points of damage per objective. */
-const FLIP_POINTS = 40;
-/** OC an enemy unit that can walk onto an objective in its turn is counted with (it may go elsewhere). */
-const THREAT_SHARE = 0.5;
+// How much the plan asks for (data/bot-weights.json, scripts/tune.mjs): planFlip, planScreen, planThreat, planSpare
 
 const cache = new WeakMap<GameState, Map<PlayerId, { key: string; plan: TurnPlan }>>();
 
@@ -126,15 +124,62 @@ function makePlan(s: GameState, p: PlayerId): TurnPlan {
   const engaged = engagedCheck(s);
   if (s.phase === 'movement' && !botOff('tpPosts')) planObjectives(s, p, mine, foes, spots, gaps, engaged, plan);
   else standingKills(s, p, foes, spots, plan);
-  if (s.phase === 'shooting' || s.phase === 'charge') planCharges(s, mine, foes, engaged, plan);
+  if (s.phase === 'shooting' || s.phase === 'charge') planCharges(s, p, mine, foes, engaged, plan);
   return plan;
 }
 
-/** How much an objective is worth to p this turn (1 a field objective; home only when holding it scores). */
-function objectiveValue(s: GameState, p: PlayerId, o: ObjectiveState): number {
-  if (o.type === 'home' && o.owner === p) return homeScoresVp(s, p) ? 0.7 : 0;
-  // the battle is won on the primary of rounds 3-5: those objectives are worth the most
-  return pace(s) >= 3 ? 1.5 : 1;
+/**
+ * What controlling `o` is worth to p in VP by p's primary mission: the rules scored at the end of this turn, and the
+ * ones scored at its next Command phase (`hold`: the objective must still be ours after the enemy's turn). Each rule
+ * counts what this one objective adds to what p holds elsewhere: "control at least one objective" pays for the
+ * first only, "control 3+" for the third, "per objective" for each. A mission that pays nothing for an objective
+ * gets no unit sent there.
+ */
+function objectiveValue(s: GameState, p: PlayerId, o: ObjectiveState, planned: ObjectiveState[] = []): { vp: number; hold: boolean } {
+  const id = s.players[p].primaryId;
+  if (!id) return { vp: o.type === 'home' && o.owner === p ? (homeScoresVp(s, p) ? 3 : 0) : 4, hold: true };
+  const ownHome = (x: ObjectiveState) => x.type === 'home' && x.owner === p;
+  const enemyHome = (x: ObjectiveState) => x.type === 'home' && x.owner !== p;
+  const others = s.objectives.filter((x) => x !== o && (x.controller === p || planned.includes(x)));
+  const theirs = s.objectives.filter((x) => x !== o && x.controller === other(p) && !planned.includes(x)).length;
+  const last = lastRound(s);
+  let vp = 0, hold = false;
+  for (const r of primaryById(id).scoring) {
+    const [from, to] = r.rounds;
+    const now = (r.when === 'endOfYourTurn' || (r.round5When === 'endOfYourTurn' && s.round >= last)) && s.round >= from && s.round <= to;
+    const next = s.round + 1;
+    const cmd = r.when === 'endOfYourCommandPhase' && next >= from && next <= to && next <= last;
+    const end = r.when === 'endOfBattle' && s.round >= last - 1;
+    if (!now && !cmd && !end) continue;
+    const v = r.vp || 0;
+    let add = 0;
+    switch (r.condition) {
+      case 'perObjectiveControlled': add = v; break;
+      case 'perObjectiveControlledExclHome': add = ownHome(o) ? 0 : v; break;
+      case 'perNonHomeIfHomeControlled': add = ownHome(o) ? v * others.filter((x) => !ownHome(x)).length : others.some(ownHome) ? v : 0.3 * v; break;
+      case 'controlCentral': add = o.type === 'central' && !others.some((x) => x.type === 'central') ? v : 0; break;
+      case 'control2Plus': case 'control3Plus': case 'control4Plus': {
+        const k = Number(r.condition[7]);
+        add = others.length === k - 1 ? v : others.length === k - 2 ? 0.4 * v : 0.15 * v;
+        break;
+      }
+      case 'controlAnyExclHome': add = ownHome(o) ? 0 : others.some((x) => !ownHome(x)) ? 0.25 * v : v; break;
+      case 'controlAnyExclHomes': add = o.type === 'home' ? 0 : others.some((x) => x.type !== 'home') ? 0.25 * v : v; break;
+      case 'controlEnemyHome': add = enemyHome(o) ? v : 0; break;
+      case 'controlOwnHome': add = ownHome(o) ? v : 0; break;
+      case 'controlMoreThanOpponent': {
+        const was = o.controller === other(p) ? 1 : 0;
+        const withIt = others.length + 1 > theirs, without = others.length > theirs + was;
+        add = withIt && !without ? v : 0.2 * v;
+        break;
+      }
+      case 'perNewObjectiveThisTurnExclHome': add = now && o.type !== 'home' && s.controlAtTurnStart?.[s.objectives.indexOf(o)] !== p ? v : 0; break;
+      default: add = 0;
+    }
+    if (add > 0 && !now) hold = true;
+    vp += add;
+  }
+  return { vp, hold };
 }
 
 /** Does the enemy still get a turn after this one (its units can walk onto what we take)? */
@@ -143,6 +188,7 @@ const enemyMovesAfter = (s: GameState, p: PlayerId) => !(s.round >= lastRound(s)
 /** Movement: send just enough OC to each objective worth taking, cheapest units first, and list what must die there. */
 function planObjectives(s: GameState, p: PlayerId, mine: UnitState[], foes: UnitState[], spots: Spot[], gaps: Map<string, number[]>, engaged: (u: UnitState) => boolean, plan: TurnPlan) {
   const army = armyPlan(s, p);
+  const w = W(p);
   const threatLater = enemyMovesAfter(s, p);
   // units that can be sent: they score OC, are free to move (an engaged unit only counts where it stands), carry
   // nobody (a loaded transport delivers its squad) and are not the squad kept on the home objective all game. What
@@ -154,11 +200,14 @@ function planObjectives(s: GameState, p: PlayerId, mine: UnitState[], foes: Unit
   const objs = spots.map((sp) => {
     const ours = sp.oc[p], theirs = sp.oc[other(p)];
     // enemy units off the objective that could walk onto it in their turn
-    const threat = threatLater ? foes.reduce((x, e) => {
+    const v = objectiveValue(s, p, sp.o);
+    const threat = threatLater && v.hold ? foes.reduce((x, e) => {
       const g = gaps.get(e.id)![sp.i];
       return g > 0 && g <= moveOf(e) + 3 && oc(e) > 0 && !engaged(e) ? x + oc(e) : x;
     }, 0) : 0;
-    return { ...sp, ours, theirs, threat, value: objectiveValue(s, p, sp.o) };
+    // what it scores the enemy's mission: taking it (or keeping it) from them is worth part of that
+    const deny = w.planDeny * objectiveValue(s, other(p), sp.o).vp;
+    return { ...sp, ours, theirs, threat, deny, value: (v.vp + deny) / 4 };
   }).filter((x) => x.value > 0 && x.polys.length && !(x.o.secured === p && x.theirs === 0 && x.threat === 0));
 
   // the moves a unit needs to get there: two at most (it heads there now and arrives next turn)
@@ -169,7 +218,8 @@ function planObjectives(s: GameState, p: PlayerId, mine: UnitState[], foes: Unit
     return Number.isFinite(moves) ? { u: x.u, oc: x.oc, cost: x.base + moves * 40 } : null;
   }).filter((x): x is NonNullable<typeof x> => !!x).sort((a, b) => a.cost - b.cost);
   const pick = (obj: (typeof objs)[number], taken: Set<string>) => {
-    const need = obj.theirs + Math.ceil(THREAT_SHARE * obj.threat) + 1;
+    const base = obj.theirs + Math.ceil(w.planThreat * obj.threat) + 1;
+    const need = base + Math.ceil(w.planSpare * base);
     const out: { u: UnitState; oc: number; cost: number }[] = [];
     // the squad kept on the home objective counts where it stands
     let have = info.filter((x) => x.pinned && x.gap[obj.i] <= 0).reduce((a, x) => a + x.oc, 0);
@@ -178,33 +228,46 @@ function planObjectives(s: GameState, p: PlayerId, mine: UnitState[], foes: Unit
     const ok = have >= need || (obj.theirs > 0 && have >= 0.4 * obj.theirs + 1);
     return { need, have, out, ok, cost: out.reduce((a, c) => a + c.cost, 0) };
   };
-  // the objectives that give the most for the least first; each unit goes to one
-  const order = objs.map((obj) => ({ obj, first: pick(obj, new Set()) })).filter((x) => x.first.ok)
-    .sort((a, b) => b.obj.value / (b.first.cost + 50) - a.obj.value / (a.first.cost + 50));
+  // the objective that gives the most VP for the least first, then the rest valued again with it counted as ours
+  // ("control at least one objective" pays once); each unit goes to one
   const taken = new Set<string>();
-  for (const { obj } of order) {
-    const r = pick(obj, taken);
-    if (!r.ok) continue;
+  const planned: ObjectiveState[] = [];
+  const left = [...objs];
+  while (left.length) {
+    let best: { obj: (typeof objs)[number]; r: ReturnType<typeof pick>; score: number } | null = null;
+    for (const obj of left) {
+      const value = planned.length ? (objectiveValue(s, p, obj.o, planned).vp + obj.deny) / 4 : obj.value;
+      if (value <= 0) continue;
+      const r = pick(obj, taken);
+      if (!r.ok) continue;
+      const score = value / (r.cost + 50);
+      if (!best || score > best.score) best = { obj: { ...obj, value }, r, score };
+    }
+    if (!best) break;
+    const { obj, r } = best;
+    left.splice(left.findIndex((x) => x.o === obj.o), 1);
+    planned.push(obj.o);
     if (r.have >= r.need) plan.covered.push(obj.at);
     if (!r.out.length) continue;
     for (const c of r.out) { taken.add(c.u.id); plan.post.set(c.u.id, obj.at); }
     plan.orders.push({ o: obj.o, at: obj.at, units: r.out.map((c) => c.u.id), need: r.need, have: r.have, value: obj.value });
     // what they bring is not enough on its own: the models on it that must die first
-    if (r.have <= obj.theirs) addObjectiveKills(foes, obj.polys, obj.theirs - r.have + 1, obj.value, plan);
+    if (r.have <= obj.theirs) addObjectiveKills(foes, obj.polys, obj.theirs - r.have + 1, w.planFlip * obj.value, plan);
   }
 }
 
 /** Shooting and later: objectives where our models stand but theirs still outnumber them. */
 function standingKills(s: GameState, p: PlayerId, foes: UnitState[], spots: Spot[], plan: TurnPlan) {
   for (const sp of spots) {
-    const value = objectiveValue(s, p, sp.o);
+    const value = (objectiveValue(s, p, sp.o).vp + W(p).planDeny * objectiveValue(s, other(p), sp.o).vp) / 4;
     const ours = sp.oc[p], theirs = sp.oc[other(p)];
-    if (value && ours > 0 && theirs >= ours) addObjectiveKills(foes, sp.polys, theirs - ours + 1, value, plan);
+    if (value && ours > 0 && theirs >= ours) addObjectiveKills(foes, sp.polys, theirs - ours + 1, W(p).planFlip * value, plan);
   }
 }
 
-/** The enemy models on an objective to kill to take `ocToTake` off it: the units with the most OC per point first. */
-function addObjectiveKills(foes: UnitState[], polys: Pt[][], ocToTake: number, value: number, plan: TurnPlan) {
+/** The enemy models on an objective to kill to take `ocToTake` off it (worth `worth` points of damage): the units
+ *  with the most OC per point first. */
+function addObjectiveKills(foes: UnitState[], polys: Pt[][], ocToTake: number, worth: number, plan: TurnPlan) {
   const on = foes.filter((e) => oc(e) > 0 && alive(e).some((m) => gapToObjective(m, polys) <= 0))
     .sort((a, b) => oc(b) / Math.max(1, unitValue(b)) - oc(a) / Math.max(1, unitValue(a)));
   let left = ocToTake;
@@ -215,7 +278,7 @@ function addObjectiveKills(foes: UnitState[], polys: Pt[][], ocToTake: number, v
     const n = Math.min(inside.length, Math.ceil(left / per));
     left -= n * per;
     const k = plan.kills.get(e.id);
-    plan.kills.set(e.id, { models: Math.max(n, k?.models ?? 0), bonus: (k?.bonus ?? 0) + FLIP_POINTS * value, why: 'objective' });
+    plan.kills.set(e.id, { models: Math.max(n, k?.models ?? 0), bonus: (k?.bonus ?? 0) + worth, why: 'objective' });
   }
 }
 
@@ -223,7 +286,7 @@ function addObjectiveKills(foes: UnitState[], polys: Pt[][], ocToTake: number, v
  * Charges: each fighter that can still charge goes for its best target, one fighter per target one can deal with;
  * the enemy units standing between a fighter and its target are screens, shot first.
  */
-function planCharges(s: GameState, mine: UnitState[], foes: UnitState[], engaged: (u: UnitState) => boolean, plan: TurnPlan) {
+function planCharges(s: GameState, p: PlayerId, mine: UnitState[], foes: UnitState[], engaged: (u: UnitState) => boolean, plan: TurnPlan) {
   if (botOff('tpCharge')) return;
   const near = (u: UnitState) => foes.some((e) => dist(centre(u), centre(e)) <= 24);
   const fighters = mine.filter((u) => !engaged(u) && near(u) && isBrawler(s, u) && !chargeEligibility(s, u)).sort((a, b) => unitValue(b) - unitValue(a));
@@ -253,7 +316,7 @@ function planCharges(s: GameState, mine: UnitState[], foes: UnitState[], engaged
       if (f.id === target.id || unitDistance(u, f) >= best.d) continue;
       if (!alive(f).some((m) => pointSegDist(m, { a: from, b: to }) <= m.r + 2)) continue;
       const k = plan.kills.get(f.id);
-      plan.kills.set(f.id, { models: Math.max(alive(f).length, k?.models ?? 0), bonus: (k?.bonus ?? 0) + 0.5 * best.v + perModel(f), why: k?.why ?? 'screen' });
+      plan.kills.set(f.id, { models: Math.max(alive(f).length, k?.models ?? 0), bonus: (k?.bonus ?? 0) + W(p).planScreen * best.v + perModel(f), why: k?.why ?? 'screen' });
     }
   }
 }
