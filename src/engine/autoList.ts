@@ -36,6 +36,8 @@ export const AUX_EXCLUSIONS: Record<string, string[]> = {
   GC: ['ASTRA MILITARUM', 'TYRANIDS'],
   QI: ['ADEPTUS MECHANICUS'],
   QT: ['HERETIC ASTARTES'],
+  // Thralls of the First Prince: the Heretic Astartes units come only with Shadow Legion
+  CD: ['HERETIC ASTARTES'],
   DRU: ['HARLEQUINS', 'ASURYANI', 'YNNARI'],
   DG: ['PLAGUE LEGIONS'],
   TS: ['SCINTILLATING LEGIONS'],

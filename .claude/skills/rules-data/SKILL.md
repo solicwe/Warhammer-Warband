@@ -76,6 +76,17 @@ skill is the checklist around them.
   and lash whip", "Bone cleaver, lash whip and rending claws") is one item; `items()` in `scripts/build-data.mjs` keeps
   the datasheet's own weapon names whole. "one of the following: 1 X and 1 Y, 1 Z and 1 Y" without bullets is a list of
   choices. Before the fix (21 Nov 2026) such options never matched the loadout and swapped nothing.
+- Units a detachment brings from another book (Mechanicus Allies, Wretched Thralls, Thralls of the First Prince) are in
+  the army's own faction data: list them in `DETACHMENT_ALLIES` (`allies.ts`) or they show and pass validation with
+  every detachment. Chaos Daemons' Heretic Astartes units were not listed until 24 Nov 2026: every Chaos Daemons list
+  could take Legionaries and Raptors, and all 40 of 40 bot lists had them. `AUX_EXCLUSIONS` (`autoList.ts`) keeps such
+  units out of the bot's lists.
+- "one of the following options (you cannot select the same option more than once):• …" gave Raptors a choice called
+  "Options" (24 Nov 2026): the words before the first bullet are not a choice. That note, "(duplicates are not
+  allowed)" and "but cannot take duplicates" set `distinct` on the option; `wargearProblems` allows each choice once
+  (per model, so not checked, for "any number of models can each …"), the builder's + stops at 1, and default and
+  meta loadouts keep to it. Before, nothing stopped two meltaguns from one Raptors option. "and can take duplicates"
+  and "(it cannot take duplicates of this piece of wargear)" are not this rule.
 - The pack/Wahapedia hybrid (`wargearFrom: 'wahapedia'`) takes Wahapedia's wargear when it has more choices than the
   pack: a parser fix that adds choices can move more units over (Death Company Marines, Deathwing Terminator Squad and
   Fortis Kill Team moved on 21 Nov 2026). Compare the list of hybrid units before and after `npm run data`.

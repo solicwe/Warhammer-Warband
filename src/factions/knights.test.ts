@@ -201,10 +201,15 @@ describe('Chaos Knights', () => {
     knightsCommandStart(s);
     expect((d.timed ?? []).some((t) => t.mark === 'Empowered')).toBe(true);
   });
-  it('Houndpack Lance needs three War Dogs; no Wretched Thralls', () => {
+  it('Houndpack Lance needs three War Dogs; Wretched Thralls: DAMNED only with Iconoclast Fiefdom, up to 500 pts', () => {
     const two: ArmyList = { ...PRESETS.QT, detachments: ['Houndpack Lance'], units: PRESETS.QT.units.slice(0, 3) };
     expect(validateList(two, QT, size).join()).toMatch(/three or more WAR DOG/);
-    expect(QT.datasheets.find((d) => d.name === 'Cultist Mob')).toBeUndefined(); // Wretched Thralls left out (owner)
+    // as Wahapedia 11e (owner, 24 Nov 2026)
+    const mob: ArmyList['units'] = [{ uid: 'm1', datasheet: 'Cultist Mob', models: 10, pts: 50 }];
+    expect(validateList(with_(PRESETS.QT, 'Traitoris Lance', mob), QT, size).join()).toMatch(/only be included with the Iconoclast Fiefdom/);
+    expect(validateList(with_(PRESETS.QT, 'Iconoclast Fiefdom', mob), QT, size).join()).not.toMatch(/DAMNED|Wretched|Iconoclast/);
+    const many: ArmyList['units'] = Array.from({ length: 6 }, (_, i) => ({ uid: `m${i}`, datasheet: 'Cultist Mob', models: 20, pts: 100 }));
+    expect(validateList(with_(PRESETS.QT, 'Iconoclast Fiefdom', many), QT, size).join()).toMatch(/at most 500 pts/);
   });
 });
 

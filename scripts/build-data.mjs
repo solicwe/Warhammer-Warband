@@ -190,6 +190,9 @@ export function parseWargearOption(text, weapons = []) {
   // "(a model cannot be equipped with more than one electroscourge)": a note, not a choice
   const uniq = t.match(/cannot be equipped with more than one ([\w -]+?)\)/i);
   if (uniq) opt.unique = [uniq[1].trim()];
+  // "(duplicates are not allowed)", "(you cannot select the same option more than once)", "but cannot take
+  // duplicates": each choice of this option at most once (not "it cannot take duplicates of this piece of wargear")
+  if (/duplicates are not allowed|cannot select the same option more than once|but cannot take duplicates/i.test(t)) opt.distinct = true;
   t = t.replace(/\s*\([^)]*cannot be equipped with[^)]*\)/gi, '').trim();
   // "This model can be equipped with 1 havoc launcher or can replace 1 combi-bolter with 1 havoc launcher": the gain is what counts
   t = t.replace(/^(This model can be equipped with [^.]+?) or can replace .*$/i, '$1.');
@@ -232,7 +235,9 @@ export function parseWargearOption(text, weapons = []) {
     }
     if (choiceBody !== null) {
       const listed = /\b(?:one|1) of the following\b/i.test(t);
-      choiceBody = choiceBody.replace(/^(?:one|1) of the following:?\s*/i, '');
+      // "one of the following options (you cannot select the same option more than once):• …": the words before the
+      // first item are not a choice (they gave Raptors an "Options" choice)
+      choiceBody = choiceBody.replace(/^(?:(?:one|1) of the following\s*)?(?:options?\b\s*)?(?:\([^)]*\)\s*)?:?\s*/i, '');
       if (choiceBody.includes('•')) opt.choices = choiceBody.split('•').map((x) => x.trim()).filter(Boolean).map(items);
       // "one of the following: 1 Boltgun and 1 Storm Shield, 1 Power Weapon and 1 Storm Shield" (no bullets)
       else if (listed) opt.choices = keepAnd(choiceBody.split(/\.\s/)[0]).split(/,\s*(?:or\s+)?|\s+or\s+/).map(items);

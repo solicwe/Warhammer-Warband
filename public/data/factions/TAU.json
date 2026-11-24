@@ -5440,7 +5440,8 @@
             [
               "Weapon support system"
             ]
-          ]
+          ],
+          "distinct": true
         },
         {
           "text": "Any number of models can each be equipped with up to two of the following, and can take duplicates:• 1 gun drone • 1 marker drone • 1 missile drone • 1 shield drone",
@@ -7040,7 +7041,8 @@
             [
               "Shield drone"
             ]
-          ]
+          ],
+          "distinct": true
         }
       ],
       "weapons": [
@@ -7220,7 +7222,8 @@
             [
               "Shield drone"
             ]
-          ]
+          ],
+          "distinct": true
         }
       ],
       "weapons": [
@@ -7423,7 +7426,8 @@
             [
               "Shield drone"
             ]
-          ]
+          ],
+          "distinct": true
         }
       ],
       "weapons": [

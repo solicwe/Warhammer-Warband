@@ -18,7 +18,8 @@ Made for a phone held upright; it works on a desktop too. Everything runs in the
 
 **Army builder.** The datasheets, points, detachments, enhancements and stratagems of 23 factions, read from the
 11th edition faction data. It checks Leaders, enhancements, unit limits and wargear, and lists units that may join
-as allies (Freeblades, Titanic Support, Assigned Agents for Imperium armies; Chaos Knights for Chaos armies).
+as allies (Freeblades, Titanic Support, Assigned Agents for Imperium armies; Chaos Knights for Chaos armies, and
+daemons through the Daemonic Pact for Chaos Space Marines and Chaos Knights).
 Battle sizes: Incursion (1,000), Strike Force (2,000), Onslaught (3,000), War Zone (4,000) and Apocalypse (5,000),
 all on the 44" x 60" table.
 

@@ -11916,6 +11916,7 @@
               "Cultist sniper rifle"
             ]
           ],
+          "distinct": true,
           "max": 3
         },
         {
@@ -13055,6 +13056,7 @@
               "Reaper chaincannon"
             ]
           ],
+          "distinct": true,
           "per": 5,
           "max": 1
         }
@@ -13938,9 +13940,6 @@
           ],
           "choices": [
             [
-              "Options"
-            ],
-            [
               "Flamer",
               "Close combat weapon"
             ],
@@ -13953,6 +13952,7 @@
               "Close combat weapon"
             ]
           ],
+          "distinct": true,
           "max": 2
         },
         {
@@ -13963,9 +13963,6 @@
             "Astartes chainsword"
           ],
           "choices": [
-            [
-              "Options"
-            ],
             [
               "Flamer",
               "Close combat weapon"
@@ -13980,6 +13977,7 @@
             ]
           ],
           "minModels": 10,
+          "distinct": true,
           "max": 2
         }
       ],

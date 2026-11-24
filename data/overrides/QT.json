@@ -1,5 +1,5 @@
 {
- "_comment": "Chaos Knights Faction Pack v1.2 (26 Aug 2026). Dark Pacts is the Heretic Astartes army rule (DAMNED units in an Iconoclast Fiefdom do not use it). War Dog Moirax profile per the pack. Knights: the invulnerable save is against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (owner, 20 Nov 2026). Wretched Thralls (the DAMNED units) are left out: a Chaos army takes only Chaos Knights from other books (owner, 20 Nov 2026).",
+ "_comment": "Chaos Knights Faction Pack v1.2 (26 Aug 2026). Dark Pacts is the Heretic Astartes army rule (DAMNED units in an Iconoclast Fiefdom do not use it). War Dog Moirax profile per the pack. Knights: the invulnerable save is against ranged attacks only, except Cerastus Knight Lancer / Atrapos and Questoris Knight Magaera / Styrix (owner, 20 Nov 2026). Wretched Thralls: the DAMNED units come only with Iconoclast Fiefdom, up to 500 pts (as Wahapedia 11e, owner 24 Nov 2026; allies.ts).",
  "armyRules": [
   {
    "name": "Dark Pacts",
@@ -153,34 +153,6 @@
      "InSvRanged": true
     }
    ]
-  },
-  {
-   "name": "Cultist Firebrand",
-   "_delete": true
-  },
-  {
-   "name": "Dark Commune",
-   "_delete": true
-  },
-  {
-   "name": "Traitor Enforcer",
-   "_delete": true
-  },
-  {
-   "name": "Cultist Mob",
-   "_delete": true
-  },
-  {
-   "name": "Accursed Cultists",
-   "_delete": true
-  },
-  {
-   "name": "Fellgor Beastmen",
-   "_delete": true
-  },
-  {
-   "name": "Traitor Guardsmen Squad",
-   "_delete": true
   }
  ]
 }

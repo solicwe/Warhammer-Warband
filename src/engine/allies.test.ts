@@ -16,8 +16,15 @@ const allyErrs = (f: FactionData, l: ArmyList) => validateList(l, f, SF).filter(
 describe('allied units', () => {
   it('each army gets the allies its rules allow', () => {
     const csm = merged('CSM', 'Chaos');
-    expect([...new Set(csm.datasheets.map((d) => d.allyName).filter(Boolean))].sort()).toEqual(['Chaos Knights']); // no Daemonic Pact (owner)
+    // as Wahapedia 11e (owner, 24 Nov 2026): Daemonic Pact for Chaos Space Marines and Chaos Knights
+    expect([...new Set(csm.datasheets.map((d) => d.allyName).filter(Boolean))].sort()).toEqual(['Chaos Daemons', 'Chaos Knights']);
     expect(csm.datasheets.some((d) => d.name === 'War Dog Karnivore' && d.ally === 'QT')).toBe(true);
+    const qt = merged('QT', 'Chaos');
+    expect([...new Set(qt.datasheets.map((d) => d.allyName).filter(Boolean))]).toEqual(['Chaos Daemons']);
+    // the Daemons book's Heretic Astartes units (Shadow Legion) are not daemons
+    expect(qt.datasheets.some((d) => d.ally === 'CD' && d.factionKeywords.includes('HERETIC ASTARTES'))).toBe(false);
+    expect(qt.datasheets.some((d) => d.name === 'Bloodletters' && d.ally === 'CD')).toBe(true);
+    for (const [id, g] of [['DG', 'Chaos'], ['TS', 'Chaos'], ['WE', 'Chaos'], ['EC', 'Chaos']]) expect(merged(id, g).datasheets.some((d) => d.ally === 'CD'), id).toBe(false);
     // the Knights' cultists are not Dreadblades
     expect(csm.datasheets.find((d) => d.name === 'Cultist Mob')?.ally).toBeUndefined();
     const sm = merged('SM', 'Imperium');
@@ -48,6 +55,19 @@ describe('allied units', () => {
     expect(allyErrs(sm, list('SM', [['Vindicare Assassin', 1], ['Callidus Assassin', 1], ['Eversor Assassin', 1]])).join()).toMatch(/at most 2 CHARACTER/);
   });
 
+  it('the Daemonic Pact caps the points, needs Battleline per god, never the Warlord', () => {
+    const csm = merged('CSM', 'Chaos');
+    const d = csm.datasheets.filter((x) => x.ally === 'CD');
+    const line = d.find((x) => x.keywords.includes('KHORNE') && x.keywords.includes('BATTLELINE'))!;
+    const other = d.find((x) => x.keywords.includes('KHORNE') && !x.keywords.includes('BATTLELINE') && !x.keywords.includes('EPIC HERO'))!;
+    expect(allyErrs(csm, list('CSM', [[other.name, other.models.length]])).join()).toMatch(/Khorne needs/);
+    expect(allyErrs(csm, list('CSM', [[line.name, 10], [other.name, other.models.length]])).join()).not.toMatch(/Khorne needs/);
+    const big = list('CSM', [[line.name, 10]]);
+    big.units[0].pts = 600;
+    expect(allyErrs(csm, big).join()).toMatch(/at most 500 pts/);
+    expect(allyErrs(csm, list('CSM', [[line.name, 10, true]])).join()).toMatch(/Warlord/);
+  });
+
   it('applies the Assigned Agents Retinue exemptions only when their matching Characters are present', () => {
     const sm = merged('SM', 'Imperium');
     expect(allyErrs(sm, list('SM', [['Inquisitor', 1], ['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6], ['Inquisitorial Agents', 6]])).join()).not.toMatch(/at most 2 RETINUE/);
@@ -64,4 +84,18 @@ it('Assigned Agents leaves out the requisitioned squads an army already has', ()
   expect(merged('GK', 'Imperium').datasheets.map((d) => d.name)).not.toContain('Grey Knights Terminator Squad');
   expect(merged('AS', 'Imperium').datasheets.map((d) => d.name)).not.toContain('Sisters of Battle Squad');
   expect(merged('AM', 'Imperium').datasheets.map((d) => d.name)).toContain('Deathwatch Kill Team');
+});
+
+// Thralls of the First Prince (Wahapedia 11e, owner 24 Nov 2026): a Chaos Daemons army takes the Heretic Astartes units
+// of its book only with Shadow Legion, up to 500 / 1000 / 1500 pts, and then no Daemon Prince or Epic Hero but Be'lakor
+it('Chaos Daemons: Heretic Astartes units only with Shadow Legion', () => {
+  const cd = load('CD');
+  const army = (det: string, units: [string, number, boolean?][]): ArmyList => ({ ...list('CD', units), detachments: [det] });
+  const shadowErrs = (l: ArmyList) => validateList(l, cd, SF).filter((e) => /HERETIC ASTARTES|Shadow Legion/.test(e));
+  expect(shadowErrs(army('Daemonic Incursion', [['Bloodthirster', 1, true], ['Raptors', 5]])).join()).toMatch(/only be included with the Shadow Legion/);
+  expect(shadowErrs(army('Shadow Legion', [['Be’lakor', 1, true], ['Raptors', 5], ['Legionaries', 5]]))).toEqual([]);
+  expect(shadowErrs(army('Shadow Legion', [['Be’lakor', 1, true], ['Skarbrand', 1]])).join()).toMatch(/Skarbrand cannot be included/);
+  expect(shadowErrs(army('Shadow Legion', [['Be’lakor', 1, true], ['Daemon Prince of Chaos', 1]])).join()).toMatch(/Daemon Prince of Chaos cannot be included/);
+  const many = army('Shadow Legion', [['Be’lakor', 1, true], ...Array.from({ length: 11 }, (): [string, number] => ['Legionaries', 10])]);
+  expect(shadowErrs(many).join()).toMatch(/at most 1000 pts/);
 });

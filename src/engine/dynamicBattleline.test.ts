@@ -169,12 +169,13 @@ describe('Dynamic Detachment Battleline System', () => {
     expect(unitKind(melee, ['Warrior Bioform Onslaught'], TYR)).toBe('Battleline');
   });
 
-  it('Wretched Thralls are left out: no DAMNED cap for Chaos Knights or Chaos Space Marines (owner)', async () => {
+  it('Wretched Thralls: DAMNED units for Chaos Knights with Iconoclast Fiefdom, up to 500 pts (Wahapedia 11e)', async () => {
     const { subPointsList } = await import('./allies');
     const QT = loadFaction('QT');
-    expect(QT.datasheets.some((d) => d.keywords.includes('DAMNED') || d.factionKeywords.includes('DAMNED'))).toBe(false);
+    expect(QT.datasheets.some((d) => d.keywords.includes('DAMNED'))).toBe(true);
     const qtList: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strikeForce', detachments: ['Iconoclast Fiefdom'], units: [] };
-    expect(subPointsList(qtList, QT, 2000).some((s) => s.id === 'wretched-thralls')).toBe(false);
+    expect(subPointsList(qtList, QT, 2000).find((s) => s.id === 'wretched-thralls')?.cap).toBe(500);
+    expect(subPointsList({ ...qtList, detachments: ['Traitoris Lance'] }, QT, 2000).some((s) => s.id === 'wretched-thralls')).toBe(false);
   });
 
 

@@ -1,6 +1,8 @@
-// Allied units from other books (11th edition army rules): Freeblades and Dreadblades (Knights), Titanic Support,
-// Assigned Agents (Chaos armies: Chaos Knights only). Their datasheets join the army's faction data marked `ally`, so the builder,
-// points and the game treat them as any other unit; the caps of each rule are checked here.
+// Allied units from other books (11th edition army rules, as Wahapedia 11e: owner, 24 Nov 2026): Freeblades and
+// Dreadblades (Knights), Titanic Support, Assigned Agents and the Daemonic Pact. Their datasheets join the army's
+// faction data marked `ally`, so the builder, points and the game treat them as any other unit; the caps of each rule
+// are checked here. Units another book's detachment brings (Mechanicus Allies, Wretched Thralls, Thralls of the
+// First Prince) are in the army's own faction data and listed in DETACHMENT_ALLIES.
 import type { ArmyList, ArmyUnitEntry, DatasheetData, FactionData } from './types';
 
 export interface AllySource {
@@ -22,12 +24,17 @@ export const ALLIES: AllySource[] = [
     // the Ordos' requisitioned squads: a Space Marine army has its own Deathwatch, Grey Knights and Sisters their own squads
     notFor: { 'Deathwatch Kill Team': ['SM'], 'Aquila Kill Team': ['SM'], 'Grey Knights Terminator Squad': ['GK'], 'Sisters of Battle Squad': ['AS'], 'Sisters of Battle Immolator': ['AS'] } },
   { id: 'QT', rule: 'Dreadblades', army: (id, g) => g === 'Chaos' && id !== 'QT', unit: (d) => has(d, 'TITANIC') || has(d, 'WAR DOG') },
-  // no Daemonic Pact: a Chaos army brings only Chaos Knights as allies (owner, 20 Nov 2026)
+  // "If every model from your army has the Chaos Knights or Heretic Astartes keyword": Chaos Space Marines and Chaos
+  // Knights armies (Death Guard, Thousand Sons, World Eaters and Emperor's Children have their own faction keyword,
+  // and their own daemon detachments). The Chaos Daemons book's Heretic Astartes units are not daemons
+  { id: 'CD', rule: 'Daemonic Pact', army: (id) => id === 'CSM' || id === 'QT', unit: (d) => d.factionKeywords.includes('LEGIONES DAEMONICA') && !d.factionKeywords.includes('HERETIC ASTARTES') },
 ];
 
-/** Units from another book that only one detachment of the army allows (up to 500 pts): Mechanicus Allies. */
+/** Units from another book that only one detachment of the army allows, with their points cap at each battle size. */
 export const DETACHMENT_ALLIES = [
-  { id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact', rule: 'Mechanicus Allies' },
+  { id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact', rule: 'Mechanicus Allies', caps: [500, 500, 500] },
+  { id: 'QT', kw: 'DAMNED', det: 'Iconoclast Fiefdom', rule: 'Wretched Thralls', caps: [500, 500, 500] },
+  { id: 'CD', kw: 'HERETIC ASTARTES', det: 'Shadow Legion', rule: 'Thralls of the First Prince', caps: [500, 1000, 1500] },
 ];
 export const detachmentAllyOf = (factionId: string | undefined, d: { keywords: string[]; factionKeywords: string[] }) =>
   DETACHMENT_ALLIES.find((a) => a.id === factionId && (d.factionKeywords.includes(a.kw) || d.keywords.includes(a.kw)));
@@ -74,6 +81,16 @@ export function allyErrors(list: ArmyList, faction: FactionData, sizePoints: num
       if (titans > 1 || dogs > 3 || (titans && dogs)) errs.push(`${id === 'QI' ? 'Freeblades' : 'Dreadblades'}: either 1 TITANIC model or up to 3 ${small} models`);
     }
     if (id === 'TL' && xs.length > 1) errs.push('Titanic Support: only 1 ADEPTUS TITANICUS model');
+    if (id === 'CD') {
+      const cap = [250, 500, 750][tier], pts = xs.reduce((a, x) => a + unitPoints(x.u), 0);
+      if (pts > cap) errs.push(`Daemonic Pact: ${pts} pts of LEGIONES DAEMONICA units — at most ${cap} pts at this battle size`);
+      // "the number of non-BATTLELINE units with that keyword … cannot be greater than the number of BATTLELINE units"
+      for (const god of ['KHORNE', 'TZEENTCH', 'NURGLE', 'SLAANESH']) {
+        const mine = xs.filter((x) => has(x.d, god));
+        const line = mine.filter((x) => has(x.d, 'BATTLELINE')).length;
+        if (mine.length - line > line) errs.push(`Daemonic Pact: ${god[0] + god.slice(1).toLowerCase()} needs as many BATTLELINE units as other units (${line} BATTLELINE, ${mine.length - line} other)`);
+      }
+    }
     if (id === 'AoI') {
       const caps = { RETINUE: [1, 2, 3], CHARACTER: [1, 2, 3], REQUISITIONED: [1, 1, 2] };
       const kind = (d: DatasheetData) => (has(d, 'RETINUE') ? 'RETINUE' : has(d, 'CHARACTER') ? 'CHARACTER' : 'REQUISITIONED');
@@ -152,8 +169,12 @@ export function subPointsList(
     });
   };
 
-  // 1. (no Daemonic Pact: a Chaos army takes only Chaos Knights from other books, owner 20 Nov 2026; the daemon
-  //    detachments have their own caps in army.ts)
+  // 1. Daemonic Pact: Chaos Space Marines and Chaos Knights armies (the other Chaos books' daemon detachments have
+  //    their own caps below)
+  if (faction.id === 'CSM' || faction.id === 'QT') {
+    const cap = [250, 500, 750][tier];
+    add('daemonic-pact', 'Daemonic Pact', 'Daemons', 'D', cap, (_u, d) => d?.ally === 'CD', `Daemonic Pact: allied LEGIONES DAEMONICA units (up to ${cap} pts)`);
+  }
 
   // 2. Cult of the Dark Gods: CSM cult Legionaries (only in Chaos Space Marines armies)
   if (faction.id === 'CSM') {
@@ -246,8 +267,8 @@ export function subPointsList(
     );
   }
 
-  // 7. Shadow Legion: CD detachment Shadow Legion
-  const hasShadowLegion = list.units.some((u) => {
+  // 7. Shadow Legion: CD detachment Shadow Legion (Thralls of the First Prince)
+  const hasShadowLegion = faction.id === 'CD' && list.units.some((u) => {
     const d = sheetOf(u);
     return d && (d.factionKeywords.includes('HERETIC ASTARTES') || d.keywords.includes('HERETIC ASTARTES'));
   });
@@ -347,6 +368,13 @@ export function subPointsList(
       `Mechanicus Allies: Adeptus Mechanicus units in Questor Forgepact (up to 500 pts)`,
       'Questor Forgepact'
     );
+  }
+
+  // 12. Wretched Thralls: QT detachment Iconoclast Fiefdom
+  const hasDamned = faction.id === 'QT' && list.units.some((u) => !!sheetOf(u)?.keywords.includes('DAMNED'));
+  if (faction.id === 'QT' && (list.detachments.includes('Iconoclast Fiefdom') || hasDamned)) {
+    add('wretched-thralls', 'Wretched Thralls', 'Damned', 'DM', 500, (_u, d) => !!d?.keywords.includes('DAMNED'),
+      'Wretched Thralls: DAMNED units in Iconoclast Fiefdom (up to 500 pts)', 'Iconoclast Fiefdom');
   }
 
   // 13. Deathwatch Allies: SM detachment Deathwatch Support

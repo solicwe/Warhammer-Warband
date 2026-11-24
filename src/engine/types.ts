@@ -86,6 +86,7 @@ export interface WargearOption {
   requiresNot?: string[]; // the model must NOT carry these ("not equipped with X")
   perItem?: string; // "For each [item] this model is equipped with"
   unique?: string[]; // "a model cannot be equipped with more than one X"
+  distinct?: boolean; // "duplicates are not allowed" / "you cannot select the same option more than once": each choice once
 }
 
 /** A wargear choice in an army list: `count` models take choice `choice` of option `opt` (choice -1 = the `picks` list). */

@@ -1935,6 +1935,7 @@
               "Magna-rail rifle"
             ]
           ],
+          "distinct": true,
           "max": 2
         },
         {

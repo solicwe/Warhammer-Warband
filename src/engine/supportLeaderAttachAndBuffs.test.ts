@@ -310,12 +310,12 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     // 1. CSM at 2000 pts (Strike Force)
     const csmList: ArmyList = { name: 'CSM', factionId: 'CSM', battleSize: 'strike_force', detachments: ['Veterans of the Long War'], units: [] };
     const csmSub = subPointsList(csmList, CSM, 2000);
-    expect(csmSub.some((s) => s.id === 'daemonic-pact')).toBe(false); // no Daemonic Pact (owner)
+    expect(csmSub.find((s) => s.id === 'daemonic-pact')?.cap).toBe(500); // Daemonic Pact (Wahapedia 11e)
     expect(csmSub.some((s) => s.id === 'cult-marines' && s.cap === 500 && s.spent === 0)).toBe(true);
 
     // CSM at 1000 pts (Incursion)
     const csmIncursionSub = subPointsList({ ...csmList, battleSize: 'incursion' }, CSM, 1000);
-    expect(csmIncursionSub.find((s) => s.id === 'daemonic-pact')).toBeUndefined();
+    expect(csmIncursionSub.find((s) => s.id === 'daemonic-pact')?.cap).toBe(250);
     expect(csmIncursionSub.find((s) => s.id === 'cult-marines')?.cap).toBe(250);
 
     // Adding Cult Marines: Rubric Marines (105 pts)
@@ -364,11 +364,11 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     const qiSub = subPointsList(qiForgepact, QI, 2000);
     expect(qiSub.find((s) => s.id === 'mechanicus-allies')?.cap).toBe(500);
 
-    // 6. Chaos Knights: Iconoclast Fiefdom has no allied caps (no Daemonic Pact, no Wretched Thralls: owner, 20 Nov 2026)
+    // 6. Chaos Knights: Daemonic Pact, and Wretched Thralls with Iconoclast Fiefdom (Wahapedia 11e, owner 24 Nov 2026)
     const qtFiefdom: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strike_force', detachments: ['Iconoclast Fiefdom'], units: [] };
     const qtSub = subPointsList(qtFiefdom, QT, 2000);
-    expect(qtSub.find((s) => s.id === 'daemonic-pact')).toBeUndefined();
-    expect(qtSub.find((s) => s.id === 'wretched-thralls')).toBeUndefined();
+    expect(qtSub.find((s) => s.id === 'daemonic-pact')?.cap).toBe(500);
+    expect(qtSub.find((s) => s.id === 'wretched-thralls')?.cap).toBe(500);
 
     // 7. Space Marines: Deathwatch Support
     const smDW: ArmyList = { name: 'SM', factionId: 'SM', battleSize: 'strike_force', detachments: ['Deathwatch Support'], units: [] };
@@ -390,9 +390,10 @@ describe('Support / Leader Attachments and Detachment Buff Targets', () => {
     const ecSub = subPointsList(ecCarnival, EC, 2000);
     expect(ecSub.find((s) => s.id === 'legions-of-excess')?.cap).toBe(1000);
 
-    // 10b. No Chaos army has a Daemonic Pact cap any more (owner, 20 Nov 2026)
+    // 10b. Daemonic Pact only for Chaos Space Marines and Chaos Knights armies ("every model has the Chaos Knights or
+    // Heretic Astartes keyword"): the other Chaos books have their own faction keyword and daemon detachments
     const qtList: ArmyList = { name: 'QT', factionId: 'QT', battleSize: 'strike_force', detachments: ['Traitoris Lance'], units: [] };
-    expect(subPointsList(qtList, QT, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(false);
+    expect(subPointsList(qtList, QT, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(true);
 
     const tsDefault: ArmyList = { name: 'TS', factionId: 'TS', battleSize: 'strike_force', detachments: ['Cult of Magic'], units: [] };
     expect(subPointsList(tsDefault, TS, 2000).some((s) => s.id === 'daemonic-pact' && s.cap === 500)).toBe(false);

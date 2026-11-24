@@ -822,6 +822,13 @@ export function wargearProblems(sheet: DatasheetData, e: ArmyUnitEntry): string[
     if (!o) continue;
     const max = wargearMax(sheet, o, e.models, e.addons, e.wargear);
     if (n > max) out.push(`${e.datasheet}: "${o.text.slice(0, 60)}…" allows at most ${max}`);
+    // "duplicates are not allowed": each choice once (for "any number of models can each …" the rule is per model,
+    // and one pick there stands for every model that takes it)
+    if (o.distinct && o.scope !== 'any' && o.scope !== 'all') {
+      const per = new Map<number, number>();
+      for (const pk of e.wargear ?? []) if (pk.opt === i && pk.choice >= 0) per.set(pk.choice, (per.get(pk.choice) ?? 0) + pk.count);
+      for (const [ci, k] of per) if (k > 1) out.push(`${e.datasheet}: ${o.choices[ci]?.join(' and ') ?? 'a choice'} can be taken only once ("${o.text.slice(0, 50)}…")`);
+    }
   }
   for (const pk of e.wargear ?? []) {
     const o = opts[pk.opt];
@@ -1781,14 +1788,24 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     if (cap && pts > cap) errs.push(`${pact.det}: ${pts} pts of ${pact.kw} units — at most ${cap} pts at this battle size`);
     if (pact.caps && xs.some((u) => u.warlord)) errs.push(`A ${pact.kw} model cannot be your Warlord`);
   }
-  // Mechanicus Allies (Questor Forgepact): up to 500 points, only with that detachment
+  // Mechanicus Allies (Questor Forgepact), Wretched Thralls (Iconoclast Fiefdom), Thralls of the First Prince (Shadow
+  // Legion): only with that detachment, up to its points cap
   for (const al of DETACHMENT_ALLIES) {
     if (faction.id !== al.id) continue;
     const xs = list.units.filter((u) => { const d = faction.datasheets.find((x) => x.name === u.datasheet); return !!d && !!detachmentAllyOf(faction.id, d); });
     if (!xs.length) continue;
     if (!list.detachments.includes(al.det)) { errs.push(`${al.kw} units can only be included with the ${al.det} detachment`); continue; }
+    const cap = al.caps[size.points <= 1000 ? 0 : size.points <= 2000 ? 1 : 2];
     const pts = xs.reduce((a, u) => a + unitPoints(u), 0);
-    if (pts > 500) errs.push(`${al.det}: ${pts} pts of ${al.kw} units — at most 500 pts`);
+    if (pts > cap) errs.push(`${al.det}: ${pts} pts of ${al.kw} units — at most ${cap} pts`);
+  }
+  // Thralls of the First Prince: "you cannot include any Daemon Prince, Daemon Prince with Wings or Epic Hero units
+  // (excluding Be'lakor)"
+  if (faction.id === 'CD' && list.detachments.includes('Shadow Legion')) {
+    for (const u of list.units) {
+      const d = faction.datasheets.find((x) => x.name === u.datasheet);
+      if (d && (/^Daemon Prince/i.test(d.name) || d.keywords.includes('EPIC HERO')) && !/^Be.lakor$/i.test(d.name)) errs.push(`Shadow Legion: ${d.name} cannot be included (no Daemon Princes or Epic Heroes but Be’lakor)`);
+    }
   }
   // Houndpack Lance: three or more War Dog units, three of them are CHARACTERS
   if (list.detachments.includes('Houndpack Lance')) {

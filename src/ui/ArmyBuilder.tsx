@@ -255,15 +255,18 @@ export function UnitArt({ sheet }: { sheet?: DatasheetData }) {
 const itemsLabel = (items: string[]) => [...new Set(items)].map((n) => { const k = items.filter((x) => x === n).length; return k > 1 ? `${k}× ${n}` : n; }).join(' + ');
 
 function scopeLabel(o: WargearOption, max: number) {
+  const once = max > 1 && onceEach(o) ? ', each option once' : '';
   const perIt = optPerItem(o);
   if (perIt) return `1 per ${perIt} (max ${max})`;
-  if (o.stack) return `up to ${max}`;
+  if (o.stack) return `up to ${max}${once}`;
   if (o.scope === 'all') return 'whole unit';
-  if (o.scope === 'perN') return `${max} per ${o.per} models`;
+  if (o.scope === 'perN') return `${max} per ${o.per} models${once}`;
   if (o.scope === 'any') return `any number (${max})`;
-  if (o.scope === 'upTo' && max > 1) return `up to ${max} models`;
+  if (o.scope === 'upTo' && max > 1) return `up to ${max} models${once}`;
   return '';
 }
+/** "Duplicates are not allowed": each choice of the option at most once (per model for "any number of models"). */
+const onceEach = (o: WargearOption) => !!o.distinct && o.scope !== 'any' && o.scope !== 'all';
 
 /** Wargear choices of one list entry: swaps, extra weapons, "pick two from the list", add-on models. */
 export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u: ArmyUnitEntry; onChange: (patch: Partial<ArmyUnitEntry>) => void }) {
@@ -393,6 +396,7 @@ export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u:
                 const cur = mine.find((p) => p.choice === ci)?.count ?? 0;
                 const setN = (n: number) => put(i, [...mine.filter((p) => p.choice !== ci), ...(n > 0 ? [{ opt: i, choice: ci, count: n }] : [])]);
                 const onAdd = () => {
+                  if (onceEach(o) && cur >= 1) return;
                   if (used < max) {
                     setN(cur + 1);
                   } else if (max > 0) {
@@ -410,7 +414,7 @@ export function WargearEditor({ sheet, u, onChange }: { sheet: DatasheetData; u:
                     }
                   }
                 };
-                const canAdd = used < max || (max > 0 && cur < max && mine.some((p) => p.choice !== ci && p.count > 0));
+                const canAdd = !(onceEach(o) && cur >= 1) && (used < max || (max > 0 && cur < max && mine.some((p) => p.choice !== ci && p.count > 0)));
                 return (
                   <div key={ci} className="wg-step">
                     <span className="grow">{itemsLabel(c)}{costTag(c, o.replace)}</span>
