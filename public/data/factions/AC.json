@@ -1580,9 +1580,17 @@
           "name": "Sweeping Advance (Once per battle, per unit)",
           "type": "Datasheet",
           "text": "At the end of the Fight phase, if this unit was eligible to fight this phase:\n- If this unit is unengaged, this unit can make a normal move.\n- Or: If this unit is engaged, this unit can make a fall-back move."
+        },
+        {
+          "name": "Leader",
+          "type": "Core",
+          "text": ""
         }
       ],
-      "leads": [],
+      "leads": [
+        "Vertus Praetors",
+        "Gyrfalcon Jetbike Sodality"
+      ],
       "isSupport": false,
       "points": [
         {
@@ -5518,146 +5526,6 @@
         "from": 4
       },
       "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Anathema-Psykana-Rhino"
-    },
-    {
-      "id": "000002519",
-      "name": "Valerian",
-      "role": "Infantry Epic Hero",
-      "keywords": [
-        "SHIELD-CAPTAIN",
-        "EPIC HERO",
-        "CHARACTER",
-        "INFANTRY",
-        "IMPERIUM"
-      ],
-      "factionKeywords": [
-        "ADEPTUS CUSTODES"
-      ],
-      "models": [
-        {
-          "name": "Valerian",
-          "M": 8,
-          "T": 7,
-          "Sv": 2,
-          "InSv": 4,
-          "W": 8,
-          "Ld": 5,
-          "OC": 2,
-          "base": {
-            "w": 40,
-            "h": 40,
-            "text": "40mm"
-          }
-        }
-      ],
-      "composition": [
-        {
-          "name": "Valerian",
-          "min": 1,
-          "max": 1,
-          "text": "1 Valerian model"
-        }
-      ],
-      "loadout": {
-        "*": [
-          "Gnosis"
-        ]
-      },
-      "loadoutText": "This model is equipped with: 1 Gnosis.",
-      "options": [],
-      "wargearOptions": [],
-      "weapons": [
-        {
-          "name": "Gnosis",
-          "profiles": [
-            {
-              "name": "Gnosis",
-              "range": 24,
-              "A": "3",
-              "skill": 2,
-              "S": 6,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "assault",
-                "rapid fire 2"
-              ]
-            },
-            {
-              "name": "Gnosis",
-              "range": "Melee",
-              "A": "7",
-              "skill": 2,
-              "S": 8,
-              "AP": -3,
-              "D": "3",
-              "abilities": []
-            }
-          ]
-        }
-      ],
-      "abilities": [
-        {
-          "name": "Deep Strike",
-          "type": "Core",
-          "text": "DEEP STRIKE24.09\nThere are many ways by which to deploy troops to the field of battle including tunnels, teleportation devices and other esoteric means of transportation.\nEach time this unit makes an ingress move (20.04), if every model in this unit has this ability, it can be set up anywhere on the battlefield that is more than 8\" horizontally from all enemy units, even if that is within your opponent’s deployment zone."
-        },
-        {
-          "name": "Feel No Pain",
-          "type": "Core",
-          "param": "6+",
-          "text": "FEEL NO PAIN24.12\nThe hardiest warriors refuse to be laid low, even by wounds that should by all rights prove lethal.\nThis ability always takes the form Feel No Pain X+. Each time a model with this ability would lose a wound, roll one D6: on an X+, that wound is not lost."
-        },
-        {
-          "name": "Leader",
-          "type": "Core",
-          "text": "LEADER24.22\nMighty heroes fight at the forefront of battle.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
-        },
-        {
-          "name": "Aegis of the Emperor",
-          "type": "Faction",
-          "text": "Friendly Adeptus Custodes units with this ability have Feel No Pain 5+ against mortal wounds."
-        },
-        {
-          "name": "Aquila Commander",
-          "type": "Faction",
-          "text": "At the start of the battle round, if a model with this ability is your WARLORD, gain 1CP."
-        },
-        {
-          "name": "Martial Ka'tah",
-          "type": "Faction",
-          "text": "At the start of your Command phase, friendly Adeptus Custodes units with this ability are readied. While a friendly unit is readied, you can select one of the ka’tah abilities presented below for that unit to use. If you do, that unit is no longer readied.\nEach ka’tah ability will tell you when that ka’tah ability can be used, and the effects that ka’tah ability has on the unit using it.\nWe recommend placing a token next to each readied unit, removing it when that unit is no longer readied.\nFavoured Ka’tah\nMany of the most prominent shield hosts favour a specific martial ka’tah above all others.\nAll detachments tagged ‘Unique: Shield Host’ state a Favoured Ka’tah. If you selected one of these detachments, the ka’tah ability that is the Favoured Ka’tah of that detachment grants the additional effect listed in that detachment.\nExample: If you selected the Solar Watch detachment, when you select the Calistus ka’tah ability for a readied unit, that unit has +2\" M in addition to the normal effect of Calistus."
-        },
-        {
-          "name": "Golden Laurels",
-          "type": "Datasheet",
-          "text": "Attacks that target this unit have -1 AP."
-        },
-        {
-          "name": "Hero of Lion's Gate (Once per battle, per unit)",
-          "type": "Datasheet",
-          "text": "After making a hit roll, wound roll or save roll for this model, you can change the result to an unmodified 6."
-        }
-      ],
-      "leads": [
-        "Sentinel Guard Sodality",
-        "Custodian Guard Sodality",
-        "Custodian Wardens"
-      ],
-      "isSupport": false,
-      "points": [
-        {
-          "label": "YOUR UNIT COSTS",
-          "options": [
-            {
-              "models": 1,
-              "pts": 120
-            }
-          ]
-        }
-      ],
-      "wargearCosts": [],
-      "link": "https://wahapedia.ru/wh40k11ed/factions/adeptus-custodes/Valerian"
     }
   ],
   "source": {

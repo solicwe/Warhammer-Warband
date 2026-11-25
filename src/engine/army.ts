@@ -137,6 +137,8 @@ export function transportFit(t: TransportInfo, kws: string[]): { why: string | n
   }
   // Logan Grimnar: rides transports that can carry Terminators, taking the space of 4 models
   if (kws.some((k) => normKw(k) === 'LOGAN GRIMNAR')) return /terminator/i.test(t.text) ? { why: null, space: 4 } : { why: 'Only transports that carry TERMINATOR models', space: 0 };
+  // Loyal Protector (Ogryn Bodyguard / Nork Deddog): embarks in any transport its unit can embark in, taking the space of 3 models
+  if (kws.some((k) => normKw(k) === 'LOYAL PROTECTOR')) return { why: null, space: 3 };
   const no = t.forbid.filter((f) => kwPhrase(f, kws));
   if (no.length && !(t.except ?? []).some((e) => kwPhrase(e, kws))) return { why: `Cannot carry ${no.join(', ')}`, space: 0 };
   if (t.kinds?.length) {
@@ -1070,7 +1072,16 @@ export function buildUnits(list: ArmyList, faction: FactionData, owner: PlayerId
     const sheet = sheetOf(e);
     if (!sheet) continue;
     const id = `p${owner}-${e.uid}`;
-    const joiners = attached.filter((a) => a.attachTo === e.uid);
+    // Collect direct and transitive joiners (e.g. Ogryn Bodyguard -> Command Squad -> Infantry Squad)
+    const joiners: typeof attached = [];
+    const seenJoiners = new Set<string>([e.uid]);
+    let frontier = [e.uid];
+    while (frontier.length) {
+      const next = attached.filter((a) => frontier.includes(a.attachTo!) && !seenJoiners.has(a.uid));
+      for (const n of next) seenJoiners.add(n.uid);
+      joiners.push(...next);
+      frontier = next.map((n) => n.uid);
+    }
     const sheets = [sheet, ...joiners.map(sheetOf)];
     const models = [
       ...makeModels(sheet, e, id, joiners.length > 0),
@@ -1328,9 +1339,12 @@ export function canLeaderAttach(leader: DatasheetData, body: DatasheetData, enha
     (leads.includes('Battle Sisters Squad') || leads.includes('Sisters of Battle Squad') || leader.keywords.includes('INQUISITOR') || leader.keywords.includes('MINISTORUM PRIEST') || leader.name === 'Ministorum Priest')
   ) return true;
 
+  // Loyal Protector (Ogryn Bodyguard, Nork Deddog): joins any COMMAND SQUAD unit
+  if (leader.keywords.includes('LOYAL PROTECTOR')) return body.keywords.includes('COMMAND SQUAD');
+
   // Astra Militarum
   if (
-    ['Catachan Jungle Fighters', 'Death Korps of Krieg', 'Kasrkin', 'Infantry Squad'].includes(body.name) &&
+    ['Catachan Jungle Fighters', 'Death Korps of Krieg', 'Death Korps Of Krieg', 'Kasrkin', 'Infantry Squad'].includes(body.name) &&
     (leads.includes('Cadian Shock Troops') || leads.includes('Infantry Squad'))
   ) return true;
 
@@ -1350,12 +1364,14 @@ export function canLeaderAttach(leader: DatasheetData, body: DatasheetData, enha
 export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry): ArmyUnitEntry[] {
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
   const me = sheetOf(entry.datasheet);
-  if (!me?.leads.length) return [];
+  const isLoyal = !!me?.keywords.includes('LOYAL PROTECTOR');
+  if (!me || (!me.leads.length && !isLoyal)) return [];
   return list.units.filter((b) => {
-    if (b.uid === entry.uid || b.attachTo) return false;
+    if (b.uid === entry.uid || (!isLoyal && b.attachTo)) return false;
     const bodySheet = sheetOf(b.datasheet);
     if (!bodySheet || !canLeaderAttach(me, bodySheet, entry.enhancement)) return false;
-    return !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && supportIn(list, sheetOf(o.datasheet)) === supportIn(list, me));
+    if (isLoyal) return !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && sheetOf(o.datasheet)?.keywords.includes('LOYAL PROTECTOR'));
+    return !list.units.some((o) => o.uid !== entry.uid && o.attachTo === b.uid && !sheetOf(o.datasheet)?.keywords.includes('LOYAL PROTECTOR') && supportIn(list, sheetOf(o.datasheet)) === supportIn(list, me));
   });
 }
 
@@ -1367,11 +1383,12 @@ export function attachOptions(list: ArmyList, faction: FactionData, entry: ArmyU
 export function autoAttach(list: ArmyList, faction: FactionData): ArmyList {
   const sheetOf = (n: string) => faction.datasheets.find((d) => d.name === n);
   let units = [...list.units];
-  const loose = units.filter((u) => !u.attachTo && sheetOf(u.datasheet)?.leads.length && !units.some((o) => o.attachTo === u.uid))
+  const loose = units.filter((u) => !u.attachTo && (sheetOf(u.datasheet)?.leads.length || sheetOf(u.datasheet)?.keywords.includes('LOYAL PROTECTOR')) && !units.some((o) => o.attachTo === u.uid))
     .sort((a, b) => Number(!!sheetOf(a.datasheet)?.isSupport) - Number(!!sheetOf(b.datasheet)?.isSupport));
   for (const c of loose) {
     const cur = { ...list, units };
-    const body = attachOptions(cur, faction, c).filter((b) => !sheetOf(b.datasheet)?.keywords.includes('CHARACTER'))
+    const isLoyal = !!sheetOf(c.datasheet)?.keywords.includes('LOYAL PROTECTOR');
+    const body = attachOptions(cur, faction, c).filter((b) => isLoyal || !sheetOf(b.datasheet)?.keywords.includes('CHARACTER'))
       .sort((a, b) => b.pts * b.models - a.pts * a.models)[0];
     if (body) units = units.map((u) => (u.uid === c.uid ? { ...u, attachTo: body.uid, embarkIn: undefined } : u));
   }
@@ -1388,8 +1405,9 @@ export function fitKeywords(sheet: DatasheetData, list: ArmyList, faction: Facti
 export function enhancementOptions(list: ArmyList, faction: FactionData, entry: ArmyUnitEntry) {
   const sheet = faction.datasheets.find((d) => d.name === entry.datasheet);
   // allied units take no Enhancements (Freeblades, Dreadblades, Daemonic Pact; the others' own detachments aren't ours)
+  // Loyal Protector (Ogryn Bodyguard / Nork Deddog): cannot be given Enhancements
   const isAlliedDaemon = !!sheet && sheet.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD' && !list.detachments.includes('Tallyband Summoners');
-  if (!sheet || sheet.ally || isAlliedDaemon) return [];
+  if (!sheet || sheet.ally || isAlliedDaemon || sheet.keywords.includes('LOYAL PROTECTOR')) return [];
 
   // Officio Assassinorum in Veiled Blade Elimination Force can take enhancements despite EPIC HERO
   const isOfficioVeiled = faction.id === 'AoI' && list.detachments.includes('Veiled Blade Elimination Force') && sheet.keywords.includes('OFFICIO ASSASSINORUM');
@@ -1827,8 +1845,11 @@ export function validateList(list: ArmyList, faction: FactionData, size: { point
     // Supreme Commander (Trajann Valoris): must be the Warlord
     if (sheet?.abilities.some((a) => a.name.toUpperCase() === 'SUPREME COMMANDER') && !u.warlord) errs.push(`${u.datasheet} must be your Warlord (Supreme Commander)`);
     // ANATHEMA PSYKANA characters can't be the Warlord (Null Maiden Vigil allows it)
-    // Force of Untamed Destruction (Murderfang): "This model cannot be your WARLORD"
-    if (u.warlord && sheet?.abilities.some((ab) => /cannot be (?:selected to be )?your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
+    // Force of Untamed Destruction (Murderfang) / Loyal Protector: "This model cannot be (selected as) your WARLORD"
+    if (u.warlord && sheet?.abilities.some((ab) => /cannot be (?:selected (?:to be |as ))?your WARLORD/i.test(ab.text ?? ''))) errs.push(`${u.datasheet} cannot be your Warlord`);
+    if (sheet?.keywords.includes('LOYAL PROTECTOR') && (!u.attachTo || !list.units.some((b) => b.uid === u.attachTo && faction.datasheets.find((d) => d.name === b.datasheet)?.keywords.includes('COMMAND SQUAD')))) {
+      errs.push(`${u.datasheet}: must join a COMMAND SQUAD unit`);
+    }
     if (u.warlord && sheet?.factionKeywords.includes('ANATHEMA PSYKANA') && !list.detachments.includes('Null Maiden Vigil')) errs.push(`${u.datasheet} (ANATHEMA PSYKANA) cannot be your Warlord`);
     if (u.warlord && (sheet?.ally || (sheet?.factionKeywords.includes('LEGIONES DAEMONICA') && faction.id !== 'CD'))) {
       errs.push(`${u.datasheet} is an allied unit and cannot be your Warlord`);

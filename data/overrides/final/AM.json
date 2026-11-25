@@ -1,0 +1,18 @@
+{
+ "datasheets": [
+  {
+   "name": "Ministorum Priest",
+   "abilities": [
+    {
+     "name": "Support",
+     "_delete": true
+    },
+    {
+     "name": "Leader",
+     "type": "Core",
+     "text": ""
+    }
+   ]
+  }
+ ]
+}

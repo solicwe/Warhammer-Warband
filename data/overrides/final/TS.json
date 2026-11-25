@@ -1,0 +1,13 @@
+{
+ "detachments": [
+  {
+   "name": "Ritual of Regeneration",
+   "stratagems": [
+    {
+     "name": "MUTAGENIC MAGICKS",
+     "text": "WHEN: Start of the Fight phase.\nTARGET: One friendly engaged THOUSAND SONS PSYKER unit.\nEFFECT: Select one enemy unit engaged with your unit. Roll six D6: For each 4+, that enemy unit suffers 1 mortal wound."
+    }
+   ]
+  }
+ ]
+}

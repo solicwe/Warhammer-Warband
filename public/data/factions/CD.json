@@ -9034,21 +9034,6 @@
           ]
         },
         {
-          "name": "Astartes chainblade",
-          "profiles": [
-            {
-              "name": "Astartes chainblade",
-              "range": "Melee",
-              "A": "7",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
           "name": "Accursed weapon",
           "profiles": [
             {
@@ -9107,6 +9092,20 @@
               "abilities": [
                 "devastating wounds"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "7",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1"
             }
           ]
         }
@@ -15009,6 +15008,11 @@
           "name": "Hysterical Frenzy (Psychic)",
           "type": "Datasheet",
           "text": "Each time a model in this model’s unit is destroyed, if that model has not fought this phase, do not remove it from play. The destroyed model can fight after the attacking unit has finished making its attacks, and is then removed from play."
+        },
+        {
+          "name": "Leader",
+          "type": "Core",
+          "text": ""
         }
       ],
       "leads": [

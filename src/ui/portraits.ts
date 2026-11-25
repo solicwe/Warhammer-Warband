@@ -1,5 +1,5 @@
 /** Players can change unit pictures or the army emblem in the app; photos can be exported as JSON or ZIP. */
-export const PHOTO_EDIT = false;
+export const PHOTO_EDIT = true;
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
 //     `public/images/manifest.json` (built by `npm run images`). The folder can live elsewhere: set VITE_IMAGE_BASE.

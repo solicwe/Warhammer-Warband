@@ -780,7 +780,7 @@
           "type": "Soulforged Warpack – Strategic Ploy Stratagem",
           "turn": "Opponent’s turn",
           "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, when an enemy unit (excluding MONSTER and VEHICLES) is selected to Fall Back.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE or Vashtorr the Arkifane unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: Until the end of the phase, each time an enemy unit (excluding MONSTERS and VEHICLES) that is within Engagement Range of your unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, of that enemy unit is Battle-shocked, substract 1 from each of those tests."
+          "text": "WHEN: Your opponent’s Movement phase, when an enemy unit (excluding MONSTER and VEHICLES) is selected to Fall Back.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE or Vashtorr the Arkifane unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: Until the end of the phase, each time an enemy unit (excluding MONSTERS and VEHICLES) that is within Engagement Range of your unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, substract 1 from each of those tests."
         },
         {
           "id": "000008986003",
@@ -2351,21 +2351,6 @@
           ]
         },
         {
-          "name": "Astartes chainblade",
-          "profiles": [
-            {
-              "name": "Astartes chainblade",
-              "range": "Melee",
-              "A": "7",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
           "name": "Daemon hammer",
           "profiles": [
             {
@@ -2394,6 +2379,20 @@
               "AP": -2,
               "D": "2",
               "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "7",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1"
             }
           ]
         }

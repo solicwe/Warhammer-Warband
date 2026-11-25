@@ -1858,13 +1858,14 @@
         }
       ],
       "leads": [
-        "Vigilant Squad",
         "Aquila Kill Team",
-        "Subductor Squad",
+        "Deathwatch Kill Team",
+        "Exaction Squad",
         "Imperial Navy Breachers",
         "Inquisitorial Agents",
-        "Exaction Squad",
-        "Deathwatch Kill Team"
+        "Sanctifiers",
+        "Subductor Squad",
+        "Vigilant Squad"
       ],
       "isSupport": false,
       "points": [

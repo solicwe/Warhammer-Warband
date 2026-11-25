@@ -1308,7 +1308,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
       && faction.datasheets.some((d) => allowed(d) && supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
     const bodyLeader = body && bodySheet && supportIn(list, sheet) && !list.units.some((c) => c.attachTo === body.uid && !supportIn(list, sheetOf(c.datasheet)))
       && faction.datasheets.some((d) => allowed(d) && !supportIn(list, d) && canLeaderAttach(d, bodySheet) && pointsOptions(d).length);
-    const squadsFor = sheet?.leads.length && !body ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
+    const squadsFor = (sheet?.leads.length || sheet?.keywords.includes('LOYAL PROTECTOR')) && !body ? faction.datasheets.filter((d) => allowed(d) && pointsOptions(d).length > 0 && canLeaderAttach(sheet, d)) : [];
     const close = () => { setPop(null); setPeek(null); };
     const w = pop.mode && pop.mode !== 'size' ? Math.min(340, window.innerWidth - 16) : 260;
     const left = Math.max(8, Math.min(window.innerWidth - w - 8, pop.x - w));

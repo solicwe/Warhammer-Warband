@@ -299,7 +299,8 @@ export const stratDetachment = (s: GameState, p: PlayerId, st: StratagemData) =>
 /** What this stratagem does: the faction's hand-written book first, else read from the card. */
 export function stratRule(st: StratagemData, factionId?: string, detachment?: string): StratRule {
   const book = factionId ? BOOKS[factionId] : undefined;
-  const own = book?.[`${st.name}@${detachment}`] ?? book?.[st.name];
+  const norm = st.name.replace(/[\u2010-\u2014]/g, '-');
+  const own = book?.[`${st.name}@${detachment}`] ?? book?.[st.name] ?? book?.[`${norm}@${detachment}`] ?? book?.[norm];
   // an entry marked 'never' still gets the attack / defend use its effects call for (the bot measures whether it pays)
   if (own) return { status: 'auto', ...own, bot: !own.bot || (own.bot === 'never' && !own.react) ? botUseOf(own) : own.bot };
   return readStratagem(st);

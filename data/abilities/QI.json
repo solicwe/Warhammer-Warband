@@ -1186,5 +1186,10 @@
     }
    }
   ]
+ },
+ "Using Sir Hekhtur": {
+  "code": true,
+  "status": "auto",
+  "note": "When Canis Rex is destroyed, Sir Hekhtur performs an Emergency Disembarkation; Canis Rex unit is not destroyed until Sir Hekhtur is also destroyed (Core Stratagems only)"
  }
 }

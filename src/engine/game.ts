@@ -2904,7 +2904,93 @@ export function emergencyDisembark(s: GameState, t: UnitState, tm: ModelState) {
   }
 }
 
-onTransportDestroyed((s, u, m) => { if (u.transport && embarkedIn(s, u).length) emergencyDisembark(s, u, m); });
+function spawnSirHekhtur(s: GameState, canis: UnitState, m: ModelState) {
+  (canis.used ??= {}).hekhturSpawned = '1';
+  const id = `${canis.id}-hekhtur`;
+  if (s.units.some((x) => x.id === id)) return;
+  const r = 25 / 2 / 25.4;
+  const kws = ['INFANTRY', 'CHARACTER', 'EPIC HERO', 'IMPERIUM', 'SIR HEKHTUR'];
+  const hekhtur: UnitState = {
+    id,
+    owner: canis.owner,
+    name: 'Sir Hekhtur',
+    sources: ['Sir Hekhtur'],
+    keywords: kws,
+    factionKeywords: ['IMPERIUM', 'IMPERIAL KNIGHTS'],
+    models: [
+      {
+        id: `${id}-m0`,
+        name: 'Sir Hekhtur',
+        source: 'Sir Hekhtur',
+        isCharacter: true,
+        isBodyguard: false,
+        x: m.x,
+        y: m.y,
+        r,
+        wounds: 3,
+        dead: false,
+        profile: { name: 'Sir Hekhtur', M: 6, T: 3, Sv: 4, InSv: null, W: 3, Ld: 5, OC: 1, base: { w: 25, h: 25, text: '25mm' } },
+        weapons: [
+          {
+            name: "Hekhtur's pistol",
+            profiles: [{ name: "Hekhtur's pistol", range: 12, A: '1', skill: 2, S: 5, AP: -1, D: '2', abilities: ['pistol'] }],
+          },
+          {
+            name: 'Close combat weapon',
+            profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '2', skill: 2, S: 3, AP: 0, D: '1', abilities: [] }],
+          },
+        ],
+        keywords: kws,
+        gear: [],
+      },
+    ],
+    startingStrength: 1,
+    abilities: [
+      { name: 'Lone Operative', type: 'Core', text: '', sheet: 'Sir Hekhtur', faction: 'QI' },
+      {
+        name: 'Using Sir Hekhtur',
+        type: 'Datasheet',
+        text: 'If your Canis Rex model is destroyed, this model is treated as a model disembarking from a destroyed TRANSPORT and must perform an Emergency Disembarkation. Sir Hekhtur cannot be selected as the target of any of your Stratagems other than Core Stratagems. Your Canis Rex unit is not considered to be destroyed until Sir Hekhtur is also destroyed.',
+        sheet: 'Sir Hekhtur',
+        faction: 'QI',
+      },
+    ],
+    core: { loneOperative: 12 },
+    pts: 0,
+    status: 'embarked',
+    embarkedIn: canis.id,
+    transport: null,
+    weaponsFired: [],
+    cantCharge: false,
+    scoutDone: false,
+    battleShocked: false,
+    isWarlordUnit: canis.isWarlordUnit,
+    warlordSource: canis.isWarlordUnit ? 'Sir Hekhtur' : undefined,
+    enhancements: [],
+    move: null,
+    advanceRoll: null,
+    maxMoved: 0,
+    setUpTurn: s.turn,
+    shotTurn: -10,
+    selectedToShoot: false,
+    declaredCharge: false,
+    chargeRoll: null,
+    chargedTurn: -10,
+    chargeTargets: [],
+    fought: false,
+    foughtFirstUntilTurn: -10,
+    stratagemPhase: null,
+    oneShotUsed: [],
+    buffs: [],
+  };
+  s.units.push(hekhtur);
+  emergencyDisembark(s, canis, m);
+}
+
+onTransportDestroyed((s, u, m) => {
+  if (u.keywords.includes('CANIS REX') && !u.used?.hekhturSpawned) spawnSirHekhtur(s, u, m);
+  if (u.transport && embarkedIn(s, u).length) emergencyDisembark(s, u, m);
+});
 
 // ---------- one-tap moves (the player's "go in" buttons and the bot share these) ----------
 

@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildShootPools } from './attack';
+import { attachOptions, buildUnits, enhancementOptions, transportFit, validateList } from './army';
+import { parseTransport } from './army';
 import { botAct } from '../ai/bot';
 import { modelDefence, unitFlags } from '../rules-engine/effects';
 import { createGame } from './game';
@@ -215,6 +217,65 @@ describe('Astra Militarum Detachment Rules and Abilities', () => {
     bullgryn.status = 'board';
     const def = modelDefence(state, bullgryn, bullgryn.models[0], 'ranged');
     expect(def.damage).toBe(-1);
+  });
+
+  it('Death Korps Of Krieg: Grim Demeanour gives +1 hit below starting strength and +1 wound below half strength', () => {
+    const list = {
+      ...PRESETS.AM,
+      units: [
+        { uid: 'cmd', datasheet: 'Cadian Castellan', models: 1, pts: 55, warlord: true },
+        { uid: 'krieg', datasheet: 'Death Korps Of Krieg', models: 10, pts: 70 },
+      ],
+    };
+    const state = createGame({ lists: [list, PRESETS.SM], factions: [AM, SM], names: ['Astra', 'Marines'], seed: 108 });
+    const krieg = state.units.find((u) => u.name === 'Death Korps Of Krieg')!;
+    const marines = state.units.find((u) => u.owner === 1)!;
+    krieg.status = 'board';
+    marines.status = 'board';
+    krieg.models.forEach((m) => { m.x = 10; m.y = 10; });
+    marines.models.forEach((m) => { m.x = 10; m.y = 20; });
+    expect(buildShootPools(state, krieg.id, marines.id, { mode: 'normal' }).pools[0].hitMod).toBe(0);
+    krieg.models[0].dead = true; // 9/10: below starting strength
+    const belowStart = buildShootPools(state, krieg.id, marines.id, { mode: 'normal' }).pools[0];
+    expect(belowStart.hitMod).toBe(1);
+    expect(belowStart.woundMod).toBe(0);
+    for (let i = 1; i < 6; i++) krieg.models[i].dead = true; // 4/10: below half strength
+    const belowHalf = buildShootPools(state, krieg.id, marines.id, { mode: 'normal' }).pools[0];
+    expect(belowHalf.hitMod).toBe(1);
+    expect(belowHalf.woundMod).toBe(1);
+  });
+
+  it('Ogryn Bodyguard (LOYAL PROTECTOR): attaches to a Command Squad (even if leading), max 1, no Warlord/Enhancements, takes 3 transport spaces', () => {
+    const ogryn = AM.datasheets.find((d) => d.name === 'Ogryn Bodyguard')!;
+    const chimera = AM.datasheets.find((d) => d.name === 'Chimera')!;
+    const size = { points: 2000, dp: 3, unitLimit: 3, enhancements: 3 };
+    const list = {
+      ...PRESETS.AM,
+      detachments: ['Combined Arms'],
+      units: [
+        { uid: 'cmd', datasheet: 'Cadian Command Squad', models: 5, pts: 65, warlord: true, attachTo: 'shock' },
+        { uid: 'shock', datasheet: 'Cadian Shock Troops', models: 10, pts: 65 },
+        { uid: 'ob1', datasheet: 'Ogryn Bodyguard', models: 1, pts: 40 },
+        { uid: 'ob2', datasheet: 'Ogryn Bodyguard', models: 1, pts: 40 },
+      ],
+    };
+    // Can attach to Cadian Command Squad even though Command Squad is already attached to Cadian Shock Troops
+    expect(attachOptions(list, AM, list.units[2]).map((u) => u.uid)).toEqual(['cmd']);
+    // Cannot take enhancements
+    expect(enhancementOptions(list, AM, list.units[2])).toEqual([]);
+    // Unattached Ogryn Bodyguard fails validation
+    expect(validateList(list, AM, size).some((e) => e.includes('must join a COMMAND SQUAD'))).toBe(true);
+    // Attach ob1 -> cmd: ob2 can no longer attach to cmd (max 1 LOYAL PROTECTOR per COMMAND SQUAD)
+    const attachedList = { ...list, units: list.units.slice(0, 3).map((u) => u.uid === 'ob1' ? { ...u, attachTo: 'cmd' } : u) };
+    expect(validateList(attachedList, AM, size)).toEqual([]);
+    expect(attachOptions({ ...list, units: [...attachedList.units, list.units[3]] }, AM, list.units[3])).toEqual([]);
+    // Transitive join: buildUnits puts Shock Troops + Command Squad + Ogryn Bodyguard into one unit
+    const built = buildUnits(attachedList, AM, 0);
+    expect(built).toHaveLength(1);
+    expect(built[0].models.some((m) => m.source === 'Ogryn Bodyguard')).toBe(true);
+    // Transport capacity: Ogryn Bodyguard joined to a unit can embark in Chimera and takes 3 spaces
+    const fit = transportFit(parseTransport(chimera.transport)!, [...ogryn.keywords, ...ogryn.factionKeywords, ogryn.name]);
+    expect(fit).toEqual({ why: null, space: 3 });
   });
 });
 

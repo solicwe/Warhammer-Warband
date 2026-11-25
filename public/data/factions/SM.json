@@ -16677,6 +16677,23 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Multi-melta",
+          "profiles": [
+            {
+              "name": "Multi-melta",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 10,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 3"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -16781,6 +16798,17 @@
           "choices": [
             [
               "Ironhail Heavy Stubber"
+            ]
+          ]
+        },
+        {
+          "text": "This model can be equipped with 1 Multi-melta.",
+          "scope": "one",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Multi-melta"
             ]
           ]
         }
@@ -17217,6 +17245,23 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Multi-melta",
+          "profiles": [
+            {
+              "name": "Multi-melta",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 10,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 3"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -17279,6 +17324,17 @@
           "choices": [
             [
               "Twin Lascannon"
+            ]
+          ]
+        },
+        {
+          "text": "This model can be equipped with 1 Multi-melta.",
+          "scope": "one",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Multi-melta"
             ]
           ]
         }
@@ -17458,6 +17514,23 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Multi-melta",
+          "profiles": [
+            {
+              "name": "Multi-melta",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 10,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 3"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -17507,6 +17580,17 @@
           "choices": [
             [
               "Heavy Laser Destroyer"
+            ]
+          ]
+        },
+        {
+          "text": "This model can be equipped with 1 Multi-melta.",
+          "scope": "one",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Multi-melta"
             ]
           ]
         }
@@ -19747,6 +19831,23 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Multi-melta",
+          "profiles": [
+            {
+              "name": "Multi-melta",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 10,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 3"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -19784,7 +19885,19 @@
           ]
         }
       ],
-      "wargearOptions": [],
+      "wargearOptions": [
+        {
+          "text": "This model can be equipped with 1 Multi-melta.",
+          "scope": "one",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Multi-melta"
+            ]
+          ]
+        }
+      ],
       "maxPerArmy": 3,
       "dupTax": {
         "pts": 20,
@@ -19891,6 +20004,23 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Multi-melta",
+          "profiles": [
+            {
+              "name": "Multi-melta",
+              "range": 18,
+              "A": "2",
+              "skill": 3,
+              "S": 10,
+              "AP": -3,
+              "D": "D3+2",
+              "abilities": [
+                "melta 3"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -19928,7 +20058,19 @@
           ]
         }
       ],
-      "wargearOptions": [],
+      "wargearOptions": [
+        {
+          "text": "This model can be equipped with 1 Multi-melta.",
+          "scope": "one",
+          "who": "*",
+          "replace": [],
+          "choices": [
+            [
+              "Multi-melta"
+            ]
+          ]
+        }
+      ],
       "maxPerArmy": 3,
       "dupTax": {
         "pts": 20,
@@ -24888,7 +25030,7 @@
           "profiles": [
             {
               "name": "bolt",
-              "range": 12,
+              "range": 18,
               "A": "4",
               "skill": 2,
               "S": 6,
@@ -24900,7 +25042,7 @@
             },
             {
               "name": "plasma",
-              "range": 12,
+              "range": 18,
               "A": "2",
               "skill": 2,
               "S": 10,
@@ -30827,7 +30969,7 @@
           "M": 6,
           "T": 4,
           "Sv": 3,
-          "InSv": null,
+          "InSv": 4,
           "W": 1,
           "Ld": 8,
           "OC": 1,

@@ -4,5 +4,40 @@
    "name": "Dark Pacts",
    "_delete": true
   }
+ ],
+ "datasheets": [
+  {
+   "name": "Tormentbringer",
+   "abilities": [
+    {
+     "name": "Leader",
+     "type": "Core",
+     "text": ""
+    }
+   ]
+  },
+  {
+   "name": "Chaos Lord",
+   "weapons": [
+    {
+     "name": "Astartes chainblade",
+     "_delete": true
+    },
+    {
+     "name": "Astartes chainsword",
+     "profiles": [
+      {
+       "name": "Astartes chainsword",
+       "range": "Melee",
+       "A": "7",
+       "skill": 2,
+       "S": 5,
+       "AP": -1,
+       "D": "1"
+      }
+     ]
+    }
+   ]
+  }
  ]
 }

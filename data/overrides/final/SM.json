@@ -81,6 +81,274 @@
    ]
   },
   {
+   "name": "Impulsor",
+   "weapons": [
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "range": 18,
+       "A": "2",
+       "skill": 3,
+       "S": 10,
+       "AP": -3,
+       "D": "D3+2",
+       "abilities": [
+        "melta 3"
+       ]
+      }
+     ]
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "Impulsor: Storm Bolters can be replaced with Fragstorm Grenade Launchers",
+      "scope": "one",
+      "who": "Impulsor",
+      "replace": [
+       "Storm Bolters"
+      ],
+      "choices": [
+       [
+        "Fragstorm Grenade Launchers"
+       ]
+      ]
+     },
+     {
+      "text": "Impulsor: can be equipped with Bellicatus Missile Array / Orbital Comms Array / Ironhail Skytalon Array / Shield Dome",
+      "scope": "one",
+      "who": "Impulsor",
+      "replace": [],
+      "choices": [
+       [
+        "Bellicatus Missile Array"
+       ],
+       [
+        "Orbital Comms Array"
+       ],
+       [
+        "Ironhail Skytalon Array"
+       ],
+       [
+        "Shield Dome"
+       ]
+      ]
+     },
+     {
+      "text": "Impulsor: can be equipped with Ironhail Heavy Stubber",
+      "scope": "one",
+      "who": "Impulsor",
+      "replace": [],
+      "choices": [
+       [
+        "Ironhail Heavy Stubber"
+       ]
+      ]
+     },
+     {
+      "text": "This model can be equipped with 1 Multi-melta.",
+      "scope": "one",
+      "who": "*",
+      "replace": [],
+      "choices": [
+       [
+        "Multi-melta"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Repulsor",
+   "weapons": [
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "range": 18,
+       "A": "2",
+       "skill": 3,
+       "S": 10,
+       "AP": -3,
+       "D": "D3+2",
+       "abilities": [
+        "melta 3"
+       ]
+      }
+     ]
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "Repulsor: Heavy Onslaught Gatling Cannon can be replaced with Las-talon",
+      "scope": "one",
+      "who": "Repulsor",
+      "replace": [
+       "Heavy Onslaught Gatling Cannon"
+      ],
+      "choices": [
+       [
+        "Las-talon"
+       ]
+      ]
+     },
+     {
+      "text": "Repulsor: Twin Heavy Bolter can be replaced with Twin Lascannon",
+      "scope": "one",
+      "who": "Repulsor",
+      "replace": [
+       "Twin Heavy Bolter"
+      ],
+      "choices": [
+       [
+        "Twin Lascannon"
+       ]
+      ]
+     },
+     {
+      "text": "This model can be equipped with 1 Multi-melta.",
+      "scope": "one",
+      "who": "*",
+      "replace": [],
+      "choices": [
+       [
+        "Multi-melta"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Repulsor Executioner",
+   "weapons": [
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "range": 18,
+       "A": "2",
+       "skill": 3,
+       "S": 10,
+       "AP": -3,
+       "D": "D3+2",
+       "abilities": [
+        "melta 3"
+       ]
+      }
+     ]
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "Repulsor Executioner: Macro Plasma Incinerator can be replaced with Heavy Laser Destroyer",
+      "scope": "one",
+      "who": "Repulsor Executioner",
+      "replace": [
+       "Macro Plasma Incinerator"
+      ],
+      "choices": [
+       [
+        "Heavy Laser Destroyer"
+       ]
+      ]
+     },
+     {
+      "text": "This model can be equipped with 1 Multi-melta.",
+      "scope": "one",
+      "who": "*",
+      "replace": [],
+      "choices": [
+       [
+        "Multi-melta"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Gladiator Lancer",
+   "weapons": [
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "range": 18,
+       "A": "2",
+       "skill": 3,
+       "S": 10,
+       "AP": -3,
+       "D": "D3+2",
+       "abilities": [
+        "melta 3"
+       ]
+      }
+     ]
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "This model can be equipped with 1 Multi-melta.",
+      "scope": "one",
+      "who": "*",
+      "replace": [],
+      "choices": [
+       [
+        "Multi-melta"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Gladiator Reaper",
+   "weapons": [
+    {
+     "name": "Multi-melta",
+     "profiles": [
+      {
+       "name": "Multi-melta",
+       "range": 18,
+       "A": "2",
+       "skill": 3,
+       "S": 10,
+       "AP": -3,
+       "D": "D3+2",
+       "abilities": [
+        "melta 3"
+       ]
+      }
+     ]
+    }
+   ],
+   "wargearOptions": {
+    "_replace": [
+     {
+      "text": "This model can be equipped with 1 Multi-melta.",
+      "scope": "one",
+      "who": "*",
+      "replace": [],
+      "choices": [
+       [
+        "Multi-melta"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
    "name": "Death Company Captain",
    "weapons": [
     {
@@ -628,6 +896,15 @@
    ]
   },
   {
+   "name": "Chaplain Grimaldus",
+   "models": [
+    {
+     "name": "Cenobyte Servitor",
+     "InSv": 4
+    }
+   ]
+  },
+  {
    "name": "Marshal",
    "weapons": [
     {
@@ -808,34 +1085,29 @@
    ]
   },
   {
-   "name": "Fortis Kill Team",
-   "weapons": [
-    {
-     "name": "Superfrag Rocket Launcher",
-     "profiles": [
-      {
-       "name": "Superfrag Rocket Launcher",
-       "skill": 3
-      }
-     ]
-    },
-    {
-     "name": "Superkrak Rocket Launcher",
-     "profiles": [
-      {
-       "name": "Superkrak Rocket Launcher",
-       "skill": 3
-      }
-     ]
-    }
-   ]
-  },
-  {
    "name": "Watch Captain Artemis",
    "models": [
     {
      "name": "Watch Captain Artemis",
      "W": 4
+    }
+   ]
+  },
+  {
+   "name": "Lion El’jonson",
+   "weapons": [
+    {
+     "name": "Arma Luminis",
+     "profiles": [
+      {
+       "name": "bolt",
+       "range": 18
+      },
+      {
+       "name": "plasma",
+       "range": 18
+      }
+     ]
     }
    ]
   }

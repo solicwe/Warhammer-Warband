@@ -1,0 +1,20 @@
+{
+ "datasheets": [
+  {
+   "name": "Shield-Captain on Dawneagle Jetbike",
+   "abilities": [
+    {
+     "name": "Leader",
+     "type": "Core",
+     "text": ""
+    }
+   ],
+   "leads": {
+    "_replace": [
+     "Vertus Praetors",
+     "Gyrfalcon Jetbike Sodality"
+    ]
+   }
+  }
+ ]
+}

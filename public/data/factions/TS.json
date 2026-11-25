@@ -655,7 +655,7 @@
           "type": "Ritual of Regeneration Stratagem",
           "turn": "Either player’s turn",
           "phase": "Fight phase",
-          "text": "WHEN: Start of the Fight phase.\nTARGET: One friendly engaged THOUSAND SONS PSYKER unit.\nEFFECT: Start of the Fight phase. One friendly engaged Thousand Sons Psyker unit. Select one enemy unit engaged with your unit. Roll six D6: For each 4+, that enemy unit suffers 1 mortal wound."
+          "text": "WHEN: Start of the Fight phase.\nTARGET: One friendly engaged THOUSAND SONS PSYKER unit.\nEFFECT: Select one enemy unit engaged with your unit. Roll six D6: For each 4+, that enemy unit suffers 1 mortal wound."
         }
       ]
     },

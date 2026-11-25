@@ -11,7 +11,8 @@ AC | Allarus Custodians | !2=120/160,3=180/220,5=300/340,6=360/400 | comp:Allaru
 AC | Vertus Praetors | 2=155/180,3=230/255
 AC | Custodian Guard | !4=180/190,5=225/235 | comp:Custodian Guard=4-5
 AC | Custodian Wardens | !4=210/230,5=260/280 | comp:Custodian Warden=4-5
-AC | Valerian | =120
+# Valerian is in the Warhammer Legends source on Wahapedia; removed from the game (24 Nov 2026)
+# AC | Valerian | =120
 AC | Shield-Captain on Dawneagle Jetbike | =150
 AC | Prosecutors | 4=50,5=55,9=80,10=90
 AdM | Kataphron Breachers | 3=140,6=290

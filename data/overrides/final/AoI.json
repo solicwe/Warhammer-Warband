@@ -1,0 +1,19 @@
+{
+ "datasheets": [
+  {
+   "name": "Inquisitor Draxus",
+   "leads": {
+    "_replace": [
+     "Aquila Kill Team",
+     "Deathwatch Kill Team",
+     "Exaction Squad",
+     "Imperial Navy Breachers",
+     "Inquisitorial Agents",
+     "Sanctifiers",
+     "Subductor Squad",
+     "Vigilant Squad"
+    ]
+   }
+  }
+ ]
+}

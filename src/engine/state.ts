@@ -207,6 +207,9 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
     const blocked = blockHook?.(s, unit);
     if (blocked) return blocked;
     if (unit.stratagemPhase === phaseKey(s)) return 'This unit was already targeted by a Stratagem this phase';
+    if ((hasKw(unit, 'SIR HEKHTUR') || unit.name === 'Sir Hekhtur') && !RULES.coreStratagems.some((x) => x.id === id)) {
+      return 'Sir Hekhtur can only be targeted by Core Stratagems';
+    }
   }
   if (id === 'insane-bravery' && p.insaneBraveryUsed) return 'Once per battle';
   if (id === 'crushing-impact' && unit && !hasKw(unit, 'MONSTER') && !hasKw(unit, 'VEHICLE')) return 'Only MONSTER or VEHICLE units can use Crushing Impact';

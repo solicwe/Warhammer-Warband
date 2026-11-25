@@ -6964,6 +6964,7 @@
         }
       ],
       "leads": [
+        "Death Korps Of Krieg",
         "Cadian Shock Troops",
         "Catachan Jungle Fighters",
         "Krieg Combat Engineers",
@@ -8719,7 +8720,8 @@
         "Tempestus Scions",
         "Cadian Shock Troops",
         "Catachan Jungle Fighters",
-        "Kasrkin"
+        "Kasrkin",
+        "Death Korps Of Krieg"
       ],
       "isSupport": false,
       "points": [
@@ -8864,11 +8866,6 @@
       ],
       "abilities": [
         {
-          "name": "Support",
-          "type": "Core",
-          "text": "SUPPORT24.34\nSpecialist combatants may be assigned to front-line squads to bolster their fighting effectiveness.\nBefore the battle, in the Muster Armies step, for each leader and support unit in your army, you can select one friendly bodyguard unit that unit can lead. That unit will then lead that bodyguard unit for the battle and form an attached unit with it.\nUnless otherwise stated, each bodyguard unit can only have one leader unit and one support unit attached to it."
-        },
-        {
           "name": "War Hymns",
           "type": "Datasheet",
           "text": "While this model is leading a unit, melee weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
@@ -8877,11 +8874,17 @@
           "name": "Holy Piety",
           "type": "Datasheet",
           "text": "Each time this model makes a melee attack, unless this model’s unit is Battle-shocked, you can re-roll the Hit roll."
+        },
+        {
+          "name": "Leader",
+          "type": "Core",
+          "text": ""
         }
       ],
       "leads": [
         "Catachan Jungle Fighters",
         "Cadian Shock Troops",
+        "Death Korps Of Krieg",
         "Krieg Combat Engineers",
         "Kasrkin",
         "Tempestus Scions"
@@ -9029,7 +9032,8 @@
         "Catachan Jungle Fighters",
         "Cadian Shock Troops",
         "Krieg Combat Engineers",
-        "Kasrkin"
+        "Kasrkin",
+        "Death Korps Of Krieg"
       ],
       "isSupport": false,
       "points": [
@@ -9831,7 +9835,8 @@
         "Kasrkin",
         "Krieg Combat Engineers",
         "Cadian Shock Troops",
-        "Catachan Jungle Fighters"
+        "Catachan Jungle Fighters",
+        "Death Korps Of Krieg"
       ],
       "isSupport": false,
       "points": [
@@ -11107,6 +11112,480 @@
       ],
       "wargearCosts": [],
       "link": "https://wahapedia.ru/wh40k11ed/factions/astra-militarum/Cadian-Shock-Troops"
+    },
+    {
+      "id": "000002613",
+      "name": "Death Korps Of Krieg",
+      "role": "Battleline",
+      "keywords": [
+        "BATTLELINE",
+        "INFANTRY",
+        "IMPERIUM",
+        "GRENADES",
+        "REGIMENT",
+        "PLATOON",
+        "DEATH KORPS OF KRIEG"
+      ],
+      "factionKeywords": [
+        "ASTRA MILITARUM"
+      ],
+      "models": [
+        {
+          "name": "Death Korps Of Krieg",
+          "M": 6,
+          "T": 3,
+          "Sv": 5,
+          "InSv": null,
+          "W": 1,
+          "Ld": 7,
+          "OC": 2,
+          "base": {
+            "w": 25,
+            "h": 25,
+            "text": "25mm"
+          }
+        }
+      ],
+      "composition": [
+        {
+          "name": "Death Korps Watchmaster",
+          "min": 1,
+          "max": 1,
+          "text": "1 Death Korps Watchmaster"
+        },
+        {
+          "name": "Death Korps Troopers",
+          "min": 9,
+          "max": 9,
+          "text": "9 Death Korps Troopers"
+        },
+        {
+          "text": "OR"
+        },
+        {
+          "name": "Death Korps Watchmasters",
+          "min": 2,
+          "max": 2,
+          "text": "2 Death Korps Watchmasters"
+        },
+        {
+          "name": "Death Korps Troopers",
+          "min": 18,
+          "max": 18,
+          "text": "18 Death Korps Troopers"
+        }
+      ],
+      "loadout": {
+        "Death Korps Watchmaster": [
+          "laspistol",
+          "chainsword."
+        ],
+        "Death Korps Trooper": [
+          "lasgun",
+          "close combat weapon"
+        ]
+      },
+      "loadoutText": "Every Death Korps Watchmaster is equipped with: laspistol; chainsword. \nEvery Death Korps Trooper is equipped with: lasgun; close combat weapon.\nThis unit can have up to two Leader units attached to it, provided no more than one of those units is a Command Squad unit. If it does, and this Bodyguard unit is destroyed, the Leader units attached to it become separate units, with their original Starting Strengths.",
+      "options": [
+        "For every 10 models in this unit, up to 2 Death Korps Troopers can each have their lasgun replaced with one of the following*:• 1 flamer\n• 1 grenade launcher\n• 1 long-las\n• 1 meltagun\n• 1 plasma gun",
+        "For every 10 models in this unit, 1 Death Korps Trooper equipped with a lasgun can be equipped with 1 Death Korps medi-pack (that model’s lasgun cannot be replaced)**.",
+        "For every 10 models in this unit, 1 Death Korps Trooper equipped with a lasgun can be equipped with 1 vox-caster (that model’s lasgun cannot be replaced).**",
+        "Any number of Death Korps Watchmasters can each replace their laspistol and chainsword with 1 boltgun and 1 close combat weapon.",
+        "Any number of Death Korps Watchmasters can each replace their chainsword with 1 power weapon.",
+        "Any number of Death Korps Watchmasters can each replace their laspistol with one of the following:• 1 bolt pistol\n• 1 plasma pistol",
+        "* You cannot select the same option more than once per unit unless it contains 20 models, in which case you cannot select the same option more than twice per unit.",
+        "** A model can only take one of these options."
+      ],
+      "wargearOptions": [
+        {
+          "text": "For every 10 models in this unit, up to 2 Death Korps Troopers can each have their lasgun replaced with one of the following*:• 1 flamer • 1 grenade launcher • 1 long-las • 1 meltagun • 1 plasma gun",
+          "scope": "perN",
+          "who": "Death Korps Troopers",
+          "replace": [
+            "Lasgun"
+          ],
+          "choices": [
+            [
+              "Flamer"
+            ],
+            [
+              "Grenade launcher"
+            ],
+            [
+              "Long-las"
+            ],
+            [
+              "Meltagun"
+            ],
+            [
+              "Plasma gun"
+            ]
+          ],
+          "per": 10,
+          "max": 2
+        },
+        {
+          "text": "For every 10 models in this unit, 1 Death Korps Trooper equipped with a lasgun can be equipped with 1 Death Korps medi-pack (that model's lasgun cannot be replaced)**.",
+          "scope": "perN",
+          "who": "Death Korps Trooper",
+          "replace": [],
+          "choices": [
+            [
+              "Death Korps medi-pack"
+            ]
+          ],
+          "per": 10,
+          "max": 1
+        },
+        {
+          "text": "For every 10 models in this unit, 1 Death Korps Trooper equipped with a lasgun can be equipped with 1 vox-caster (that model's lasgun cannot be replaced).**",
+          "scope": "perN",
+          "who": "Death Korps Trooper",
+          "replace": [],
+          "choices": [
+            [
+              "Vox-caster"
+            ]
+          ],
+          "per": 10,
+          "max": 1
+        },
+        {
+          "text": "Any number of Death Korps Watchmasters can each replace their laspistol and chainsword with 1 boltgun and 1 close combat weapon.",
+          "scope": "any",
+          "who": "Death Korps Watchmasters",
+          "replace": [
+            "Laspistol",
+            "Chainsword"
+          ],
+          "choices": [
+            [
+              "Boltgun",
+              "Close combat weapon"
+            ]
+          ]
+        },
+        {
+          "text": "Any number of Death Korps Watchmasters can each replace their chainsword with 1 power weapon.",
+          "scope": "any",
+          "who": "Death Korps Watchmasters",
+          "replace": [
+            "Chainsword"
+          ],
+          "choices": [
+            [
+              "Power weapon"
+            ]
+          ]
+        },
+        {
+          "text": "Any number of Death Korps Watchmasters can each replace their laspistol with one of the following:• 1 bolt pistol • 1 plasma pistol",
+          "scope": "any",
+          "who": "Death Korps Watchmasters",
+          "replace": [
+            "Laspistol"
+          ],
+          "choices": [
+            [
+              "Bolt pistol"
+            ],
+            [
+              "Plasma pistol"
+            ]
+          ]
+        }
+      ],
+      "weapons": [
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "name": "Boltgun",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Flamer",
+          "profiles": [
+            {
+              "name": "Flamer",
+              "range": 12,
+              "A": "D6",
+              "skill": null,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "ignores cover",
+                "torrent"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Grenade launcher",
+          "profiles": [
+            {
+              "name": "frag",
+              "range": 24,
+              "A": "D3",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "blast"
+              ]
+            },
+            {
+              "name": "krak",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 9,
+              "AP": -2,
+              "D": "D3",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Lasgun",
+          "profiles": [
+            {
+              "name": "Lasgun",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Laspistol",
+          "profiles": [
+            {
+              "name": "Laspistol",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Long-las",
+          "profiles": [
+            {
+              "name": "Long-las",
+              "range": 36,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "heavy",
+                "precision"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Meltagun",
+          "profiles": [
+            {
+              "name": "Meltagun",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 9,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma gun",
+          "profiles": [
+            {
+              "name": "standard",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            },
+            {
+              "name": "supercharge",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            },
+            {
+              "name": "supercharge",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Chainsword",
+          "profiles": [
+            {
+              "name": "Chainsword",
+              "range": "Melee",
+              "A": "3",
+              "skill": 4,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "1",
+              "skill": 4,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Power weapon",
+          "profiles": [
+            {
+              "name": "Power weapon",
+              "range": "Melee",
+              "A": "2",
+              "skill": 4,
+              "S": 4,
+              "AP": -2,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        }
+      ],
+      "abilities": [
+        {
+          "name": "Grim Demeanour",
+          "type": "Datasheet",
+          "text": "Each time a model in this unit makes an attack, add 1 to the Hit roll if this unit is below its Starting Strength, and add 1 to the Wound roll as well if this unit is Below Half-strength."
+        },
+        {
+          "name": "Vox-caster",
+          "type": "Wargear",
+          "text": "Each time you target the bearer’s unit with a Stratagem, roll one D6, adding 1 to the result if there are one or more friendly Officer models within 6\": on a 5+, you gain 1CP."
+        },
+        {
+          "name": "Death Korps Medi-pack",
+          "type": "Wargear",
+          "text": "At the start of your Command phase, if the bearer’s unit is below its Starting Strength, you can return up to D3 destroyed Death Korps Troopers to this unit (if this unit contains two models equipped with a Death Korps medi-pack, return up to D3+1 destroyed Death Korps Troopers to this unit instead)."
+        }
+      ],
+      "leads": [],
+      "isSupport": false,
+      "points": [
+        {
+          "label": "YOUR UNIT COSTS",
+          "options": [
+            {
+              "models": 10,
+              "pts": 70
+            },
+            {
+              "models": 20,
+              "pts": 135
+            }
+          ]
+        }
+      ],
+      "wargearCosts": [],
+      "link": "https://wahapedia.ru/wh40k11ed/factions/astra-militarum/Death-Korps-Of-Krieg"
     },
     {
       "id": "000002614",
@@ -15639,6 +16118,7 @@
         }
       ],
       "leads": [
+        "Death Korps Of Krieg",
         "Krieg Combat Engineers"
       ],
       "isSupport": false,
@@ -18266,6 +18746,7 @@
         "Krieg Combat Engineers",
         "Tempestus Scions",
         "Kasrkin",
+        "Death Korps Of Krieg",
         "Catachan Jungle Fighters",
         "Cadian Shock Troops"
       ],
@@ -18598,6 +19079,7 @@
         "Krieg Combat Engineers",
         "Kasrkin",
         "Catachan Jungle Fighters",
+        "Death Korps Of Krieg",
         "Cadian Shock Troops"
       ],
       "isSupport": false,

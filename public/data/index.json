@@ -14,7 +14,7 @@
    "id": "AC",
    "name": "Adeptus Custodes",
    "group": "Imperium",
-   "datasheets": 28,
+   "datasheets": 27,
    "detachments": 13
   },
   {
@@ -42,7 +42,7 @@
    "id": "AM",
    "name": "Astra Militarum",
    "group": "Imperium",
-   "datasheets": 69,
+   "datasheets": 70,
    "detachments": 11
   },
   {
@@ -140,7 +140,7 @@
    "id": "SM",
    "name": "Space Marines",
    "group": "Imperium",
-   "datasheets": 163,
+   "datasheets": 164,
    "detachments": 35,
    "subfactions": [
     "Ultramarines",

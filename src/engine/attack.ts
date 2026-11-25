@@ -942,7 +942,7 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   const kws = m.keywords ?? u.keywords ?? [];
   (s.modelDeaths ??= []).push({ turn: s.turn, owner: u.owner, character: m.isCharacter || kws.includes('CHARACTER'), W: m.profile.W });
 
-  if (u.transport && kws.includes('TRANSPORT')) transportHook?.(s, u, m);
+  if ((u.transport && kws.includes('TRANSPORT')) || (kws.includes('CANIS REX') && !u.used?.hekhturSpawned)) transportHook?.(s, u, m);
   // Vengeance for the Omnissiah: a friendly ASTRA MILITARUM VEHICLE destroyed within 12"
   if (kws.includes('VEHICLE') && (u.factionKeywords ?? []).includes('ASTRA MILITARUM')) {
     for (const f of boardUnits(s, u.owner)) {
@@ -955,10 +955,15 @@ export function killModel(s: GameState, u: UnitState, m: ModelState, killer?: st
   if (u.abilities.some((a) => a.name === 'Crewed Platform') && !alive(u).some((n) => !/platform/i.test(n.name))) for (const x of alive(u)) { x.dead = true; x.wounds = 0; }
   if (!alive(u).length) {
     u.status = 'destroyed';
-    s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
-    onUnitDestroyed(s, u, s.attack?.attackerId);
-    emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
-    log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
+    const hekhtur = s.units.find((x) => x.id === `${u.id}-hekhtur`);
+    if (hekhtur && alive(hekhtur).length > 0) {
+      log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''} — Sir Hekhtur disembarks (unit not destroyed while Sir Hekhtur survives)`, 'kill');
+    } else {
+      s.destroyedByTurn.push({ turn: s.turn, owner: u.owner, unitId: u.id, killerId: s.attack?.attackerId, phase: s.phase });
+      onUnitDestroyed(s, u, s.attack?.attackerId);
+      emit(s, 'unitDestroyed', { u, attackerId: s.attack?.attackerId });
+      log(s, `${u.name} destroyed${killer ? ' by ' + killer : ''}`, 'kill');
+    }
   }
   for (const h of killHooks) h(s, u, m, s.attack?.attackerId);
   if (dd) {

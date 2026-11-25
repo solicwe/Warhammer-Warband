@@ -9,6 +9,8 @@ import { abilityRule, abilityStatus, effectsFor, unitFlags } from '../rules-engi
 import { buildUnits, validateList } from '../engine/army';
 import { pickDetChoice } from '../rules-engine/detachments';
 import { createGame, formationAt, placeUnit, settleMove } from '../engine/game';
+import { killModel } from '../engine/attack';
+import { canUseStratagem } from '../engine/state';
 import { knightsCommandStart, knightsTurnEnd } from './knights';
 import { stratRuleFor } from '../rules-engine/stratagems';
 import { placementRings } from '../ui/Board';
@@ -143,6 +145,30 @@ describe('Imperial Knights', () => {
     expect(useAct(s, action, paladin.id)).toBeNull();
     expect(paladin.battleShocked).toBe(false);
     expect(useAct(s, action, paladin.id)).toBe('Already used');
+  });
+  it('Using Sir Hekhtur: spawns and disembarks when Canis Rex is destroyed, Core Stratagems only, unit not destroyed until Sir Hekhtur dies', () => {
+    const list = { ...PRESETS.QI, detachments: ['Valourstrike Lance'], units: [
+      { uid: 'canis', datasheet: 'Canis Rex', models: 1, pts: 450, warlord: true },
+    ] };
+    const s = game(list, QI);
+    const canis = unit(s, 0, 'Canis Rex');
+    placeUnit(s, canis, formationAt(canis, { x: 20, y: 30 }));
+    killModel(s, canis, canis.models[0], 'Enemy');
+    const hekhtur = s.units.find((u) => u.name === 'Sir Hekhtur')!;
+    expect(hekhtur).toBeDefined();
+    expect(hekhtur.status).toBe('board');
+    expect(hekhtur.battleShocked).toBe(true);
+    expect(hekhtur.core.loneOperative).toBe(12);
+    expect(hekhtur.models[0].profile.W).toBe(3);
+    expect(s.destroyedByTurn.some((d) => d.unitId === canis.id)).toBe(false);
+    // Core Stratagem allowed (once not Battle-shocked), detachment stratagem blocked
+    hekhtur.battleShocked = false;
+    s.players[0].cp = 2;
+    expect(canUseStratagem(s, 0, 'command-reroll', hekhtur)).toBeNull();
+    expect(canUseStratagem(s, 0, '000010180002', hekhtur)).toBe('Sir Hekhtur can only be targeted by Core Stratagems');
+    // Destroying Sir Hekhtur marks the unit destroyed
+    killModel(s, hekhtur, hekhtur.models[0], 'Enemy');
+    expect(s.destroyedByTurn.some((d) => d.unitId === hekhtur.id)).toBe(true);
   });
   it('Super-heavy Walker: a Normal move goes through infantry', () => {
     const s = game(with_(PRESETS.QI, 'Valourstrike Lance'), QI);

@@ -1135,14 +1135,6 @@
    }
   ]
  },
- "Senior Officer": {
-  "status": "auto",
-  "note": "While this model is leading a unit, ranged weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
- },
- "Get Back in the Fight": {
-  "status": "auto",
-  "note": "While this model is leading a unit, that unit is eligible to shoot in a turn in which it Fell Back."
- },
  "ORDERS": {
   "status": "auto",
   "note": "This OFFICER can issue 2 Orders to Regiment units."
@@ -1154,14 +1146,6 @@
  "Master Vox": {
   "status": "auto",
   "note": "Each time the OFFICER in the bearer’s unit issues an Order, it can issue it to an eligible unit up to 24\" away."
- },
- "Medi-pack": {
-  "status": "auto",
-  "note": "At the start of your Command phase, if the bearer’s unit is below its Starting Strength, you can return up to D3 destroyed PLATOON models (excluding CHARACTERS) to this unit."
- },
- "Regimental Standard": {
-  "status": "auto",
-  "note": "Add 1 to the Objective Control characteristic of models in the bearer’s unit."
  },
  "Gung-ho Command": {
   "status": "auto",
@@ -1232,14 +1216,6 @@
    ]
   },
   "note": "At the end of your Command phase, if this unit is within range of an objective marker you control, that objective marker remains under your control, even if you have no models within range of it, until your opponent controls it at the start or end of any turn."
- },
- "Vox-caster": {
-  "status": "auto",
-  "note": "Each time you target the bearer’s unit with a Stratagem, roll one D6, adding 1 to the result if there are one or more friendly Officer models within 6\": on a 5+, you gain 1CP."
- },
- "Jungle Fighters": {
-  "status": "auto",
-  "note": "Each time a model in this unit makes a melee attack, if this unit made a Charge move or was charged this turn, add 1 to the Wound roll."
  },
  "Grim Demeanour": {
   "effects": [
@@ -1395,17 +1371,9 @@
   "status": "auto",
   "note": "When this model is set up, it will consist of 1 platform section, up to 5 shield sections, up to 2 broken shield sections, and up to 2 end sections."
  },
- "Mobile Hunter-killers": {
-  "status": "auto",
-  "note": "Each time a model in this unit makes an attack that targets a MONSTER or VEHICLE unit, you can re-roll the Wound roll."
- },
  "Remorseless Barrage": {
   "status": "auto",
   "note": "In your Shooting phase, after this model has shot, if one or more of those attacks made with an Indirect Fire weapon scored a hit against an enemy unit, that unit must take a Battle-shock test (if an INFANTRY unit is hit by one or more attacks made by a multiple rocket launcher, they must subtract 1..."
- },
- "Horsemasters": {
-  "status": "auto",
-  "note": "This unit is eligible to shoot and declare a charge in a turn in which it Fell Back."
  },
  "Rolling Fortress": {
   "status": "auto",
@@ -1533,10 +1501,6 @@
  "Furious Barrage": {
   "status": "auto",
   "note": "In your Shooting phase, after this model has shot, select one enemy unit (excluding MONSTERS and VEHICLES) that was hit by one or more of those attacks made with this model’s storm eagle rockets. Until the start of your next Shooting phase, that enemy unit is staggered."
- },
- "Ablative Plating": {
-  "status": "auto",
-  "note": "Once per battle, when an attack is allocated to this model, you change the Damage characteristic of that attack to 0."
  },
  "Daring Recon": {
   "status": "auto",
