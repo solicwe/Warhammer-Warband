@@ -1,0 +1,14 @@
+{
+ "datasheets": [
+  {
+   "name": "Canis Rex",
+   "abilities": [
+    {
+     "name": "Using Sir Hekhtur",
+     "type": "Datasheet",
+     "text": "If your Canis Rex model is destroyed, this model is treated as a model disembarking from a destroyed TRANSPORT and must perform an Emergency Disembarkation. Sir Hekhtur cannot be selected as the target of any of your Stratagems other than Core Stratagems. Your Canis Rex unit is not considered to be destroyed until Sir Hekhtur is also destroyed."
+    }
+   ]
+  }
+ ]
+}

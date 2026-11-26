@@ -310,6 +310,7 @@ export function DatasheetView({
       <Weapons weapons={sheet.weapons} counts={counts} />
       {(sheet.options ?? []).length > 0 && <details><summary className="small">Wargear options</summary>{(sheet.options ?? []).map((o, i) => <div key={i} className="small">• <Em text={o} /></div>)}</details>}
       {renderAbilitiesContent(sheet.abilities, probe, sheet.name, rulesFaction, names, sheet.damaged)}
+      {sheet.name === 'Canis Rex' && <SirHekhturCard owner={0} />}
       {sheet.transport && (
         <div className="ds-sec-transport" style={{ marginTop: 6 }}>
           <div className="ds-sec" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -502,11 +503,55 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
         );
       })()}
       <div className="kw"><b>KEYWORDS:</b> {[...u.factionKeywords, ...u.keywords].join(', ')}</div>
+      {(u.sources?.includes('Canis Rex') || u.name === 'Canis Rex') && <SirHekhturCard owner={u.owner} />}
     </div>
   );
 }
 
-/** Model portraits & loadouts section is closed per user preference. */
-export function ModelPictures(_props: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
-  return null;
+/** Model portraits & loadouts section: shown when PHOTO_EDIT is enabled so players can customize each model picture. */
+export function ModelPictures({ variants, kind, owner }: { variants: PictureVariant[]; kind: TokenKind; owner: 0 | 1 }) {
+  if (!PHOTO_EDIT || !variants.length) return null;
+  return (
+    <div>
+      <div className="small muted">Model pictures · tap to set one for each model / loadout</div>
+      <div className="model-pics">
+        {variants.map((v) => (
+          <div key={v.key} className="model-pic">
+            <Portrait kind={kind} owner={owner} size={48} datasheet={v.key} fallback={v.fallback} editable={PHOTO_EDIT} />
+            <span>{v.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SIR_HEKHTUR_PROFILE: ModelProfileData = { name: 'Sir Hekhtur', M: 6, T: 3, Sv: 4, InSv: null, W: 3, Ld: 5, OC: 1, base: { w: 25, h: 25, text: '25mm' } };
+const SIR_HEKHTUR_WEAPONS: WeaponData[] = [
+  { name: "Hekhtur's pistol", profiles: [{ name: "Hekhtur's pistol", range: 12, A: '1', skill: 2, S: 5, AP: -1, D: '2', abilities: ['pistol'] }] },
+  { name: 'Close combat weapon', profiles: [{ name: 'Close combat weapon', range: 'Melee', A: '2', skill: 2, S: 3, AP: 0, D: '1', abilities: [] }] },
+];
+
+function SirHekhturCard({ owner }: { owner: 0 | 1 }) {
+  return (
+    <div style={{ border: '1px solid var(--line, #2a3140)', borderRadius: 8, padding: 8, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="ds-head">
+        <Portrait kind={tokenKind(['INFANTRY', 'CHARACTER', 'EPIC HERO', 'IMPERIUM'], ['IMPERIAL KNIGHTS'])} owner={owner} character size={48} datasheet="Sir Hekhtur" editable={PHOTO_EDIT} />
+        <div className="grow">
+          <div style={{ fontWeight: 700, fontSize: 13 }}>SIR HEKHTUR <small style={{ fontWeight: 400, opacity: 0.75 }}>(ø25mm · Epic Hero)</small></div>
+          <div className="tiny">Use this datasheet only after your Canis Rex model is destroyed · CORE: Lone Operative</div>
+        </div>
+      </div>
+      <div className="ds-statband">
+        <div className="ds-statline">
+          <div className="ds-mname">SIR HEKHTUR<small>base 25mm</small></div>
+          <Stats p={SIR_HEKHTUR_PROFILE} />
+        </div>
+      </div>
+      <Weapons weapons={SIR_HEKHTUR_WEAPONS} />
+      <div className="ds-ab" style={{ fontSize: 12 }}>
+        <b>USING SIR HEKHTUR:</b> If your Canis Rex model is destroyed, this model is treated as a model disembarking from a destroyed TRANSPORT and must perform an Emergency Disembarkation. Sir Hekhtur cannot be selected as the target of any of your Stratagems other than Core Stratagems. Your Canis Rex unit is not considered to be destroyed until Sir Hekhtur is also destroyed.
+      </div>
+    </div>
+  );
 }
