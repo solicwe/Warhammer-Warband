@@ -283,12 +283,20 @@ function parsePoints(rows) {
   const filled = tiers.filter((t) => t.options.length);
   const uniq = [];
   for (const t of filled) if (!uniq.some((u) => u.label === t.label && JSON.stringify(u.options) === JSON.stringify(t.options))) uniq.push(t);
-  // headers that name the models ("1 Voidscarred Felarch, 4 Corsair Voidscarred" / "... 5-9 Corsair Voidscarred") are
-  // unit sizes, not price tiers: one tier, so the 10-model unit can be taken
-  if (uniq.length > 1 && uniq.every((t) => /dsHeaderComp/.test(t.label ?? ''))) uniq.splice(0, uniq.length, { label: '', options: uniq.flatMap((t) => t.options) });
+  // headers that name the models ("1 Voidscarred Felarch, 4 Corsair Voidscarred" / "0 Broadside Shas’ui") are
+  // unit sizes, not price tiers: merge consecutive dsHeaderComp entries into one tier, keeping later tiers (e.g. YOUR 3RD+ UNIT COSTS)
+  const merged = [];
+  for (const t of uniq) {
+    if (/dsHeaderComp/.test(t.label ?? '') && merged.length && /dsHeaderComp/.test(merged[merged.length - 1].label ?? '')) {
+      for (const o of t.options) if (!merged[merged.length - 1].options.some((x) => x.models === o.models)) merged[merged.length - 1].options.push(o);
+    } else {
+      merged.push({ ...t, options: [...t.options] });
+    }
+  }
+  for (const t of merged) if (/dsHeaderComp/.test(t.label ?? '')) t.label = '';
   const wg = [];
   for (const w of wargear) if (!wg.some((x) => x.name.toLowerCase() === w.name.toLowerCase())) wg.push(w);
-  return { tiers: uniq, wargear: wg };
+  return { tiers: merged, wargear: wg };
 }
 
 function deepMerge(target, patch) {

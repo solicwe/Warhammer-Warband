@@ -2,7 +2,7 @@
   "id": "WE",
   "name": "World Eaters",
   "link": "https://wahapedia.ru/wh40k11ed/factions/world-eaters",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Blessings of Khorne",
@@ -682,15 +682,15 @@
       "name": "Angron",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MONSTER",
-        "FLY",
-        "ANGRON",
         "PRIMARCH",
-        "CHARACTER",
-        "DAEMON",
-        "KHORNE",
+        "ANGRON",
         "CHAOS",
-        "EPIC HERO"
+        "EPIC HERO",
+        "FLY",
+        "CHARACTER",
+        "MONSTER",
+        "KHORNE",
+        "DAEMON"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -833,17 +833,17 @@
       "name": "Khârn The Betrayer",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHAOS",
-        "GRENADES",
-        "EPIC HERO",
         "CHARACTER",
+        "GRENADES",
+        "CHAOS",
         "INFANTRY",
         "KHÂRN THE BETRAYER",
+        "EPIC HERO",
         "KHORNE"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -977,15 +977,15 @@
       "role": "Mounted Epic Hero",
       "keywords": [
         "LORD INVOCATUS",
-        "CHAOS",
-        "MOUNTED",
         "KHORNE",
+        "CHAOS",
         "CHARACTER",
+        "MOUNTED",
         "EPIC HERO"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -1110,8 +1110,8 @@
       ],
       "leads": [
         "Khorne Berzerkers",
-        "Exalted Eightbound",
-        "Eightbound"
+        "Eightbound",
+        "Exalted Eightbound"
       ],
       "isSupport": false,
       "points": [
@@ -1133,12 +1133,12 @@
       "name": "Daemon Prince of Khorne",
       "role": "Monster Character",
       "keywords": [
-        "DAEMON",
-        "KHORNE",
         "CHAOS",
-        "CHARACTER",
         "MONSTER",
-        "DAEMON PRINCE"
+        "KHORNE",
+        "DAEMON",
+        "DAEMON PRINCE",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -1271,15 +1271,15 @@
       "name": "Lord on Juggernaut",
       "role": "Mounted Character",
       "keywords": [
+        "CHAOS",
         "LORD ON JUGGERNAUT",
         "KHORNE",
-        "CHAOS",
-        "MOUNTED",
-        "CHARACTER"
+        "CHARACTER",
+        "MOUNTED"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -1405,8 +1405,8 @@
       ],
       "leads": [
         "Khorne Berzerkers",
-        "Eightbound",
-        "Exalted Eightbound"
+        "Exalted Eightbound",
+        "Eightbound"
       ],
       "isSupport": false,
       "points": [
@@ -1429,14 +1429,14 @@
       "role": "Infantry Character",
       "keywords": [
         "MASTER OF EXECUTIONS",
-        "CHARACTER",
         "INFANTRY",
+        "CHARACTER",
         "CHAOS",
         "KHORNE"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -1555,11 +1555,11 @@
       "role": "Battleline",
       "keywords": [
         "INFANTRY",
-        "BERZERKERS",
-        "KHORNE",
-        "CHAOS",
+        "BATTLELINE",
         "GRENADES",
-        "BATTLELINE"
+        "CHAOS",
+        "KHORNE",
+        "BERZERKERS"
       ],
       "factionKeywords": [
         "",
@@ -1792,15 +1792,15 @@
       "name": "Jakhals",
       "role": "Infantry",
       "keywords": [
-        "JAKHALS",
-        "KHORNE",
-        "CHAOS",
+        "INFANTRY",
         "GRENADES",
-        "INFANTRY"
+        "CHAOS",
+        "KHORNE",
+        "JAKHALS"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -2039,11 +2039,11 @@
       "name": "Chaos Terminators",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "CHAOS",
         "KHORNE",
         "TERMINATOR",
-        "TERMINATOR SQUAD",
-        "INFANTRY"
+        "TERMINATOR SQUAD"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -2367,16 +2367,16 @@
       "name": "Eightbound",
       "role": "Infantry",
       "keywords": [
-        "KHORNE",
-        "INFANTRY",
-        "CHAOS",
-        "DAEMON",
+        "EIGHTBOUND",
         "POSSESSED",
-        "EIGHTBOUND"
+        "DAEMON",
+        "KHORNE",
+        "CHAOS",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -2490,12 +2490,12 @@
       "name": "Exalted Eightbound",
       "role": "Infantry",
       "keywords": [
+        "POSSESSED",
         "EXALTED EIGHTBOUND",
         "INFANTRY",
         "CHAOS",
         "KHORNE",
-        "DAEMON",
-        "POSSESSED"
+        "DAEMON"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -2616,14 +2616,14 @@
       "role": "Walker",
       "keywords": [
         "HELBRUTE",
-        "KHORNE",
-        "CHAOS",
+        "VEHICLE",
         "WALKER",
-        "VEHICLE"
+        "CHAOS",
+        "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -2987,9 +2987,9 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
-        "CHAOS",
-        "KHORNE",
         "SPAWN",
+        "KHORNE",
+        "CHAOS",
         "BEAST"
       ],
       "factionKeywords": [
@@ -3091,13 +3091,13 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
+        "SMOKE",
+        "FRAME",
         "TRANSPORT",
         "VEHICLE",
-        "FRAME",
-        "CHAOS",
-        "KHORNE",
         "LAND RAIDER",
-        "SMOKE"
+        "CHAOS",
+        "KHORNE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -3327,12 +3327,12 @@
       "name": "Chaos Predator Destructor",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
         "KHORNE",
         "PREDATOR DESTRUCTOR",
         "CHAOS",
         "SMOKE",
-        "FRAME"
+        "FRAME",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -3590,11 +3590,11 @@
       "name": "Chaos Predator Annihilator",
       "role": "Vehicle",
       "keywords": [
-        "FRAME",
         "CHAOS",
         "SMOKE",
-        "VEHICLE",
         "PREDATOR ANNIHILATOR",
+        "FRAME",
+        "VEHICLE",
         "KHORNE"
       ],
       "factionKeywords": [
@@ -3854,16 +3854,16 @@
       "name": "Forgefiend",
       "role": "Walker",
       "keywords": [
-        "DAEMON",
-        "FORGEFIEND",
-        "VEHICLE",
-        "WALKER",
         "CHAOS",
-        "KHORNE"
+        "WALKER",
+        "KHORNE",
+        "VEHICLE",
+        "DAEMON",
+        "FORGEFIEND"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -4058,11 +4058,11 @@
       "role": "Walker",
       "keywords": [
         "VEHICLE",
-        "MAULERFIEND",
         "CHAOS",
+        "MAULERFIEND",
         "DAEMON",
-        "WALKER",
-        "KHORNE"
+        "KHORNE",
+        "WALKER"
       ],
       "factionKeywords": [
         "",
@@ -4228,14 +4228,14 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "CHAOS",
-        "TRANSPORT",
-        "DEDICATED TRANSPORT",
         "SMOKE",
         "FRAME",
+        "TRANSPORT",
+        "CHAOS",
+        "KHORNE",
         "RHINO",
-        "KHORNE"
+        "VEHICLE",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "",
@@ -4429,12 +4429,12 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
+        "DAEMON",
+        "KHORNE",
         "HELDRAKE",
-        "VEHICLE",
         "FLY",
         "CHAOS",
-        "KHORNE",
-        "DAEMON"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "",
@@ -4593,18 +4593,18 @@
       "name": "Khorne Lord of Skulls",
       "role": "Titanic",
       "keywords": [
-        "KHORNE",
-        "DAEMON",
         "LORD OF SKULLS",
         "VEHICLE",
         "FRAME",
         "TITANIC",
         "TOWERING",
-        "CHAOS"
+        "CHAOS",
+        "KHORNE",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "",
-        "WORLD EATERS"
+        "WORLD EATERS",
+        ""
       ],
       "models": [
         {
@@ -4847,17 +4847,17 @@
       "name": "Daemon Prince of Khorne with Wings",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
-        "DAEMON",
-        "KHORNE",
         "CHAOS",
         "FLY",
         "MONSTER",
-        "DAEMON PRINCE"
+        "CHARACTER",
+        "DAEMON PRINCE",
+        "DAEMON",
+        "KHORNE"
       ],
       "factionKeywords": [
-        "WORLD EATERS",
-        ""
+        "",
+        "WORLD EATERS"
       ],
       "models": [
         {
@@ -4986,11 +4986,11 @@
       "name": "Goremongers",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
-        "INFANTRY",
+        "CHAOS",
         "GOREMONGERS",
         "KHORNE",
-        "CHAOS"
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "",
@@ -5176,13 +5176,13 @@
       "name": "Slaughterbound",
       "role": "Infantry Character",
       "keywords": [
-        "DAEMON",
-        "POSSESSED",
-        "SLAUGHTERBOUND",
+        "KHORNE",
         "INFANTRY",
         "CHARACTER",
         "CHAOS",
-        "KHORNE"
+        "DAEMON",
+        "POSSESSED",
+        "SLAUGHTERBOUND"
       ],
       "factionKeywords": [
         "",
@@ -5272,8 +5272,8 @@
         }
       ],
       "leads": [
-        "Exalted Eightbound",
-        "Eightbound"
+        "Eightbound",
+        "Exalted Eightbound"
       ],
       "isSupport": false,
       "points": [
@@ -5296,13 +5296,13 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "SKARBRAND",
-        "KHORNE",
-        "DAEMON",
         "SUMMONED",
-        "MONSTER",
-        "CHARACTER",
+        "DAEMON",
+        "KHORNE",
+        "CHAOS",
         "EPIC HERO",
-        "CHAOS"
+        "CHARACTER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "",
@@ -5441,17 +5441,17 @@
       "role": "Monster Character",
       "keywords": [
         "MONSTER",
-        "CHARACTER",
-        "FLY",
-        "CHAOS",
-        "DAEMON",
-        "KHORNE",
+        "BLOODTHIRSTER",
         "SUMMONED",
-        "BLOODTHIRSTER"
+        "KHORNE",
+        "DAEMON",
+        "CHAOS",
+        "FLY",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "BLOOD LEGIONS",
-        ""
+        "",
+        "BLOOD LEGIONS"
       ],
       "models": [
         {
@@ -5673,17 +5673,17 @@
       "name": "Bloodletters",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "BATTLELINE",
-        "CHAOS",
-        "DAEMON",
-        "KHORNE",
+        "BLOODLETTERS",
         "SUMMONED",
-        "BLOODLETTERS"
+        "KHORNE",
+        "BATTLELINE",
+        "INFANTRY",
+        "DAEMON",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "BLOOD LEGIONS",
-        ""
+        "",
+        "BLOOD LEGIONS"
       ],
       "models": [
         {
@@ -5824,11 +5824,11 @@
       "role": "Mounted",
       "keywords": [
         "BLOODCRUSHERS",
+        "SUMMONED",
         "MOUNTED",
         "CHAOS",
         "DAEMON",
-        "KHORNE",
-        "SUMMONED"
+        "KHORNE"
       ],
       "factionKeywords": [
         "",
@@ -6008,12 +6008,12 @@
       "name": "Flesh Hounds",
       "role": "Beast",
       "keywords": [
+        "DAEMON",
         "CHAOS",
         "BEAST",
         "FLESH HOUNDS",
         "SUMMONED",
-        "KHORNE",
-        "DAEMON"
+        "KHORNE"
       ],
       "factionKeywords": [
         "BLOOD LEGIONS",
@@ -6148,12 +6148,12 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "DEFILER",
+        "VEHICLE",
+        "WALKER",
         "DAEMON",
         "CHAOS",
         "KHORNE",
-        "VEHICLE",
-        "WALKER"
+        "DEFILER"
       ],
       "factionKeywords": [
         "",

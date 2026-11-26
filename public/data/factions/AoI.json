@@ -2,7 +2,7 @@
   "id": "AoI",
   "name": "Imperial Agents",
   "link": "https://wahapedia.ru/wh40k11ed/factions/imperial-agents",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Assigned Agents",
@@ -511,8 +511,8 @@
       "name": "Vindicare Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHARACTER",
         "INFANTRY",
+        "CHARACTER",
         "EPIC HERO",
         "SMOKE",
         "IMPERIUM",
@@ -681,12 +681,12 @@
       "name": "Callidus Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "CHARACTER",
+        "IMPERIUM",
         "OFFICIO ASSASSINORUM",
         "CALLIDUS ASSASSIN",
-        "CHARACTER",
-        "INFANTRY",
         "EPIC HERO",
-        "IMPERIUM"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -827,13 +827,13 @@
       "name": "Eversor Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "GRENADES",
+        "EPIC HERO",
+        "EVERSOR ASSASSIN",
+        "OFFICIO ASSASSINORUM",
         "INFANTRY",
         "CHARACTER",
-        "EPIC HERO",
         "IMPERIUM",
-        "OFFICIO ASSASSINORUM",
-        "EVERSOR ASSASSIN"
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -982,9 +982,9 @@
       "name": "Culexus Assassin",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
         "CHARACTER",
         "GRENADES",
+        "INFANTRY",
         "IMPERIUM",
         "OFFICIO ASSASSINORUM",
         "CULEXUS ASSASSIN",
@@ -1136,15 +1136,15 @@
       "name": "Inquisitor Greyfax",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "IMPERIUM",
+        "GREYFAX",
+        "ORDO HERETICUS",
+        "INQUISITOR",
         "INFANTRY",
         "CHARACTER",
         "EPIC HERO",
-        "ORDO HERETICUS",
-        "GREYFAX",
-        "INQUISITOR",
-        "IMPERIUM",
-        "GRENADES",
-        "PSYKER"
+        "PSYKER",
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1269,15 +1269,15 @@
         }
       ],
       "leads": [
+        "Vigilant Squad",
+        "Deathwatch Kill Team",
         "Aquila Kill Team",
-        "Exaction Squad",
-        "Sisters of Battle Squad",
-        "Subductor Squad",
         "Sanctifiers",
         "Imperial Navy Breachers",
         "Inquisitorial Agents",
-        "Deathwatch Kill Team",
-        "Vigilant Squad"
+        "Sisters of Battle Squad",
+        "Subductor Squad",
+        "Exaction Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1299,14 +1299,14 @@
       "name": "Inquisitor Coteaz",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "ORDO MALLEUS",
+        "COTEAZ",
+        "INQUISITOR",
         "IMPERIUM",
         "PSYKER",
         "EPIC HERO",
-        "ORDO MALLEUS",
         "CHARACTER",
-        "INFANTRY",
-        "INQUISITOR",
-        "COTEAZ"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1436,14 +1436,14 @@
         }
       ],
       "leads": [
-        "Vigilant Squad",
-        "Imperial Navy Breachers",
-        "Aquila Kill Team",
         "Inquisitorial Agents",
         "Grey Knights Terminator Squad",
+        "Imperial Navy Breachers",
+        "Vigilant Squad",
+        "Aquila Kill Team",
         "Subductor Squad",
-        "Deathwatch Kill Team",
-        "Exaction Squad"
+        "Exaction Squad",
+        "Deathwatch Kill Team"
       ],
       "isSupport": false,
       "points": [
@@ -1475,10 +1475,10 @@
       "role": "Infantry Character",
       "keywords": [
         "IMPERIUM",
-        "GRENADES",
+        "INQUISITOR",
         "CHARACTER",
         "INFANTRY",
-        "INQUISITOR"
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1688,16 +1688,16 @@
         }
       ],
       "leads": [
-        "Aquila Kill Team",
-        "Sanctifiers",
-        "Sisters of Battle Squad",
-        "Deathwatch Kill Team",
         "Grey Knights Terminator Squad",
-        "Exaction Squad",
-        "Subductor Squad",
         "Imperial Navy Breachers",
+        "Sanctifiers",
+        "Deathwatch Kill Team",
+        "Aquila Kill Team",
         "Inquisitorial Agents",
-        "Vigilant Squad"
+        "Vigilant Squad",
+        "Sisters of Battle Squad",
+        "Subductor Squad",
+        "Exaction Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1728,15 +1728,15 @@
       "name": "Inquisitor Draxus",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "DRAXUS",
+        "EPIC HERO",
+        "PSYKER",
         "INQUISITOR",
+        "DRAXUS",
         "ORDO XENOS",
         "IMPERIUM",
-        "PSYKER",
-        "EPIC HERO",
+        "GRENADES",
         "CHARACTER",
-        "INFANTRY",
-        "GRENADES"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -1898,10 +1898,10 @@
       "keywords": [
         "INFANTRY",
         "GRENADES",
-        "VOIDSMEN-AT-ARMS",
-        "RETINUE",
+        "IMPERIUM",
         "VOIDFARERS",
-        "IMPERIUM"
+        "RETINUE",
+        "VOIDSMEN-AT-ARMS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -2114,13 +2114,13 @@
       "name": "Imperial Navy Breachers",
       "role": "Battleline",
       "keywords": [
-        "IMPERIAL NAVY BREACHERS",
-        "SMOKE",
-        "GRENADES",
         "BATTLELINE",
-        "VOIDFARERS",
-        "IMPERIUM",
+        "IMPERIAL NAVY BREACHERS",
         "RETINUE",
+        "GRENADES",
+        "SMOKE",
+        "IMPERIUM",
+        "VOIDFARERS",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -2531,12 +2531,12 @@
       "role": "Battleline",
       "keywords": [
         "ADEPTUS ARBITES",
-        "INFANTRY",
-        "BATTLELINE",
-        "GRENADES",
-        "IMPERIUM",
+        "VIGILANT SQUAD",
         "RETINUE",
-        "VIGILANT SQUAD"
+        "IMPERIUM",
+        "GRENADES",
+        "BATTLELINE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -2815,11 +2815,11 @@
       "name": "Subductor Squad",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
-        "IMPERIUM",
-        "RETINUE",
         "SUBDUCTOR SQUAD",
         "ADEPTUS ARBITES",
+        "RETINUE",
+        "IMPERIUM",
+        "GRENADES",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -2984,12 +2984,12 @@
       "name": "Exaction Squad",
       "role": "Infantry",
       "keywords": [
-        "RETINUE",
-        "INFANTRY",
-        "IMPERIUM",
-        "ADEPTUS ARBITES",
         "EXACTION SQUAD",
-        "GRENADES"
+        "ADEPTUS ARBITES",
+        "RETINUE",
+        "IMPERIUM",
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3353,10 +3353,10 @@
       "keywords": [
         "INFANTRY",
         "GRENADES",
-        "CHARACTER",
-        "IMPERIUM",
+        "VOIDFARERS",
         "ROGUE TRADER ENTOURAGE",
-        "VOIDFARERS"
+        "CHARACTER",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3623,11 +3623,11 @@
       "role": "Infantry Character",
       "keywords": [
         "CHARACTER",
-        "NAVIGATOR",
         "VOIDFARERS",
-        "IMPERIUM",
         "PSYKER",
-        "INFANTRY"
+        "IMPERIUM",
+        "INFANTRY",
+        "NAVIGATOR"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -3757,8 +3757,8 @@
       "name": "Inquisitorial Agents",
       "role": "Infantry",
       "keywords": [
-        "RETINUE",
         "INQUISITORIAL AGENTS",
+        "RETINUE",
         "IMPERIUM",
         "GRENADES",
         "INFANTRY"
@@ -4125,11 +4125,11 @@
       "name": "Ministorum Priest",
       "role": "Infantry Character",
       "keywords": [
-        "IMPERIUM",
+        "INFANTRY",
         "CHARACTER",
-        "MINISTORUM PRIEST",
+        "IMPERIUM",
         "ORDO HERETICUS",
-        "INFANTRY"
+        "MINISTORUM PRIEST"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4274,13 +4274,13 @@
         }
       ],
       "leads": [
-        "Inquisitorial Agents",
-        "Sisters of Battle Squad",
-        "Subductor Squad",
-        "Exaction Squad",
-        "Imperial Navy Breachers",
+        "Vigilant Squad",
         "Sanctifiers",
-        "Vigilant Squad"
+        "Subductor Squad",
+        "Sisters of Battle Squad",
+        "Inquisitorial Agents",
+        "Exaction Squad",
+        "Imperial Navy Breachers"
       ],
       "isSupport": true,
       "points": [
@@ -4302,14 +4302,14 @@
       "name": "Grey Knights Terminator Squad",
       "role": "Infantry",
       "keywords": [
-        "ORDO MALLEUS",
-        "IMPERIUM",
-        "GRENADES",
-        "TERMINATOR",
         "PSYKER",
-        "INFANTRY",
+        "REQUISITIONED",
+        "GRENADES",
+        "IMPERIUM",
+        "ORDO MALLEUS",
         "GREY KNIGHTS TERMINATOR SQUAD",
-        "REQUISITIONED"
+        "INFANTRY",
+        "TERMINATOR"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4564,13 +4564,13 @@
       "name": "Watch Captain Artemis",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CAPTAIN",
-        "INFANTRY",
-        "ORDO XENOS",
         "CHARACTER",
-        "EPIC HERO",
+        "INFANTRY",
         "EXPLOSIVES",
-        "IMPERIUM"
+        "CAPTAIN",
+        "ORDO XENOS",
+        "IMPERIUM",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4693,11 +4693,11 @@
       "name": "Watch Master",
       "role": "Infantry Character",
       "keywords": [
-        "IMPERIUM",
-        "EXPLOSIVES",
-        "CHARACTER",
         "INFANTRY",
-        "ORDO XENOS"
+        "CHARACTER",
+        "IMPERIUM",
+        "ORDO XENOS",
+        "EXPLOSIVES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -4810,12 +4810,12 @@
       "name": "Deathwatch Kill Team",
       "role": "Battleline",
       "keywords": [
-        "EXPLOSIVES",
         "BATTLELINE",
-        "IMPERIUM",
         "INFANTRY",
-        "KILL TEAM",
+        "IMPERIUM",
+        "EXPLOSIVES",
         "ORDO XENOS",
+        "KILL TEAM",
         "RETINUE"
       ],
       "factionKeywords": [
@@ -5282,13 +5282,13 @@
       "name": "Corvus Blackstar",
       "role": "Transport",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
         "FLY",
-        "ORDO XENOS",
         "IMPERIUM",
-        "RETINUE",
-        "TRANSPORT"
+        "ORDO XENOS",
+        "SMOKE",
+        "TRANSPORT",
+        "VEHICLE",
+        "RETINUE"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -5532,12 +5532,12 @@
       "name": "Sisters of Battle Squad",
       "role": "Infantry",
       "keywords": [
-        "REQUISITIONED",
-        "IMPERIUM",
         "INFANTRY",
         "GRENADES",
-        "SISTERS OF BATTLE SQUAD",
-        "ORDO HERETICUS"
+        "IMPERIUM",
+        "ORDO HERETICUS",
+        "REQUISITIONED",
+        "SISTERS OF BATTLE SQUAD"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -6038,14 +6038,14 @@
       "name": "Sisters of Battle Immolator",
       "role": "Dedicated Transports",
       "keywords": [
+        "VEHICLE",
+        "SMOKE",
         "TRANSPORT",
         "FRAME",
         "DEDICATED TRANSPORT",
-        "VEHICLE",
         "IMPERIUM",
         "ORDO HERETICUS",
-        "SISTERS OF BATTLE IMMOLATOR",
-        "SMOKE"
+        "SISTERS OF BATTLE IMMOLATOR"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -6298,13 +6298,13 @@
       "name": "Inquisitorial Chimera",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
-        "TRANSPORT",
         "FRAME",
         "DEDICATED TRANSPORT",
         "IMPERIUM",
-        "INQUISITORIAL CHIMERA"
+        "INQUISITORIAL CHIMERA",
+        "VEHICLE",
+        "SMOKE",
+        "TRANSPORT"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -6601,12 +6601,12 @@
       "name": "Imperial Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "IMPERIAL RHINO",
-        "TRANSPORT",
-        "DEDICATED TRANSPORT",
         "VEHICLE",
-        "SMOKE",
+        "TRANSPORT",
         "FRAME",
+        "DEDICATED TRANSPORT",
+        "IMPERIAL RHINO",
+        "SMOKE",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -6771,11 +6771,11 @@
       "name": "Sanctifiers",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "SANCTIFIERS",
-        "IMPERIUM",
         "RETINUE",
-        "GRENADES",
-        "INFANTRY"
+        "IMPERIUM",
+        "GRENADES"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
@@ -7148,22 +7148,22 @@
       "name": "Aquila Kill Team",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "BATTLELINE",
-        "EXPLOSIVES",
-        "IMPERIUM",
-        "ORDO XENOS",
-        "RETINUE",
         "KILL TEAM",
         "TACTICUS",
-        "GRAVIS"
+        "GRAVIS",
+        "RETINUE",
+        "BATTLELINE",
+        "INFANTRY",
+        "EXPLOSIVES",
+        "IMPERIUM",
+        "ORDO XENOS"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"
       ],
       "models": [
         {
-          "name": "KILL TEAM SERGEANT, DEATHWATCH VETERAN",
+          "name": "Kill Team Sergeant, Deathwatch Veteran",
           "M": 6,
           "T": 5,
           "Sv": 3,
@@ -7178,7 +7178,7 @@
           }
         },
         {
-          "name": "GRAVIS VETERAN",
+          "name": "Gravis Veteran",
           "M": 5,
           "T": 6,
           "Sv": 3,
@@ -7647,7 +7647,7 @@
       "isSupport": false,
       "points": [
         {
-          "label": "YOUR UNIT COSTS",
+          "label": "",
           "options": [
             {
               "models": 5,
@@ -7668,14 +7668,14 @@
       "name": "Inquisitor Kroyle",
       "role": "Mounted Epic Hero",
       "keywords": [
+        "EPIC HERO",
+        "IMPERIUM",
         "KROYLE",
+        "ORDO XENOS",
         "GRENADES",
         "INQUISITOR",
         "MOUNTED",
-        "CHARACTER",
-        "EPIC HERO",
-        "IMPERIUM",
-        "ORDO XENOS"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "AGENTS OF THE IMPERIUM"

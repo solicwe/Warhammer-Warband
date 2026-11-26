@@ -2,7 +2,7 @@
   "id": "CSM",
   "name": "Chaos Space Marines",
   "link": "https://wahapedia.ru/wh40k11ed/factions/chaos-space-marines",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Dark Pacts",
@@ -765,13 +765,13 @@
           "text": "WHEN: Your Command phase.\nTARGET: One HERETIC ASTARTES VEHICLE unit from your army (excluding Daemon units).\nEFFECT: Until the end of the battle, your unit has the DAEMON keyword."
         },
         {
-          "id": "000008986006",
-          "name": "PREDATORY PURSUIT",
+          "id": "000008986003",
+          "name": "GLUT OF SOULS",
           "cp": 1,
           "type": "Soulforged Warpack – Strategic Ploy Stratagem",
-          "turn": "Opponent’s turn",
-          "phase": "Movement phase",
-          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall back move.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE or Vashtorr the Arkifane unit from your army that is within 8\" of that enemy unit and not within Engagement Range of one or more enemy units.\nEFFECT: Your unit can make a Normal move of up to 6\", but must end that move as close as possible to that enemy unit."
+          "turn": "Either player’s turn",
+          "phase": "Fight phase",
+          "text": "WHEN: Fight phase.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE unit from your army (excluding Titanic units) that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, if your unit invokes its contract, each time it makes an attack that destroys an enemy model, roll one D6: on 5+, your unit regains 1 lost wound after all of its attacks have been resolved (to a maximum of 6 wound)."
         },
         {
           "id": "000008986007",
@@ -783,13 +783,13 @@
           "text": "WHEN: Your opponent’s Movement phase, when an enemy unit (excluding MONSTER and VEHICLES) is selected to Fall Back.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE or Vashtorr the Arkifane unit from your army that is within Engagement Range of that enemy unit.\nEFFECT: Until the end of the phase, each time an enemy unit (excluding MONSTERS and VEHICLES) that is within Engagement Range of your unit Falls Back, all models in that enemy unit must take a Desperate Escape test. When doing so, if that enemy unit is Battle-shocked, substract 1 from each of those tests."
         },
         {
-          "id": "000008986003",
-          "name": "GLUT OF SOULS",
+          "id": "000008986006",
+          "name": "PREDATORY PURSUIT",
           "cp": 1,
           "type": "Soulforged Warpack – Strategic Ploy Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Fight phase",
-          "text": "WHEN: Fight phase.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE unit from your army (excluding Titanic units) that has not been selected to fight this phase.\nEFFECT: Until the end of the phase, if your unit invokes its contract, each time it makes an attack that destroys an enemy model, roll one D6: on 5+, your unit regains 1 lost wound after all of its attacks have been resolved (to a maximum of 6 wound)."
+          "turn": "Opponent’s turn",
+          "phase": "Movement phase",
+          "text": "WHEN: Your opponent’s Movement phase, just after an enemy unit ends a Normal, Advance or Fall back move.\nTARGET: One HERETIC ASTARTES DAEMON VEHICLE or Vashtorr the Arkifane unit from your army that is within 8\" of that enemy unit and not within Engagement Range of one or more enemy units.\nEFFECT: Your unit can make a Normal move of up to 6\", but must end that move as close as possible to that enemy unit."
         },
         {
           "id": "000008986005",
@@ -1000,15 +1000,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010642003",
-          "name": "PREY ON THE WEAK",
-          "cp": 1,
-          "type": "Nightmare Hunt Stratagem",
-          "turn": "Either player’s turn",
-          "phase": "Shooting or Fight phase",
-          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Heretic Astartes Infantry unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a unit that is Battle-shocked and/or Below Half-strength, you can re-roll the Hit roll."
-        },
-        {
           "id": "000010642004",
           "name": "SADISTIC DISPLAY",
           "cp": 1,
@@ -1016,6 +1007,15 @@
           "turn": "Either player’s turn",
           "phase": "Fight phase",
           "text": "WHEN: Fight phase, just after a HERETIC ASTARTES unit from your army destroys an enemy unit.\nTARGET: That HERETIC ASTARTES unit.\nEFFECT: Each enemy unit within 6\" of and visible to your unit (excluding MONSTER and VEHICLE units) must take a Battle-shock test."
+        },
+        {
+          "id": "000010642003",
+          "name": "PREY ON THE WEAK",
+          "cp": 1,
+          "type": "Nightmare Hunt Stratagem",
+          "turn": "Either player’s turn",
+          "phase": "Shooting or Fight phase",
+          "text": "WHEN: Your Shooting phase or the Fight phase.\nTARGET: One Heretic Astartes Infantry unit from your army that has not been selected to shoot or fight this phase.\nEFFECT: Until the end of the phase, each time a model in your unit makes an attack that targets a unit that is Battle-shocked and/or Below Half-strength, you can re-roll the Hit roll."
         },
         {
           "id": "000010642005",
@@ -1576,13 +1576,13 @@
       "name": "Abaddon The Despoiler",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
         "ABADDON THE DESPOILER",
+        "INFANTRY",
+        "TERMINATOR",
+        "CHARACTER",
         "CHAOS",
         "CHAOS UNDIVIDED",
-        "TERMINATOR",
-        "EPIC HERO",
-        "CHARACTER"
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -1717,8 +1717,8 @@
         }
       ],
       "leads": [
-        "Chaos Terminator Squad",
-        "Chosen"
+        "Chosen",
+        "Chaos Terminator Squad"
       ],
       "isSupport": false,
       "points": [
@@ -1741,11 +1741,11 @@
       "role": "Infantry Epic Hero",
       "keywords": [
         "CHARACTER",
-        "EPIC HERO",
-        "CHAOS",
         "INFANTRY",
+        "HURON BLACKHEART",
         "CHAOS UNDIVIDED",
-        "HURON BLACKHEART"
+        "CHAOS",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -1856,10 +1856,10 @@
         }
       ],
       "leads": [
-        "Red Corsairs Raiders",
+        "Legionaries",
         "Chaos Terminator Squad",
         "Chosen",
-        "Legionaries"
+        "Red Corsairs Raiders"
       ],
       "isSupport": false,
       "points": [
@@ -1881,12 +1881,12 @@
       "name": "Cypher",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "INFANTRY",
-        "EPIC HERO",
-        "CHAOS",
+        "CYPHER",
         "FALLEN",
-        "CYPHER"
+        "CHAOS",
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -2033,11 +2033,11 @@
       "role": "Infantry Epic Hero",
       "keywords": [
         "INFANTRY",
-        "CHAOS",
         "CHAOS UNDIVIDED",
-        "CHARACTER",
+        "FABIUS BILE",
+        "CHAOS",
         "EPIC HERO",
-        "FABIUS BILE"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -2202,11 +2202,11 @@
         }
       ],
       "leads": [
+        "Legionaries",
         "Accursed Cultists",
         "Chosen",
         "Cultist Mob",
-        "Red Corsairs Raiders",
-        "Legionaries"
+        "Red Corsairs Raiders"
       ],
       "isSupport": false,
       "points": [
@@ -2229,10 +2229,10 @@
       "role": "Infantry Character",
       "keywords": [
         "CHARACTER",
-        "GRENADES",
-        "CHAOS",
+        "INFANTRY",
         "CHAOS LORD",
-        "INFANTRY"
+        "CHAOS",
+        "GRENADES"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -2270,12 +2270,12 @@
       },
       "loadoutText": "This model is equipped with: plasma pistol; daemon hammer.",
       "options": [
-        "This model’s daemon hammer can be replaced with one of the following:• 1 accursed weapon\n• 1 Astartes chainsword",
+        "This model’s daemon hammer can be replaced with one of the following:• 1 accursed weapon\n• 1 astartes chainsword",
         "This model’s plasma pistol can be replaced with 1 power fist."
       ],
       "wargearOptions": [
         {
-          "text": "This model's daemon hammer can be replaced with one of the following:• 1 accursed weapon • 1 Astartes chainsword",
+          "text": "This model's daemon hammer can be replaced with one of the following:• 1 accursed weapon • 1 astartes chainsword",
           "scope": "one",
           "who": "*",
           "replace": [
@@ -2351,6 +2351,21 @@
           ]
         },
         {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "7",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Daemon hammer",
           "profiles": [
             {
@@ -2381,20 +2396,6 @@
               "abilities": []
             }
           ]
-        },
-        {
-          "name": "Astartes chainsword",
-          "profiles": [
-            {
-              "name": "Astartes chainsword",
-              "range": "Melee",
-              "A": "7",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1"
-            }
-          ]
         }
       ],
       "abilities": [
@@ -2420,8 +2421,8 @@
         }
       ],
       "leads": [
-        "Chosen",
         "Nemesis Claw",
+        "Chosen",
         "Red Corsairs Raiders",
         "Legionaries"
       ],
@@ -2445,12 +2446,12 @@
       "name": "Chaos Lord In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "CHAOS",
-        "CHAOS LORD",
+        "CHAOS LORD IN TERMINATOR ARMOUR",
         "TERMINATOR",
-        "CHAOS LORD IN TERMINATOR ARMOUR"
+        "CHAOS LORD",
+        "CHARACTER",
+        "INFANTRY",
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -2689,11 +2690,11 @@
       "name": "Dark Apostle",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
+        "CHAOS",
         "GRENADES",
         "DARK APOSTLE",
         "CHARACTER",
-        "CHAOS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -2833,12 +2834,12 @@
         }
       ],
       "leads": [
-        "Cultist Mob",
-        "Legionaries",
-        "Red Corsairs Raiders",
+        "Chosen",
         "Nemesis Claw",
+        "Cultist Mob",
+        "Red Corsairs Raiders",
         "Accursed Cultists",
-        "Chosen"
+        "Legionaries"
       ],
       "isSupport": false,
       "points": [
@@ -2861,10 +2862,10 @@
       "role": "Monster Character",
       "keywords": [
         "DAEMON",
-        "DAEMON PRINCE",
         "CHAOS",
         "CHARACTER",
-        "MONSTER"
+        "MONSTER",
+        "DAEMON PRINCE"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -3021,9 +3022,9 @@
       "keywords": [
         "CHAOS",
         "SORCERER",
-        "CHARACTER",
-        "PSYKER",
         "GRENADES",
+        "PSYKER",
+        "CHARACTER",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -3154,10 +3155,10 @@
         }
       ],
       "leads": [
-        "Red Corsairs Raiders",
         "Legionaries",
-        "Chosen",
-        "Nemesis Claw"
+        "Nemesis Claw",
+        "Red Corsairs Raiders",
+        "Chosen"
       ],
       "isSupport": false,
       "points": [
@@ -3179,10 +3180,10 @@
       "name": "Sorcerer In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
+        "CHAOS",
+        "PSYKER",
         "INFANTRY",
         "CHARACTER",
-        "PSYKER",
-        "CHAOS",
         "SORCERER IN TERMINATOR ARMOUR",
         "TERMINATOR"
       ],
@@ -3393,11 +3394,11 @@
       "name": "Warpsmith",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
+        "INFANTRY",
+        "CHARACTER",
         "CHAOS",
         "WARPSMITH",
-        "INFANTRY",
-        "CHARACTER"
+        "GRENADES"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -3552,10 +3553,10 @@
         }
       ],
       "leads": [
-        "Red Corsairs Raiders",
-        "Chosen",
         "Legionaries",
+        "Chosen",
         "Havocs",
+        "Red Corsairs Raiders",
         "Nemesis Claw"
       ],
       "isSupport": false,
@@ -3578,12 +3579,12 @@
       "name": "Cultist Mob",
       "role": "Battleline",
       "keywords": [
+        "GRENADES",
         "BATTLELINE",
         "INFANTRY",
-        "GRENADES",
-        "CHAOS",
         "DAMNED",
-        "CULTIST MOB"
+        "CULTIST MOB",
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -3732,9 +3733,9 @@
       "name": "Chaos Terminator Squad",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "CHAOS",
         "TERMINATOR",
+        "CHAOS",
+        "INFANTRY",
         "CHAOS TERMINATOR SQUAD"
       ],
       "factionKeywords": [
@@ -4057,10 +4058,10 @@
       "name": "Chosen",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "GRENADES",
         "CHAOS",
-        "CHOSEN"
+        "GRENADES",
+        "CHOSEN",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -4371,10 +4372,10 @@
       "name": "Possessed",
       "role": "Infantry",
       "keywords": [
-        "CHAOS",
-        "DAEMON",
         "POSSESSED",
-        "INFANTRY"
+        "INFANTRY",
+        "DAEMON",
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -4505,9 +4506,9 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
+        "CHAOS",
         "VEHICLE",
         "WALKER",
-        "CHAOS",
         "HELBRUTE"
       ],
       "factionKeywords": [
@@ -4867,12 +4868,12 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "FRAME",
-        "TRANSPORT",
-        "DEDICATED TRANSPORT",
         "SMOKE",
         "CHAOS",
+        "TRANSPORT",
+        "FRAME",
+        "VEHICLE",
+        "DEDICATED TRANSPORT",
         "RHINO"
       ],
       "factionKeywords": [
@@ -5067,9 +5068,9 @@
       "role": "Mounted",
       "keywords": [
         "CHAOS BIKERS",
-        "MOUNTED",
+        "CHAOS",
         "GRENADES",
-        "CHAOS"
+        "MOUNTED"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -5441,10 +5442,10 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "FLY",
         "JUMP PACKS",
         "GRENADES",
         "CHAOS",
+        "FLY",
         "RAPTORS"
       ],
       "factionKeywords": [
@@ -5872,12 +5873,12 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "DAEMON",
-        "WARP TALONS",
-        "CHAOS",
-        "GRENADES",
+        "FLY",
         "JUMP PACKS",
-        "FLY"
+        "GRENADES",
+        "CHAOS",
+        "WARP TALONS",
+        "DAEMON"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -5997,9 +5998,9 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
-        "CHAOS SPAWN",
+        "BEAST",
         "CHAOS",
-        "BEAST"
+        "CHAOS SPAWN"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -6095,11 +6096,11 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
-        "FLY",
         "CHAOS",
-        "HELDRAKE",
+        "FLY",
+        "VEHICLE",
         "DAEMON",
-        "VEHICLE"
+        "HELDRAKE"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -6255,12 +6256,12 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "FRAME",
-        "TRANSPORT",
-        "VEHICLE",
-        "CHAOS",
+        "SMOKE",
         "LAND RAIDER",
-        "SMOKE"
+        "CHAOS",
+        "VEHICLE",
+        "TRANSPORT",
+        "FRAME"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -6486,11 +6487,11 @@
       "name": "Chaos Predator Destructor",
       "role": "Vehicle",
       "keywords": [
-        "CHAOS",
-        "SMOKE",
         "FRAME",
         "VEHICLE",
-        "PREDATOR DESTRUCTOR"
+        "PREDATOR DESTRUCTOR",
+        "CHAOS",
+        "SMOKE"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -6746,11 +6747,11 @@
       "name": "Chaos Vindicator",
       "role": "Vehicle",
       "keywords": [
-        "VINDICATOR",
-        "CHAOS",
         "SMOKE",
+        "FRAME",
         "VEHICLE",
-        "FRAME"
+        "VINDICATOR",
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -6957,9 +6958,9 @@
       "name": "Obliterators",
       "role": "Infantry",
       "keywords": [
+        "CHAOS",
         "OBLITERATORS",
         "DAEMON",
-        "CHAOS",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -7533,11 +7534,11 @@
       "name": "Forgefiend",
       "role": "Walker",
       "keywords": [
-        "VEHICLE",
-        "DAEMON",
         "FORGEFIEND",
+        "DAEMON",
         "CHAOS",
-        "WALKER"
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -7731,11 +7732,11 @@
       "name": "Maulerfiend",
       "role": "Walker",
       "keywords": [
-        "MAULERFIEND",
-        "DAEMON",
         "CHAOS",
         "WALKER",
-        "VEHICLE"
+        "VEHICLE",
+        "DAEMON",
+        "MAULERFIEND"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -7888,8 +7889,8 @@
         "DEFILER",
         "DAEMON",
         "CHAOS",
-        "WALKER",
-        "VEHICLE"
+        "VEHICLE",
+        "WALKER"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -8265,14 +8266,14 @@
       "name": "Khorne Lord Of Skulls",
       "role": "Titanic",
       "keywords": [
-        "CHAOS",
-        "LORD OF SKULLS",
-        "DAEMON",
-        "KHORNE",
         "VEHICLE",
-        "TITANIC",
+        "LORD OF SKULLS",
         "FRAME",
-        "TOWERING"
+        "KHORNE",
+        "CHAOS",
+        "DAEMON",
+        "TOWERING",
+        "TITANIC"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -8508,12 +8509,12 @@
       "role": "Infantry Epic Hero",
       "keywords": [
         "CHAOS UNDIVIDED",
-        "CHAOS",
         "INFANTRY",
+        "JUMP PACK",
         "CHARACTER",
         "EPIC HERO",
         "FLY",
-        "JUMP PACK",
+        "CHAOS",
         "HAARKEN WORLDCLAIMER"
       ],
       "factionKeywords": [
@@ -8654,11 +8655,11 @@
       "name": "Master Of Possession",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
-        "PSYKER",
+        "MASTER OF POSSESSION",
         "CHARACTER",
+        "CHAOS",
         "INFANTRY",
-        "MASTER OF POSSESSION"
+        "PSYKER"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -8794,8 +8795,8 @@
         }
       ],
       "leads": [
-        "Chosen",
         "Legionaries",
+        "Chosen",
         "Possessed",
         "Nemesis Claw",
         "Red Corsairs Raiders"
@@ -8820,11 +8821,11 @@
       "name": "Lord Discordant On Helstalker",
       "role": "Mounted Character",
       "keywords": [
-        "CHAOS",
         "CHARACTER",
-        "DAEMON",
+        "MOUNTED",
         "LORD DISCORDANT",
-        "MOUNTED"
+        "DAEMON",
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -9057,9 +9058,9 @@
       "keywords": [
         "INFANTRY",
         "MASTER OF EXECUTIONS",
+        "CHARACTER",
         "GRENADES",
-        "CHAOS",
-        "CHARACTER"
+        "CHAOS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -9158,10 +9159,10 @@
         }
       ],
       "leads": [
+        "Red Corsairs Raiders",
         "Nemesis Claw",
-        "Legionaries",
         "Chosen",
-        "Red Corsairs Raiders"
+        "Legionaries"
       ],
       "isSupport": true,
       "points": [
@@ -9183,10 +9184,10 @@
       "name": "Venomcrawler",
       "role": "Walker",
       "keywords": [
+        "CHAOS",
         "VEHICLE",
         "VENOMCRAWLER",
         "DAEMON",
-        "CHAOS",
         "WALKER"
       ],
       "factionKeywords": [
@@ -9308,8 +9309,8 @@
       "role": "Fortifications",
       "keywords": [
         "NOCTILITH CROWN",
-        "FORTIFICATION",
         "CHAOS",
+        "FORTIFICATION",
         "FRAME"
       ],
       "factionKeywords": [
@@ -9414,11 +9415,11 @@
       "name": "Fellgor Beastmen",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "CHAOS",
+        "GRENADES",
         "FELLGOR BEASTMEN",
         "DAMNED",
-        "GRENADES"
+        "CHAOS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -9688,14 +9689,14 @@
       "name": "Dark Commune",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
-        "GRENADES",
         "CULT DEMAGOGUE",
         "CHARACTER",
         "PSYKER",
-        "DARK COMMUNE",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
         "INFANTRY",
-        "DAMNED"
+        "DARK COMMUNE"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -9904,8 +9905,8 @@
         }
       ],
       "leads": [
-        "Accursed Cultists",
-        "Cultist Mob"
+        "Cultist Mob",
+        "Accursed Cultists"
       ],
       "isSupport": false,
       "points": [
@@ -9936,8 +9937,8 @@
       "name": "Legionaries",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
         "LEGIONARIES",
+        "INFANTRY",
         "BATTLELINE",
         "CHAOS",
         "GRENADES"
@@ -10480,9 +10481,9 @@
       "role": "Infantry",
       "keywords": [
         "ACCURSED CULTISTS",
-        "INFANTRY",
         "DAMNED",
-        "CHAOS"
+        "CHAOS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -10638,10 +10639,10 @@
       "name": "Chaos Predator Annihilator",
       "role": "Vehicle",
       "keywords": [
-        "PREDATOR ANNIHILATOR",
-        "FRAME",
         "CHAOS",
+        "PREDATOR ANNIHILATOR",
         "SMOKE",
+        "FRAME",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -10898,12 +10899,12 @@
       "name": "Traitor Enforcer",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
         "GRENADES",
+        "INFANTRY",
+        "CHAOS",
         "DAMNED",
         "CHARACTER",
-        "TRAITOR ENFORCER",
-        "INFANTRY"
+        "TRAITOR ENFORCER"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -11062,11 +11063,11 @@
       "name": "Traitor Guardsmen Squad",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "TRAITOR GUARDSMEN SQUAD",
         "DAMNED",
+        "INFANTRY",
+        "GRENADES",
         "CHAOS",
-        "GRENADES"
+        "TRAITOR GUARDSMEN SQUAD"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -11417,11 +11418,11 @@
       "name": "Vashtorr The Arkifane",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MONSTER",
         "CHARACTER",
-        "EPIC HERO",
-        "FLY",
         "CHAOS",
+        "EPIC HERO",
+        "MONSTER",
+        "FLY",
         "DAEMON",
         "VASHTORR THE ARKIFANE"
       ],
@@ -11571,12 +11572,12 @@
       "name": "Heretic Astartes Daemon Prince With Wings",
       "role": "Monster Character",
       "keywords": [
+        "DAEMON PRINCE WITH WINGS",
+        "MONSTER",
+        "FLY",
         "CHARACTER",
         "CHAOS",
-        "DAEMON",
-        "DAEMON PRINCE WITH WINGS",
-        "FLY",
-        "MONSTER"
+        "DAEMON"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -11731,12 +11732,12 @@
       "name": "Khorne Berzerkers",
       "role": "Battleline",
       "keywords": [
+        "CHAOS",
         "BATTLELINE",
         "INFANTRY",
+        "GRENADES",
         "BERZERKERS",
-        "KHORNE",
-        "CHAOS",
-        "GRENADES"
+        "KHORNE"
       ],
       "factionKeywords": [
         "WORLD EATERS",
@@ -11845,16 +11846,16 @@
       ],
       "weapons": [
         {
-          "name": "Chainblade",
+          "name": "Khornate eviscerator",
           "profiles": [
             {
-              "name": "Chainblade",
+              "name": "Khornate eviscerator",
               "range": "Melee",
-              "A": "4",
+              "A": "3",
               "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
+              "S": 8,
+              "AP": -2,
+              "D": "2",
               "abilities": []
             }
           ]
@@ -11890,21 +11891,6 @@
           ]
         },
         {
-          "name": "Khornate eviscerator",
-          "profiles": [
-            {
-              "name": "Khornate eviscerator",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
           "name": "Bolt pistol",
           "profiles": [
             {
@@ -11918,6 +11904,21 @@
               "abilities": [
                 "pistol"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Chainblade",
+          "profiles": [
+            {
+              "name": "Chainblade",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": []
             }
           ]
         }
@@ -11969,17 +11970,17 @@
       "name": "Rubric Marines",
       "role": "Battleline",
       "keywords": [
-        "RUBRIC MARINES",
-        "RUBRICAE",
-        "TZEENTCH",
         "CHAOS",
-        "BATTLELINE",
+        "TZEENTCH",
+        "RUBRICAE",
+        "RUBRIC MARINES",
         "PSYKER",
-        "INFANTRY"
+        "INFANTRY",
+        "BATTLELINE"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -12118,23 +12119,6 @@
           ]
         },
         {
-          "name": "Soulreaper cannon",
-          "profiles": [
-            {
-              "name": "Soulreaper cannon",
-              "range": 24,
-              "A": "6",
-              "skill": 3,
-              "S": 6,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "devastating wounds"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Close combat weapon",
           "profiles": [
             {
@@ -12150,37 +12134,17 @@
           ]
         },
         {
-          "name": "Warpflamer",
+          "name": "Force weapon",
           "profiles": [
             {
-              "name": "Warpflamer",
-              "range": 12,
-              "A": "D6",
-              "skill": null,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "ignores cover",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Malefic Curse",
-          "profiles": [
-            {
-              "name": "Malefic Curse",
-              "range": 24,
+              "name": "Force weapon",
+              "range": "Melee",
               "A": "3",
               "skill": 3,
-              "S": 4,
-              "AP": -3,
-              "D": "1",
+              "S": 6,
+              "AP": -1,
+              "D": "D3",
               "abilities": [
-                "anti-infantry 4+",
-                "devastating wounds",
                 "psychic"
               ]
             }
@@ -12206,17 +12170,54 @@
           ]
         },
         {
-          "name": "Force weapon",
+          "name": "Warpflamer",
           "profiles": [
             {
-              "name": "Force weapon",
-              "range": "Melee",
-              "A": "3",
+              "name": "Warpflamer",
+              "range": 12,
+              "A": "D6",
+              "skill": null,
+              "S": 4,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "ignores cover",
+                "torrent"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Soulreaper cannon",
+          "profiles": [
+            {
+              "name": "Soulreaper cannon",
+              "range": 24,
+              "A": "6",
               "skill": 3,
               "S": 6,
-              "AP": -1,
-              "D": "D3",
+              "AP": -2,
+              "D": "1",
               "abilities": [
+                "devastating wounds"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Malefic Curse",
+          "profiles": [
+            {
+              "name": "Malefic Curse",
+              "range": 24,
+              "A": "3",
+              "skill": 3,
+              "S": 4,
+              "AP": -3,
+              "D": "1",
+              "abilities": [
+                "anti-infantry 4+",
+                "devastating wounds",
                 "psychic"
               ]
             }
@@ -12294,15 +12295,15 @@
       "role": "Battleline",
       "keywords": [
         "INFANTRY",
-        "PLAGUE MARINES",
-        "NURGLE",
-        "CHAOS",
+        "BATTLELINE",
         "GRENADES",
-        "BATTLELINE"
+        "CHAOS",
+        "NURGLE",
+        "PLAGUE MARINES"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -12502,6 +12503,152 @@
           ]
         },
         {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "name": "Boltgun",
+              "range": 24,
+              "A": "2",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "lethal hits",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Meltagun",
+          "profiles": [
+            {
+              "name": "Meltagun",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 9,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma gun",
+          "profiles": [
+            {
+              "name": "supercharge",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "rapid fire 1"
+              ]
+            },
+            {
+              "name": "standard",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "supercharge",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "pistol"
+              ]
+            },
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bubotic weapons",
+          "profiles": [
+            {
+              "name": "Bubotic weapons",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Heavy plague weapon",
+          "profiles": [
+            {
+              "name": "Heavy plague weapon",
+              "range": "Melee",
+              "A": "3",
+              "skill": 4,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Plague knives",
           "profiles": [
             {
@@ -12512,6 +12659,23 @@
               "S": 5,
               "AP": -1,
               "D": "1",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Power fist",
+          "profiles": [
+            {
+              "name": "Power fist",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
               "abilities": [
                 "lethal hits"
               ]
@@ -12552,169 +12716,6 @@
                 "anti-infantry 2+",
                 "ignores cover",
                 "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "lethal hits",
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Boltgun",
-          "profiles": [
-            {
-              "name": "Boltgun",
-              "range": 24,
-              "A": "2",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Meltagun",
-          "profiles": [
-            {
-              "name": "Meltagun",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 9,
-              "AP": -4,
-              "D": "D6",
-              "abilities": [
-                "melta 2"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Heavy plague weapon",
-          "profiles": [
-            {
-              "name": "Heavy plague weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 4,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Bubotic weapons",
-          "profiles": [
-            {
-              "name": "Bubotic weapons",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Plasma gun",
-          "profiles": [
-            {
-              "name": "standard",
-              "range": 24,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "rapid fire 1"
-              ]
-            },
-            {
-              "name": "supercharge",
-              "range": 24,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "rapid fire 1"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Plasma pistol",
-          "profiles": [
-            {
-              "name": "standard",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            },
-            {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Power fist",
-          "profiles": [
-            {
-              "name": "Power fist",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "lethal hits"
               ]
             }
           ]
@@ -13002,12 +13003,12 @@
       "name": "Cultist Firebrand",
       "role": "Infantry Character",
       "keywords": [
-        "CULTIST FIREBRAND",
+        "INFANTRY",
+        "CHARACTER",
+        "GRENADES",
         "CHAOS",
         "DAMNED",
-        "GRENADES",
-        "CHARACTER",
-        "INFANTRY"
+        "CULTIST FIREBRAND"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -13135,11 +13136,11 @@
       "name": "Nemesis Claw",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "PSYKER",
         "NEMESIS CLAW",
         "GRENADES",
-        "CHAOS"
+        "CHAOS",
+        "INFANTRY",
+        "PSYKER"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -13648,8 +13649,8 @@
         "NOISE MARINES"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -13728,18 +13729,6 @@
           "name": "Blastmaster",
           "profiles": [
             {
-              "name": "varied frequency",
-              "range": 18,
-              "A": "6",
-              "skill": 3,
-              "S": 6,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "ignores cover"
-              ]
-            },
-            {
               "name": "single frequency",
               "range": 18,
               "A": "3",
@@ -13750,24 +13739,33 @@
               "abilities": [
                 "ignores cover"
               ]
+            },
+            {
+              "name": "varied frequency",
+              "range": 18,
+              "A": "6",
+              "skill": 3,
+              "S": 6,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "ignores cover"
+              ]
             }
           ]
         },
         {
-          "name": "Screamer pistol",
+          "name": "Close combat weapon",
           "profiles": [
             {
-              "name": "Screamer pistol",
-              "range": 12,
+              "name": "Close combat weapon",
+              "range": "Melee",
               "A": "3",
               "skill": 3,
               "S": 5,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "ignores cover",
-                "pistol"
-              ]
+              "AP": 0,
+              "D": "1",
+              "abilities": []
             }
           ]
         },
@@ -13789,17 +13787,20 @@
           ]
         },
         {
-          "name": "Close combat weapon",
+          "name": "Screamer pistol",
           "profiles": [
             {
-              "name": "Close combat weapon",
-              "range": "Melee",
+              "name": "Screamer pistol",
+              "range": 12,
               "A": "3",
               "skill": 3,
               "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
+              "AP": -1,
+              "D": "2",
+              "abilities": [
+                "ignores cover",
+                "pistol"
+              ]
             }
           ]
         },
@@ -13862,12 +13863,12 @@
       "role": "Infantry Epic Hero",
       "keywords": [
         "PSYKER",
-        "MASTERS OF THE MAELSTROM",
-        "CHAOS UNDIVIDED",
-        "CHAOS",
-        "GRENADES",
         "EPIC HERO",
-        "INFANTRY"
+        "INFANTRY",
+        "MASTERS OF THE MAELSTROM",
+        "CHAOS",
+        "CHAOS UNDIVIDED",
+        "GRENADES"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -14157,8 +14158,8 @@
         }
       ],
       "leads": [
-        "Legionaries",
         "Red Corsairs Raiders",
+        "Legionaries",
         "Chosen"
       ],
       "isSupport": true,
@@ -14181,10 +14182,10 @@
       "name": "Red Corsairs Raiders",
       "role": "Infantry",
       "keywords": [
-        "RED CORSAIRS RAIDERS",
-        "CHAOS",
+        "INFANTRY",
         "GRENADES",
-        "INFANTRY"
+        "CHAOS",
+        "RED CORSAIRS RAIDERS"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -14438,9 +14439,9 @@
       "name": "Red Corsairs Reave-Captain",
       "role": "Infantry Character",
       "keywords": [
-        "RED CORSAIRS REAVE-CAPTAIN",
-        "CHAOS",
         "CHARACTER",
+        "CHAOS",
+        "RED CORSAIRS REAVE-CAPTAIN",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -14617,9 +14618,9 @@
         }
       ],
       "leads": [
+        "Nemesis Claw",
         "Legionaries",
         "Chosen",
-        "Nemesis Claw",
         "Red Corsairs Raiders"
       ],
       "isSupport": false,
@@ -14642,13 +14643,13 @@
       "name": "Kravek Morne",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "TERMINATOR",
-        "KRAVEK MORNE",
-        "EPIC HERO",
-        "INFANTRY",
-        "CHARACTER",
         "CHAOS",
-        "CHAOS UNDIVIDED"
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY",
+        "CHAOS UNDIVIDED",
+        "KRAVEK MORNE",
+        "TERMINATOR"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"
@@ -14815,10 +14816,10 @@
       "name": "Mutilators",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
         "CHAOS",
         "DAEMON",
-        "MUTILATORS"
+        "MUTILATORS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES"

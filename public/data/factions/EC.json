@@ -2,7 +2,7 @@
   "id": "EC",
   "name": "Emperor’s Children",
   "link": "https://wahapedia.ru/wh40k11ed/factions/emperor-s-children",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Thrill Seekers",
@@ -882,20 +882,20 @@
       "name": "Fulgrim",
       "role": "Monster Epic Hero",
       "keywords": [
-        "PRIMARCH",
+        "MONSTER",
         "SLAANESH",
+        "FULGRIM",
+        "PRIMARCH",
         "CHAOS",
         "DAEMON",
         "EPIC HERO",
         "CHARACTER",
-        "FULGRIM",
         "FLY",
-        "MOBILE",
-        "MONSTER"
+        "MOBILE"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -1070,12 +1070,12 @@
       "name": "Lord Exultant",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
-        "CHARACTER",
-        "LORD EXULTANT",
         "INFANTRY",
+        "CHARACTER",
+        "GRENADES",
+        "CHAOS",
         "SLAANESH",
-        "CHAOS"
+        "LORD EXULTANT"
       ],
       "factionKeywords": [
         "EMPEROR’S CHILDREN",
@@ -1361,11 +1361,11 @@
       "name": "Tormentors",
       "role": "Battleline",
       "keywords": [
-        "SLAANESH",
-        "CHAOS",
-        "BATTLELINE",
-        "INFANTRY",
         "GRENADES",
+        "INFANTRY",
+        "BATTLELINE",
+        "CHAOS",
+        "SLAANESH",
         "TORMENTORS"
       ],
       "factionKeywords": [
@@ -1703,15 +1703,15 @@
       "role": "Battleline",
       "keywords": [
         "CHAOS",
-        "GRENADES",
-        "BATTLELINE",
-        "INFANTRY",
         "SLAANESH",
-        "INFRACTORS"
+        "INFRACTORS",
+        "INFANTRY",
+        "BATTLELINE",
+        "GRENADES"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -1949,14 +1949,14 @@
       "role": "Infantry",
       "keywords": [
         "TERMINATOR",
-        "INFANTRY",
         "CHAOS",
+        "TERMINATOR SQUAD",
         "SLAANESH",
-        "TERMINATOR SQUAD"
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -2254,17 +2254,17 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "SMOKE",
-        "CHAOS",
-        "LAND RAIDER",
-        "SLAANESH",
-        "VEHICLE",
+        "FRAME",
         "TRANSPORT",
-        "FRAME"
+        "SMOKE",
+        "SLAANESH",
+        "LAND RAIDER",
+        "VEHICLE",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -2487,16 +2487,16 @@
       "name": "Lucius the Eternal",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "CHARACTER",
+        "LUCIUS THE ETERNAL",
         "CHAOS",
-        "INFANTRY",
+        "EPIC HERO",
         "SLAANESH",
-        "LUCIUS THE ETERNAL"
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -2627,13 +2627,13 @@
         "INFANTRY",
         "CHARACTER",
         "GRENADES",
-        "SLAANESH",
         "CHAOS",
+        "SLAANESH",
         "LORD KAKOPHONIST"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -2759,8 +2759,8 @@
         }
       ],
       "leads": [
-        "Chaos Terminators",
-        "Noise Marines"
+        "Noise Marines",
+        "Chaos Terminators"
       ],
       "isSupport": false,
       "points": [
@@ -2782,17 +2782,17 @@
       "name": "Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "SLAANESH",
-        "SORCERER",
-        "CHAOS",
         "GRENADES",
         "PSYKER",
-        "CHARACTER",
-        "INFANTRY"
+        "SORCERER",
+        "SLAANESH",
+        "CHAOS",
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -2920,8 +2920,8 @@
       ],
       "leads": [
         "Tormentors",
-        "Noise Marines",
-        "Infractors"
+        "Infractors",
+        "Noise Marines"
       ],
       "isSupport": false,
       "points": [
@@ -2943,16 +2943,16 @@
       "name": "Daemon Prince of Slaanesh",
       "role": "Monster Character",
       "keywords": [
-        "DAEMON PRINCE",
-        "DAEMON",
         "CHAOS",
-        "CHARACTER",
         "MONSTER",
-        "SLAANESH"
+        "DAEMON PRINCE",
+        "CHARACTER",
+        "SLAANESH",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -3089,12 +3089,12 @@
       "role": "Monster Character",
       "keywords": [
         "DAEMON",
-        "CHAOS",
-        "CHARACTER",
+        "SLAANESH",
         "FLY",
         "MONSTER",
+        "CHAOS",
         "DAEMON PRINCE WITH WINGS",
-        "SLAANESH"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -3234,14 +3234,14 @@
       "name": "Noise Marines",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "CHAOS",
         "SLAANESH",
         "NOISE MARINES",
-        "CHAOS"
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -3460,8 +3460,8 @@
         "FLAWLESS BLADES"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -3568,14 +3568,14 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
+        "BEAST",
         "CHAOS",
         "SLAANESH",
-        "CHAOS SPAWN",
-        "BEAST"
+        "CHAOS SPAWN"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -3666,12 +3666,12 @@
       "name": "Maulerfiend",
       "role": "Walker",
       "keywords": [
-        "MAULERFIEND",
         "SLAANESH",
-        "VEHICLE",
-        "WALKER",
         "CHAOS",
-        "DAEMON"
+        "DAEMON",
+        "MAULERFIEND",
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "",
@@ -3831,16 +3831,16 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
-        "HELDRAKE",
-        "SLAANESH",
         "DAEMON",
+        "FLY",
+        "VEHICLE",
         "CHAOS",
-        "FLY"
+        "HELDRAKE",
+        "SLAANESH"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -3994,17 +3994,17 @@
       "role": "Dedicated Transports",
       "keywords": [
         "RHINO",
-        "SLAANESH",
-        "TRANSPORT",
-        "FRAME",
-        "DEDICATED TRANSPORT",
         "SMOKE",
-        "CHAOS",
-        "VEHICLE"
+        "DEDICATED TRANSPORT",
+        "FRAME",
+        "TRANSPORT",
+        "VEHICLE",
+        "SLAANESH",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "EMPEROR’S CHILDREN",
-        ""
+        "",
+        "EMPEROR’S CHILDREN"
       ],
       "models": [
         {
@@ -4195,14 +4195,14 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "SHALAXI HELBANE",
+        "SLAANESH",
         "SUMMONED",
         "DAEMON",
         "CHAOS",
         "PSYKER",
         "EPIC HERO",
         "CHARACTER",
-        "MONSTER",
-        "SLAANESH"
+        "MONSTER"
       ],
       "factionKeywords": [
         "",
@@ -4384,12 +4384,12 @@
       "name": "Daemonettes",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "DAEMONETTES",
-        "SLAANESH",
-        "SUMMONED",
         "DAEMON",
         "CHAOS",
+        "SUMMONED",
+        "DAEMONETTES",
+        "SLAANESH",
+        "INFANTRY",
         "BATTLELINE"
       ],
       "factionKeywords": [
@@ -4541,12 +4541,12 @@
       "name": "Fiends",
       "role": "Beast",
       "keywords": [
-        "SUMMONED",
+        "BEAST",
         "SLAANESH",
         "FIENDS",
+        "SUMMONED",
         "DAEMON",
-        "CHAOS",
-        "BEAST"
+        "CHAOS"
       ],
       "factionKeywords": [
         "LEGIONS OF EXCESS",
@@ -4652,14 +4652,14 @@
       "name": "Keeper of Secrets",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "CHARACTER",
-        "PSYKER",
+        "DAEMON",
         "CHAOS",
-        "SLAANESH",
+        "PSYKER",
+        "MONSTER",
         "KEEPER OF SECRETS",
         "SUMMONED",
-        "DAEMON"
+        "SLAANESH",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -4888,16 +4888,16 @@
       "name": "Seekers",
       "role": "Mounted",
       "keywords": [
-        "SEEKERS",
+        "SUMMONED",
         "MOUNTED",
         "CHAOS",
         "DAEMON",
-        "SUMMONED",
-        "SLAANESH"
+        "SLAANESH",
+        "SEEKERS"
       ],
       "factionKeywords": [
-        "",
-        "LEGIONS OF EXCESS"
+        "LEGIONS OF EXCESS",
+        ""
       ],
       "models": [
         {
@@ -5068,11 +5068,11 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "DEFILER",
-        "DAEMON",
         "SLAANESH",
         "CHAOS",
         "WALKER",
+        "DEFILER",
+        "DAEMON",
         "VEHICLE"
       ],
       "factionKeywords": [

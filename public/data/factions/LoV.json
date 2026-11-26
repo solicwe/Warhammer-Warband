@@ -2,7 +2,7 @@
   "id": "LoV",
   "name": "Leagues of Votann",
   "link": "https://wahapedia.ru/wh40k11ed/factions/leagues-of-votann",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Prioritised Efficiency",
@@ -874,9 +874,9 @@
       "name": "Ûthar the Destined",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "CHARACTER",
         "INFANTRY",
+        "CHARACTER",
+        "EPIC HERO",
         "KÂHL",
         "ÛTHAR THE DESTINED"
       ],
@@ -1006,8 +1006,8 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "KÂHL",
-        "CHARACTER"
+        "CHARACTER",
+        "KÂHL"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -1211,10 +1211,10 @@
       "name": "Einhyr Champion",
       "role": "Infantry Character",
       "keywords": [
-        "EINHYR CHAMPION",
-        "EXOARMOUR",
         "INFANTRY",
-        "CHARACTER"
+        "CHARACTER",
+        "EXOARMOUR",
+        "EINHYR CHAMPION"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -1386,10 +1386,10 @@
       "name": "Grimnyr",
       "role": "Infantry Character",
       "keywords": [
-        "GRIMNYR",
-        "PSYKER",
         "CHARACTER",
-        "INFANTRY"
+        "PSYKER",
+        "INFANTRY",
+        "GRIMNYR"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -1577,10 +1577,10 @@
       "name": "Brôkhyr Iron-master",
       "role": "Infantry Character",
       "keywords": [
+        "IRON-MASTER",
         "CHARACTER",
         "BRÔKHYR",
-        "INFANTRY",
-        "IRON-MASTER"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -1813,8 +1813,8 @@
         }
       ],
       "leads": [
-        "Brôkhyr Thunderkyn",
-        "Hearthkyn Warriors"
+        "Hearthkyn Warriors",
+        "Brôkhyr Thunderkyn"
       ],
       "isSupport": false,
       "points": [
@@ -1838,8 +1838,8 @@
       "keywords": [
         "INFANTRY",
         "GRENADES",
-        "BATTLELINE",
-        "HEARTHKYN WARRIORS"
+        "HEARTHKYN WARRIORS",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -2239,9 +2239,9 @@
       "name": "Einhyr Hearthguard",
       "role": "Infantry",
       "keywords": [
-        "EXOARMOUR",
+        "INFANTRY",
         "EINHYR HEARTHGUARD",
-        "INFANTRY"
+        "EXOARMOUR"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -2507,9 +2507,9 @@
       "name": "Cthonian Beserks",
       "role": "Infantry",
       "keywords": [
-        "BESERKS",
         "CTHONIAN",
-        "INFANTRY"
+        "INFANTRY",
+        "BESERKS"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -2714,11 +2714,11 @@
       "name": "Hernkyn Pioneers",
       "role": "Mounted",
       "keywords": [
-        "GRENADES",
-        "MOUNTED",
-        "HERNKYN",
         "PIONEERS",
-        "FLY"
+        "MOUNTED",
+        "GRENADES",
+        "FLY",
+        "HERNKYN"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -2992,11 +2992,11 @@
       "name": "Sagitaur",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
+        "DEDICATED TRANSPORT",
         "FRAME",
         "TRANSPORT",
-        "DEDICATED TRANSPORT",
-        "SAGITAUR"
+        "SAGITAUR",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -3215,10 +3215,10 @@
       "name": "Brôkhyr Thunderkyn",
       "role": "Infantry",
       "keywords": [
+        "THUNDERKYN",
         "BRÔKHYR",
-        "INFANTRY",
         "EXOFRAME",
-        "THUNDERKYN"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -3413,9 +3413,9 @@
       "role": "Transport",
       "keywords": [
         "TRANSPORT",
-        "HEKATON LAND FORTRESS",
         "FRAME",
-        "VEHICLE"
+        "VEHICLE",
+        "HEKATON LAND FORTRESS"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -3721,10 +3721,10 @@
       "name": "Hernkyn Yaegirs",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
         "HERNKYN",
-        "INFANTRY",
-        "YAEGIRS"
+        "GRENADES",
+        "YAEGIRS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -3960,10 +3960,10 @@
       "name": "Buri Aegnirssen",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
         "BURI AEGNIRSSEN",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4096,9 +4096,9 @@
       "name": "Memnyr Strategist",
       "role": "Infantry Character",
       "keywords": [
-        "MEMNYR STRATEGIST",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "MEMNYR STRATEGIST"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4194,8 +4194,8 @@
         }
       ],
       "leads": [
-        "Ironkin Steeljacks with Heavy Volkanite Disintegrators",
-        "Ironkin Steeljacks with Melee Weapons"
+        "Ironkin Steeljacks with Melee Weapons",
+        "Ironkin Steeljacks with Heavy Volkanite Disintegrators"
       ],
       "isSupport": false,
       "points": [
@@ -4218,8 +4218,8 @@
       "role": "Infantry Character",
       "keywords": [
         "ARKANYST EVALUATOR",
-        "CHARACTER",
-        "INFANTRY"
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4368,9 +4368,9 @@
       "name": "Ironkin Steeljacks with Heavy Volkanite Disintegrators",
       "role": "Infantry",
       "keywords": [
-        "IRONKIN STEELJACKS",
         "INFANTRY",
-        "IRONKIN STEELJACKS WITH HEAVY VOLKANITE DISINTEGRATORS"
+        "IRONKIN STEELJACKS WITH HEAVY VOLKANITE DISINTEGRATORS",
+        "IRONKIN STEELJACKS"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4561,9 +4561,9 @@
       "name": "Ironkin Steeljacks with Melee Weapons",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
         "IRONKIN STEELJACKS",
-        "IRONKIN STEELJACKS WITH MELEE WEAPONS"
+        "IRONKIN STEELJACKS WITH MELEE WEAPONS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4737,10 +4737,10 @@
       "name": "Cthonian Earthshakers",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "EARTHSHAKERS",
         "ARTILLERY",
-        "CTHONIAN",
-        "EARTHSHAKERS"
+        "INFANTRY",
+        "CTHONIAN"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -4906,10 +4906,10 @@
       "name": "Kapricus Defenders",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
         "FLY",
         "HERNKYN",
         "KAPRICUS",
+        "VEHICLE",
         "DEFENDERS"
       ],
       "factionKeywords": [
@@ -5114,13 +5114,13 @@
       "name": "Kapricus Carrier",
       "role": "Dedicated Transports",
       "keywords": [
-        "TRANSPORT",
-        "FLY",
         "VEHICLE",
-        "DEDICATED TRANSPORT",
-        "HERNKYN",
+        "CARRIER",
         "KAPRICUS",
-        "CARRIER"
+        "HERNKYN",
+        "DEDICATED TRANSPORT",
+        "TRANSPORT",
+        "FLY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"
@@ -5289,11 +5289,11 @@
       "name": "Berehk Stornbröw",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "CTHONIAN",
         "BEREHK STORNBRÖW",
-        "EPIC HERO"
+        "CTHONIAN",
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEAGUES OF VOTANN"

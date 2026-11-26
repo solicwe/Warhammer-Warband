@@ -2,7 +2,7 @@
   "id": "TYR",
   "name": "Tyranids",
   "link": "https://wahapedia.ru/wh40k11ed/factions/tyranids",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Synapse",
@@ -878,12 +878,12 @@
       "name": "Hive Tyrant",
       "role": "Monster Character",
       "keywords": [
-        "GREAT DEVOURER",
-        "MONSTER",
         "HIVE TYRANT",
-        "PSYKER",
         "SYNAPSE",
-        "CHARACTER"
+        "GREAT DEVOURER",
+        "PSYKER",
+        "CHARACTER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1088,14 +1088,14 @@
       "name": "The Swarmlord",
       "role": "Monster Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "GREAT DEVOURER",
-        "SYNAPSE",
-        "HIVE TYRANT",
-        "THE SWARMLORD",
-        "CHARACTER",
+        "PSYKER",
         "MONSTER",
-        "PSYKER"
+        "CHARACTER",
+        "THE SWARMLORD",
+        "HIVE TYRANT",
+        "SYNAPSE",
+        "GREAT DEVOURER",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1233,10 +1233,10 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "MONSTER",
-        "OLD ONE EYE",
+        "CHARACTER",
         "GREAT DEVOURER",
-        "EPIC HERO",
-        "CHARACTER"
+        "OLD ONE EYE",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1352,13 +1352,13 @@
       "name": "Broodlord",
       "role": "Infantry Character",
       "keywords": [
-        "VANGUARD INVADER",
-        "CHARACTER",
-        "INFANTRY",
-        "BROODLORD",
         "SYNAPSE",
         "GREAT DEVOURER",
-        "PSYKER"
+        "PSYKER",
+        "BROODLORD",
+        "INFANTRY",
+        "CHARACTER",
+        "VANGUARD INVADER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1472,12 +1472,12 @@
       "name": "Tervigon",
       "role": "Monster Character",
       "keywords": [
-        "SYNAPSE",
         "MONSTER",
         "CHARACTER",
         "PSYKER",
-        "TERVIGON",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "SYNAPSE",
+        "TERVIGON"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -1756,9 +1756,9 @@
       "name": "Termagants",
       "role": "Battleline",
       "keywords": [
+        "INFANTRY",
         "BATTLELINE",
         "GREAT DEVOURER",
-        "INFANTRY",
         "ENDLESS MULTITUDE",
         "TERMAGANTS"
       ],
@@ -2036,11 +2036,11 @@
       "name": "Hormagaunts",
       "role": "Battleline",
       "keywords": [
+        "BATTLELINE",
+        "GREAT DEVOURER",
         "HORMAGAUNTS",
         "ENDLESS MULTITUDE",
-        "GREAT DEVOURER",
-        "INFANTRY",
-        "BATTLELINE"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2132,10 +2132,10 @@
       "name": "Ripper Swarms",
       "role": "Swarm",
       "keywords": [
-        "RIPPER SWARMS",
+        "SWARM",
         "GREAT DEVOURER",
         "HARVESTER",
-        "SWARM"
+        "RIPPER SWARMS"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2269,9 +2269,9 @@
       "name": "Tyrant Guard",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "TYRANT GUARD",
         "GREAT DEVOURER",
-        "TYRANT GUARD"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2414,9 +2414,9 @@
       "name": "Hive Guard",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "HIVE GUARD",
         "GREAT DEVOURER",
-        "HIVE GUARD"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2573,10 +2573,10 @@
       "name": "Lictor",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
+        "LICTOR",
         "VANGUARD INVADER",
         "GREAT DEVOURER",
-        "LICTOR"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2691,11 +2691,11 @@
       "name": "Maleceptor",
       "role": "Monster",
       "keywords": [
-        "MONSTER",
-        "PSYKER",
-        "MALECEPTOR",
         "SYNAPSE",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "PSYKER",
+        "MONSTER",
+        "MALECEPTOR"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2836,12 +2836,12 @@
       "name": "Zoanthropes",
       "role": "Infantry",
       "keywords": [
+        "ZOANTHROPES",
         "SYNAPSE",
+        "GREAT DEVOURER",
         "INFANTRY",
         "PSYKER",
-        "FLY",
-        "GREAT DEVOURER",
-        "ZOANTHROPES"
+        "FLY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -2981,10 +2981,10 @@
       "name": "Venomthropes",
       "role": "Infantry",
       "keywords": [
-        "VENOMTHROPES",
-        "INFANTRY",
         "FLY",
-        "GREAT DEVOURER"
+        "INFANTRY",
+        "GREAT DEVOURER",
+        "VENOMTHROPES"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3083,10 +3083,10 @@
       "name": "Pyrovores",
       "role": "Infantry",
       "keywords": [
-        "PYROVORES",
         "INFANTRY",
         "GREAT DEVOURER",
-        "HARVESTER"
+        "HARVESTER",
+        "PYROVORES"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3225,10 +3225,10 @@
       "name": "Haruspex",
       "role": "Monster",
       "keywords": [
-        "HARUSPEX",
         "GREAT DEVOURER",
         "HARVESTER",
-        "MONSTER"
+        "MONSTER",
+        "HARUSPEX"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3371,10 +3371,10 @@
       "name": "Deathleaper",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "GREAT DEVOURER",
         "EPIC HERO",
         "INFANTRY",
         "CHARACTER",
+        "GREAT DEVOURER",
         "VANGUARD INVADER",
         "DEATHLEAPER"
       ],
@@ -3496,11 +3496,11 @@
       "name": "Raveners",
       "role": "Infantry",
       "keywords": [
-        "BURROWERS",
-        "RAVENERS",
-        "INFANTRY",
+        "VANGUARD INVADER",
         "GREAT DEVOURER",
-        "VANGUARD INVADER"
+        "INFANTRY",
+        "RAVENERS",
+        "BURROWERS"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3606,13 +3606,13 @@
       "name": "Gargoyles",
       "role": "Battleline",
       "keywords": [
-        "GARGOYLES",
-        "ENDLESS MULTITUDE",
-        "GREAT DEVOURER",
-        "FLY",
         "INFANTRY",
+        "ENDLESS MULTITUDE",
         "VANGUARD INVADER",
-        "BATTLELINE"
+        "GARGOYLES",
+        "BATTLELINE",
+        "GREAT DEVOURER",
+        "FLY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3730,9 +3730,9 @@
         "MONSTER",
         "FLY",
         "AIRCRAFT",
-        "GREAT DEVOURER",
         "VANGUARD INVADER",
-        "HARPY"
+        "HARPY",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -3902,9 +3902,9 @@
         "MONSTER",
         "FLY",
         "AIRCRAFT",
-        "GREAT DEVOURER",
+        "HIVE CRONE",
         "VANGUARD INVADER",
-        "HIVE CRONE"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4074,10 +4074,10 @@
       "name": "Mucolid Spores",
       "role": "Beast",
       "keywords": [
-        "BEAST",
+        "GREAT DEVOURER",
         "FLY",
-        "MUCOLID SPORES",
-        "GREAT DEVOURER"
+        "BEAST",
+        "MUCOLID SPORES"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4179,10 +4179,10 @@
       "name": "Spore Mines",
       "role": "Beast",
       "keywords": [
-        "BEAST",
-        "FLY",
+        "SPORE MINES",
         "GREAT DEVOURER",
-        "SPORE MINES"
+        "FLY",
+        "BEAST"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4284,14 +4284,14 @@
       "name": "Tyrannocyte",
       "role": "Dedicated Transports",
       "keywords": [
-        "MONSTER",
-        "FLY",
+        "FRAME",
         "TRANSPORT",
         "DEDICATED TRANSPORT",
         "GREAT DEVOURER",
         "VANGUARD INVADER",
         "TYRANNOCYTE",
-        "FRAME"
+        "MONSTER",
+        "FLY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4416,9 +4416,9 @@
       "name": "Carnifexes",
       "role": "Monster",
       "keywords": [
-        "GREAT DEVOURER",
+        "CARNIFEXES",
         "MONSTER",
-        "CARNIFEXES"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4736,9 +4736,9 @@
       "name": "Biovores",
       "role": "Infantry",
       "keywords": [
-        "BIOVORES",
+        "GREAT DEVOURER",
         "INFANTRY",
-        "GREAT DEVOURER"
+        "BIOVORES"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4861,11 +4861,11 @@
       "name": "Trygon",
       "role": "Monster",
       "keywords": [
-        "TRYGON",
-        "BURROWER",
-        "VANGUARD INVADER",
+        "MONSTER",
         "GREAT DEVOURER",
-        "MONSTER"
+        "TRYGON",
+        "VANGUARD INVADER",
+        "BURROWER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -4980,11 +4980,11 @@
       "name": "Mawloc",
       "role": "Monster",
       "keywords": [
-        "MAWLOC",
-        "BURROWER",
-        "VANGUARD INVADER",
+        "MONSTER",
         "GREAT DEVOURER",
-        "MONSTER"
+        "VANGUARD INVADER",
+        "MAWLOC",
+        "BURROWER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5102,8 +5102,8 @@
       "role": "Monster",
       "keywords": [
         "EXOCRINE",
-        "MONSTER",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5229,10 +5229,10 @@
       "name": "Tyrannofex",
       "role": "Monster",
       "keywords": [
-        "GREAT DEVOURER",
-        "MONSTER",
         "TYRANNOFEX",
-        "FRAME"
+        "FRAME",
+        "GREAT DEVOURER",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5437,9 +5437,9 @@
       "name": "Toxicrene",
       "role": "Monster",
       "keywords": [
+        "FRAME",
         "MONSTER",
         "GREAT DEVOURER",
-        "FRAME",
         "TOXICRENE"
       ],
       "factionKeywords": [
@@ -5554,8 +5554,8 @@
       "role": "Monster",
       "keywords": [
         "SPOROCYST",
-        "GREAT DEVOURER",
-        "MONSTER"
+        "MONSTER",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5670,15 +5670,15 @@
       "name": "Winged Hive Tyrant",
       "role": "Monster Character",
       "keywords": [
-        "WINGED HIVE TYRANT",
-        "HIVE TYRANT",
-        "VANGUARD INVADER",
-        "SYNAPSE",
         "GREAT DEVOURER",
-        "FLY",
-        "PSYKER",
+        "WINGED HIVE TYRANT",
         "MONSTER",
-        "CHARACTER"
+        "CHARACTER",
+        "PSYKER",
+        "FLY",
+        "SYNAPSE",
+        "VANGUARD INVADER",
+        "HIVE TYRANT"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -5878,13 +5878,13 @@
       "name": "Parasite Of Mortrex",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "VANGUARD INVADER",
-        "PARASITE OF MORTREX",
-        "CHARACTER",
         "FLY",
+        "INFANTRY",
+        "CHARACTER",
         "SYNAPSE",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "VANGUARD INVADER",
+        "PARASITE OF MORTREX"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6129,10 +6129,10 @@
       "name": "Neurogaunts",
       "role": "Infantry",
       "keywords": [
+        "NEUROGAUNTS",
         "GREAT DEVOURER",
         "INFANTRY",
-        "ENDLESS MULTITUDE",
-        "NEUROGAUNTS"
+        "ENDLESS MULTITUDE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6234,13 +6234,13 @@
       "name": "Neurotyrant",
       "role": "Monster Character",
       "keywords": [
-        "NEUROTYRANT",
+        "MONSTER",
         "SYNAPSE",
+        "NEUROTYRANT",
         "GREAT DEVOURER",
         "PSYKER",
         "FLY",
-        "CHARACTER",
-        "MONSTER"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6350,8 +6350,8 @@
         }
       ],
       "leads": [
-        "Zoanthropes",
         "Tyrant Guard",
+        "Zoanthropes",
         "Neurogaunts"
       ],
       "isSupport": false,
@@ -6374,11 +6374,11 @@
       "name": "Psychophage",
       "role": "Monster",
       "keywords": [
-        "HARVESTER",
         "GREAT DEVOURER",
+        "HARVESTER",
         "PSYCHOPHAGE",
-        "MONSTER",
-        "SMOKE"
+        "SMOKE",
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6505,9 +6505,9 @@
       "name": "Screamer-killer",
       "role": "Monster",
       "keywords": [
+        "SCREAMER-KILLER",
         "GREAT DEVOURER",
-        "MONSTER",
-        "SCREAMER-KILLER"
+        "MONSTER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -6629,9 +6629,9 @@
       "name": "Tyranid Warriors With Melee Bio-weapons",
       "role": "Infantry",
       "keywords": [
-        "GREAT DEVOURER",
         "TYRANID WARRIORS WITH MELEE BIO-WEAPONS",
         "SYNAPSE",
+        "GREAT DEVOURER",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -6979,9 +6979,9 @@
       "role": "Infantry",
       "keywords": [
         "VANGUARD INVADER",
-        "GREAT DEVOURER",
+        "VON RYAN’S LEAPERS",
         "INFANTRY",
-        "VON RYAN’S LEAPERS"
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7088,13 +7088,13 @@
       "name": "Winged Tyranid Prime",
       "role": "Infantry Character",
       "keywords": [
-        "SYNAPSE",
+        "GREAT DEVOURER",
+        "FLY",
         "INFANTRY",
         "CHARACTER",
-        "FLY",
-        "GREAT DEVOURER",
+        "WINGED TYRANID PRIME",
         "VANGUARD INVADER",
-        "WINGED TYRANID PRIME"
+        "SYNAPSE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7184,8 +7184,8 @@
         }
       ],
       "leads": [
-        "Tyranid Warriors With Ranged Bio-weapons",
         "Gargoyles",
+        "Tyranid Warriors With Ranged Bio-weapons",
         "Tyranid Warriors With Melee Bio-weapons"
       ],
       "isSupport": false,
@@ -7210,9 +7210,9 @@
       "keywords": [
         "GREAT DEVOURER",
         "MONSTER",
-        "NORN EMISSARY",
         "PSYKER",
-        "SYNAPSE"
+        "SYNAPSE",
+        "NORN EMISSARY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7392,11 +7392,11 @@
       "name": "Norn Assimilator",
       "role": "Monster",
       "keywords": [
-        "GREAT DEVOURER",
-        "MONSTER",
-        "SYNAPSE",
         "HARVESTER",
-        "NORN ASSIMILATOR"
+        "NORN ASSIMILATOR",
+        "SYNAPSE",
+        "MONSTER",
+        "GREAT DEVOURER"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7548,11 +7548,11 @@
       "name": "Neurolictor",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "GREAT DEVOURER",
         "VANGUARD INVADER",
         "SYNAPSE",
-        "NEUROLICTOR"
+        "GREAT DEVOURER",
+        "NEUROLICTOR",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7681,13 +7681,13 @@
       "name": "Hyperadapted Raveners",
       "role": "Infantry Character",
       "keywords": [
-        "VANGUARD INVADER",
         "CHARACTER",
-        "SYNAPSE",
-        "HYPERADAPTED RAVENERS",
-        "BURROWERS",
         "INFANTRY",
-        "GREAT DEVOURER"
+        "GREAT DEVOURER",
+        "VANGUARD INVADER",
+        "BURROWERS",
+        "HYPERADAPTED RAVENERS",
+        "SYNAPSE"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7876,11 +7876,11 @@
       "name": "Tyranid Prime with Lash Whip",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
+        "TYRANID PRIME WITH LASH WHIP",
         "CHARACTER",
-        "GREAT DEVOURER",
         "SYNAPSE",
-        "TYRANID PRIME WITH LASH WHIP"
+        "GREAT DEVOURER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "TYRANIDS"
@@ -7999,10 +7999,10 @@
         }
       ],
       "leads": [
-        "Termagants",
-        "Hormagaunts",
+        "Tyranid Warriors With Ranged Bio-weapons",
         "Tyranid Warriors With Melee Bio-weapons",
-        "Tyranid Warriors With Ranged Bio-weapons"
+        "Termagants",
+        "Hormagaunts"
       ],
       "isSupport": false,
       "points": [
@@ -8024,14 +8024,14 @@
       "name": "The Red Terror",
       "role": "Monster Epic Hero",
       "keywords": [
-        "GREAT DEVOURER",
+        "THE RED TERROR",
         "CHARACTER",
         "EPIC HERO",
+        "GREAT DEVOURER",
         "MONSTER",
         "MOBILE",
         "BURROWER",
-        "VANGUARD INVADER",
-        "THE RED TERROR"
+        "VANGUARD INVADER"
       ],
       "factionKeywords": [
         "TYRANIDS"

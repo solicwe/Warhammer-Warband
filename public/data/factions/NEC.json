@@ -2,7 +2,7 @@
   "id": "NEC",
   "name": "Necrons",
   "link": "https://wahapedia.ru/wh40k11ed/factions/necrons",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Reanimation Protocols",
@@ -1070,11 +1070,11 @@
       "name": "Imotekh The Stormlord",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "IMOTEKH THE STORMLORD",
         "NOBLE",
-        "INFANTRY",
         "EPIC HERO",
         "CHARACTER",
-        "IMOTEKH THE STORMLORD"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1184,8 +1184,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Lychguard",
-        "Immortals"
+        "Immortals",
+        "Lychguard"
       ],
       "isSupport": false,
       "points": [
@@ -1207,10 +1207,10 @@
       "name": "Overlord",
       "role": "Infantry Character",
       "keywords": [
-        "NOBLE",
         "CHARACTER",
         "INFANTRY",
-        "OVERLORD"
+        "OVERLORD",
+        "NOBLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1396,8 +1396,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Lychguard",
-        "Immortals"
+        "Immortals",
+        "Lychguard"
       ],
       "isSupport": false,
       "points": [
@@ -1419,12 +1419,12 @@
       "name": "Orikan The Diviner",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
         "EPIC HERO",
         "CRYPTEK",
         "CHRONOMANCER",
-        "ORIKAN THE DIVINER"
+        "ORIKAN THE DIVINER",
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1527,11 +1527,11 @@
       "name": "Trazyn The Infinite",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "TRAZYN THE INFINITE",
-        "NOBLE",
-        "EPIC HERO",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "EPIC HERO",
+        "NOBLE",
+        "TRAZYN THE INFINITE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1612,8 +1612,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Lychguard",
-        "Immortals"
+        "Immortals",
+        "Lychguard"
       ],
       "isSupport": false,
       "points": [
@@ -1635,12 +1635,12 @@
       "name": "Catacomb Command Barge",
       "role": "Vehicle Character",
       "keywords": [
+        "FRAME",
+        "CATACOMB COMMAND BARGE",
         "VEHICLE",
         "CHARACTER",
         "NOBLE",
-        "FLY",
-        "FRAME",
-        "CATACOMB COMMAND BARGE"
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1848,9 +1848,9 @@
       "name": "Necron Warriors",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
+        "NECRON WARRIORS",
         "BATTLELINE",
-        "NECRON WARRIORS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -1994,9 +1994,9 @@
       "name": "Immortals",
       "role": "Battleline",
       "keywords": [
+        "IMMORTALS",
         "BATTLELINE",
-        "INFANTRY",
-        "IMMORTALS"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -2402,8 +2402,8 @@
       "name": "Flayed Ones",
       "role": "Infantry",
       "keywords": [
-        "FLAYED ONES",
-        "INFANTRY"
+        "INFANTRY",
+        "FLAYED ONES"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -2508,10 +2508,10 @@
       "name": "Triarch Praetorians",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "FLY",
-        "TRIARCH",
         "PRAETORIANS",
-        "INFANTRY"
+        "TRIARCH"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -2668,11 +2668,11 @@
       "name": "Triarch Stalker",
       "role": "Walker",
       "keywords": [
-        "STALKER",
+        "WALKER",
         "VEHICLE",
         "TRIARCH",
-        "WALKER",
-        "FRAME"
+        "FRAME",
+        "STALKER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -2867,10 +2867,10 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "CHARACTER",
+        "MONSTER",
         "EPIC HERO",
         "FLY",
-        "C’TAN SHARD OF THE NIGHTBRINGER",
-        "MONSTER"
+        "C’TAN SHARD OF THE NIGHTBRINGER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3013,11 +3013,11 @@
       "name": "C’tan Shard of the Deceiver",
       "role": "Monster Epic Hero",
       "keywords": [
-        "MONSTER",
-        "CHARACTER",
-        "FLY",
         "C’TAN SHARD OF THE DECEIVER",
-        "EPIC HERO"
+        "CHARACTER",
+        "MONSTER",
+        "EPIC HERO",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3157,12 +3157,12 @@
       "name": "Ghost Ark",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "FLY",
-        "FRAME",
-        "TRANSPORT",
         "GHOST ARK",
-        "DEDICATED TRANSPORT"
+        "DEDICATED TRANSPORT",
+        "TRANSPORT",
+        "FRAME",
+        "FLY",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3277,10 +3277,10 @@
       "name": "Night Scythe",
       "role": "Transport",
       "keywords": [
-        "VEHICLE",
-        "FLY",
         "TRANSPORT",
-        "NIGHT SCYTHE"
+        "FLY",
+        "NIGHT SCYTHE",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3413,10 +3413,10 @@
       "name": "Doom Scythe",
       "role": "Aircraft",
       "keywords": [
+        "AIRCRAFT",
         "VEHICLE",
-        "FLY",
         "DOOM SCYTHE",
-        "AIRCRAFT"
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3551,10 +3551,10 @@
       "name": "Canoptek Wraiths",
       "role": "Beast",
       "keywords": [
+        "FLY",
         "BEASTS",
         "CANOPTEK",
-        "WRAITHS",
-        "FLY"
+        "WRAITHS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3739,8 +3739,8 @@
       "role": "Mounted",
       "keywords": [
         "MOUNTED",
-        "FLY",
-        "TOMB BLADES"
+        "TOMB BLADES",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -3968,10 +3968,10 @@
       "name": "Canoptek Spyders",
       "role": "Vehicle",
       "keywords": [
-        "CANOPTEK",
         "FLY",
-        "VEHICLE",
-        "SPYDERS"
+        "CANOPTEK",
+        "SPYDERS",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4136,12 +4136,12 @@
       "name": "Monolith",
       "role": "Titanic",
       "keywords": [
+        "VEHICLE",
         "TITANIC",
-        "FLY",
-        "FRAME",
-        "TOWERING",
         "MONOLITH",
-        "VEHICLE"
+        "FRAME",
+        "FLY",
+        "TOWERING"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4500,10 +4500,10 @@
       "name": "Doomsday Ark",
       "role": "Vehicle",
       "keywords": [
-        "FLY",
-        "FRAME",
         "DOOMSDAY ARK",
-        "VEHICLE"
+        "FRAME",
+        "VEHICLE",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4649,10 +4649,10 @@
       "name": "Transcendent C’tan",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
         "FLY",
-        "TRANSCENDENT C’TAN",
-        "MONSTER"
+        "CHARACTER",
+        "MONSTER",
+        "TRANSCENDENT C’TAN"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -4802,11 +4802,11 @@
       "name": "Tesseract Vault",
       "role": "Titanic",
       "keywords": [
+        "FLY",
         "VEHICLE",
         "TITANIC",
-        "FLY",
-        "TESSERACT VAULT",
         "FRAME",
+        "TESSERACT VAULT",
         "TOWERING"
       ],
       "factionKeywords": [
@@ -4995,12 +4995,12 @@
       "name": "Obelisk",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
-        "OBELISK",
-        "TOWERING",
-        "FLY",
+        "VEHICLE",
         "TITANIC",
-        "VEHICLE"
+        "FLY",
+        "FRAME",
+        "TOWERING",
+        "OBELISK"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5134,11 +5134,11 @@
       "name": "Illuminor Szeras",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "EPIC HERO",
         "ILLUMINOR SZERAS",
-        "CRYPTEK",
-        "INFANTRY"
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY",
+        "CRYPTEK"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5270,10 +5270,10 @@
       "name": "Plasmancer",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "CHARACTER",
-        "CRYPTEK",
-        "PLASMANCER"
+        "INFANTRY",
+        "PLASMANCER",
+        "CRYPTEK"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5384,10 +5384,10 @@
       "name": "Skorpekh Lord",
       "role": "Infantry Character",
       "keywords": [
-        "SKORPEKH LORD",
+        "DESTROYER CULT",
         "CHARACTER",
-        "INFANTRY",
-        "DESTROYER CULT"
+        "SKORPEKH LORD",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5530,9 +5530,9 @@
       "name": "Skorpekh Destroyers",
       "role": "Infantry",
       "keywords": [
+        "DESTROYER CULT",
         "INFANTRY",
-        "SKORPEKH DESTROYERS",
-        "DESTROYER CULT"
+        "SKORPEKH DESTROYERS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5759,10 +5759,10 @@
       "name": "Canoptek Reanimator",
       "role": "Walker",
       "keywords": [
-        "WALKER",
-        "VEHICLE",
         "CANOPTEK",
-        "REANIMATOR"
+        "REANIMATOR",
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5873,10 +5873,10 @@
       "name": "Canoptek Scarab Swarms",
       "role": "Swarm",
       "keywords": [
-        "CANOPTEK",
         "SCARAB SWARMS",
-        "SWARM",
-        "FLY"
+        "CANOPTEK",
+        "FLY",
+        "SWARM"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -5975,10 +5975,10 @@
       "name": "Canoptek Doomstalker",
       "role": "Walker",
       "keywords": [
-        "DOOMSTALKER",
-        "WALKER",
         "CANOPTEK",
-        "VEHICLE"
+        "DOOMSTALKER",
+        "VEHICLE",
+        "WALKER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6115,9 +6115,9 @@
       "name": "Lokhust Heavy Destroyers",
       "role": "Mounted",
       "keywords": [
+        "LOKHUST HEAVY DESTROYERS",
         "DESTROYER CULT",
         "MOUNTED",
-        "LOKHUST HEAVY DESTROYERS",
         "FLY"
       ],
       "factionKeywords": [
@@ -6407,11 +6407,11 @@
       "name": "Lokhust Lord",
       "role": "Mounted Character",
       "keywords": [
-        "FLY",
-        "MOUNTED",
-        "CHARACTER",
+        "LOKHUST LORD",
         "DESTROYER CULT",
-        "LOKHUST LORD"
+        "FLY",
+        "CHARACTER",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6557,8 +6557,8 @@
         }
       ],
       "leads": [
-        "Lokhust Heavy Destroyers",
-        "Lokhust Destroyers"
+        "Lokhust Destroyers",
+        "Lokhust Heavy Destroyers"
       ],
       "isSupport": false,
       "points": [
@@ -6580,11 +6580,11 @@
       "name": "Technomancer",
       "role": "Infantry Character",
       "keywords": [
-        "FLY",
-        "INFANTRY",
         "CHARACTER",
+        "TECHNOMANCER",
         "CRYPTEK",
-        "TECHNOMANCER"
+        "INFANTRY",
+        "FLY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6672,9 +6672,9 @@
         }
       ],
       "leads": [
+        "Canoptek Wraiths",
         "Necron Warriors",
-        "Immortals",
-        "Canoptek Wraiths"
+        "Immortals"
       ],
       "isSupport": true,
       "points": [
@@ -6706,9 +6706,9 @@
       "role": "Infantry Character",
       "keywords": [
         "PSYCHOMANCER",
-        "INFANTRY",
+        "CRYPTEK",
         "CHARACTER",
-        "CRYPTEK"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6819,10 +6819,10 @@
       "name": "Chronomancer",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
-        "INFANTRY",
         "CHRONOMANCER",
-        "CRYPTEK"
+        "CRYPTEK",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -6944,10 +6944,10 @@
       "name": "Hexmark Destroyer",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
+        "HEXMARK DESTROYER",
         "DESTROYER CULT",
-        "HEXMARK DESTROYER"
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7069,11 +7069,11 @@
       "name": "C’tan Shard of the Void Dragon",
       "role": "Monster Epic Hero",
       "keywords": [
-        "C’TAN SHARD OF THE VOID DRAGON",
-        "FLY",
-        "MONSTER",
         "CHARACTER",
-        "EPIC HERO"
+        "EPIC HERO",
+        "FLY",
+        "C’TAN SHARD OF THE VOID DRAGON",
+        "MONSTER"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7249,9 +7249,9 @@
       "name": "Ophydian Destroyers",
       "role": "Infantry",
       "keywords": [
-        "OPHYDIAN DESTROYERS",
         "DESTROYER CULT",
-        "INFANTRY"
+        "INFANTRY",
+        "OPHYDIAN DESTROYERS"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7368,10 +7368,10 @@
       "name": "Lokhust Destroyers",
       "role": "Mounted",
       "keywords": [
-        "MOUNTED",
-        "FLY",
+        "LOKHUST DESTROYERS",
         "DESTROYER CULT",
-        "LOKHUST DESTROYERS"
+        "FLY",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7511,10 +7511,10 @@
       "role": "Vehicle Epic Hero",
       "keywords": [
         "THE SILENT KING",
-        "VEHICLE",
         "CHARACTER",
         "TRIARCH",
-        "EPIC HERO"
+        "EPIC HERO",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7735,10 +7735,10 @@
       "name": "Convergence Of Dominion",
       "role": "Fortifications",
       "keywords": [
-        "VEHICLE",
+        "FRAME",
         "FORTIFICATION",
-        "CONVERGENCE OF DOMINION",
-        "FRAME"
+        "VEHICLE",
+        "CONVERGENCE OF DOMINION"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7849,11 +7849,11 @@
       "name": "Overlord with translocation shroud",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
-        "INFANTRY",
         "NOBLE",
         "OVERLORD",
-        "OVERLORD WITH TRANSLOCATION SHROUD"
+        "OVERLORD WITH TRANSLOCATION SHROUD",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "NECRONS"
@@ -7940,8 +7940,8 @@
       ],
       "leads": [
         "Necron Warriors",
-        "Immortals",
-        "Lychguard"
+        "Lychguard",
+        "Immortals"
       ],
       "isSupport": false,
       "points": [
@@ -8427,9 +8427,9 @@
         }
       ],
       "leads": [
-        "Immortals",
         "Necron Warriors",
-        "Canoptek Macrocytes"
+        "Canoptek Macrocytes",
+        "Immortals"
       ],
       "isSupport": true,
       "points": [
@@ -8451,9 +8451,9 @@
       "name": "Nekrosor Ammentar",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "EPIC HERO",
         "INFANTRY",
         "CHARACTER",
-        "EPIC HERO",
         "DESTROYER CULT",
         "NEKROSOR AMMENTAR"
       ],

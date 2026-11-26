@@ -38368,11 +38368,11 @@
       "name": "Thunderhawk Gunship",
       "role": "Titanic",
       "keywords": [
-        "TRANSPORT",
-        "IMPERIUM",
-        "FLY",
         "VEHICLE",
+        "IMPERIUM",
+        "TRANSPORT",
         "RAVENWING",
+        "FLY",
         "TITANIC"
       ],
       "factionKeywords": [
@@ -38630,10 +38630,10 @@
       "name": "Astraeus",
       "role": "Titanic",
       "keywords": [
+        "IMPERIUM",
         "FRAME",
-        "VEHICLE",
         "TITANIC",
-        "IMPERIUM"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ADEPTUS ASTARTES"

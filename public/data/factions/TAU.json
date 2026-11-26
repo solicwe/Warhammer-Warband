@@ -2,7 +2,7 @@
   "id": "TAU",
   "name": "T’au Empire",
   "link": "https://wahapedia.ru/wh40k11ed/factions/t-au-empire",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "For the Greater Good",
@@ -549,12 +549,12 @@
       "name": "Commander In Coldstar Battlesuit",
       "role": "Vehicle Character",
       "keywords": [
-        "BATTLESUIT",
-        "COMMANDER IN COLDSTAR BATTLESUIT",
         "VEHICLE",
         "WALKER",
         "FLY",
-        "CHARACTER"
+        "COMMANDER IN COLDSTAR BATTLESUIT",
+        "CHARACTER",
+        "BATTLESUIT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -893,9 +893,9 @@
         }
       ],
       "leads": [
+        "Crisis Fireknife Battlesuits",
         "Crisis Starscythe Battlesuits",
-        "Crisis Sunforge Battlesuits",
-        "Crisis Fireknife Battlesuits"
+        "Crisis Sunforge Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -917,9 +917,9 @@
       "name": "Ethereal",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "CHARACTER",
-        "ETHEREAL"
+        "ETHEREAL",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1059,10 +1059,10 @@
       "name": "Cadre Fireblade",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
+        "GRENADES",
         "CADRE FIREBLADE",
-        "GRENADES"
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1204,12 +1204,12 @@
       "role": "Vehicle Epic Hero",
       "keywords": [
         "VEHICLE",
-        "EPIC HERO",
-        "CHARACTER",
-        "FLY",
         "WALKER",
-        "COMMANDER FARSIGHT",
-        "BATTLESUIT"
+        "FLY",
+        "CHARACTER",
+        "EPIC HERO",
+        "BATTLESUIT",
+        "COMMANDER FARSIGHT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1323,9 +1323,9 @@
         }
       ],
       "leads": [
+        "Crisis Sunforge Battlesuits",
         "Crisis Starscythe Battlesuits",
-        "Crisis Fireknife Battlesuits",
-        "Crisis Sunforge Battlesuits"
+        "Crisis Fireknife Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -1347,12 +1347,12 @@
       "name": "Commander Shadowsun",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "COMMANDER SHADOWSUN",
-        "EPIC HERO",
-        "CHARACTER",
-        "BATTLESUIT",
         "INFANTRY",
-        "FLY"
+        "FLY",
+        "CHARACTER",
+        "EPIC HERO",
+        "BATTLESUIT",
+        "COMMANDER SHADOWSUN"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1546,11 +1546,11 @@
       "name": "Darkstrider",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "MARKERLIGHT",
         "EPIC HERO",
-        "CHARACTER",
+        "MARKERLIGHT",
+        "DARKSTRIDER",
         "INFANTRY",
-        "DARKSTRIDER"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1679,12 +1679,12 @@
       "name": "Strike Team",
       "role": "Battleline",
       "keywords": [
-        "STRIKE TEAM",
-        "FIRE WARRIOR",
-        "MARKERLIGHT",
-        "GRENADES",
+        "INFANTRY",
         "BATTLELINE",
-        "INFANTRY"
+        "MARKERLIGHT",
+        "FIRE WARRIOR",
+        "STRIKE TEAM",
+        "GRENADES"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -1889,12 +1889,12 @@
       "name": "Breacher Team",
       "role": "Battleline",
       "keywords": [
+        "INFANTRY",
+        "BATTLELINE",
+        "GRENADES",
         "FIRE WARRIOR",
         "BREACHER TEAM",
-        "MARKERLIGHT",
-        "GRENADES",
-        "BATTLELINE",
-        "INFANTRY"
+        "MARKERLIGHT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2286,9 +2286,9 @@
       "name": "Krootox Riders",
       "role": "Mounted",
       "keywords": [
-        "KROOT",
         "MOUNTED",
         "KROOTOX RIDERS",
+        "KROOT",
         "GRENADES"
       ],
       "factionKeywords": [
@@ -2456,9 +2456,9 @@
       "name": "Kroot Hounds",
       "role": "Beast",
       "keywords": [
-        "BEASTS",
         "KROOT",
-        "HOUNDS"
+        "HOUNDS",
+        "BEASTS"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2561,12 +2561,12 @@
       "name": "Stealth Battlesuits",
       "role": "Infantry",
       "keywords": [
-        "STEALTH",
-        "BATTLESUIT",
-        "FLY",
         "MARKERLIGHT",
-        "GRENADES",
-        "INFANTRY"
+        "STEALTH",
+        "INFANTRY",
+        "FLY",
+        "BATTLESUIT",
+        "GRENADES"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -2799,10 +2799,10 @@
       "name": "Ghostkeel Battlesuit",
       "role": "Walker",
       "keywords": [
-        "SMOKE",
         "VEHICLE",
         "WALKER",
         "FLY",
+        "SMOKE",
         "BATTLESUIT",
         "GHOSTKEEL"
       ],
@@ -3081,10 +3081,10 @@
       "name": "Riptide Battlesuit",
       "role": "Walker",
       "keywords": [
+        "BATTLESUIT",
+        "FLY",
         "WALKER",
         "VEHICLE",
-        "FLY",
-        "BATTLESUIT",
         "RIPTIDE"
       ],
       "factionKeywords": [
@@ -3351,10 +3351,10 @@
       "name": "Pathfinder Team",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "GRENADES",
+        "PATHFINDER TEAM",
         "MARKERLIGHT",
-        "PATHFINDER TEAM"
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -3677,10 +3677,10 @@
       "name": "Piranhas",
       "role": "Vehicle",
       "keywords": [
-        "FLY",
         "FRAME",
-        "PIRANHAS",
-        "VEHICLE"
+        "FLY",
+        "VEHICLE",
+        "PIRANHAS"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -3907,11 +3907,11 @@
       "role": "Dedicated Transports",
       "keywords": [
         "FLY",
+        "DEVILFISH",
         "FRAME",
         "TRANSPORT",
-        "DEVILFISH",
-        "VEHICLE",
-        "DEDICATED TRANSPORT"
+        "DEDICATED TRANSPORT",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4122,10 +4122,10 @@
       "name": "Razorshark Strike Fighter",
       "role": "Aircraft",
       "keywords": [
-        "VEHICLE",
         "RAZORSHARK STRIKE FIGHTER",
         "FRAME",
         "FLY",
+        "VEHICLE",
         "AIRCRAFT"
       ],
       "factionKeywords": [
@@ -4326,11 +4326,11 @@
       "name": "Sun Shark Bomber",
       "role": "Aircraft",
       "keywords": [
-        "SUN SHARK BOMBER",
-        "FRAME",
-        "FLY",
         "VEHICLE",
-        "AIRCRAFT"
+        "AIRCRAFT",
+        "FLY",
+        "FRAME",
+        "SUN SHARK BOMBER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4534,8 +4534,8 @@
       "role": "Infantry",
       "keywords": [
         "VESPID STINGWINGS",
-        "FLY",
-        "INFANTRY"
+        "INFANTRY",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4725,10 +4725,10 @@
       "name": "Firesight Team",
       "role": "Infantry Character",
       "keywords": [
-        "FIRESIGHT TEAM",
-        "MARKERLIGHT",
+        "INFANTRY",
         "CHARACTER",
-        "INFANTRY"
+        "FIRESIGHT TEAM",
+        "MARKERLIGHT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -4870,11 +4870,11 @@
       "name": "Sky Ray Gunship",
       "role": "Vehicle",
       "keywords": [
-        "SKY RAY GUNSHIP",
+        "VEHICLE",
         "MARKERLIGHT",
         "FRAME",
         "FLY",
-        "VEHICLE"
+        "SKY RAY GUNSHIP"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5069,10 +5069,10 @@
       "name": "Hammerhead Gunship",
       "role": "Vehicle",
       "keywords": [
-        "FRAME",
-        "FLY",
+        "HAMMERHEAD GUNSHIP",
         "VEHICLE",
-        "HAMMERHEAD GUNSHIP"
+        "FLY",
+        "FRAME"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5357,9 +5357,9 @@
       "role": "Walker",
       "keywords": [
         "VEHICLE",
-        "BROADSIDE",
+        "WALKER",
         "BATTLESUIT",
-        "WALKER"
+        "BROADSIDE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5594,7 +5594,7 @@
       "isSupport": false,
       "points": [
         {
-          "label": "YOUR 1ST TO 2ND UNITS COST",
+          "label": "",
           "options": [
             {
               "models": 1,
@@ -5642,10 +5642,10 @@
       "role": "Titanic",
       "keywords": [
         "VEHICLE",
-        "STORMSURGE",
-        "TOWERING",
+        "WALKER",
         "TITANIC",
-        "WALKER"
+        "TOWERING",
+        "STORMSURGE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -5960,11 +5960,11 @@
       "role": "Fortifications",
       "keywords": [
         "FLY",
-        "VEHICLE",
-        "FORTIFICATION",
-        "TRANSPORT",
         "TIDEWALL DRONEPORT",
-        "FRAME"
+        "FRAME",
+        "TRANSPORT",
+        "VEHICLE",
+        "FORTIFICATION"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6075,12 +6075,12 @@
       "name": "Tidewall Shieldline",
       "role": "Fortifications",
       "keywords": [
-        "TRANSPORT",
         "FRAME",
-        "FLY",
+        "TRANSPORT",
         "TIDEWALL SHIELDLINE",
-        "VEHICLE",
-        "FORTIFICATION"
+        "FLY",
+        "FORTIFICATION",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6179,7 +6179,7 @@
       "transport": "This model has a transport capacity of 11 T’au Empire Infantry models. It cannot transport Battlesuit, Kroot or Vespid Stingwings models. If this model is equipped with a Tidewall defence platform, it has a transport capacity of 22 T’au Infantry models instead.",
       "points": [
         {
-          "label": "YOUR UNIT COSTS",
+          "label": "",
           "options": [
             {
               "models": 1,
@@ -6200,12 +6200,12 @@
       "name": "Tidewall Gunrig",
       "role": "Fortifications",
       "keywords": [
-        "FRAME",
-        "TIDEWALL GUNRIG",
-        "FORTIFICATION",
-        "VEHICLE",
         "TRANSPORT",
-        "FLY"
+        "VEHICLE",
+        "FLY",
+        "FORTIFICATION",
+        "FRAME",
+        "TIDEWALL GUNRIG"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6311,11 +6311,11 @@
       "name": "Commander In Enforcer Battlesuit",
       "role": "Vehicle Character",
       "keywords": [
-        "VEHICLE",
-        "WALKER",
-        "COMMANDER IN ENFORCER BATTLESUIT",
-        "BATTLESUIT",
         "CHARACTER",
+        "BATTLESUIT",
+        "COMMANDER IN ENFORCER BATTLESUIT",
+        "WALKER",
+        "VEHICLE",
         "FLY"
       ],
       "factionKeywords": [
@@ -6638,8 +6638,8 @@
       ],
       "leads": [
         "Crisis Starscythe Battlesuits",
-        "Crisis Fireknife Battlesuits",
-        "Crisis Sunforge Battlesuits"
+        "Crisis Sunforge Battlesuits",
+        "Crisis Fireknife Battlesuits"
       ],
       "isSupport": false,
       "points": [
@@ -6661,10 +6661,10 @@
       "name": "Kroot Farstalkers",
       "role": "Infantry",
       "keywords": [
-        "KROOT",
+        "INFANTRY",
         "GRENADES",
         "FARSTALKERS",
-        "INFANTRY"
+        "KROOT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -6973,12 +6973,12 @@
       "name": "Crisis Sunforge Battlesuits",
       "role": "Walker",
       "keywords": [
-        "BATTLESUIT",
         "VEHICLE",
         "WALKER",
-        "SUNFORGE",
+        "FLY",
         "CRISIS",
-        "FLY"
+        "SUNFORGE",
+        "BATTLESUIT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7126,12 +7126,12 @@
       "name": "Crisis Fireknife Battlesuits",
       "role": "Walker",
       "keywords": [
-        "VEHICLE",
         "WALKER",
-        "FLY",
-        "BATTLESUIT",
+        "VEHICLE",
+        "FIREKNIFE",
         "CRISIS",
-        "FIREKNIFE"
+        "BATTLESUIT",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7330,12 +7330,12 @@
       "name": "Crisis Starscythe Battlesuits",
       "role": "Walker",
       "keywords": [
-        "VEHICLE",
         "BATTLESUIT",
-        "WALKER",
-        "CRISIS",
         "STARSCYTHE",
-        "FLY"
+        "CRISIS",
+        "FLY",
+        "VEHICLE",
+        "WALKER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7539,9 +7539,9 @@
       "keywords": [
         "TRAIL SHAPER",
         "SHAPER",
-        "INFANTRY",
+        "KROOT",
         "CHARACTER",
-        "KROOT"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7673,9 +7673,9 @@
       "keywords": [
         "WAR SHAPER",
         "SHAPER",
-        "CHARACTER",
+        "KROOT",
         "INFANTRY",
-        "KROOT"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7859,11 +7859,11 @@
       "name": "Kroot Flesh Shaper",
       "role": "Infantry Character",
       "keywords": [
+        "FLESH SHAPER",
+        "SHAPER",
         "KROOT",
         "CHARACTER",
-        "FLESH SHAPER",
-        "INFANTRY",
-        "SHAPER"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -7996,9 +7996,9 @@
       "role": "Mounted Character",
       "keywords": [
         "MOUNTED",
+        "LONE-SPEAR",
         "CHARACTER",
-        "KROOT",
-        "LONE-SPEAR"
+        "KROOT"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -8191,10 +8191,10 @@
       "name": "Krootox Rampagers",
       "role": "Mounted",
       "keywords": [
-        "KROOT",
         "KROOTOX RAMPAGERS",
-        "MOUNTED",
-        "GRENADES"
+        "KROOT",
+        "GRENADES",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"
@@ -8340,13 +8340,13 @@
       "name": "The Twin Lance",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "WALKER",
         "VEHICLE",
-        "FLY",
-        "THE TWIN LANCE",
+        "CHARACTER",
+        "EPIC HERO",
         "BATTLESUIT",
-        "EPIC HERO"
+        "THE TWIN LANCE",
+        "WALKER",
+        "FLY"
       ],
       "factionKeywords": [
         "T’AU EMPIRE"

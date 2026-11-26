@@ -2,7 +2,7 @@
   "id": "AM",
   "name": "Astra Militarum",
   "link": "https://wahapedia.ru/wh40k11ed/factions/astra-militarum",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Voice of Command",
@@ -973,13 +973,13 @@
       "role": "Vehicle Character",
       "keywords": [
         "SMOKE",
-        "CHARACTER",
+        "SQUADRON",
         "VEHICLE",
-        "LEMAN RUSS COMMANDER",
         "FRAME",
         "OFFICER",
         "IMPERIUM",
-        "SQUADRON"
+        "CHARACTER",
+        "LEMAN RUSS COMMANDER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -1470,11 +1470,11 @@
       "name": "Cadian Heavy Weapons Squad",
       "role": "Infantry",
       "keywords": [
+        "IMPERIUM",
         "INFANTRY",
         "GRENADES",
-        "IMPERIUM",
-        "REGIMENT",
-        "CADIAN HEAVY WEAPONS SQUAD"
+        "CADIAN HEAVY WEAPONS SQUAD",
+        "REGIMENT"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -1707,13 +1707,13 @@
       "name": "Scout Sentinels",
       "role": "Walker",
       "keywords": [
+        "SCOUT SENTINELS",
         "VEHICLE",
         "WALKER",
         "SMOKE",
         "IMPERIUM",
         "REGIMENT",
-        "SQUADRON",
-        "SCOUT SENTINELS"
+        "SQUADRON"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2025,13 +2025,13 @@
       "name": "Armoured Sentinels",
       "role": "Walker",
       "keywords": [
-        "REGIMENT",
-        "SMOKE",
-        "IMPERIUM",
-        "WALKER",
-        "SQUADRON",
         "VEHICLE",
-        "ARMOURED SENTINELS"
+        "WALKER",
+        "SMOKE",
+        "REGIMENT",
+        "SQUADRON",
+        "ARMOURED SENTINELS",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2339,12 +2339,12 @@
       "keywords": [
         "FRAME",
         "CHIMERA",
+        "SQUADRON",
         "DEDICATED TRANSPORT",
         "TRANSPORT",
-        "SQUADRON",
-        "IMPERIUM",
+        "VEHICLE",
         "SMOKE",
-        "VEHICLE"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2636,13 +2636,13 @@
       "name": "Taurox",
       "role": "Dedicated Transports",
       "keywords": [
+        "SQUADRON",
         "IMPERIUM",
         "TAUROX",
-        "DEDICATED TRANSPORT",
         "TRANSPORT",
         "FRAME",
-        "SQUADRON",
-        "VEHICLE"
+        "VEHICLE",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -2790,12 +2790,12 @@
       "name": "Hellhound",
       "role": "Vehicle",
       "keywords": [
+        "SMOKE",
         "VEHICLE",
-        "FRAME",
         "HELLHOUND",
-        "SQUADRON",
         "IMPERIUM",
-        "SMOKE"
+        "SQUADRON",
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3075,13 +3075,13 @@
       "name": "Basilisk",
       "role": "Artillery",
       "keywords": [
-        "VEHICLE",
         "SQUADRON",
-        "ARTILLERY",
-        "SMOKE",
-        "IMPERIUM",
         "BASILISK",
-        "FRAME"
+        "FRAME",
+        "SMOKE",
+        "ARTILLERY",
+        "VEHICLE",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3288,11 +3288,11 @@
       "name": "Hydra",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
         "SMOKE",
-        "IMPERIUM",
         "SQUADRON",
         "HYDRA",
+        "IMPERIUM",
+        "VEHICLE",
         "FRAME"
       ],
       "factionKeywords": [
@@ -3491,13 +3491,13 @@
       "name": "Wyvern",
       "role": "Artillery",
       "keywords": [
-        "WYVERN",
-        "SQUADRON",
-        "VEHICLE",
-        "ARTILLERY",
-        "SMOKE",
         "IMPERIUM",
-        "FRAME"
+        "SQUADRON",
+        "WYVERN",
+        "VEHICLE",
+        "FRAME",
+        "ARTILLERY",
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3705,13 +3705,13 @@
       "name": "Manticore",
       "role": "Artillery",
       "keywords": [
-        "VEHICLE",
-        "MANTICORE",
         "SQUADRON",
         "IMPERIUM",
+        "MANTICORE",
+        "VEHICLE",
+        "ARTILLERY",
         "FRAME",
-        "SMOKE",
-        "ARTILLERY"
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -3919,13 +3919,13 @@
       "name": "Deathstrike",
       "role": "Artillery",
       "keywords": [
-        "SQUADRON",
-        "IMPERIUM",
         "SMOKE",
-        "ARTILLERY",
-        "VEHICLE",
+        "IMPERIUM",
+        "SQUADRON",
+        "DEATHSTRIKE",
         "FRAME",
-        "DEATHSTRIKE"
+        "VEHICLE",
+        "ARTILLERY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -4138,11 +4138,11 @@
       "name": "Leman Russ Battle Tank",
       "role": "Vehicle",
       "keywords": [
-        "FRAME",
         "SMOKE",
-        "IMPERIUM",
-        "SQUADRON",
         "LEMAN RUSS BATTLE TANK",
+        "FRAME",
+        "SQUADRON",
+        "IMPERIUM",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -4501,12 +4501,12 @@
       "name": "Leman Russ Demolisher",
       "role": "Vehicle",
       "keywords": [
-        "SMOKE",
         "VEHICLE",
-        "IMPERIUM",
-        "SQUADRON",
+        "LEMAN RUSS DEMOLISHER",
         "FRAME",
-        "LEMAN RUSS DEMOLISHER"
+        "SQUADRON",
+        "IMPERIUM",
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -4864,12 +4864,12 @@
       "name": "Baneblade",
       "role": "Titanic",
       "keywords": [
-        "VEHICLE",
-        "TITANIC",
-        "SMOKE",
-        "IMPERIUM",
+        "FRAME",
         "BANEBLADE",
-        "FRAME"
+        "IMPERIUM",
+        "SMOKE",
+        "TITANIC",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5141,8 +5141,8 @@
         "BANEHAMMER",
         "TRANSPORT",
         "IMPERIUM",
-        "TITANIC",
         "SMOKE",
+        "TITANIC",
         "VEHICLE"
       ],
       "factionKeywords": [
@@ -5366,12 +5366,12 @@
       "name": "Banesword",
       "role": "Titanic",
       "keywords": [
-        "VEHICLE",
-        "BANESWORD",
         "FRAME",
+        "TITANIC",
+        "BANESWORD",
         "IMPERIUM",
         "SMOKE",
-        "TITANIC"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5590,11 +5590,11 @@
       "keywords": [
         "SMOKE",
         "IMPERIUM",
-        "TRANSPORT",
-        "DOOMHAMMER",
         "FRAME",
-        "TITANIC",
-        "VEHICLE"
+        "DOOMHAMMER",
+        "TRANSPORT",
+        "VEHICLE",
+        "TITANIC"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -5818,12 +5818,12 @@
       "name": "Hellhammer",
       "role": "Titanic",
       "keywords": [
+        "IMPERIUM",
+        "HELLHAMMER",
+        "FRAME",
         "VEHICLE",
         "TITANIC",
-        "SMOKE",
-        "IMPERIUM",
-        "FRAME",
-        "HELLHAMMER"
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6092,11 +6092,11 @@
       "name": "Shadowsword",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
+        "SHADOWSWORD",
         "VEHICLE",
         "SMOKE",
         "TITANIC",
-        "SHADOWSWORD",
+        "FRAME",
         "IMPERIUM"
       ],
       "factionKeywords": [
@@ -6314,13 +6314,13 @@
       "name": "Stormlord",
       "role": "Titanic",
       "keywords": [
-        "FRAME",
-        "STORMLORD",
-        "SMOKE",
         "TRANSPORT",
+        "STORMLORD",
+        "FRAME",
         "IMPERIUM",
-        "VEHICLE",
-        "TITANIC"
+        "SMOKE",
+        "TITANIC",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6563,11 +6563,11 @@
       "role": "Titanic",
       "keywords": [
         "STORMSWORD",
+        "VEHICLE",
         "SMOKE",
-        "FRAME",
-        "IMPERIUM",
         "TITANIC",
-        "VEHICLE"
+        "IMPERIUM",
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6785,10 +6785,10 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "CHARACTER",
         "OFFICER",
+        "IMPERIUM",
         "COMMISSAR",
-        "IMPERIUM"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -6964,12 +6964,12 @@
         }
       ],
       "leads": [
-        "Death Korps Of Krieg",
-        "Cadian Shock Troops",
-        "Catachan Jungle Fighters",
         "Krieg Combat Engineers",
+        "Tempestus Scions",
         "Kasrkin",
-        "Tempestus Scions"
+        "Cadian Shock Troops",
+        "Death Korps Of Krieg",
+        "Catachan Jungle Fighters"
       ],
       "isSupport": false,
       "points": [
@@ -6991,13 +6991,13 @@
       "name": "Militarum Tempestus Command Squad",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "GRENADES",
+        "IMPERIUM",
+        "OFFICER",
         "MILITARUM TEMPESTUS",
         "COMMAND SQUAD",
-        "IMPERIUM",
         "CHARACTER",
-        "OFFICER"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7453,13 +7453,13 @@
       "name": "Taurox Prime",
       "role": "Dedicated Transports",
       "keywords": [
-        "DEDICATED TRANSPORT",
-        "VEHICLE",
-        "TAUROX PRIME",
         "IMPERIUM",
+        "VEHICLE",
+        "DEDICATED TRANSPORT",
+        "TAUROX PRIME",
+        "TRANSPORT",
         "SQUADRON",
-        "FRAME",
-        "TRANSPORT"
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7722,11 +7722,11 @@
       "name": "Ogryn Squad",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "OGRYN SQUAD",
         "OGRYN",
         "IMPERIUM",
-        "GRENADES"
+        "GRENADES",
+        "INFANTRY",
+        "OGRYN SQUAD"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -7839,9 +7839,9 @@
       "name": "Bullgryn Squad",
       "role": "Infantry",
       "keywords": [
-        "BULLGRYN SQUAD",
-        "OGRYN",
         "IMPERIUM",
+        "OGRYN",
+        "BULLGRYN SQUAD",
         "GRENADES",
         "INFANTRY"
       ],
@@ -8029,9 +8029,9 @@
       "name": "Ratlings",
       "role": "Infantry",
       "keywords": [
-        "RATLINGS",
+        "INFANTRY",
         "IMPERIUM",
-        "INFANTRY"
+        "RATLINGS"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8219,14 +8219,14 @@
       "name": "Nork Deddog",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "LOYAL PROTECTOR",
-        "OGRYN",
-        "NORK DEDDOG",
         "INFANTRY",
         "CHARACTER",
+        "NORK DEDDOG",
+        "OGRYN",
+        "IMPERIUM",
+        "LOYAL PROTECTOR",
         "EPIC HERO",
-        "GRENADES",
-        "IMPERIUM"
+        "GRENADES"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8345,11 +8345,11 @@
       "name": "Valkyrie",
       "role": "Transport",
       "keywords": [
-        "VEHICLE",
-        "VALKYRIE",
         "TRANSPORT",
-        "IMPERIUM",
-        "FLY"
+        "VALKYRIE",
+        "FLY",
+        "VEHICLE",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8584,11 +8584,11 @@
       "name": "Primaris Psyker",
       "role": "Infantry Character",
       "keywords": [
-        "PSYKER",
         "INFANTRY",
-        "CHARACTER",
+        "PSYKER",
+        "IMPERIUM",
         "PRIMARIS PSYKER",
-        "IMPERIUM"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8716,12 +8716,12 @@
         }
       ],
       "leads": [
-        "Krieg Combat Engineers",
-        "Tempestus Scions",
         "Cadian Shock Troops",
         "Catachan Jungle Fighters",
+        "Tempestus Scions",
         "Kasrkin",
-        "Death Korps Of Krieg"
+        "Death Korps Of Krieg",
+        "Krieg Combat Engineers"
       ],
       "isSupport": false,
       "points": [
@@ -8746,8 +8746,8 @@
         "INFANTRY",
         "CHARACTER",
         "GRENADES",
-        "IMPERIUM",
-        "MINISTORUM PRIEST"
+        "MINISTORUM PRIEST",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -8866,6 +8866,11 @@
       ],
       "abilities": [
         {
+          "name": "Leader",
+          "type": "Core",
+          "text": ""
+        },
+        {
           "name": "War Hymns",
           "type": "Datasheet",
           "text": "While this model is leading a unit, melee weapons equipped by models in that unit have the [SUSTAINED HITS 1] ability."
@@ -8874,20 +8879,15 @@
           "name": "Holy Piety",
           "type": "Datasheet",
           "text": "Each time this model makes a melee attack, unless this model’s unit is Battle-shocked, you can re-roll the Hit roll."
-        },
-        {
-          "name": "Leader",
-          "type": "Core",
-          "text": ""
         }
       ],
       "leads": [
-        "Catachan Jungle Fighters",
-        "Cadian Shock Troops",
-        "Death Korps Of Krieg",
         "Krieg Combat Engineers",
         "Kasrkin",
-        "Tempestus Scions"
+        "Tempestus Scions",
+        "Catachan Jungle Fighters",
+        "Cadian Shock Troops",
+        "Death Korps Of Krieg"
       ],
       "isSupport": false,
       "points": [
@@ -8909,10 +8909,10 @@
       "name": "Tech-Priest Enginseer",
       "role": "Infantry Character",
       "keywords": [
+        "TECH-PRIEST ENGINSEER",
         "INFANTRY",
         "CHARACTER",
-        "IMPERIUM",
-        "TECH-PRIEST ENGINSEER"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9029,11 +9029,11 @@
         }
       ],
       "leads": [
-        "Catachan Jungle Fighters",
-        "Cadian Shock Troops",
+        "Death Korps Of Krieg",
         "Krieg Combat Engineers",
-        "Kasrkin",
-        "Death Korps Of Krieg"
+        "Cadian Shock Troops",
+        "Catachan Jungle Fighters",
+        "Kasrkin"
       ],
       "isSupport": false,
       "points": [
@@ -9055,13 +9055,13 @@
       "name": "Ogryn Bodyguard",
       "role": "Infantry Character",
       "keywords": [
-        "OGRYN",
-        "BODYGUARD",
-        "LOYAL PROTECTOR",
-        "INFANTRY",
-        "CHARACTER",
+        "IMPERIUM",
         "GRENADES",
-        "IMPERIUM"
+        "CHARACTER",
+        "INFANTRY",
+        "BODYGUARD",
+        "OGRYN",
+        "LOYAL PROTECTOR"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9277,10 +9277,10 @@
       "name": "Sly Marbo",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "GRENADES",
-        "CHARACTER",
         "INFANTRY",
         "EPIC HERO",
+        "GRENADES",
+        "CHARACTER",
         "SLY MARBO",
         "REGIMENT",
         "IMPERIUM"
@@ -9414,13 +9414,13 @@
       "name": "Gaunt’s Ghosts",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "EPIC HERO",
-        "GAUNT’S GHOSTS",
         "IMPERIUM",
         "GRENADES",
-        "CHARACTER",
-        "OFFICER"
+        "EPIC HERO",
+        "INFANTRY",
+        "OFFICER",
+        "GAUNT’S GHOSTS",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9830,13 +9830,13 @@
         }
       ],
       "leads": [
-        "Death Riders",
-        "Attilan Rough Riders",
-        "Kasrkin",
-        "Krieg Combat Engineers",
         "Cadian Shock Troops",
+        "Attilan Rough Riders",
+        "Death Korps Of Krieg",
         "Catachan Jungle Fighters",
-        "Death Korps Of Krieg"
+        "Krieg Combat Engineers",
+        "Death Riders",
+        "Kasrkin"
       ],
       "isSupport": false,
       "points": [
@@ -9858,12 +9858,12 @@
       "name": "Ursula Creed",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "URSULA CREED",
-        "OFFICER",
+        "EPIC HERO",
         "IMPERIUM",
-        "CHARACTER",
-        "EPIC HERO"
+        "OFFICER",
+        "URSULA CREED",
+        "INFANTRY",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -9964,8 +9964,8 @@
         }
       ],
       "leads": [
-        "Cadian Shock Troops",
-        "Kasrkin"
+        "Kasrkin",
+        "Cadian Shock Troops"
       ],
       "isSupport": false,
       "points": [
@@ -9987,11 +9987,11 @@
       "name": "Cadian Castellan",
       "role": "Infantry Character",
       "keywords": [
-        "CADIAN CASTELLAN",
-        "OFFICER",
-        "IMPERIUM",
         "GRENADES",
         "CHARACTER",
+        "IMPERIUM",
+        "OFFICER",
+        "CADIAN CASTELLAN",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -10242,8 +10242,8 @@
         }
       ],
       "leads": [
-        "Kasrkin",
-        "Cadian Shock Troops"
+        "Cadian Shock Troops",
+        "Kasrkin"
       ],
       "isSupport": false,
       "points": [
@@ -10265,14 +10265,14 @@
       "name": "Cadian Command Squad",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
-        "INFANTRY",
-        "OFFICER",
-        "CHARACTER",
-        "COMMAND SQUAD",
-        "CADIAN",
         "PLATOON",
-        "IMPERIUM"
+        "INFANTRY",
+        "GRENADES",
+        "IMPERIUM",
+        "CADIAN",
+        "COMMAND SQUAD",
+        "CHARACTER",
+        "OFFICER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -10752,9 +10752,9 @@
         "CADIAN SHOCK TROOPS",
         "PLATOON",
         "REGIMENT",
+        "BATTLELINE",
         "GRENADES",
         "IMPERIUM",
-        "BATTLELINE",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -11118,13 +11118,13 @@
       "name": "Death Korps Of Krieg",
       "role": "Battleline",
       "keywords": [
-        "BATTLELINE",
         "INFANTRY",
-        "IMPERIUM",
-        "GRENADES",
-        "REGIMENT",
+        "DEATH KORPS OF KRIEG",
         "PLATOON",
-        "DEATH KORPS OF KRIEG"
+        "REGIMENT",
+        "GRENADES",
+        "IMPERIUM",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -11592,13 +11592,13 @@
       "name": "Catachan Jungle Fighters",
       "role": "Battleline",
       "keywords": [
-        "CATACHAN JUNGLE FIGHTERS",
-        "IMPERIUM",
+        "INFANTRY",
         "GRENADES",
-        "REGIMENT",
-        "BATTLELINE",
+        "CATACHAN JUNGLE FIGHTERS",
         "PLATOON",
-        "INFANTRY"
+        "IMPERIUM",
+        "REGIMENT",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -11806,10 +11806,10 @@
       "name": "Kasrkin",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
         "GRENADES",
-        "IMPERIUM",
         "REGIMENT",
+        "IMPERIUM",
+        "INFANTRY",
         "KASRKIN"
       ],
       "factionKeywords": [
@@ -12272,11 +12272,11 @@
       "name": "Attilan Rough Riders",
       "role": "Mounted",
       "keywords": [
-        "MOUNTED",
         "ATTILAN ROUGH RIDERS",
-        "GRENADES",
         "REGIMENT",
-        "IMPERIUM"
+        "IMPERIUM",
+        "GRENADES",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -12512,12 +12512,12 @@
       "name": "Rogal Dorn Battle Tank",
       "role": "Vehicle",
       "keywords": [
-        "SQUADRON",
-        "FRAME",
         "ROGAL DORN BATTLE TANK",
-        "VEHICLE",
+        "FRAME",
+        "IMPERIUM",
         "SMOKE",
-        "IMPERIUM"
+        "VEHICLE",
+        "SQUADRON"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -12837,9 +12837,9 @@
       "name": "Aegis Defence Line",
       "role": "Fortifications",
       "keywords": [
-        "FRAME",
         "FORTIFICATION",
         "IMPERIUM",
+        "FRAME",
         "AEGIS DEFENCE LINE"
       ],
       "factionKeywords": [
@@ -12941,12 +12941,12 @@
       "name": "Leman Russ Eradicator",
       "role": "Vehicle",
       "keywords": [
-        "LEMAN RUSS ERADICATOR",
-        "SQUADRON",
-        "SMOKE",
         "VEHICLE",
+        "LEMAN RUSS ERADICATOR",
+        "FRAME",
+        "SQUADRON",
         "IMPERIUM",
-        "FRAME"
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -13306,11 +13306,11 @@
       "role": "Vehicle",
       "keywords": [
         "LEMAN RUSS EXECUTIONER",
-        "FRAME",
+        "SMOKE",
         "SQUADRON",
         "VEHICLE",
-        "SMOKE",
-        "IMPERIUM"
+        "IMPERIUM",
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -13681,10 +13681,10 @@
       "name": "Leman Russ Exterminator",
       "role": "Vehicle",
       "keywords": [
-        "SMOKE",
         "VEHICLE",
-        "IMPERIUM",
+        "SMOKE",
         "SQUADRON",
+        "IMPERIUM",
         "FRAME",
         "LEMAN RUSS EXTERMINATOR"
       ],
@@ -14045,12 +14045,12 @@
       "name": "Leman Russ Punisher",
       "role": "Vehicle",
       "keywords": [
-        "LEMAN RUSS PUNISHER",
-        "IMPERIUM",
-        "FRAME",
-        "VEHICLE",
         "SMOKE",
-        "SQUADRON"
+        "IMPERIUM",
+        "VEHICLE",
+        "SQUADRON",
+        "LEMAN RUSS PUNISHER",
+        "FRAME"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -14406,12 +14406,12 @@
       "name": "Leman Russ Vanquisher",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
         "IMPERIUM",
+        "SMOKE",
         "LEMAN RUSS VANQUISHER",
         "FRAME",
-        "SQUADRON"
+        "SQUADRON",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -14769,12 +14769,12 @@
       "name": "Tempestus Scions",
       "role": "Infantry",
       "keywords": [
-        "REGIMENT",
-        "IMPERIUM",
-        "GRENADES",
-        "INFANTRY",
+        "MILITARUM TEMPESTUS",
         "TEMPESTUS SCIONS",
-        "MILITARUM TEMPESTUS"
+        "IMPERIUM",
+        "REGIMENT",
+        "INFANTRY",
+        "GRENADES"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -15212,12 +15212,12 @@
       "role": "Infantry",
       "keywords": [
         "INFANTRY",
-        "MILITARUM TEMPESTUS",
-        "IMPERIUM",
-        "TEMPESTUS AQUILONS",
-        "REGIMENT",
+        "GRENADES",
         "SMOKE",
-        "GRENADES"
+        "REGIMENT",
+        "MILITARUM TEMPESTUS",
+        "TEMPESTUS AQUILONS",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -15649,14 +15649,14 @@
       "name": "Krieg Command Squad",
       "role": "Infantry Character",
       "keywords": [
-        "OFFICER",
-        "COMMAND SQUAD",
-        "CHARACTER",
-        "GRENADES",
         "IMPERIUM",
         "PLATOON",
-        "KRIEG",
-        "INFANTRY"
+        "INFANTRY",
+        "GRENADES",
+        "OFFICER",
+        "CHARACTER",
+        "COMMAND SQUAD",
+        "KRIEG"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -16118,8 +16118,8 @@
         }
       ],
       "leads": [
-        "Death Korps Of Krieg",
-        "Krieg Combat Engineers"
+        "Krieg Combat Engineers",
+        "Death Korps Of Krieg"
       ],
       "isSupport": false,
       "points": [
@@ -16141,13 +16141,13 @@
       "name": "Lord Marshal Dreir",
       "role": "Mounted Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "MOUNTED",
-        "IMPERIUM",
-        "GRENADES",
+        "LORD MARSHAL DREIR",
         "EPIC HERO",
         "OFFICER",
-        "LORD MARSHAL DREIR"
+        "IMPERIUM",
+        "GRENADES",
+        "CHARACTER",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -16296,14 +16296,14 @@
       "name": "Catachan Command Squad",
       "role": "Infantry Character",
       "keywords": [
+        "OFFICER",
         "PLATOON",
-        "IMPERIUM",
         "GRENADES",
         "INFANTRY",
-        "COMMAND SQUAD",
         "CHARACTER",
         "CATACHAN",
-        "OFFICER"
+        "COMMAND SQUAD",
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -16833,13 +16833,13 @@
       "role": "Vehicle Character",
       "keywords": [
         "VEHICLE",
-        "CHARACTER",
         "FRAME",
+        "OFFICER",
+        "CHARACTER",
+        "ROGAL DORN COMMANDER",
         "SMOKE",
         "SQUADRON",
-        "IMPERIUM",
-        "OFFICER",
-        "ROGAL DORN COMMANDER"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17174,12 +17174,12 @@
       "name": "Krieg Combat Engineers",
       "role": "Infantry",
       "keywords": [
-        "IMPERIUM",
-        "REGIMENT",
-        "KRIEG COMBAT ENGINEERS",
         "INFANTRY",
-        "SMOKE",
-        "GRENADES"
+        "GRENADES",
+        "REGIMENT",
+        "IMPERIUM",
+        "KRIEG COMBAT ENGINEERS",
+        "SMOKE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17551,10 +17551,10 @@
       "role": "Infantry",
       "keywords": [
         "REGIMENT",
-        "IMPERIUM",
+        "CATACHAN HEAVY WEAPONS SQUAD",
         "INFANTRY",
         "GRENADES",
-        "CATACHAN HEAVY WEAPONS SQUAD"
+        "IMPERIUM"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -17793,11 +17793,11 @@
       "name": "Krieg Heavy Weapons Squad",
       "role": "Infantry",
       "keywords": [
+        "INFANTRY",
         "GRENADES",
         "IMPERIUM",
         "REGIMENT",
-        "KRIEG HEAVY WEAPONS SQUAD",
-        "INFANTRY"
+        "KRIEG HEAVY WEAPONS SQUAD"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18007,12 +18007,12 @@
       "name": "Artillery Team",
       "role": "Infantry",
       "keywords": [
+        "IMPERIUM",
         "INFANTRY",
         "ARTILLERY",
         "GRENADES",
-        "IMPERIUM",
-        "REGIMENT",
-        "ARTILLERY TEAM"
+        "ARTILLERY TEAM",
+        "REGIMENT"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18214,11 +18214,11 @@
       "name": "Field Ordnance Battery",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
-        "ARTILLERY",
         "GRENADES",
-        "REGIMENT",
+        "ARTILLERY",
+        "INFANTRY",
         "IMPERIUM",
+        "REGIMENT",
         "FIELD ORDNANCE BATTERY"
       ],
       "factionKeywords": [
@@ -18417,11 +18417,11 @@
       "name": "Death Riders",
       "role": "Mounted",
       "keywords": [
-        "REGIMENT",
-        "DEATH RIDERS",
-        "IMPERIUM",
         "MOUNTED",
-        "GRENADES"
+        "GRENADES",
+        "IMPERIUM",
+        "REGIMENT",
+        "DEATH RIDERS"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18572,8 +18572,8 @@
         "OFFICER",
         "IMPERIUM",
         "EPIC HERO",
-        "INFANTRY",
-        "CHARACTER"
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -18743,12 +18743,12 @@
         }
       ],
       "leads": [
-        "Krieg Combat Engineers",
-        "Tempestus Scions",
-        "Kasrkin",
-        "Death Korps Of Krieg",
+        "Cadian Shock Troops",
         "Catachan Jungle Fighters",
-        "Cadian Shock Troops"
+        "Death Korps Of Krieg",
+        "Krieg Combat Engineers",
+        "Kasrkin",
+        "Tempestus Scions"
       ],
       "isSupport": false,
       "points": [
@@ -18770,9 +18770,9 @@
       "name": "Commissar Graves",
       "role": "Vehicle Epic Hero",
       "keywords": [
-        "COMMISSAR GRAVES",
         "IMPERIUM",
         "OFFICER",
+        "COMMISSAR GRAVES",
         "VEHICLE",
         "CHARACTER",
         "SQUADRON",
@@ -18962,12 +18962,12 @@
       "name": "Commissar Graves on Foot",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "COMMISSAR GRAVES ON FOOT",
+        "INFANTRY",
         "CHARACTER",
         "EPIC HERO",
         "IMPERIUM",
-        "OFFICER",
-        "COMMISSAR GRAVES ON FOOT",
-        "INFANTRY"
+        "OFFICER"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -19075,12 +19075,12 @@
         }
       ],
       "leads": [
-        "Tempestus Scions",
-        "Krieg Combat Engineers",
-        "Kasrkin",
         "Catachan Jungle Fighters",
+        "Cadian Shock Troops",
         "Death Korps Of Krieg",
-        "Cadian Shock Troops"
+        "Kasrkin",
+        "Krieg Combat Engineers",
+        "Tempestus Scions"
       ],
       "isSupport": false,
       "points": [
@@ -19102,12 +19102,12 @@
       "name": "Hippogriff AFV",
       "role": "Vehicle",
       "keywords": [
+        "VEHICLE",
         "IMPERIUM",
-        "HIPPOGRIFF AFV",
-        "SQUADRON",
-        "FRAME",
         "SMOKE",
-        "VEHICLE"
+        "FRAME",
+        "SQUADRON",
+        "HIPPOGRIFF AFV"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"
@@ -19344,14 +19344,14 @@
       "name": "Centaur RSV",
       "role": "Dedicated Transports",
       "keywords": [
-        "CENTAUR RSV",
-        "DEDICATED TRANSPORT",
-        "TRANSPORT",
-        "SQUADRON",
-        "SMOKE",
         "IMPERIUM",
-        "VEHICLE",
-        "FRAME"
+        "SMOKE",
+        "SQUADRON",
+        "FRAME",
+        "TRANSPORT",
+        "DEDICATED TRANSPORT",
+        "CENTAUR RSV",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "ASTRA MILITARUM"

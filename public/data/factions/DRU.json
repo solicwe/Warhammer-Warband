@@ -2,7 +2,7 @@
   "id": "DRU",
   "name": "Drukhari",
   "link": "https://wahapedia.ru/wh40k11ed/factions/drukhari",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Power from Pain",
@@ -780,11 +780,11 @@
       "name": "Archon",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "KABAL",
-        "CHARACTER",
+        "ARCHON",
         "AELDARI",
-        "ARCHON"
+        "CHARACTER",
+        "INFANTRY",
+        "KABAL"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -1009,10 +1009,10 @@
       "name": "Succubus",
       "role": "Infantry Character",
       "keywords": [
+        "SUCCUBUS",
         "AELDARI",
         "CHARACTER",
         "WYCH CULT",
-        "SUCCUBUS",
         "INFANTRY"
       ],
       "factionKeywords": [
@@ -1121,13 +1121,13 @@
       "name": "Lelith Hesperax",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "WYCH CULT",
         "LELITH HESPERAX",
         "SUCCUBUS",
         "AELDARI",
         "EPIC HERO",
-        "CHARACTER"
+        "CHARACTER",
+        "WYCH CULT",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -1241,11 +1241,11 @@
       "name": "Haemonculus",
       "role": "Infantry Character",
       "keywords": [
-        "HAEMONCULUS",
         "AELDARI",
-        "INFANTRY",
+        "CHARACTER",
         "HAEMONCULUS COVENS",
-        "CHARACTER"
+        "INFANTRY",
+        "HAEMONCULUS"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -1379,12 +1379,12 @@
       "name": "Drazhar",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "BLADES FOR HIRE",
-        "AELDARI",
+        "INFANTRY",
         "EPIC HERO",
         "CHARACTER",
-        "INFANTRY",
-        "DRAZHAR"
+        "AELDARI",
+        "DRAZHAR",
+        "BLADES FOR HIRE"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -1503,11 +1503,11 @@
       "name": "Kabalite Warriors",
       "role": "Battleline",
       "keywords": [
-        "BATTLELINE",
-        "KABAL",
-        "INFANTRY",
         "KABALITE WARRIORS",
-        "AELDARI"
+        "BATTLELINE",
+        "AELDARI",
+        "KABAL",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -1867,12 +1867,12 @@
       "name": "Wyches",
       "role": "Battleline",
       "keywords": [
-        "WYCH CULT",
-        "GRENADES",
-        "BATTLELINE",
-        "INFANTRY",
         "AELDARI",
-        "WYCHES"
+        "WYCHES",
+        "WYCH CULT",
+        "BATTLELINE",
+        "GRENADES",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -2086,10 +2086,10 @@
       "name": "Incubi",
       "role": "Infantry",
       "keywords": [
-        "INCUBI",
+        "INFANTRY",
         "BLADES FOR HIRE",
         "AELDARI",
-        "INFANTRY"
+        "INCUBI"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -2280,10 +2280,10 @@
       "name": "Mandrakes",
       "role": "Infantry",
       "keywords": [
-        "MANDRAKES",
-        "BLADES FOR HIRE",
         "AELDARI",
-        "INFANTRY"
+        "INFANTRY",
+        "BLADES FOR HIRE",
+        "MANDRAKES"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -2436,11 +2436,11 @@
       "name": "Wracks",
       "role": "Battleline",
       "keywords": [
-        "WRACKS",
-        "HAEMONCULUS COVENS",
         "AELDARI",
+        "WRACKS",
+        "INFANTRY",
         "BATTLELINE",
-        "INFANTRY"
+        "HAEMONCULUS COVENS"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -2705,13 +2705,13 @@
       "name": "Raider",
       "role": "Dedicated Transports",
       "keywords": [
-        "RAIDER",
         "VEHICLE",
+        "FLY",
+        "FRAME",
         "TRANSPORT",
         "DEDICATED TRANSPORT",
-        "FRAME",
-        "FLY",
-        "AELDARI"
+        "AELDARI",
+        "RAIDER"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -2898,13 +2898,13 @@
       "name": "Venom",
       "role": "Dedicated Transports",
       "keywords": [
+        "FRAME",
         "AELDARI",
         "VENOM",
-        "VEHICLE",
         "TRANSPORT",
-        "DEDICATED TRANSPORT",
         "FLY",
-        "FRAME"
+        "VEHICLE",
+        "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -3086,10 +3086,10 @@
       "role": "Mounted",
       "keywords": [
         "REAVERS",
-        "MOUNTED",
-        "WYCH CULT",
+        "AELDARI",
         "FLY",
-        "AELDARI"
+        "WYCH CULT",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -3587,11 +3587,11 @@
       "name": "Razorwing Jetfighter",
       "role": "Aircraft",
       "keywords": [
-        "FLY",
-        "VEHICLE",
         "RAZORWING JETFIGHTER",
+        "AELDARI",
         "AIRCRAFT",
-        "AELDARI"
+        "FLY",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -3841,11 +3841,11 @@
       "name": "Voidraven Bomber",
       "role": "Aircraft",
       "keywords": [
-        "AIRCRAFT",
         "FLY",
-        "VOIDRAVEN BOMBER",
         "VEHICLE",
-        "AELDARI"
+        "VOIDRAVEN BOMBER",
+        "AELDARI",
+        "AIRCRAFT"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -4044,14 +4044,14 @@
       "name": "Scourges with Heavy Weapons",
       "role": "Infantry",
       "keywords": [
-        "BLADES FOR HIRE",
         "AELDARI",
         "JUMP PACK",
         "GRENADES",
         "FLY",
         "INFANTRY",
+        "SCOURGES WITH HEAVY WEAPONS",
         "SCOURGES",
-        "SCOURGES WITH HEAVY WEAPONS"
+        "BLADES FOR HIRE"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -4405,11 +4405,11 @@
       "name": "Talos",
       "role": "Monster",
       "keywords": [
+        "TALOS",
         "MONSTER",
         "HAEMONCULUS COVENS",
         "FLY",
-        "AELDARI",
-        "TALOS"
+        "AELDARI"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -4737,11 +4737,11 @@
       "name": "Cronos",
       "role": "Monster",
       "keywords": [
-        "MONSTER",
-        "HAEMONCULUS COVENS",
         "FLY",
+        "MONSTER",
+        "CRONOS",
         "AELDARI",
-        "CRONOS"
+        "HAEMONCULUS COVENS"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -4903,12 +4903,12 @@
       "name": "Ravager",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
-        "KABAL",
         "RAVAGER",
         "AELDARI",
         "FRAME",
-        "FLY"
+        "FLY",
+        "KABAL",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -5070,13 +5070,13 @@
       "name": "Lady Malys",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "LADY MALYS",
+        "EPIC HERO",
         "ARCHON",
         "AELDARI",
         "CHARACTER",
-        "INFANTRY",
         "KABAL",
-        "LADY MALYS",
-        "EPIC HERO"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -5210,10 +5210,10 @@
       "name": "Hand of the Archon",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
         "AELDARI",
-        "KABAL",
         "INFANTRY",
+        "KABAL",
+        "GRENADES",
         "HAND OF THE ARCHON"
       ],
       "factionKeywords": [
@@ -5709,14 +5709,14 @@
       "name": "Scourges with Shardcarbines",
       "role": "Infantry",
       "keywords": [
-        "FLY",
-        "SCOURGES WITH SHARDCARBINES",
-        "GRENADES",
-        "JUMP PACK",
-        "AELDARI",
         "BLADES FOR HIRE",
         "SCOURGES",
-        "INFANTRY"
+        "AELDARI",
+        "JUMP PACK",
+        "FLY",
+        "INFANTRY",
+        "GRENADES",
+        "SCOURGES WITH SHARDCARBINES"
       ],
       "factionKeywords": [
         "DRUKHARI"
@@ -5975,14 +5975,14 @@
       "name": "Death Jester",
       "role": "Infantry Character",
       "keywords": [
-        "DEATH JESTER",
-        "AELDARI",
         "CHARACTER",
+        "AELDARI",
+        "DEATH JESTER",
         "INFANTRY"
       ],
       "factionKeywords": [
-        "DRUKHARI",
-        "HARLEQUINS"
+        "HARLEQUINS",
+        "DRUKHARI"
       ],
       "models": [
         {
@@ -6110,11 +6110,11 @@
       "role": "Infantry Character",
       "keywords": [
         "SHADOWSEER",
+        "INFANTRY",
+        "CHARACTER",
         "GRENADES",
         "PSYKER",
-        "AELDARI",
-        "INFANTRY",
-        "CHARACTER"
+        "AELDARI"
       ],
       "factionKeywords": [
         "HARLEQUINS",
@@ -6190,24 +6190,6 @@
           ]
         },
         {
-          "name": "Shuriken pistol",
-          "profiles": [
-            {
-              "name": "Shuriken pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 2,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "assault",
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Neuro disruptor",
           "profiles": [
             {
@@ -6220,6 +6202,24 @@
               "D": "1",
               "abilities": [
                 "anti-infantry 2+",
+                "assault",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Shuriken pistol",
+          "profiles": [
+            {
+              "name": "Shuriken pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 2,
+              "S": 4,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
                 "assault",
                 "pistol"
               ]
@@ -6292,15 +6292,15 @@
       "name": "Solitaire",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
+        "AELDARI",
         "EPIC HERO",
-        "SOLITAIRE",
-        "AELDARI"
+        "CHARACTER",
+        "INFANTRY",
+        "SOLITAIRE"
       ],
       "factionKeywords": [
-        "HARLEQUINS",
-        "DRUKHARI"
+        "DRUKHARI",
+        "HARLEQUINS"
       ],
       "models": [
         {
@@ -6422,11 +6422,11 @@
       "name": "Troupe Master",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "AELDARI",
+        "TROUPE MASTER",
         "GRENADES",
-        "TROUPE MASTER"
+        "AELDARI",
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HARLEQUINS",
@@ -6502,19 +6502,18 @@
       ],
       "weapons": [
         {
-          "name": "Shuriken pistol",
+          "name": "Troupe Master’s blade",
           "profiles": [
             {
-              "name": "Shuriken pistol",
-              "range": 12,
-              "A": "1",
+              "name": "Troupe Master’s blade",
+              "range": "Melee",
+              "A": "5",
               "skill": 2,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
+              "S": 5,
+              "AP": -2,
+              "D": "2",
               "abilities": [
-                "assault",
-                "pistol"
+                "devastating wounds"
               ]
             }
           ]
@@ -6537,18 +6536,19 @@
           ]
         },
         {
-          "name": "Troupe Master’s blade",
+          "name": "Shuriken pistol",
           "profiles": [
             {
-              "name": "Troupe Master’s blade",
-              "range": "Melee",
-              "A": "5",
+              "name": "Shuriken pistol",
+              "range": 12,
+              "A": "1",
               "skill": 2,
-              "S": 5,
-              "AP": -2,
-              "D": "2",
+              "S": 4,
+              "AP": -1,
+              "D": "1",
               "abilities": [
-                "devastating wounds"
+                "assault",
+                "pistol"
               ]
             }
           ]
@@ -6652,14 +6652,14 @@
       "name": "Starweaver",
       "role": "Dedicated Transports",
       "keywords": [
-        "VEHICLE",
-        "STARWEAVER",
-        "FRAME",
-        "FLY",
         "SMOKE",
-        "DEDICATED TRANSPORT",
+        "VEHICLE",
+        "AELDARI",
         "TRANSPORT",
-        "AELDARI"
+        "DEDICATED TRANSPORT",
+        "FRAME",
+        "STARWEAVER",
+        "FLY"
       ],
       "factionKeywords": [
         "HARLEQUINS",
@@ -6702,6 +6702,21 @@
       "wargearOptions": [],
       "weapons": [
         {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Shuriken cannon",
           "profiles": [
             {
@@ -6715,21 +6730,6 @@
               "abilities": [
                 "lethal hits"
               ]
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
-            {
-              "name": "Close combat weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 3,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
             }
           ]
         }
@@ -6794,15 +6794,15 @@
       "name": "Skyweavers",
       "role": "Mounted",
       "keywords": [
+        "MOUNTED",
         "AELDARI",
         "FLY",
         "SMOKE",
-        "SKYWEAVERS",
-        "MOUNTED"
+        "SKYWEAVERS"
       ],
       "factionKeywords": [
-        "HARLEQUINS",
-        "DRUKHARI"
+        "DRUKHARI",
+        "HARLEQUINS"
       ],
       "models": [
         {
@@ -6871,6 +6871,21 @@
       ],
       "weapons": [
         {
+          "name": "Star bolas",
+          "profiles": [
+            {
+              "name": "Star bolas",
+              "range": 12,
+              "A": "D3",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Skyweaver haywire cannon",
           "profiles": [
             {
@@ -6889,17 +6904,19 @@
           ]
         },
         {
-          "name": "Zephyrglaive",
+          "name": "Shuriken cannon",
           "profiles": [
             {
-              "name": "Zephyrglaive",
-              "range": "Melee",
-              "A": "4",
+              "name": "Shuriken cannon",
+              "range": 24,
+              "A": "3",
               "skill": 3,
               "S": 6,
-              "AP": -2,
+              "AP": -1,
               "D": "2",
-              "abilities": []
+              "abilities": [
+                "lethal hits"
+              ]
             }
           ]
         },
@@ -6919,34 +6936,17 @@
           ]
         },
         {
-          "name": "Star bolas",
+          "name": "Zephyrglaive",
           "profiles": [
             {
-              "name": "Star bolas",
-              "range": 12,
-              "A": "D3",
+              "name": "Zephyrglaive",
+              "range": "Melee",
+              "A": "4",
               "skill": 3,
-              "S": 7,
+              "S": 6,
               "AP": -2,
               "D": "2",
               "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Shuriken cannon",
-          "profiles": [
-            {
-              "name": "Shuriken cannon",
-              "range": 24,
-              "A": "3",
-              "skill": 3,
-              "S": 6,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "lethal hits"
-              ]
             }
           ]
         }
@@ -6993,14 +6993,14 @@
       "name": "Troupe",
       "role": "Infantry",
       "keywords": [
-        "AELDARI",
-        "GRENADES",
         "INFANTRY",
-        "TROUPE"
+        "TROUPE",
+        "AELDARI",
+        "GRENADES"
       ],
       "factionKeywords": [
-        "HARLEQUINS",
-        "DRUKHARI"
+        "DRUKHARI",
+        "HARLEQUINS"
       ],
       "models": [
         {
@@ -7102,18 +7102,19 @@
       ],
       "weapons": [
         {
-          "name": "Harlequin’s special weapon",
+          "name": "Shuriken pistol",
           "profiles": [
             {
-              "name": "Harlequin’s special weapon",
-              "range": "Melee",
-              "A": "4",
+              "name": "Shuriken pistol",
+              "range": 12,
+              "A": "1",
               "skill": 3,
               "S": 4,
               "AP": -1,
               "D": "1",
               "abilities": [
-                "devastating wounds"
+                "assault",
+                "pistol"
               ]
             }
           ]
@@ -7153,18 +7154,36 @@
           ]
         },
         {
-          "name": "Shuriken pistol",
+          "name": "Harlequin’s special weapon",
           "profiles": [
             {
-              "name": "Shuriken pistol",
-              "range": 12,
-              "A": "1",
+              "name": "Harlequin’s special weapon",
+              "range": "Melee",
+              "A": "4",
               "skill": 3,
               "S": 4,
               "AP": -1,
               "D": "1",
               "abilities": [
+                "devastating wounds"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Fusion pistol",
+          "profiles": [
+            {
+              "name": "Fusion pistol",
+              "range": 6,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
                 "assault",
+                "melta 2",
                 "pistol"
               ]
             }
@@ -7184,25 +7203,6 @@
               "abilities": [
                 "anti-infantry 2+",
                 "assault",
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Fusion pistol",
-          "profiles": [
-            {
-              "name": "Fusion pistol",
-              "range": 6,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -4,
-              "D": "D6",
-              "abilities": [
-                "assault",
-                "melta 2",
                 "pistol"
               ]
             }
@@ -7264,15 +7264,15 @@
       "name": "Voidweaver",
       "role": "Vehicle",
       "keywords": [
-        "VOIDWEAVER",
         "VEHICLE",
         "AELDARI",
+        "VOIDWEAVER",
         "FLY",
         "FRAME"
       ],
       "factionKeywords": [
-        "HARLEQUINS",
-        "DRUKHARI"
+        "DRUKHARI",
+        "HARLEQUINS"
       ],
       "models": [
         {
@@ -7328,50 +7328,6 @@
       ],
       "weapons": [
         {
-          "name": "Prismatic cannon",
-          "profiles": [
-            {
-              "name": "dispersed pulse",
-              "range": 24,
-              "A": "2D6",
-              "skill": 3,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "blast"
-              ]
-            },
-            {
-              "name": "focused lances",
-              "range": 24,
-              "A": "2",
-              "skill": 3,
-              "S": 12,
-              "AP": -3,
-              "D": "4",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Shuriken cannon",
-          "profiles": [
-            {
-              "name": "Shuriken cannon",
-              "range": 24,
-              "A": "3",
-              "skill": 3,
-              "S": 6,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "lethal hits"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Close combat weapon",
           "profiles": [
             {
@@ -7401,6 +7357,50 @@
                 "anti-vehicle 4+",
                 "devastating wounds"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Shuriken cannon",
+          "profiles": [
+            {
+              "name": "Shuriken cannon",
+              "range": 24,
+              "A": "3",
+              "skill": 3,
+              "S": 6,
+              "AP": -1,
+              "D": "2",
+              "abilities": [
+                "lethal hits"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Prismatic cannon",
+          "profiles": [
+            {
+              "name": "dispersed pulse",
+              "range": 24,
+              "A": "2D6",
+              "skill": 3,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "blast"
+              ]
+            },
+            {
+              "name": "focused lances",
+              "range": 24,
+              "A": "2",
+              "skill": 3,
+              "S": 12,
+              "AP": -3,
+              "D": "4",
+              "abilities": []
             }
           ]
         }
@@ -7454,17 +7454,17 @@
       "name": "Corsair Voidreavers",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
         "BATTLELINE",
+        "INFANTRY",
         "AELDARI",
+        "GRENADES",
         "ANHRATHE",
-        "CORSAIR VOIDREAVERS",
-        "GRENADES"
+        "CORSAIR VOIDREAVERS"
       ],
       "factionKeywords": [
-        "ASURYANI",
+        "DRUKHARI",
         "YNNARI",
-        "DRUKHARI"
+        "ASURYANI"
       ],
       "models": [
         {
@@ -7594,33 +7594,32 @@
       ],
       "weapons": [
         {
-          "name": "Shuriken pistol",
+          "name": "Blaster",
           "profiles": [
             {
-              "name": "Shuriken pistol",
-              "range": 12,
+              "name": "Blaster",
+              "range": 18,
               "A": "1",
               "skill": 3,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
+              "S": 8,
+              "AP": -4,
+              "D": "D6+1",
               "abilities": [
-                "assault",
-                "pistol"
+                "assault"
               ]
             }
           ]
         },
         {
-          "name": "Close combat weapon",
+          "name": "Power sword",
           "profiles": [
             {
-              "name": "Close combat weapon",
+              "name": "Power sword",
               "range": "Melee",
               "A": "2",
               "skill": 3,
-              "S": 3,
-              "AP": 0,
+              "S": 4,
+              "AP": -2,
               "D": "1",
               "abilities": []
             }
@@ -7663,6 +7662,21 @@
           ]
         },
         {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "2",
+              "skill": 3,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Wraithcannon",
           "profiles": [
             {
@@ -7678,33 +7692,19 @@
           ]
         },
         {
-          "name": "Power sword",
+          "name": "Shuriken pistol",
           "profiles": [
             {
-              "name": "Power sword",
-              "range": "Melee",
-              "A": "2",
-              "skill": 3,
-              "S": 4,
-              "AP": -2,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Blaster",
-          "profiles": [
-            {
-              "name": "Blaster",
-              "range": 18,
+              "name": "Shuriken pistol",
+              "range": 12,
               "A": "1",
               "skill": 3,
-              "S": 8,
-              "AP": -4,
-              "D": "D6+1",
+              "S": 4,
+              "AP": -1,
+              "D": "1",
               "abilities": [
-                "assault"
+                "assault",
+                "pistol"
               ]
             }
           ]
@@ -7794,17 +7794,17 @@
       "name": "Corsair Voidscarred",
       "role": "Infantry",
       "keywords": [
+        "GRENADES",
         "PSYKER",
-        "CORSAIR VOIDSCARRED",
+        "INFANTRY",
         "ANHRATHE",
         "AELDARI",
-        "INFANTRY",
-        "GRENADES"
+        "CORSAIR VOIDSCARRED"
       ],
       "factionKeywords": [
+        "DRUKHARI",
         "ASURYANI",
-        "YNNARI",
-        "DRUKHARI"
+        "YNNARI"
       ],
       "models": [
         {
@@ -8016,6 +8016,25 @@
       ],
       "weapons": [
         {
+          "name": "Neuro disruptor",
+          "profiles": [
+            {
+              "name": "Neuro disruptor",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 4,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "anti-infantry 2+",
+                "assault",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Blaster",
           "profiles": [
             {
@@ -8033,37 +8052,18 @@
           ]
         },
         {
-          "name": "Executioner",
+          "name": "Shuriken pistol",
           "profiles": [
             {
-              "name": "Executioner",
-              "range": 18,
-              "A": "3",
-              "skill": 3,
-              "S": 6,
-              "AP": -2,
-              "D": "D3",
-              "abilities": [
-                "anti-infantry 2+",
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Fusion pistol",
-          "profiles": [
-            {
-              "name": "Fusion pistol",
-              "range": 6,
+              "name": "Shuriken pistol",
+              "range": 12,
               "A": "1",
               "skill": 3,
-              "S": 8,
-              "AP": -4,
-              "D": "D6",
+              "S": 4,
+              "AP": -1,
+              "D": "1",
               "abilities": [
                 "assault",
-                "melta 2",
                 "pistol"
               ]
             }
@@ -8088,56 +8088,35 @@
           ]
         },
         {
-          "name": "Neuro disruptor",
+          "name": "Paired Hekatarii blades",
           "profiles": [
             {
-              "name": "Neuro disruptor",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 4,
+              "name": "Paired Hekatarii blades",
+              "range": "Melee",
+              "A": "4",
+              "skill": 2,
+              "S": 3,
               "AP": -2,
               "D": "1",
               "abilities": [
-                "anti-infantry 2+",
-                "assault",
-                "pistol"
+                "twin-linked"
               ]
             }
           ]
         },
         {
-          "name": "Witch staff",
+          "name": "Shuriken cannon",
           "profiles": [
             {
-              "name": "Witch staff",
-              "range": "Melee",
-              "A": "2",
-              "skill": 2,
-              "S": 3,
-              "AP": 0,
-              "D": "D3",
-              "abilities": [
-                "anti-infantry 2+",
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Shuriken pistol",
-          "profiles": [
-            {
-              "name": "Shuriken pistol",
-              "range": 12,
-              "A": "1",
+              "name": "Shuriken cannon",
+              "range": 24,
+              "A": "3",
               "skill": 3,
-              "S": 4,
+              "S": 6,
               "AP": -1,
-              "D": "1",
+              "D": "2",
               "abilities": [
-                "assault",
-                "pistol"
+                "lethal hits"
               ]
             }
           ]
@@ -8161,6 +8140,21 @@
           ]
         },
         {
+          "name": "Wraithcannon",
+          "profiles": [
+            {
+              "name": "Wraithcannon",
+              "range": 18,
+              "A": "1",
+              "skill": 3,
+              "S": 14,
+              "AP": -4,
+              "D": "D6+1",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Close combat weapon",
           "profiles": [
             {
@@ -8172,23 +8166,6 @@
               "AP": 0,
               "D": "1",
               "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Paired Hekatarii blades",
-          "profiles": [
-            {
-              "name": "Paired Hekatarii blades",
-              "range": "Melee",
-              "A": "4",
-              "skill": 2,
-              "S": 3,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "twin-linked"
-              ]
             }
           ]
         },
@@ -8208,17 +8185,20 @@
           ]
         },
         {
-          "name": "Wraithcannon",
+          "name": "Witch staff",
           "profiles": [
             {
-              "name": "Wraithcannon",
-              "range": 18,
-              "A": "1",
-              "skill": 3,
-              "S": 14,
-              "AP": -4,
-              "D": "D6+1",
-              "abilities": []
+              "name": "Witch staff",
+              "range": "Melee",
+              "A": "2",
+              "skill": 2,
+              "S": 3,
+              "AP": 0,
+              "D": "D3",
+              "abilities": [
+                "anti-infantry 2+",
+                "psychic"
+              ]
             }
           ]
         },
@@ -8241,18 +8221,38 @@
           ]
         },
         {
-          "name": "Shuriken cannon",
+          "name": "Fusion pistol",
           "profiles": [
             {
-              "name": "Shuriken cannon",
-              "range": 24,
+              "name": "Fusion pistol",
+              "range": 6,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "assault",
+                "melta 2",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Executioner",
+          "profiles": [
+            {
+              "name": "Executioner",
+              "range": 18,
               "A": "3",
               "skill": 3,
               "S": 6,
-              "AP": -1,
-              "D": "2",
+              "AP": -2,
+              "D": "D3",
               "abilities": [
-                "lethal hits"
+                "anti-infantry 2+",
+                "psychic"
               ]
             }
           ]
@@ -8316,17 +8316,17 @@
       "name": "Kharseth",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "KHARSETH",
-        "ANHRATHE",
         "PSYKER",
         "EPIC HERO",
         "CHARACTER",
+        "AELDARI",
+        "KHARSETH",
         "INFANTRY",
-        "AELDARI"
+        "ANHRATHE"
       ],
       "factionKeywords": [
-        "ASURYANI",
-        "DRUKHARI"
+        "DRUKHARI",
+        "ASURYANI"
       ],
       "models": [
         {
@@ -8366,6 +8366,24 @@
       "wargearOptions": [],
       "weapons": [
         {
+          "name": "Waystave",
+          "profiles": [
+            {
+              "name": "Waystave",
+              "range": "Melee",
+              "A": "3",
+              "skill": 2,
+              "S": 3,
+              "AP": 0,
+              "D": "3",
+              "abilities": [
+                "anti-infantry 2+",
+                "psychic"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Dread of the Deep Void",
           "profiles": [
             {
@@ -8381,24 +8399,6 @@
                 "blast",
                 "hazardous",
                 "ignores cover",
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Waystave",
-          "profiles": [
-            {
-              "name": "Waystave",
-              "range": "Melee",
-              "A": "3",
-              "skill": 2,
-              "S": 3,
-              "AP": 0,
-              "D": "3",
-              "abilities": [
-                "anti-infantry 2+",
                 "psychic"
               ]
             }
@@ -8457,16 +8457,16 @@
       "name": "Prince Yriel",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "PRINCE YRIEL",
+        "ANHRATHE",
         "INFANTRY",
         "AELDARI",
         "CHARACTER",
         "EPIC HERO",
-        "ANHRATHE"
+        "PRINCE YRIEL"
       ],
       "factionKeywords": [
-        "ASURYANI",
-        "DRUKHARI"
+        "DRUKHARI",
+        "ASURYANI"
       ],
       "models": [
         {
@@ -8507,19 +8507,18 @@
       "wargearOptions": [],
       "weapons": [
         {
-          "name": "Eye of Wrath",
+          "name": "Spear of Twilight",
           "profiles": [
             {
-              "name": "Eye of Wrath",
-              "range": 6,
-              "A": "3",
+              "name": "Spear of Twilight",
+              "range": "Melee",
+              "A": "5",
               "skill": 2,
-              "S": 6,
-              "AP": -2,
-              "D": "2",
+              "S": 7,
+              "AP": -3,
+              "D": "3",
               "abilities": [
-                "assault",
-                "pistol"
+                "lance"
               ]
             }
           ]
@@ -8543,18 +8542,19 @@
           ]
         },
         {
-          "name": "Spear of Twilight",
+          "name": "Eye of Wrath",
           "profiles": [
             {
-              "name": "Spear of Twilight",
-              "range": "Melee",
-              "A": "5",
+              "name": "Eye of Wrath",
+              "range": 6,
+              "A": "3",
               "skill": 2,
-              "S": 7,
-              "AP": -3,
-              "D": "3",
+              "S": 6,
+              "AP": -2,
+              "D": "2",
               "abilities": [
-                "lance"
+                "assault",
+                "pistol"
               ]
             }
           ]
@@ -8612,18 +8612,18 @@
       "name": "Corsair Skyreavers",
       "role": "Infantry",
       "keywords": [
+        "CORSAIR SKYREAVERS",
+        "INFANTRY",
         "AELDARI",
         "ANHRATHE",
         "JUMP PACK",
         "FLY",
-        "CORSAIR SKYREAVERS",
-        "GRENADES",
-        "INFANTRY"
+        "GRENADES"
       ],
       "factionKeywords": [
-        "ASURYANI",
+        "DRUKHARI",
         "YNNARI",
-        "DRUKHARI"
+        "ASURYANI"
       ],
       "models": [
         {
@@ -8717,17 +8717,18 @@
       ],
       "weapons": [
         {
-          "name": "Blast pistol",
+          "name": "Neuro disruptor",
           "profiles": [
             {
-              "name": "Blast pistol",
-              "range": 6,
+              "name": "Neuro disruptor",
+              "range": 12,
               "A": "1",
               "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "D3",
+              "S": 4,
+              "AP": -2,
+              "D": "1",
               "abilities": [
+                "anti-infantry 2+",
                 "assault",
                 "pistol"
               ]
@@ -8753,18 +8754,17 @@
           ]
         },
         {
-          "name": "Neuro disruptor",
+          "name": "Blast pistol",
           "profiles": [
             {
-              "name": "Neuro disruptor",
-              "range": 12,
+              "name": "Blast pistol",
+              "range": 6,
               "A": "1",
               "skill": 3,
-              "S": 4,
-              "AP": -2,
-              "D": "1",
+              "S": 8,
+              "AP": -3,
+              "D": "D3",
               "abilities": [
-                "anti-infantry 2+",
                 "assault",
                 "pistol"
               ]
@@ -8772,19 +8772,18 @@
           ]
         },
         {
-          "name": "Shuriken pistol",
+          "name": "Blaster",
           "profiles": [
             {
-              "name": "Shuriken pistol",
-              "range": 12,
+              "name": "Blaster",
+              "range": 18,
               "A": "1",
               "skill": 3,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
+              "S": 8,
+              "AP": -4,
+              "D": "D6+1",
               "abilities": [
-                "assault",
-                "pistol"
+                "assault"
               ]
             }
           ]
@@ -8857,18 +8856,19 @@
           ]
         },
         {
-          "name": "Blaster",
+          "name": "Shuriken pistol",
           "profiles": [
             {
-              "name": "Blaster",
-              "range": 18,
+              "name": "Shuriken pistol",
+              "range": 12,
               "A": "1",
               "skill": 3,
-              "S": 8,
-              "AP": -4,
-              "D": "D6+1",
+              "S": 4,
+              "AP": -1,
+              "D": "1",
               "abilities": [
-                "assault"
+                "assault",
+                "pistol"
               ]
             }
           ]
@@ -8922,18 +8922,18 @@
       "name": "Starfangs",
       "role": "Vehicle",
       "keywords": [
-        "AELDARI",
         "ANHRATHE",
         "FLY",
+        "SMOKE",
         "GRENADES",
         "STARFANGS",
-        "SMOKE",
-        "VEHICLE"
+        "VEHICLE",
+        "AELDARI"
       ],
       "factionKeywords": [
-        "ASURYANI",
+        "DRUKHARI",
         "YNNARI",
-        "DRUKHARI"
+        "ASURYANI"
       ],
       "models": [
         {
@@ -8974,24 +8974,6 @@
       "wargearOptions": [],
       "weapons": [
         {
-          "name": "Starfang grenade launcher",
-          "profiles": [
-            {
-              "name": "Starfang grenade launcher",
-              "range": 36,
-              "A": "D3",
-              "skill": 3,
-              "S": 6,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "assault",
-                "blast"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Wraithbone hull",
           "profiles": [
             {
@@ -9019,6 +9001,24 @@
               "D": "2",
               "abilities": [
                 "assault"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Starfang grenade launcher",
+          "profiles": [
+            {
+              "name": "Starfang grenade launcher",
+              "range": 36,
+              "A": "D3",
+              "skill": 3,
+              "S": 6,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "assault",
+                "blast"
               ]
             }
           ]

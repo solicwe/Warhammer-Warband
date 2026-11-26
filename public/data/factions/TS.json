@@ -2,7 +2,7 @@
   "id": "TS",
   "name": "Thousand Sons",
   "link": "https://wahapedia.ru/wh40k11ed/factions/thousand-sons",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Cabal of Sorcerers",
@@ -631,15 +631,6 @@
       ],
       "stratagems": [
         {
-          "id": "000010965004",
-          "name": "MULTITUDINOUS LIMBS",
-          "cp": 1,
-          "type": "Ritual of Regeneration Stratagem",
-          "turn": "Your turn",
-          "phase": "Shooting phase",
-          "text": "WHEN: Your Movement phase, when a friendly INFANTRY/MOUNTED THOUSAND SONS PSYKER unit is selected to make an advance/fall back move.\nTARGET: That INFANTRY/MOUNTED THOUSAND SONS PSYKER unit.\nEFFECT: That move does not prevent your unit from being eligible to start an action."
-        },
-        {
           "id": "000010965002",
           "name": "RELENTLESS REBIRTH",
           "cp": 1,
@@ -647,6 +638,15 @@
           "turn": "Either player’s turn",
           "phase": "Any phase",
           "text": "WHEN: Any phase, when a friendly INFANTRY/MOUNTED THOUSAND SONS PSYKER unit suffers a mortal wound.\nTARGET: That INFANTRY/MOUNTED THOUSAND SONS PSYKER unit.\nEFFECT: Your unit has Feel No Pain 5+ against mortal wounds."
+        },
+        {
+          "id": "000010965004",
+          "name": "MULTITUDINOUS LIMBS",
+          "cp": 1,
+          "type": "Ritual of Regeneration Stratagem",
+          "turn": "Your turn",
+          "phase": "Shooting phase",
+          "text": "WHEN: Your Movement phase, when a friendly INFANTRY/MOUNTED THOUSAND SONS PSYKER unit is selected to make an advance/fall back move.\nTARGET: That INFANTRY/MOUNTED THOUSAND SONS PSYKER unit.\nEFFECT: That move does not prevent your unit from being eligible to start an action."
         },
         {
           "id": "000010965003",
@@ -780,12 +780,12 @@
       "name": "Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "SORCERER",
-        "TZEENTCH",
         "CHAOS",
-        "GRENADES",
         "PSYKER",
+        "GRENADES",
+        "SORCERER",
+        "INFANTRY",
+        "TZEENTCH",
         "CHARACTER"
       ],
       "factionKeywords": [
@@ -964,13 +964,13 @@
       "name": "Sorcerer In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
-        "PSYKER",
         "INFANTRY",
-        "TERMINATOR",
+        "CHARACTER",
         "CHAOS",
+        "PSYKER",
         "TZEENTCH",
         "SORCERER",
-        "CHARACTER"
+        "TERMINATOR"
       ],
       "factionKeywords": [
         "",
@@ -1161,13 +1161,13 @@
       "name": "Rubric Marines",
       "role": "Battleline",
       "keywords": [
-        "PSYKER",
-        "BATTLELINE",
-        "CHAOS",
-        "TZEENTCH",
-        "RUBRICAE",
+        "INFANTRY",
         "RUBRIC MARINES",
-        "INFANTRY"
+        "PSYKER",
+        "RUBRICAE",
+        "TZEENTCH",
+        "CHAOS",
+        "BATTLELINE"
       ],
       "factionKeywords": [
         "",
@@ -1485,15 +1485,15 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
+        "CHAOS",
+        "HELBRUTE",
         "WALKER",
         "TZEENTCH",
-        "HELBRUTE",
-        "CHAOS",
         "VEHICLE"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -1844,14 +1844,14 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "FRAME",
         "TRANSPORT",
-        "SMOKE",
         "VEHICLE",
-        "RHINO",
-        "TZEENTCH",
         "CHAOS",
-        "DEDICATED TRANSPORT"
+        "SMOKE",
+        "DEDICATED TRANSPORT",
+        "FRAME",
+        "TZEENTCH",
+        "RHINO"
       ],
       "factionKeywords": [
         "",
@@ -2040,15 +2040,15 @@
       "name": "Chaos Spawn",
       "role": "Beast",
       "keywords": [
+        "BEAST",
         "CHAOS SPAWN",
         "MUTANT",
         "TZEENTCH",
-        "CHAOS",
-        "BEAST"
+        "CHAOS"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -2134,16 +2134,16 @@
       "name": "Heldrake",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
         "TZEENTCH",
-        "CHAOS",
+        "HELDRAKE",
         "DAEMON",
+        "CHAOS",
         "FLY",
-        "HELDRAKE"
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -2291,17 +2291,17 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "SMOKE",
-        "LAND RAIDER",
-        "TZEENTCH",
         "CHAOS",
         "FRAME",
         "TRANSPORT",
-        "VEHICLE"
+        "VEHICLE",
+        "SMOKE",
+        "TZEENTCH",
+        "LAND RAIDER"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -2519,12 +2519,12 @@
       "name": "Chaos Predator Destructor",
       "role": "Vehicle",
       "keywords": [
-        "VEHICLE",
-        "SMOKE",
         "CHAOS",
         "TZEENTCH",
         "PREDATOR DESTRUCTOR",
-        "FRAME"
+        "FRAME",
+        "SMOKE",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -2776,12 +2776,12 @@
       "name": "Chaos Vindicator",
       "role": "Vehicle",
       "keywords": [
+        "VINDICATOR",
         "VEHICLE",
         "FRAME",
-        "CHAOS",
         "SMOKE",
-        "TZEENTCH",
-        "VINDICATOR"
+        "CHAOS",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -2984,12 +2984,12 @@
       "name": "Forgefiend",
       "role": "Walker",
       "keywords": [
-        "VEHICLE",
-        "DAEMON",
-        "CHAOS",
-        "TZEENTCH",
         "FORGEFIEND",
-        "WALKER"
+        "WALKER",
+        "TZEENTCH",
+        "DAEMON",
+        "VEHICLE",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -3180,10 +3180,10 @@
       "role": "Walker",
       "keywords": [
         "VEHICLE",
-        "TZEENTCH",
-        "CHAOS",
         "DAEMON",
         "MAULERFIEND",
+        "TZEENTCH",
+        "CHAOS",
         "WALKER"
       ],
       "factionKeywords": [
@@ -3717,15 +3717,15 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "FLY",
-        "MAGNUS THE RED",
-        "MONSTER",
-        "CHARACTER",
         "EPIC HERO",
-        "DAEMON",
-        "PRIMARCH",
-        "PSYKER",
+        "CHARACTER",
+        "MONSTER",
+        "MAGNUS THE RED",
+        "TZEENTCH",
         "CHAOS",
-        "TZEENTCH"
+        "PSYKER",
+        "PRIMARCH",
+        "DAEMON"
       ],
       "factionKeywords": [
         "",
@@ -3908,15 +3908,15 @@
       "name": "Ahriman",
       "role": "Mounted Epic Hero",
       "keywords": [
-        "CHARACTER",
+        "TZEENTCH",
+        "MOUNTED",
+        "INFANTRY",
+        "AHRIMAN",
         "EPIC HERO",
         "FLY",
-        "INFANTRY",
         "PSYKER",
-        "CHAOS",
-        "MOUNTED",
-        "AHRIMAN",
-        "TZEENTCH"
+        "CHARACTER",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -4034,9 +4034,9 @@
         }
       ],
       "leads": [
-        "Tzaangor Enlightened with Fatecaster Greatbows",
         "Tzaangor Enlightened",
-        "Rubric Marines"
+        "Rubric Marines",
+        "Tzaangor Enlightened with Fatecaster Greatbows"
       ],
       "isSupport": false,
       "points": [
@@ -4059,12 +4059,12 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "GRENADES",
-        "EXALTED SORCERER",
         "CHARACTER",
-        "CHAOS",
+        "GRENADES",
         "PSYKER",
-        "TZEENTCH"
+        "CHAOS",
+        "TZEENTCH",
+        "EXALTED SORCERER"
       ],
       "factionKeywords": [
         "",
@@ -4234,11 +4234,11 @@
       "name": "Tzaangors",
       "role": "Infantry",
       "keywords": [
-        "CHAOS",
         "INFANTRY",
         "TZAANGORS",
         "MUTANT",
-        "TZEENTCH"
+        "TZEENTCH",
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -4423,17 +4423,17 @@
       "name": "Scarab Occult Terminators",
       "role": "Infantry",
       "keywords": [
-        "RUBRICAE",
+        "TZEENTCH",
         "CHAOS",
         "TERMINATOR",
         "INFANTRY",
+        "RUBRICAE",
         "SCARAB OCCULT",
-        "TZEENTCH",
         "PSYKER"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -4719,17 +4719,17 @@
       "name": "Daemon Prince of Tzeentch",
       "role": "Monster Character",
       "keywords": [
+        "DAEMON PRINCE",
+        "MONSTER",
         "CHARACTER",
         "DAEMON",
         "PSYKER",
         "CHAOS",
-        "TZEENTCH",
-        "DAEMON PRINCE",
-        "MONSTER"
+        "TZEENTCH"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -4882,15 +4882,15 @@
       "name": "Tzaangor Shaman",
       "role": "Mounted Character",
       "keywords": [
-        "MUTANT",
-        "TZAANGOR SHAMAN",
-        "CHARACTER",
         "MOUNTED",
+        "CHARACTER",
         "INFANTRY",
-        "FLY",
-        "PSYKER",
+        "TZAANGOR SHAMAN",
         "CHAOS",
-        "TZEENTCH"
+        "MUTANT",
+        "TZEENTCH",
+        "PSYKER",
+        "FLY"
       ],
       "factionKeywords": [
         "",
@@ -5015,12 +5015,12 @@
       "name": "Tzaangor Enlightened",
       "role": "Mounted",
       "keywords": [
-        "MOUNTED",
         "FLY",
-        "CHAOS",
-        "TZEENTCH",
+        "TZAANGOR ENLIGHTENED",
         "MUTANT",
-        "TZAANGOR ENLIGHTENED"
+        "TZEENTCH",
+        "CHAOS",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -5168,15 +5168,15 @@
       "name": "Mutalith Vortex Beast",
       "role": "Monster",
       "keywords": [
+        "MUTANT",
+        "TZEENTCH",
         "MONSTER",
         "CHAOS",
-        "TZEENTCH",
-        "MUTANT",
         "MUTALITH VORTEX BEAST"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -5345,17 +5345,17 @@
       "name": "Infernal Master",
       "role": "Infantry Character",
       "keywords": [
-        "GRENADES",
-        "PSYKER",
         "INFANTRY",
         "CHARACTER",
-        "INFERNAL MASTER",
+        "GRENADES",
+        "PSYKER",
+        "CHAOS",
         "TZEENTCH",
-        "CHAOS"
+        "INFERNAL MASTER"
       ],
       "factionKeywords": [
-        "",
-        "THOUSAND SONS"
+        "THOUSAND SONS",
+        ""
       ],
       "models": [
         {
@@ -5506,11 +5506,11 @@
       "role": "Vehicle",
       "keywords": [
         "PREDATOR ANNIHILATOR",
-        "SMOKE",
-        "VEHICLE",
         "CHAOS",
-        "TZEENTCH",
-        "FRAME"
+        "SMOKE",
+        "FRAME",
+        "VEHICLE",
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -5762,15 +5762,15 @@
       "name": "Exalted Sorcerer on Disc of Tzeentch",
       "role": "Mounted Character",
       "keywords": [
+        "INFANTRY",
         "EXALTED SORCERER",
+        "TZEENTCH",
+        "MOUNTED",
         "CHAOS",
         "PSYKER",
         "GRENADES",
         "FLY",
-        "CHARACTER",
-        "MOUNTED",
-        "INFANTRY",
-        "TZEENTCH"
+        "CHARACTER"
       ],
       "factionKeywords": [
         "THOUSAND SONS",
@@ -5918,9 +5918,9 @@
         }
       ],
       "leads": [
-        "Rubric Marines",
         "Tzaangor Enlightened with Fatecaster Greatbows",
-        "Tzaangor Enlightened"
+        "Tzaangor Enlightened",
+        "Rubric Marines"
       ],
       "isSupport": false,
       "points": [
@@ -5942,18 +5942,18 @@
       "name": "Daemon Prince of Tzeentch with Wings",
       "role": "Monster Character",
       "keywords": [
-        "MONSTER",
-        "CHARACTER",
-        "DAEMON",
         "DAEMON PRINCE",
         "TZEENTCH",
-        "FLY",
+        "CHAOS",
         "PSYKER",
-        "CHAOS"
+        "FLY",
+        "CHARACTER",
+        "MONSTER",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -6115,15 +6115,15 @@
       "name": "Sekhetar Robots",
       "role": "Walker",
       "keywords": [
-        "WALKER",
-        "VEHICLE",
+        "SEKHETAR ROBOTS",
         "TZEENTCH",
         "CHAOS",
-        "SEKHETAR ROBOTS"
+        "WALKER",
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -6333,17 +6333,17 @@
       "name": "Tzaangor Enlightened with Fatecaster Greatbows",
       "role": "Mounted",
       "keywords": [
-        "MUTANT",
-        "TZAANGOR ENLIGHTENED",
         "TZAANGOR ENLIGHTENED WITH FATECASTER GREATBOWS",
-        "MOUNTED",
-        "FLY",
+        "TZAANGOR ENLIGHTENED",
+        "MUTANT",
         "CHAOS",
+        "FLY",
+        "MOUNTED",
         "TZEENTCH"
       ],
       "factionKeywords": [
-        "THOUSAND SONS",
-        ""
+        "",
+        "THOUSAND SONS"
       ],
       "models": [
         {
@@ -6454,19 +6454,19 @@
       "role": "Monster Epic Hero",
       "keywords": [
         "SUMMONED",
-        "KAIROS FATEWEAVER",
-        "CHARACTER",
         "MONSTER",
         "EPIC HERO",
         "FLY",
         "PSYKER",
         "CHAOS",
         "DAEMON",
-        "TZEENTCH"
+        "TZEENTCH",
+        "KAIROS FATEWEAVER",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "SCINTILLATING LEGIONS",
-        ""
+        "",
+        "SCINTILLATING LEGIONS"
       ],
       "models": [
         {
@@ -6608,15 +6608,15 @@
       "name": "Lord of Change",
       "role": "Monster Character",
       "keywords": [
-        "CHAOS",
         "PSYKER",
-        "FLY",
-        "CHARACTER",
-        "MONSTER",
+        "CHAOS",
         "DAEMON",
         "TZEENTCH",
         "SUMMONED",
-        "LORD OF CHANGE"
+        "LORD OF CHANGE",
+        "MONSTER",
+        "CHARACTER",
+        "FLY"
       ],
       "factionKeywords": [
         "",
@@ -6818,13 +6818,13 @@
       "name": "Flamers",
       "role": "Infantry",
       "keywords": [
+        "CHAOS",
+        "FLY",
+        "INFANTRY",
         "FLAMERS",
         "SUMMONED",
-        "INFANTRY",
-        "FLY",
-        "CHAOS",
-        "DAEMON",
-        "TZEENTCH"
+        "TZEENTCH",
+        "DAEMON"
       ],
       "factionKeywords": [
         "",
@@ -6948,13 +6948,13 @@
       "name": "Screamers",
       "role": "Beast",
       "keywords": [
-        "SCREAMERS",
         "BEAST",
-        "FLY",
         "CHAOS",
         "DAEMON",
+        "FLY",
         "TZEENTCH",
-        "SUMMONED"
+        "SUMMONED",
+        "SCREAMERS"
       ],
       "factionKeywords": [
         "",
@@ -7055,16 +7055,16 @@
       "name": "Pink Horrors",
       "role": "Battleline",
       "keywords": [
-        "BLUE",
-        "BRIMSTONE",
         "SUMMONED",
-        "PINK",
         "TZEENTCH",
-        "HORRORS",
-        "DAEMON",
-        "CHAOS",
         "BATTLELINE",
-        "INFANTRY"
+        "BRIMSTONE",
+        "INFANTRY",
+        "CHAOS",
+        "DAEMON",
+        "BLUE",
+        "PINK",
+        "HORRORS"
       ],
       "factionKeywords": [
         "",
@@ -7315,14 +7315,14 @@
       "name": "Blue Horrors",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "BATTLELINE",
-        "CHAOS",
-        "BRIMSTONE",
-        "HORRORS",
-        "BLUE",
         "DAEMON",
+        "CHAOS",
+        "BATTLELINE",
+        "INFANTRY",
+        "HORRORS",
         "SUMMONED",
+        "BLUE",
+        "BRIMSTONE",
         "TZEENTCH"
       ],
       "factionKeywords": [

@@ -2,7 +2,7 @@
   "id": "DG",
   "name": "Death Guard",
   "link": "https://wahapedia.ru/wh40k11ed/factions/death-guard",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "Nurgle’s Gift (Aura)",
@@ -780,16 +780,16 @@
       "name": "Plague Marines",
       "role": "Battleline",
       "keywords": [
-        "PLAGUE MARINES",
-        "NURGLE",
-        "CHAOS",
-        "GRENADES",
+        "INFANTRY",
         "BATTLELINE",
-        "INFANTRY"
+        "GRENADES",
+        "CHAOS",
+        "NURGLE",
+        "PLAGUE MARINES"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -1253,15 +1253,15 @@
       "name": "Helbrute",
       "role": "Walker",
       "keywords": [
-        "NURGLE",
-        "WALKER",
         "VEHICLE",
+        "HELBRUTE",
+        "NURGLE",
         "CHAOS",
-        "HELBRUTE"
+        "WALKER"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -1636,13 +1636,13 @@
       "name": "Chaos Rhino",
       "role": "Dedicated Transports",
       "keywords": [
-        "RHINO",
+        "FRAME",
+        "SMOKE",
+        "CHAOS",
         "TRANSPORT",
         "NURGLE",
-        "CHAOS",
-        "SMOKE",
-        "FRAME",
         "VEHICLE",
+        "RHINO",
         "DEDICATED TRANSPORT"
       ],
       "factionKeywords": [
@@ -1844,8 +1844,8 @@
         "SPAWN"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -1948,17 +1948,17 @@
       "name": "Chaos Land Raider",
       "role": "Transport",
       "keywords": [
-        "TRANSPORT",
-        "LAND RAIDER",
-        "VEHICLE",
-        "NURGLE",
         "CHAOS",
+        "LAND RAIDER",
         "SMOKE",
-        "FRAME"
+        "NURGLE",
+        "FRAME",
+        "VEHICLE",
+        "TRANSPORT"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -2183,11 +2183,11 @@
       "name": "Chaos Predator Annihilator",
       "role": "Vehicle",
       "keywords": [
+        "NURGLE",
+        "PREDATOR ANNIHILATOR",
+        "SMOKE",
         "FRAME",
         "VEHICLE",
-        "SMOKE",
-        "PREDATOR ANNIHILATOR",
-        "NURGLE",
         "CHAOS"
       ],
       "factionKeywords": [
@@ -2448,15 +2448,15 @@
       "role": "Monster Character",
       "keywords": [
         "DAEMON PRINCE",
-        "CHARACTER",
         "MONSTER",
-        "DAEMON",
+        "CHAOS",
         "NURGLE",
-        "CHAOS"
+        "DAEMON",
+        "CHARACTER"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -2589,14 +2589,14 @@
       "name": "Typhus",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "CHAOS",
-        "TYPHUS",
         "INFANTRY",
         "CHARACTER",
         "PSYKER",
         "EPIC HERO",
+        "CHAOS",
         "NURGLE",
-        "TERMINATOR"
+        "TERMINATOR",
+        "TYPHUS"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -2694,8 +2694,8 @@
         }
       ],
       "leads": [
-        "Deathshroud Terminators",
         "Poxwalkers",
+        "Deathshroud Terminators",
         "Blightlord Terminators"
       ],
       "isSupport": false,
@@ -2718,17 +2718,17 @@
       "name": "Lord of Contagion",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
-        "GRENADES",
-        "CHARACTER",
         "TERMINATOR",
-        "NURGLE",
         "INFANTRY",
+        "CHARACTER",
+        "GRENADES",
+        "CHAOS",
+        "NURGLE",
         "LORD OF CONTAGION"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -2845,12 +2845,12 @@
       "name": "Malignant Plaguecaster",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
         "PSYKER",
-        "NURGLE",
         "INFANTRY",
         "MALIGNANT PLAGUECASTER",
-        "CHAOS"
+        "NURGLE",
+        "CHAOS",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "",
@@ -2984,8 +2984,8 @@
         }
       ],
       "leads": [
-        "Plague Marines",
-        "Poxwalkers"
+        "Poxwalkers",
+        "Plague Marines"
       ],
       "isSupport": false,
       "points": [
@@ -3009,8 +3009,8 @@
       "keywords": [
         "INFANTRY",
         "CHAOS",
-        "NURGLE",
-        "POXWALKERS"
+        "POXWALKERS",
+        "NURGLE"
       ],
       "factionKeywords": [
         "",
@@ -3116,12 +3116,12 @@
       "name": "Foetid Bloat-drone",
       "role": "Vehicle",
       "keywords": [
+        "DAEMON",
+        "NURGLE",
+        "CHAOS",
         "FLY",
         "VEHICLE",
-        "DAEMON",
-        "FOETID BLOAT-DRONE",
-        "NURGLE",
-        "CHAOS"
+        "FOETID BLOAT-DRONE"
       ],
       "factionKeywords": [
         "",
@@ -3282,10 +3282,10 @@
       "role": "Infantry Character",
       "keywords": [
         "NOXIOUS BLIGHTBRINGER",
-        "INFANTRY",
-        "CHARACTER",
         "CHAOS",
-        "NURGLE"
+        "INFANTRY",
+        "NURGLE",
+        "CHARACTER"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -3398,8 +3398,8 @@
         }
       ],
       "leads": [
-        "Plague Marines",
-        "Poxwalkers"
+        "Poxwalkers",
+        "Plague Marines"
       ],
       "isSupport": false,
       "points": [
@@ -3423,14 +3423,14 @@
       "keywords": [
         "GRENADES",
         "CHAOS",
-        "FOUL BLIGHTSPAWN",
-        "CHARACTER",
         "NURGLE",
-        "INFANTRY"
+        "INFANTRY",
+        "CHARACTER",
+        "FOUL BLIGHTSPAWN"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -3547,16 +3547,16 @@
       "name": "Biologus Putrifier",
       "role": "Infantry Character",
       "keywords": [
-        "BIOLOGUS PUTRIFIER",
         "NURGLE",
-        "INFANTRY",
+        "BIOLOGUS PUTRIFIER",
         "CHAOS",
-        "GRENADES",
-        "CHARACTER"
+        "INFANTRY",
+        "CHARACTER",
+        "GRENADES"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -3701,15 +3701,15 @@
       "name": "Plague Surgeon",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
+        "PLAGUE SURGEON",
         "NURGLE",
-        "CHARACTER",
         "CHAOS",
-        "PLAGUE SURGEON"
+        "CHARACTER",
+        "INFANTRY"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {
@@ -3827,11 +3827,11 @@
       "name": "Tallyman",
       "role": "Infantry Character",
       "keywords": [
-        "NURGLE",
         "TALLYMAN",
-        "CHAOS",
+        "NURGLE",
+        "CHARACTER",
         "INFANTRY",
-        "CHARACTER"
+        "CHAOS"
       ],
       "factionKeywords": [
         "",
@@ -3963,15 +3963,15 @@
       "name": "Deathshroud Terminators",
       "role": "Infantry",
       "keywords": [
-        "INFANTRY",
         "NURGLE",
-        "DEATHSHROUD TERMINATORS",
         "CHAOS",
+        "INFANTRY",
+        "DEATHSHROUD TERMINATORS",
         "TERMINATOR"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -4155,8 +4155,8 @@
       "name": "Blightlord Terminators",
       "role": "Infantry",
       "keywords": [
-        "TERMINATOR",
         "BLIGHTLORD TERMINATORS",
+        "TERMINATOR",
         "CHAOS",
         "NURGLE",
         "INFANTRY"
@@ -4511,11 +4511,11 @@
       "role": "Vehicle",
       "keywords": [
         "MYPHITIC BLIGHT-HAULER",
-        "NURGLE",
-        "SMOKE",
         "DAEMON",
-        "VEHICLE",
-        "CHAOS"
+        "NURGLE",
+        "CHAOS",
+        "SMOKE",
+        "VEHICLE"
       ],
       "factionKeywords": [
         "",
@@ -4681,12 +4681,12 @@
       "name": "Plagueburst Crawler",
       "role": "Vehicle",
       "keywords": [
+        "FRAME",
+        "PLAGUEBURST CRAWLER",
+        "DAEMON",
         "NURGLE",
         "CHAOS",
-        "FRAME",
-        "VEHICLE",
-        "PLAGUEBURST CRAWLER",
-        "DAEMON"
+        "VEHICLE"
       ],
       "factionKeywords": [
         "",
@@ -4920,21 +4920,21 @@
       "name": "Mortarion",
       "role": "Monster Epic Hero",
       "keywords": [
-        "CHARACTER",
         "PSYKER",
-        "EPIC HERO",
+        "CHARACTER",
+        "MONSTER",
+        "MORTARION",
+        "FLY",
         "GRENADES",
         "CHAOS",
         "NURGLE",
-        "FLY",
         "DAEMON",
-        "MONSTER",
         "PRIMARCH",
-        "MORTARION"
+        "EPIC HERO"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -5122,11 +5122,11 @@
       "role": "Infantry Character",
       "keywords": [
         "CHAOS",
-        "NURGLE",
-        "TERMINATOR",
         "INFANTRY",
+        "TERMINATOR",
         "CHARACTER",
-        "LORD OF VIRULENCE"
+        "LORD OF VIRULENCE",
+        "NURGLE"
       ],
       "factionKeywords": [
         "",
@@ -5257,15 +5257,15 @@
       "role": "Vehicle",
       "keywords": [
         "FRAME",
-        "VEHICLE",
-        "PREDATOR DESTRUCTOR",
-        "NURGLE",
+        "SMOKE",
         "CHAOS",
-        "SMOKE"
+        "NURGLE",
+        "PREDATOR DESTRUCTOR",
+        "VEHICLE"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -5521,11 +5521,11 @@
       "name": "Miasmic Malignifier",
       "role": "Fortifications",
       "keywords": [
-        "MIASMIC MALIGNIFIER",
+        "FRAME",
         "FORTIFICATION",
-        "NURGLE",
         "CHAOS",
-        "FRAME"
+        "NURGLE",
+        "MIASMIC MALIGNIFIER"
       ],
       "factionKeywords": [
         "",
@@ -5639,12 +5639,12 @@
       "role": "Monster Character",
       "keywords": [
         "FLY",
-        "MONSTER",
-        "CHARACTER",
-        "CHAOS",
         "NURGLE",
         "DAEMON",
-        "DAEMON PRINCE WITH WINGS"
+        "DAEMON PRINCE WITH WINGS",
+        "CHARACTER",
+        "MONSTER",
+        "CHAOS"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -5782,11 +5782,11 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "CHARACTER",
         "GRENADES",
+        "CHARACTER",
         "CHAOS",
-        "NURGLE",
-        "ICON BEARER"
+        "ICON BEARER",
+        "NURGLE"
       ],
       "factionKeywords": [
         "DEATH GUARD",
@@ -5907,16 +5907,16 @@
       "name": "Lord of Poxes",
       "role": "Infantry Character",
       "keywords": [
+        "GRENADES",
         "LORD OF POXES",
         "NURGLE",
         "CHAOS",
-        "GRENADES",
         "CHARACTER",
         "INFANTRY"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -6047,16 +6047,16 @@
       "name": "Foetid Bloat-drone with Heavy Blight Launcher",
       "role": "Vehicle",
       "keywords": [
-        "DAEMON",
-        "FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER",
+        "VEHICLE",
         "FLY",
         "CHAOS",
         "NURGLE",
-        "VEHICLE"
+        "FOETID BLOAT-DRONE WITH HEAVY BLIGHT LAUNCHER",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "DEATH GUARD",
-        ""
+        "",
+        "DEATH GUARD"
       ],
       "models": [
         {
@@ -6177,15 +6177,15 @@
       "name": "Rotigus",
       "role": "Monster Epic Hero",
       "keywords": [
-        "CHARACTER",
-        "MONSTER",
-        "SUMMONED",
-        "ROTIGUS",
-        "CHAOS",
-        "EPIC HERO",
         "DAEMON",
         "NURGLE",
-        "PSYKER"
+        "CHAOS",
+        "PSYKER",
+        "EPIC HERO",
+        "CHARACTER",
+        "MONSTER",
+        "ROTIGUS",
+        "SUMMONED"
       ],
       "factionKeywords": [
         "",
@@ -6336,14 +6336,14 @@
       "name": "Great Unclean One",
       "role": "Monster Character",
       "keywords": [
-        "NURGLE",
-        "CHAOS",
-        "PSYKER",
-        "CHARACTER",
         "MONSTER",
         "GREAT UNCLEAN ONE",
+        "DAEMON",
+        "CHARACTER",
+        "PSYKER",
+        "CHAOS",
         "SUMMONED",
-        "DAEMON"
+        "NURGLE"
       ],
       "factionKeywords": [
         "",
@@ -6588,16 +6588,16 @@
       "role": "Battleline",
       "keywords": [
         "BATTLELINE",
-        "CHAOS",
-        "NURGLE",
-        "DAEMON",
-        "PLAGUEBEARERS",
         "INFANTRY",
+        "NURGLE",
+        "PLAGUEBEARERS",
+        "CHAOS",
+        "DAEMON",
         "SUMMONED"
       ],
       "factionKeywords": [
-        "",
-        "PLAGUE LEGIONS"
+        "PLAGUE LEGIONS",
+        ""
       ],
       "models": [
         {
@@ -6739,17 +6739,17 @@
       "name": "Plague Drones",
       "role": "Mounted",
       "keywords": [
-        "NURGLE",
         "DAEMON",
-        "CHAOS",
-        "SUMMONED",
-        "PLAGUE DRONES",
+        "MOUNTED",
         "FLY",
-        "MOUNTED"
+        "CHAOS",
+        "NURGLE",
+        "SUMMONED",
+        "PLAGUE DRONES"
       ],
       "factionKeywords": [
-        "PLAGUE LEGIONS",
-        ""
+        "",
+        "PLAGUE LEGIONS"
       ],
       "models": [
         {
@@ -6933,12 +6933,12 @@
       "name": "Beasts of Nurgle",
       "role": "Beast",
       "keywords": [
-        "BEAST",
-        "CHAOS",
-        "NURGLE",
         "DAEMON",
+        "NURGLE",
         "SUMMONED",
-        "BEASTS OF NURGLE"
+        "BEASTS OF NURGLE",
+        "BEAST",
+        "CHAOS"
       ],
       "factionKeywords": [
         "PLAGUE LEGIONS",
@@ -7052,14 +7052,14 @@
       "keywords": [
         "NURGLE",
         "CHAOS",
-        "SUMMONED",
+        "SWARM",
         "NURGLINGS",
         "DAEMON",
-        "SWARM"
+        "SUMMONED"
       ],
       "factionKeywords": [
-        "PLAGUE LEGIONS",
-        ""
+        "",
+        "PLAGUE LEGIONS"
       ],
       "models": [
         {
@@ -7160,16 +7160,16 @@
       "name": "Defiler",
       "role": "Walker",
       "keywords": [
-        "WALKER",
-        "CHAOS",
         "NURGLE",
         "DAEMON",
         "DEFILER",
-        "VEHICLE"
+        "VEHICLE",
+        "WALKER",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "",
-        "DEATH GUARD"
+        "DEATH GUARD",
+        ""
       ],
       "models": [
         {

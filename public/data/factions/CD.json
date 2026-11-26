@@ -2,7 +2,7 @@
   "id": "CD",
   "name": "Chaos Daemons",
   "link": "https://wahapedia.ru/wh40k11ed/factions/chaos-daemons",
-  "lastUpdate": "2026-10-30 22:19:16",
+  "lastUpdate": "2026-11-23 01:43:36",
   "armyRules": [
     {
       "name": "The Shadow of Chaos",
@@ -794,12 +794,12 @@
       "name": "Karanak",
       "role": "Beast Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "CHARACTER",
-        "BEAST",
-        "KARANAK",
-        "KHORNE",
         "DAEMON",
+        "KHORNE",
+        "KARANAK",
+        "BEAST",
+        "CHARACTER",
+        "EPIC HERO",
         "CHAOS"
       ],
       "factionKeywords": [
@@ -935,13 +935,13 @@
       "name": "Skarbrand",
       "role": "Monster Epic Hero",
       "keywords": [
-        "EPIC HERO",
         "CHAOS",
-        "DAEMON",
         "KHORNE",
-        "SKARBRAND",
+        "EPIC HERO",
         "MONSTER",
-        "CHARACTER"
+        "CHARACTER",
+        "SKARBRAND",
+        "DAEMON"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1085,13 +1085,13 @@
       "name": "Skulltaker",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "DAEMON",
-        "CHAOS",
         "KHORNE",
+        "DAEMON",
         "SKULLTAKER",
-        "EPIC HERO",
+        "CHAOS",
         "CHARACTER",
-        "INFANTRY"
+        "INFANTRY",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1201,13 +1201,13 @@
       "name": "Rendmaster On Blood Throne",
       "role": "Mounted Character",
       "keywords": [
-        "CHARACTER",
-        "SHADOW LEGION",
-        "RENDMASTER ON BLOOD THRONE",
-        "KHORNE",
         "DAEMON",
-        "MOUNTED",
-        "CHAOS"
+        "CHARACTER",
+        "CHAOS",
+        "KHORNE",
+        "RENDMASTER ON BLOOD THRONE",
+        "SHADOW LEGION",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1335,11 +1335,11 @@
       "role": "Beast",
       "keywords": [
         "CHAOS",
-        "BEAST",
-        "DAEMON",
         "KHORNE",
+        "BEAST",
+        "SHADOW LEGION",
         "FLESH HOUNDS",
-        "SHADOW LEGION"
+        "DAEMON"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1473,13 +1473,13 @@
       "name": "Bloodletters",
       "role": "Battleline",
       "keywords": [
-        "BLOODLETTERS",
         "KHORNE",
-        "BATTLELINE",
-        "CHAOS",
-        "INFANTRY",
+        "SHADOW LEGION",
+        "BLOODLETTERS",
         "DAEMON",
-        "SHADOW LEGION"
+        "CHAOS",
+        "BATTLELINE",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1622,12 +1622,12 @@
       "name": "Bloodcrushers",
       "role": "Mounted",
       "keywords": [
-        "SHADOW LEGION",
-        "KHORNE",
         "BLOODCRUSHERS",
-        "DAEMON",
+        "SHADOW LEGION",
+        "MOUNTED",
         "CHAOS",
-        "MOUNTED"
+        "DAEMON",
+        "KHORNE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1806,12 +1806,12 @@
       "name": "Skull Cannon",
       "role": "Mounted",
       "keywords": [
-        "MOUNTED",
+        "SHADOW LEGION",
         "CHAOS",
         "DAEMON",
         "KHORNE",
         "SKULL CANNON",
-        "SHADOW LEGION"
+        "MOUNTED"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -1942,14 +1942,14 @@
       "name": "Kairos Fateweaver",
       "role": "Monster Epic Hero",
       "keywords": [
-        "DAEMON",
-        "FLY",
-        "PSYKER",
-        "EPIC HERO",
-        "CHAOS",
-        "TZEENTCH",
-        "KAIROS FATEWEAVER",
         "MONSTER",
+        "EPIC HERO",
+        "KAIROS FATEWEAVER",
+        "TZEENTCH",
+        "DAEMON",
+        "CHAOS",
+        "PSYKER",
+        "FLY",
         "CHARACTER"
       ],
       "factionKeywords": [
@@ -2102,14 +2102,14 @@
       "name": "The Changeling",
       "role": "Infantry Epic Hero",
       "keywords": [
+        "DAEMON",
         "CHAOS",
         "PSYKER",
         "EPIC HERO",
         "INFANTRY",
         "CHARACTER",
         "THE CHANGELING",
-        "TZEENTCH",
-        "DAEMON"
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2257,13 +2257,13 @@
       "role": "Mounted Epic Hero",
       "keywords": [
         "TZEENTCH",
-        "THE BLUE SCRIBES",
-        "MOUNTED",
-        "CHARACTER",
-        "EPIC HERO",
+        "DAEMON",
         "FLY",
+        "EPIC HERO",
+        "CHARACTER",
+        "MOUNTED",
         "CHAOS",
-        "DAEMON"
+        "THE BLUE SCRIBES"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2370,15 +2370,15 @@
       "name": "Lord of Change",
       "role": "Monster Character",
       "keywords": [
-        "DAEMON",
         "MONSTER",
-        "CHARACTER",
         "FLY",
-        "PSYKER",
         "CHAOS",
-        "TZEENTCH",
+        "CHARACTER",
+        "SHADOW LEGION",
         "LORD OF CHANGE",
-        "SHADOW LEGION"
+        "TZEENTCH",
+        "DAEMON",
+        "PSYKER"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2584,13 +2584,13 @@
       "name": "Flamers",
       "role": "Infantry",
       "keywords": [
-        "TZEENTCH",
+        "CHAOS",
+        "DAEMON",
         "FLAMERS",
         "SHADOW LEGION",
-        "INFANTRY",
+        "TZEENTCH",
         "FLY",
-        "CHAOS",
-        "DAEMON"
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2715,14 +2715,14 @@
       "name": "Exalted Flamer",
       "role": "Infantry Character",
       "keywords": [
-        "TZEENTCH",
+        "DAEMON",
         "SHADOW LEGION",
+        "TZEENTCH",
         "EXALTED FLAMER",
-        "INFANTRY",
         "CHARACTER",
+        "INFANTRY",
         "FLY",
-        "CHAOS",
-        "DAEMON"
+        "CHAOS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2867,13 +2867,13 @@
       "name": "Screamers",
       "role": "Beast",
       "keywords": [
-        "SHADOW LEGION",
-        "BEAST",
-        "FLY",
         "CHAOS",
+        "FLY",
         "DAEMON",
+        "BEAST",
         "TZEENTCH",
-        "SCREAMERS"
+        "SCREAMERS",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -2976,12 +2976,12 @@
       "role": "Mounted",
       "keywords": [
         "BURNING CHARIOT",
+        "TZEENTCH",
+        "DAEMON",
+        "SHADOW LEGION",
         "FLY",
         "CHAOS",
-        "SHADOW LEGION",
-        "MOUNTED",
-        "DAEMON",
-        "TZEENTCH"
+        "MOUNTED"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3129,13 +3129,13 @@
       "name": "Epidemius",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "EPIC HERO",
-        "CHAOS",
         "INFANTRY",
         "CHARACTER",
-        "NURGLE",
+        "EPIC HERO",
+        "EPIDEMIUS",
+        "CHAOS",
         "DAEMON",
-        "EPIDEMIUS"
+        "NURGLE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3244,14 +3244,14 @@
       "name": "Great Unclean One",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
-        "GREAT UNCLEAN ONE",
-        "PSYKER",
-        "CHAOS",
+        "MONSTER",
         "NURGLE",
         "DAEMON",
-        "MONSTER",
-        "SHADOW LEGION"
+        "CHAOS",
+        "PSYKER",
+        "SHADOW LEGION",
+        "CHARACTER",
+        "GREAT UNCLEAN ONE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3499,13 +3499,13 @@
       "name": "Plaguebearers",
       "role": "Battleline",
       "keywords": [
-        "DAEMON",
-        "SHADOW LEGION",
-        "PLAGUEBEARERS",
-        "NURGLE",
         "INFANTRY",
         "BATTLELINE",
-        "CHAOS"
+        "CHAOS",
+        "DAEMON",
+        "NURGLE",
+        "PLAGUEBEARERS",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3650,13 +3650,13 @@
       "name": "Nurglings",
       "role": "Battleline",
       "keywords": [
+        "SHADOW LEGION",
+        "SWARM",
+        "BATTLELINE",
         "CHAOS",
         "DAEMON",
-        "SWARM",
-        "NURGLINGS",
-        "SHADOW LEGION",
         "NURGLE",
-        "BATTLELINE"
+        "NURGLINGS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3764,10 +3764,10 @@
       "keywords": [
         "NURGLE",
         "DAEMON",
+        "CHAOS",
         "SHADOW LEGION",
-        "BEASTS OF NURGLE",
         "BEAST",
-        "CHAOS"
+        "BEASTS OF NURGLE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -3880,13 +3880,13 @@
       "name": "Plague Drones",
       "role": "Mounted",
       "keywords": [
+        "DAEMON",
         "MOUNTED",
         "FLY",
         "CHAOS",
-        "DAEMON",
+        "NURGLE",
         "PLAGUE DRONES",
-        "SHADOW LEGION",
-        "NURGLE"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4073,14 +4073,14 @@
       "name": "The Masque Of Slaanesh",
       "role": "Infantry Epic Hero",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "THE MASQUE OF SLAANESH",
         "SLAANESH",
         "DAEMON",
         "CHAOS",
         "FLY",
-        "EPIC HERO"
+        "EPIC HERO",
+        "CHARACTER",
+        "INFANTRY",
+        "THE MASQUE OF SLAANESH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4192,14 +4192,14 @@
       "name": "Keeper Of Secrets",
       "role": "Monster Character",
       "keywords": [
-        "PSYKER",
-        "SLAANESH",
         "CHARACTER",
+        "PSYKER",
+        "CHAOS",
+        "DAEMON",
+        "SLAANESH",
         "KEEPER OF SECRETS",
         "SHADOW LEGION",
-        "MONSTER",
-        "DAEMON",
-        "CHAOS"
+        "MONSTER"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4432,14 +4432,14 @@
       "name": "Tranceweaver",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "PSYKER",
-        "CHARACTER",
         "CHAOS",
+        "SLAANESH",
         "DAEMON",
-        "SHADOW LEGION",
         "TRANCEWEAVER",
-        "SLAANESH"
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4553,13 +4553,13 @@
       "name": "Daemonettes",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
+        "DAEMONETTES",
         "SHADOW LEGION",
-        "BATTLELINE",
+        "INFANTRY",
         "CHAOS",
+        "BATTLELINE",
         "DAEMON",
-        "SLAANESH",
-        "DAEMONETTES"
+        "SLAANESH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4709,11 +4709,11 @@
       "name": "Fiends",
       "role": "Beast",
       "keywords": [
-        "SHADOW LEGION",
         "FIENDS",
+        "SHADOW LEGION",
+        "DAEMON",
         "SLAANESH",
         "BEAST",
-        "DAEMON",
         "CHAOS"
       ],
       "factionKeywords": [
@@ -4834,12 +4834,12 @@
       "name": "Hellflayers",
       "role": "Mounted",
       "keywords": [
-        "SLAANESH",
-        "SHADOW LEGION",
-        "HELLFLAYERS",
         "DAEMON",
         "CHAOS",
-        "MOUNTED"
+        "MOUNTED",
+        "SHADOW LEGION",
+        "HELLFLAYERS",
+        "SLAANESH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -4992,12 +4992,12 @@
       "name": "Seekers",
       "role": "Mounted",
       "keywords": [
-        "SEEKERS",
-        "SHADOW LEGION",
-        "SLAANESH",
-        "DAEMON",
         "CHAOS",
-        "MOUNTED"
+        "SLAANESH",
+        "MOUNTED",
+        "SHADOW LEGION",
+        "DAEMON",
+        "SEEKERS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -5171,15 +5171,15 @@
       "name": "Be’lakor",
       "role": "Monster Epic Hero",
       "keywords": [
-        "PSYKER",
-        "EPIC HERO",
         "FLY",
         "CHARACTER",
-        "MONSTER",
         "BE’LAKOR",
         "SHADOW LEGION",
         "DAEMON",
-        "CHAOS"
+        "CHAOS",
+        "PSYKER",
+        "EPIC HERO",
+        "MONSTER"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -5363,12 +5363,12 @@
       "name": "Daemon Prince of Chaos",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
         "DAEMON PRINCE OF CHAOS",
-        "CHAOS",
         "MONSTER",
-        "SHADOW LEGION",
-        "DAEMON"
+        "CHARACTER",
+        "CHAOS",
+        "DAEMON",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -5530,12 +5530,12 @@
       "name": "Soul Grinder",
       "role": "Walker",
       "keywords": [
-        "SHADOW LEGION",
-        "VEHICLE",
-        "CHAOS",
-        "DAEMON",
         "SOUL GRINDER",
-        "WALKER"
+        "SHADOW LEGION",
+        "DAEMON",
+        "WALKER",
+        "VEHICLE",
+        "CHAOS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -5791,13 +5791,13 @@
       "name": "Bloodmaster",
       "role": "Infantry Character",
       "keywords": [
+        "BLOODMASTER",
         "SHADOW LEGION",
-        "INFANTRY",
         "CHARACTER",
         "CHAOS",
+        "INFANTRY",
         "DAEMON",
-        "KHORNE",
-        "BLOODMASTER"
+        "KHORNE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -5905,12 +5905,12 @@
       "role": "Mounted Character",
       "keywords": [
         "SHADOW LEGION",
-        "MOUNTED",
-        "CHARACTER",
+        "KHORNE",
         "CHAOS",
         "DAEMON",
-        "KHORNE",
-        "SKULLMASTER"
+        "CHARACTER",
+        "SKULLMASTER",
+        "MOUNTED"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6038,12 +6038,12 @@
       "keywords": [
         "CHARACTER",
         "SHADOW LEGION",
-        "DAEMON",
+        "PSYKER",
         "CHANGECASTER",
         "TZEENTCH",
-        "INFANTRY",
-        "PSYKER",
-        "CHAOS"
+        "DAEMON",
+        "CHAOS",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6162,8 +6162,8 @@
         }
       ],
       "leads": [
-        "Blue Horrors",
-        "Pink Horrors"
+        "Pink Horrors",
+        "Blue Horrors"
       ],
       "isSupport": false,
       "points": [
@@ -6185,15 +6185,15 @@
       "name": "Fateskimmer",
       "role": "Mounted Character",
       "keywords": [
+        "MOUNTED",
+        "CHARACTER",
+        "CHAOS",
         "DAEMON",
+        "FLY",
         "PSYKER",
         "TZEENTCH",
         "FATESKIMMER",
-        "MOUNTED",
-        "CHARACTER",
-        "SHADOW LEGION",
-        "CHAOS",
-        "FLY"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6354,15 +6354,15 @@
       "name": "Fluxmaster",
       "role": "Mounted Character",
       "keywords": [
-        "SHADOW LEGION",
-        "TZEENTCH",
-        "DAEMON",
-        "CHAOS",
         "PSYKER",
+        "CHAOS",
+        "DAEMON",
         "MOUNTED",
+        "CHARACTER",
         "FLY",
+        "SHADOW LEGION",
         "FLUXMASTER",
-        "CHARACTER"
+        "TZEENTCH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6509,9 +6509,9 @@
         "EPIC HERO",
         "CHARACTER",
         "MONSTER",
-        "DAEMON",
+        "ROTIGUS",
         "NURGLE",
-        "ROTIGUS"
+        "DAEMON"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6668,13 +6668,13 @@
       "name": "Horticulous Slimux",
       "role": "Mounted Epic Hero",
       "keywords": [
-        "HORTICULOUS SLIMUX",
-        "MOUNTED",
         "CHARACTER",
+        "MOUNTED",
+        "HORTICULOUS SLIMUX",
+        "NURGLE",
         "EPIC HERO",
         "CHAOS",
-        "DAEMON",
-        "NURGLE"
+        "DAEMON"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6802,14 +6802,14 @@
       "name": "Poxbringer",
       "role": "Infantry Character",
       "keywords": [
-        "SHADOW LEGION",
-        "INFANTRY",
-        "PSYKER",
         "CHARACTER",
+        "INFANTRY",
         "CHAOS",
-        "DAEMON",
+        "SHADOW LEGION",
+        "POXBRINGER",
         "NURGLE",
-        "POXBRINGER"
+        "DAEMON",
+        "PSYKER"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -6933,13 +6933,13 @@
       "name": "Sloppity Bilepiper",
       "role": "Infantry Character",
       "keywords": [
-        "CHAOS",
+        "DAEMON",
         "INFANTRY",
         "CHARACTER",
-        "DAEMON",
-        "NURGLE",
+        "CHAOS",
+        "SHADOW LEGION",
         "SLOPPITY BILEPIPER",
-        "SHADOW LEGION"
+        "NURGLE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -7049,12 +7049,12 @@
       "role": "Infantry Character",
       "keywords": [
         "SHADOW LEGION",
+        "SPOILPOX SCRIVENER",
         "NURGLE",
         "DAEMON",
-        "CHAOS",
         "CHARACTER",
         "INFANTRY",
-        "SPOILPOX SCRIVENER"
+        "CHAOS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -7182,13 +7182,13 @@
       "name": "Feculent Gnarlmaw",
       "role": "Fortifications",
       "keywords": [
-        "FORTIFICATION",
-        "DAEMON",
         "NURGLE",
         "FECULENT GNARLMAW",
         "SHADOW LEGION",
-        "FRAME",
-        "CHAOS"
+        "FORTIFICATION",
+        "CHAOS",
+        "DAEMON",
+        "FRAME"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -7294,11 +7294,11 @@
       "role": "Fortifications",
       "keywords": [
         "FRAME",
-        "KHORNE",
+        "FORTIFICATION",
         "SHADOW LEGION",
         "SKULL ALTAR",
+        "KHORNE",
         "DAEMON",
-        "FORTIFICATION",
         "CHAOS"
       ],
       "factionKeywords": [
@@ -7404,12 +7404,12 @@
       "name": "Infernal Enrapturess",
       "role": "Infantry Character",
       "keywords": [
-        "SLAANESH",
-        "CHAOS",
-        "SHADOW LEGION",
-        "INFERNAL ENRAPTURESS",
         "INFANTRY",
         "CHARACTER",
+        "CHAOS",
+        "SLAANESH",
+        "INFERNAL ENRAPTURESS",
+        "SHADOW LEGION",
         "DAEMON"
       ],
       "factionKeywords": [
@@ -7554,12 +7554,12 @@
       "name": "Contorted Epitome",
       "role": "Infantry Character",
       "keywords": [
-        "PSYKER",
-        "CHARACTER",
+        "SLAANESH",
+        "CONTORTED EPITOME",
         "INFANTRY",
         "SHADOW LEGION",
-        "CONTORTED EPITOME",
-        "SLAANESH",
+        "CHARACTER",
+        "PSYKER",
         "CHAOS"
       ],
       "factionKeywords": [
@@ -7701,14 +7701,14 @@
       "name": "Shalaxi Helbane",
       "role": "Monster Epic Hero",
       "keywords": [
-        "DAEMON",
-        "SHALAXI HELBANE",
-        "SLAANESH",
-        "CHAOS",
-        "PSYKER",
-        "EPIC HERO",
         "CHARACTER",
-        "MONSTER"
+        "MONSTER",
+        "EPIC HERO",
+        "PSYKER",
+        "CHAOS",
+        "DAEMON",
+        "SLAANESH",
+        "SHALAXI HELBANE"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -7896,14 +7896,14 @@
       "name": "Syll’esske",
       "role": "Monster Epic Hero",
       "keywords": [
-        "DAEMON",
-        "CHARACTER",
-        "SLAANESH",
-        "EPIC HERO",
-        "SYLL’ESSKE",
         "PSYKER",
+        "CHARACTER",
         "MONSTER",
-        "CHAOS"
+        "SYLL’ESSKE",
+        "SLAANESH",
+        "DAEMON",
+        "CHAOS",
+        "EPIC HERO"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -8077,13 +8077,13 @@
       "name": "Bloodthirster",
       "role": "Monster Character",
       "keywords": [
+        "CHARACTER",
+        "FLY",
+        "CHAOS",
+        "DAEMON",
+        "KHORNE",
         "BLOODTHIRSTER",
         "SHADOW LEGION",
-        "KHORNE",
-        "DAEMON",
-        "CHAOS",
-        "FLY",
-        "CHARACTER",
         "MONSTER"
       ],
       "factionKeywords": [
@@ -8314,14 +8314,14 @@
       "name": "Blue Horrors",
       "role": "Battleline",
       "keywords": [
-        "INFANTRY",
-        "BATTLELINE",
+        "BRIMSTONE",
         "BLUE",
         "HORRORS",
         "SHADOW LEGION",
-        "TZEENTCH",
-        "BRIMSTONE",
         "CHAOS",
+        "TZEENTCH",
+        "INFANTRY",
+        "BATTLELINE",
         "DAEMON"
       ],
       "factionKeywords": [
@@ -8488,16 +8488,16 @@
       "name": "Pink Horrors",
       "role": "Battleline",
       "keywords": [
-        "HORRORS",
-        "TZEENTCH",
-        "DAEMON",
+        "INFANTRY",
         "BATTLELINE",
         "CHAOS",
-        "INFANTRY",
+        "DAEMON",
+        "TZEENTCH",
         "PINK",
-        "SHADOW LEGION",
+        "BLUE",
         "BRIMSTONE",
-        "BLUE"
+        "SHADOW LEGION",
+        "HORRORS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -8747,13 +8747,13 @@
       "name": "Daemon Prince Of Chaos With Wings",
       "role": "Monster Character",
       "keywords": [
-        "CHARACTER",
-        "FLY",
-        "CHAOS",
         "DAEMON",
+        "CHAOS",
+        "FLY",
+        "CHARACTER",
+        "MONSTER",
         "DAEMON PRINCE OF CHAOS WITH WINGS",
-        "SHADOW LEGION",
-        "MONSTER"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
@@ -8910,45 +8910,45 @@
       "name": "Chaos Lord",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
-        "CHARACTER",
-        "GRENADES",
-        "CHAOS",
-        "CHAOS LORD",
         "UNDIVIDED",
+        "CHAOS LORD",
+        "CHAOS",
+        "GRENADES",
+        "CHARACTER",
+        "INFANTRY",
         "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
+        "UNDIVIDED",
         "GRENADES",
         "CHAOS",
-        "CHAOS LORD",
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "INFANTRY",
         "CHARACTER",
-        "GRENADES",
-        "CHAOS",
         "CHAOS LORD",
-        "UNDIVIDED",
+        "INFANTRY",
         "SHADOW LEGION",
+        "UNDIVIDED",
+        "CHAOS LORD",
+        "CHAOS",
+        "GRENADES",
+        "CHARACTER",
+        "INFANTRY",
+        "UNDIVIDED",
+        "CHAOS LORD",
+        "CHAOS",
+        "GRENADES",
         "INFANTRY",
         "CHARACTER",
-        "GRENADES",
-        "CHAOS",
-        "CHAOS LORD",
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "GRENADES",
-        "CHAOS",
-        "CHAOS LORD",
         "UNDIVIDED",
+        "CHAOS",
+        "GRENADES",
+        "CHAOS LORD",
+        "CHARACTER",
+        "INFANTRY",
         "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "LEGIONES DAEMONICA",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "LEGIONES DAEMONICA"
       ],
       "models": [
         {
@@ -8983,12 +8983,12 @@
       },
       "loadoutText": "This model is equipped with: plasma pistol; daemon hammer.",
       "options": [
-        "This model’s daemon hammer can be replaced with one of the following:• 1 accursed weapon\n• 1 Astartes chainsword",
+        "This model’s daemon hammer can be replaced with one of the following:• 1 accursed weapon\n• 1 astartes chainsword",
         "This model’s plasma pistol can be replaced with 1 power fist."
       ],
       "wargearOptions": [
         {
-          "text": "This model's daemon hammer can be replaced with one of the following:• 1 accursed weapon • 1 Astartes chainsword",
+          "text": "This model's daemon hammer can be replaced with one of the following:• 1 accursed weapon • 1 astartes chainsword",
           "scope": "one",
           "who": "*",
           "replace": [
@@ -9019,16 +9019,63 @@
       ],
       "weapons": [
         {
-          "name": "Power fist",
+          "name": "Daemon hammer",
           "profiles": [
             {
-              "name": "Power fist",
+              "name": "Daemon hammer",
               "range": "Melee",
               "A": "5",
-              "skill": 2,
+              "skill": 3,
               "S": 8,
               "AP": -2,
               "D": "2",
+              "abilities": [
+                "devastating wounds"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 2,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            },
+            {
+              "name": "supercharge",
+              "range": 12,
+              "A": "1",
+              "skill": 2,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "pistol",
+                "hazardous"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "7",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
               "abilities": []
             }
           ]
@@ -9049,63 +9096,17 @@
           ]
         },
         {
-          "name": "Plasma pistol",
+          "name": "Power fist",
           "profiles": [
             {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
-              "skill": 2,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "pistol",
-                "hazardous"
-              ]
-            },
-            {
-              "name": "standard",
-              "range": 12,
-              "A": "1",
-              "skill": 2,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Daemon hammer",
-          "profiles": [
-            {
-              "name": "Daemon hammer",
+              "name": "Power fist",
               "range": "Melee",
               "A": "5",
-              "skill": 3,
+              "skill": 2,
               "S": 8,
               "AP": -2,
               "D": "2",
-              "abilities": [
-                "devastating wounds"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Astartes chainsword",
-          "profiles": [
-            {
-              "name": "Astartes chainsword",
-              "range": "Melee",
-              "A": "7",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1"
+              "abilities": []
             }
           ]
         }
@@ -9156,7 +9157,15 @@
       "name": "Chaos Lord In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
+        "SHADOW LEGION",
+        "INFANTRY",
+        "CHARACTER",
+        "CHAOS",
+        "CHAOS LORD",
+        "TERMINATOR",
         "UNDIVIDED",
+        "TERMINATOR",
+        "CHAOS LORD IN TERMINATOR ARMOUR",
         "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
@@ -9164,30 +9173,7 @@
         "CHAOS LORD",
         "TERMINATOR",
         "CHAOS LORD IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "INFANTRY",
-        "CHAOS",
-        "CHAOS LORD",
         "TERMINATOR",
-        "CHARACTER",
-        "CHAOS LORD IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "CHAOS",
-        "CHAOS LORD",
-        "TERMINATOR",
-        "CHAOS LORD IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "CHARACTER",
-        "CHAOS",
-        "CHAOS LORD",
-        "TERMINATOR",
-        "CHAOS LORD IN TERMINATOR ARMOUR",
         "UNDIVIDED",
         "SHADOW LEGION",
         "INFANTRY",
@@ -9200,14 +9186,29 @@
         "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
+        "CHAOS LORD IN TERMINATOR ARMOUR",
+        "UNDIVIDED",
         "CHAOS",
         "CHAOS LORD",
+        "CHAOS LORD IN TERMINATOR ARMOUR",
+        "CHAOS LORD",
+        "CHAOS",
+        "CHARACTER",
+        "INFANTRY",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CHAOS LORD IN TERMINATOR ARMOUR",
         "TERMINATOR",
-        "CHAOS LORD IN TERMINATOR ARMOUR"
+        "CHAOS LORD",
+        "CHAOS",
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -9293,59 +9294,6 @@
       ],
       "weapons": [
         {
-          "name": "Combi-bolter",
-          "profiles": [
-            {
-              "name": "Combi-bolter",
-              "range": 24,
-              "A": "2",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "rapid fire 2"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Combi-weapon",
-          "profiles": [
-            {
-              "name": "Combi-weapon",
-              "range": 24,
-              "A": "1",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "anti-infantry 4+",
-                "devastating wounds",
-                "rapid fire 1"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Chainfist",
-          "profiles": [
-            {
-              "name": "Chainfist",
-              "range": "Melee",
-              "A": "5",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "anti-vehicle 3+"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Paired accursed weapons",
           "profiles": [
             {
@@ -9374,6 +9322,59 @@
               "AP": -2,
               "D": "2",
               "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Combi-weapon",
+          "profiles": [
+            {
+              "name": "Combi-weapon",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "anti-infantry 4+",
+                "devastating wounds",
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Combi-bolter",
+          "profiles": [
+            {
+              "name": "Combi-bolter",
+              "range": 24,
+              "A": "2",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "rapid fire 2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Chainfist",
+          "profiles": [
+            {
+              "name": "Chainfist",
+              "range": "Melee",
+              "A": "5",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "anti-vehicle 3+"
+              ]
             }
           ]
         },
@@ -9443,6 +9444,8 @@
       "name": "Chaos Lord with Jump Pack",
       "role": "Infantry Character",
       "keywords": [
+        "INFANTRY",
+        "CHARACTER",
         "JUMP PACK",
         "FLY",
         "GRENADES",
@@ -9450,6 +9453,23 @@
         "CHAOS LORD",
         "UNDIVIDED",
         "SHADOW LEGION",
+        "INFANTRY",
+        "CHARACTER",
+        "JUMP PACK",
+        "FLY",
+        "GRENADES",
+        "CHAOS",
+        "CHAOS LORD",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "CHARACTER",
+        "JUMP PACK",
+        "FLY",
+        "GRENADES",
+        "CHAOS",
+        "CHAOS LORD",
+        "UNDIVIDED",
         "INFANTRY",
         "CHARACTER",
         "JUMP PACK",
@@ -9486,30 +9506,11 @@
         "CHAOS LORD",
         "UNDIVIDED",
         "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "JUMP PACK",
-        "FLY",
-        "GRENADES",
-        "CHAOS",
-        "CHAOS LORD",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "JUMP PACK",
-        "FLY",
-        "GRENADES",
-        "CHAOS",
-        "CHAOS LORD",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "LEGIONES DAEMONICA",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "LEGIONES DAEMONICA"
       ],
       "models": [
         {
@@ -9592,40 +9593,6 @@
       ],
       "weapons": [
         {
-          "name": "Twin lightning claws",
-          "profiles": [
-            {
-              "name": "Twin lightning claws",
-              "range": "Melee",
-              "A": "6",
-              "skill": 2,
-              "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "twin-linked"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 2,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Plasma pistol",
           "profiles": [
             {
@@ -9684,6 +9651,40 @@
               "abilities": []
             }
           ]
+        },
+        {
+          "name": "Twin lightning claws",
+          "profiles": [
+            {
+              "name": "Twin lightning claws",
+              "range": "Melee",
+              "A": "6",
+              "skill": 2,
+              "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "twin-linked"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 2,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
         }
       ],
       "abilities": [
@@ -9736,34 +9737,34 @@
       "name": "Chaos Terminator Squad",
       "role": "Infantry",
       "keywords": [
+        "TERMINATOR",
+        "CHAOS TERMINATOR SQUAD",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "INFANTRY",
+        "TERMINATOR",
+        "CHAOS TERMINATOR SQUAD",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
         "CHAOS",
         "TERMINATOR",
         "CHAOS TERMINATOR SQUAD",
+        "UNDIVIDED",
         "SHADOW LEGION",
         "CHAOS",
-        "INFANTRY",
-        "CHAOS",
         "TERMINATOR",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "CHAOS TERMINATOR SQUAD",
-        "TERMINATOR",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
         "CHAOS TERMINATOR SQUAD",
         "UNDIVIDED",
-        "TERMINATOR",
-        "CHAOS",
-        "INFANTRY",
         "SHADOW LEGION",
-        "UNDIVIDED",
-        "CHAOS TERMINATOR SQUAD"
+        "INFANTRY",
+        "CHAOS",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -9910,23 +9911,6 @@
           ]
         },
         {
-          "name": "Paired accursed weapons",
-          "profiles": [
-            {
-              "name": "Paired accursed weapons",
-              "range": "Melee",
-              "A": "5",
-              "skill": 3,
-              "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "twin-linked"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Combi-bolter",
           "profiles": [
             {
@@ -9989,6 +9973,23 @@
               "D": "2",
               "abilities": [
                 "anti-vehicle 3+"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Paired accursed weapons",
+          "profiles": [
+            {
+              "name": "Paired accursed weapons",
+              "range": "Melee",
+              "A": "5",
+              "skill": 3,
+              "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "twin-linked"
               ]
             }
           ]
@@ -10084,9 +10085,15 @@
       "keywords": [
         "INFANTRY",
         "GRENADES",
+        "CHAOS",
         "CHOSEN",
         "UNDIVIDED",
         "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
+        "CHOSEN",
+        "UNDIVIDED",
         "SHADOW LEGION",
         "INFANTRY",
         "GRENADES",
@@ -10099,17 +10106,11 @@
         "CHAOS",
         "CHOSEN",
         "UNDIVIDED",
-        "INFANTRY",
-        "GRENADES",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "CHOSEN",
-        "CHAOS",
-        "CHAOS"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -10234,36 +10235,6 @@
       ],
       "weapons": [
         {
-          "name": "Plasma pistol",
-          "profiles": [
-            {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "pistol"
-              ]
-            },
-            {
-              "name": "standard",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Combi-weapon",
           "profiles": [
             {
@@ -10279,21 +10250,6 @@
                 "devastating wounds",
                 "rapid fire 1"
               ]
-            }
-          ]
-        },
-        {
-          "name": "Boltgun",
-          "profiles": [
-            {
-              "name": "Boltgun",
-              "range": 24,
-              "A": "2",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": []
             }
           ]
         },
@@ -10315,6 +10271,51 @@
           ]
         },
         {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "name": "Boltgun",
+              "range": 24,
+              "A": "2",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            },
+            {
+              "name": "supercharge",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Accursed weapon",
           "profiles": [
             {
@@ -10325,21 +10326,6 @@
               "S": 5,
               "AP": -2,
               "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Power fist",
-          "profiles": [
-            {
-              "name": "Power fist",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
               "abilities": []
             }
           ]
@@ -10358,6 +10344,21 @@
               "abilities": [
                 "twin-linked"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Power fist",
+          "profiles": [
+            {
+              "name": "Power fist",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
             }
           ]
         }
@@ -10417,7 +10418,6 @@
       "name": "Cultist Firebrand",
       "role": "Infantry Character",
       "keywords": [
-        "CULTIST FIREBRAND",
         "UNDIVIDED",
         "SHADOW LEGION",
         "INFANTRY",
@@ -10451,24 +10451,25 @@
         "DAMNED",
         "CULTIST FIREBRAND",
         "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
         "CHARACTER",
-        "GRENADES",
         "DAMNED",
         "CULTIST FIREBRAND",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "GRENADES",
-        "CHAOS",
         "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "GRENADES",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULTIST FIREBRAND",
         "CHAOS"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -10505,6 +10506,21 @@
       "wargearOptions": [],
       "weapons": [
         {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "4",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Balefire pike",
           "profiles": [
             {
@@ -10519,21 +10535,6 @@
                 "ignores cover",
                 "torrent"
               ]
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
-            {
-              "name": "Close combat weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
             }
           ]
         }
@@ -10593,6 +10594,58 @@
       "name": "Dark Commune",
       "role": "Infantry Character",
       "keywords": [
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULT DEMAGOGUE",
+        "PSYKER",
+        "DARK COMMUNE",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULT DEMAGOGUE",
+        "CHARACTER",
+        "PSYKER",
+        "DARK COMMUNE",
+        "INFANTRY",
+        "CHAOS",
+        "GRENADES",
+        "INFANTRY",
+        "CHARACTER",
+        "PSYKER",
+        "PSYKER",
+        "DARK COMMUNE",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULT DEMAGOGUE",
+        "DAMNED",
+        "CHARACTER",
+        "PSYKER",
+        "DARK COMMUNE",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULT DEMAGOGUE",
+        "CHARACTER",
+        "GRENADES",
+        "CHAOS",
+        "DAMNED",
+        "DARK COMMUNE",
+        "CHARACTER",
+        "CULT DEMAGOGUE",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
         "CHAOS",
         "DAMNED",
         "DARK COMMUNE",
@@ -10620,63 +10673,11 @@
         "CHARACTER",
         "CULT DEMAGOGUE",
         "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "DARK COMMUNE",
-        "PSYKER",
-        "CHARACTER",
-        "CULT DEMAGOGUE",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "DARK COMMUNE",
-        "PSYKER",
-        "CHARACTER",
-        "CULT DEMAGOGUE",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "DARK COMMUNE",
-        "PSYKER",
-        "CHARACTER",
-        "CULT DEMAGOGUE",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "GRENADES",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "DARK COMMUNE",
-        "PSYKER",
-        "CHARACTER",
-        "CULT DEMAGOGUE",
-        "UNDIVIDED",
-        "CHAOS",
-        "GRENADES",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "CULT DEMAGOGUE",
-        "CHARACTER",
-        "PSYKER",
-        "DARK COMMUNE",
-        "DAMNED"
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "LEGIONES DAEMONICA",
-        "HERETIC ASTARTES"
+        "HERETIC ASTARTES",
+        "LEGIONES DAEMONICA"
       ],
       "models": [
         {
@@ -10915,22 +10916,18 @@
       "role": "Infantry Character",
       "keywords": [
         "INFANTRY",
-        "GRENADES",
+        "CHAOS",
         "GRENADES",
         "DAMNED",
         "CHARACTER",
         "TRAITOR ENFORCER",
         "UNDIVIDED",
         "SHADOW LEGION",
-        "CHARACTER",
-        "CHAOS",
         "CHAOS",
         "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "TRAITOR ENFORCER",
-        "CHARACTER",
+        "GRENADES",
         "DAMNED",
+        "CHARACTER",
         "TRAITOR ENFORCER",
         "UNDIVIDED",
         "SHADOW LEGION",
@@ -10941,7 +10938,6 @@
         "CHARACTER",
         "TRAITOR ENFORCER",
         "UNDIVIDED",
-        "DAMNED",
         "SHADOW LEGION",
         "INFANTRY",
         "CHAOS",
@@ -10951,9 +10947,14 @@
         "TRAITOR ENFORCER",
         "UNDIVIDED",
         "SHADOW LEGION",
-        "GRENADES",
-        "CHAOS",
         "INFANTRY",
+        "CHAOS",
+        "GRENADES",
+        "DAMNED",
+        "CHARACTER",
+        "TRAITOR ENFORCER",
+        "UNDIVIDED",
+        "SHADOW LEGION",
         "INFANTRY",
         "CHAOS",
         "GRENADES",
@@ -10964,8 +10965,8 @@
         "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -11029,19 +11030,17 @@
       "wargearOptions": [],
       "weapons": [
         {
-          "name": "Bolt pistol",
+          "name": "Power fist",
           "profiles": [
             {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
+              "name": "Power fist",
+              "range": "Melee",
+              "A": "3",
               "skill": 3,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
+              "S": 6,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
             }
           ]
         },
@@ -11061,17 +11060,19 @@
           ]
         },
         {
-          "name": "Power fist",
+          "name": "Bolt pistol",
           "profiles": [
             {
-              "name": "Power fist",
-              "range": "Melee",
-              "A": "3",
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
               "skill": 3,
-              "S": 6,
-              "AP": -2,
-              "D": "2",
-              "abilities": []
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
             }
           ]
         }
@@ -11121,58 +11122,58 @@
       "name": "Cultist Mob",
       "role": "Battleline",
       "keywords": [
-        "BATTLELINE",
-        "GRENADES",
-        "CULTIST MOB",
         "DAMNED",
-        "BATTLELINE",
-        "GRENADES",
         "CHAOS",
-        "DAMNED",
-        "CULTIST MOB",
-        "UNDIVIDED",
+        "GRENADES",
+        "BATTLELINE",
+        "INFANTRY",
         "SHADOW LEGION",
-        "BATTLELINE",
-        "INFANTRY",
-        "BATTLELINE",
+        "UNDIVIDED",
+        "CULTIST MOB",
+        "DAMNED",
         "CHAOS",
         "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "CULTIST MOB",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
         "BATTLELINE",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
         "CULTIST MOB",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
         "BATTLELINE",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
+        "INFANTRY",
         "CULTIST MOB",
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "INFANTRY",
-        "INFANTRY",
-        "GRENADES",
-        "CHAOS",
-        "DAMNED",
-        "CULTIST MOB",
         "UNDIVIDED",
-        "SHADOW LEGION"
+        "CULTIST MOB",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "BATTLELINE",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULTIST MOB",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "BATTLELINE",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "DAMNED",
+        "CHAOS",
+        "GRENADES",
+        "BATTLELINE",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "CULTIST MOB"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -11232,17 +11233,19 @@
       ],
       "weapons": [
         {
-          "name": "Brutal assault weapon",
+          "name": "Autopistol",
           "profiles": [
             {
-              "name": "Brutal assault weapon",
-              "range": "Melee",
-              "A": "2",
+              "name": "Autopistol",
+              "range": 12,
+              "A": "1",
               "skill": 4,
               "S": 3,
               "AP": 0,
               "D": "1",
-              "abilities": []
+              "abilities": [
+                "pistol"
+              ]
             }
           ]
         },
@@ -11264,19 +11267,17 @@
           ]
         },
         {
-          "name": "Autopistol",
+          "name": "Brutal assault weapon",
           "profiles": [
             {
-              "name": "Autopistol",
-              "range": 12,
-              "A": "1",
+              "name": "Brutal assault weapon",
+              "range": "Melee",
+              "A": "2",
               "skill": 4,
               "S": 3,
               "AP": 0,
               "D": "1",
-              "abilities": [
-                "pistol"
-              ]
+              "abilities": []
             }
           ]
         }
@@ -11318,30 +11319,30 @@
       "name": "Accursed Cultists",
       "role": "Infantry",
       "keywords": [
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHAOS",
         "DAMNED",
+        "INFANTRY",
         "ACCURSED CULTISTS",
         "UNDIVIDED",
         "SHADOW LEGION",
         "INFANTRY",
         "CHAOS",
-        "DAMNED",
+        "INFANTRY",
         "SHADOW LEGION",
         "UNDIVIDED",
+        "ACCURSED CULTISTS",
+        "DAMNED",
+        "CHAOS",
         "SHADOW LEGION",
-        "INFANTRY",
-        "CHAOS",
-        "DAMNED",
-        "ACCURSED CULTISTS",
         "UNDIVIDED",
-        "INFANTRY",
-        "CHAOS",
-        "DAMNED",
         "ACCURSED CULTISTS",
-        "ACCURSED CULTISTS"
+        "DAMNED",
+        "CHAOS",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "ACCURSED CULTISTS",
+        "DAMNED",
+        "CHAOS"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA",
@@ -11498,41 +11499,41 @@
       "name": "Fellgor Beastmen",
       "role": "Infantry",
       "keywords": [
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
-        "SHADOW LEGION",
         "UNDIVIDED",
-        "FELLGOR BEASTMEN",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
         "DAMNED",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
-        "UNDIVIDED",
         "FELLGOR BEASTMEN",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
         "DAMNED",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "SHADOW LEGION",
-        "UNDIVIDED",
         "FELLGOR BEASTMEN",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "CHAOS",
         "DAMNED",
-        "CHAOS",
+        "FELLGOR BEASTMEN",
+        "UNDIVIDED",
+        "SHADOW LEGION",
         "GRENADES",
         "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "FELLGOR BEASTMEN",
+        "GRENADES",
+        "CHAOS",
         "DAMNED",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
         "FELLGOR BEASTMEN",
-        "DAMNED"
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
+        "DAMNED",
+        "FELLGOR BEASTMEN"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES",
@@ -11630,68 +11631,8 @@
       ],
       "weapons": [
         {
-          "name": "Great weapon",
-          "profiles": [
-            {
-              "name": "Great weapon",
-              "range": "Melee",
-              "A": "2",
-              "skill": 5,
-              "S": 8,
-              "AP": -1,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Chainsword",
-          "profiles": [
-            {
-              "name": "Chainsword",
-              "range": "Melee",
-              "A": "3",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
           "name": "Corrupted stave",
           "profiles": [
-            {
-              "name": "Corrupted stave",
-              "range": 18,
-              "A": "D3",
-              "skill": 4,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "devastating wounds",
-                "psychic"
-              ]
-            },
             {
               "name": "Corrupted stave",
               "range": "Melee",
@@ -11700,6 +11641,19 @@
               "S": 4,
               "AP": -1,
               "D": "D3",
+              "abilities": [
+                "devastating wounds",
+                "psychic"
+              ]
+            },
+            {
+              "name": "Corrupted stave",
+              "range": 18,
+              "A": "D3",
+              "skill": 4,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
               "abilities": [
                 "devastating wounds",
                 "psychic"
@@ -11738,6 +11692,21 @@
           ]
         },
         {
+          "name": "Great weapon",
+          "profiles": [
+            {
+              "name": "Great weapon",
+              "range": "Melee",
+              "A": "2",
+              "skill": 5,
+              "S": 8,
+              "AP": -1,
+              "D": "2",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Close combat weapon",
           "profiles": [
             {
@@ -11749,6 +11718,23 @@
               "AP": 0,
               "D": "1",
               "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
             }
           ]
         },
@@ -11766,6 +11752,21 @@
               "abilities": [
                 "pistol"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Chainsword",
+          "profiles": [
+            {
+              "name": "Chainsword",
+              "range": "Melee",
+              "A": "3",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": []
             }
           ]
         }
@@ -11803,16 +11804,10 @@
       "name": "Traitor Guardsmen Squad",
       "role": "Infantry",
       "keywords": [
-        "CHAOS",
-        "DAMNED",
-        "UNDIVIDED",
-        "INFANTRY",
-        "GRENADES",
         "SHADOW LEGION",
-        "UNDIVIDED",
         "INFANTRY",
         "GRENADES",
-        "DAMNED",
+        "CHAOS",
         "DAMNED",
         "TRAITOR GUARDSMEN SQUAD",
         "UNDIVIDED",
@@ -11820,24 +11815,30 @@
         "INFANTRY",
         "GRENADES",
         "CHAOS",
-        "CHAOS",
-        "TRAITOR GUARDSMEN SQUAD",
+        "DAMNED",
         "TRAITOR GUARDSMEN SQUAD",
         "UNDIVIDED",
-        "DAMNED",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
         "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
+        "DAMNED",
+        "TRAITOR GUARDSMEN SQUAD",
         "UNDIVIDED",
-        "TRAITOR GUARDSMEN SQUAD",
-        "DAMNED",
-        "CHAOS",
-        "GRENADES",
-        "INFANTRY",
         "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
+        "DAMNED",
         "TRAITOR GUARDSMEN SQUAD",
-        "SHADOW LEGION"
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "GRENADES",
+        "CHAOS",
+        "DAMNED",
+        "TRAITOR GUARDSMEN SQUAD",
+        "UNDIVIDED"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA",
@@ -11950,6 +11951,119 @@
       ],
       "weapons": [
         {
+          "name": "Boltgun",
+          "profiles": [
+            {
+              "name": "Boltgun",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Corrupted pistol",
+          "profiles": [
+            {
+              "name": "Corrupted pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Cultist grenade launcher",
+          "profiles": [
+            {
+              "name": "frag",
+              "range": 24,
+              "A": "D3",
+              "skill": 4,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "blast"
+              ]
+            },
+            {
+              "name": "krak",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 9,
+              "AP": -2,
+              "D": "D3",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Cultist sniper rifle",
+          "profiles": [
+            {
+              "name": "Cultist sniper rifle",
+              "range": 36,
+              "A": "1",
+              "skill": 4,
+              "S": 4,
+              "AP": -2,
+              "D": "2",
+              "abilities": [
+                "heavy",
+                "precision"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Lasgun",
+          "profiles": [
+            {
+              "name": "Lasgun",
+              "range": 24,
+              "A": "1",
+              "skill": 4,
+              "S": 3,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Meltagun",
+          "profiles": [
+            {
+              "name": "Meltagun",
+              "range": 12,
+              "A": "1",
+              "skill": 4,
+              "S": 9,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Plasma gun",
           "profiles": [
             {
@@ -11980,41 +12094,6 @@
           ]
         },
         {
-          "name": "Boltgun",
-          "profiles": [
-            {
-              "name": "Boltgun",
-              "range": 24,
-              "A": "1",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "rapid fire 1"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Flamer",
-          "profiles": [
-            {
-              "name": "Flamer",
-              "range": 12,
-              "A": "D6",
-              "skill": null,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "ignores cover",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Chainsword",
           "profiles": [
             {
@@ -12026,100 +12105,6 @@
               "AP": 0,
               "D": "1",
               "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Meltagun",
-          "profiles": [
-            {
-              "name": "Meltagun",
-              "range": 12,
-              "A": "1",
-              "skill": 4,
-              "S": 9,
-              "AP": -4,
-              "D": "D6",
-              "abilities": [
-                "melta 2"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Power weapon",
-          "profiles": [
-            {
-              "name": "Power weapon",
-              "range": "Melee",
-              "A": "2",
-              "skill": 4,
-              "S": 4,
-              "AP": -2,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Cultist sniper rifle",
-          "profiles": [
-            {
-              "name": "Cultist sniper rifle",
-              "range": 36,
-              "A": "1",
-              "skill": 4,
-              "S": 4,
-              "AP": -2,
-              "D": "2",
-              "abilities": [
-                "heavy",
-                "precision"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Cultist grenade launcher",
-          "profiles": [
-            {
-              "name": "krak",
-              "range": 24,
-              "A": "1",
-              "skill": 4,
-              "S": 9,
-              "AP": -2,
-              "D": "D3",
-              "abilities": []
-            },
-            {
-              "name": "frag",
-              "range": 24,
-              "A": "D3",
-              "skill": 4,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "blast"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Corrupted pistol",
-          "profiles": [
-            {
-              "name": "Corrupted pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 4,
-              "S": 4,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
             }
           ]
         },
@@ -12139,18 +12124,34 @@
           ]
         },
         {
-          "name": "Lasgun",
+          "name": "Power weapon",
           "profiles": [
             {
-              "name": "Lasgun",
-              "range": 24,
-              "A": "1",
+              "name": "Power weapon",
+              "range": "Melee",
+              "A": "2",
               "skill": 4,
-              "S": 3,
+              "S": 4,
+              "AP": -2,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Flamer",
+          "profiles": [
+            {
+              "name": "Flamer",
+              "range": 12,
+              "A": "D6",
+              "skill": null,
+              "S": 4,
               "AP": 0,
               "D": "1",
               "abilities": [
-                "rapid fire 1"
+                "ignores cover",
+                "torrent"
               ]
             }
           ]
@@ -12189,14 +12190,10 @@
       "name": "Dark Apostle",
       "role": "Infantry Character",
       "keywords": [
-        "CHARACTER",
-        "CHAOS",
         "GRENADES",
-        "INFANTRY",
-        "UNDIVIDED",
-        "SHADOW LEGION",
         "DARK APOSTLE",
         "CHARACTER",
+        "CHAOS",
         "GRENADES",
         "INFANTRY",
         "SHADOW LEGION",
@@ -12204,22 +12201,26 @@
         "DARK APOSTLE",
         "CHARACTER",
         "CHAOS",
-        "GRENADES",
         "INFANTRY",
-        "SHADOW LEGION",
+        "INFANTRY",
+        "CHARACTER",
         "CHAOS",
+        "GRENADES",
         "SHADOW LEGION",
         "UNDIVIDED",
+        "GRENADES",
         "DARK APOSTLE",
         "CHARACTER",
         "CHAOS",
         "GRENADES",
         "INFANTRY",
+        "SHADOW LEGION",
         "UNDIVIDED",
         "DARK APOSTLE",
+        "SHADOW LEGION",
+        "UNDIVIDED",
         "CHARACTER",
         "CHAOS",
-        "GRENADES",
         "INFANTRY",
         "SHADOW LEGION",
         "UNDIVIDED",
@@ -12304,21 +12305,6 @@
           ]
         },
         {
-          "name": "Accursed crozius",
-          "profiles": [
-            {
-              "name": "Accursed crozius",
-              "range": "Melee",
-              "A": "5",
-              "skill": 2,
-              "S": 6,
-              "AP": -1,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
           "name": "Bolt pistol",
           "profiles": [
             {
@@ -12332,6 +12318,21 @@
               "abilities": [
                 "pistol"
               ]
+            }
+          ]
+        },
+        {
+          "name": "Accursed crozius",
+          "profiles": [
+            {
+              "name": "Accursed crozius",
+              "range": "Melee",
+              "A": "5",
+              "skill": 2,
+              "S": 6,
+              "AP": -1,
+              "D": "2",
+              "abilities": []
             }
           ]
         }
@@ -12364,9 +12365,9 @@
         }
       ],
       "leads": [
+        "Chosen",
         "Legionaries",
         "Accursed Cultists",
-        "Chosen",
         "Cultist Mob"
       ],
       "isSupport": false,
@@ -12389,21 +12390,21 @@
       "name": "Havocs",
       "role": "Infantry",
       "keywords": [
-        "SHADOW LEGION",
-        "HAVOCS",
-        "SHADOW LEGION",
         "INFANTRY",
         "CHAOS",
-        "HAVOCS",
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "INFANTRY",
-        "CHAOS",
-        "UNDIVIDED",
         "UNDIVIDED",
         "HAVOCS",
         "CHAOS",
-        "INFANTRY"
+        "INFANTRY",
+        "HAVOCS",
+        "CHAOS",
+        "INFANTRY",
+        "UNDIVIDED",
+        "UNDIVIDED",
+        "HAVOCS",
+        "SHADOW LEGION",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES",
@@ -12530,6 +12531,21 @@
       ],
       "weapons": [
         {
+          "name": "Power fist",
+          "profiles": [
+            {
+              "name": "Power fist",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
+            }
+          ]
+        },
+        {
           "name": "Havoc missile launcher",
           "profiles": [
             {
@@ -12557,12 +12573,45 @@
           ]
         },
         {
-          "name": "Havoc reaper chaincannon",
+          "name": "Havoc autocannon",
           "profiles": [
             {
-              "name": "Havoc reaper chaincannon",
-              "range": 24,
-              "A": "8",
+              "name": "Havoc autocannon",
+              "range": 48,
+              "A": "2",
+              "skill": 3,
+              "S": 9,
+              "AP": -1,
+              "D": "3",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Flamer",
+          "profiles": [
+            {
+              "name": "Flamer",
+              "range": 12,
+              "A": "D6",
+              "skill": null,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "ignores cover",
+                "torrent"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "3",
               "skill": 3,
               "S": 5,
               "AP": 0,
@@ -12572,18 +12621,93 @@
           ]
         },
         {
-          "name": "Meltagun",
+          "name": "Accursed weapon",
           "profiles": [
             {
-              "name": "Meltagun",
+              "name": "Accursed weapon",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Havoc lascannon",
+          "profiles": [
+            {
+              "name": "Havoc lascannon",
+              "range": 48,
+              "A": "1",
+              "skill": 3,
+              "S": 12,
+              "AP": -3,
+              "D": "D6+1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "supercharge",
               "range": 12,
               "A": "1",
               "skill": 3,
-              "S": 9,
-              "AP": -4,
-              "D": "D6",
+              "S": 8,
+              "AP": -3,
+              "D": "2",
               "abilities": [
-                "melta 2"
+                "hazardous",
+                "pistol"
+              ]
+            },
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "5",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Havoc heavy bolter",
+          "profiles": [
+            {
+              "name": "Havoc heavy bolter",
+              "range": 36,
+              "A": "3",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "2",
+              "abilities": [
+                "sustained hits 1"
               ]
             }
           ]
@@ -12619,156 +12743,33 @@
           ]
         },
         {
-          "name": "Plasma pistol",
+          "name": "Meltagun",
           "profiles": [
             {
-              "name": "standard",
+              "name": "Meltagun",
               "range": 12,
               "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            },
-            {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Accursed weapon",
-          "profiles": [
-            {
-              "name": "Accursed weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Astartes chainsword",
-          "profiles": [
-            {
-              "name": "Astartes chainsword",
-              "range": "Melee",
-              "A": "5",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
-            {
-              "name": "Close combat weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Power fist",
-          "profiles": [
-            {
-              "name": "Power fist",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Flamer",
-          "profiles": [
-            {
-              "name": "Flamer",
-              "range": 12,
-              "A": "D6",
-              "skill": null,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "ignores cover",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Havoc lascannon",
-          "profiles": [
-            {
-              "name": "Havoc lascannon",
-              "range": 48,
-              "A": "1",
-              "skill": 3,
-              "S": 12,
-              "AP": -3,
-              "D": "D6+1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Havoc heavy bolter",
-          "profiles": [
-            {
-              "name": "Havoc heavy bolter",
-              "range": 36,
-              "A": "3",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "2",
-              "abilities": [
-                "sustained hits 1"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Havoc autocannon",
-          "profiles": [
-            {
-              "name": "Havoc autocannon",
-              "range": 48,
-              "A": "2",
               "skill": 3,
               "S": 9,
-              "AP": -1,
-              "D": "3",
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Havoc reaper chaincannon",
+          "profiles": [
+            {
+              "name": "Havoc reaper chaincannon",
+              "range": 24,
+              "A": "8",
+              "skill": 3,
+              "S": 5,
+              "AP": 0,
+              "D": "1",
               "abilities": []
             }
           ]
@@ -12831,40 +12832,40 @@
       "name": "Legionaries",
       "role": "Battleline",
       "keywords": [
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "BATTLELINE",
         "CHAOS",
-        "LEGIONARIES",
+        "BATTLELINE",
         "INFANTRY",
-        "BATTLELINE",
-        "CHAOS",
-        "GRENADES",
-        "BATTLELINE",
-        "UNDIVIDED",
         "SHADOW LEGION",
-        "LEGIONARIES",
+        "UNDIVIDED",
         "LEGIONARIES",
         "GRENADES",
-        "UNDIVIDED",
-        "INFANTRY",
         "CHAOS",
-        "GRENADES",
-        "INFANTRY",
         "BATTLELINE",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "LEGIONARIES",
         "CHAOS",
+        "BATTLELINE",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "LEGIONARIES",
+        "GRENADES",
+        "CHAOS",
+        "BATTLELINE",
+        "INFANTRY",
+        "GRENADES",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "LEGIONARIES",
+        "GRENADES",
+        "CHAOS",
+        "BATTLELINE",
+        "INFANTRY",
         "LEGIONARIES",
         "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "BATTLELINE",
-        "CHAOS",
-        "GRENADES",
-        "LEGIONARIES",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "SHADOW LEGION",
-        "INFANTRY",
         "GRENADES"
       ],
       "factionKeywords": [
@@ -13062,6 +13063,51 @@
       ],
       "weapons": [
         {
+          "name": "Heavy melee weapon",
+          "profiles": [
+            {
+              "name": "Heavy melee weapon",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Plasma gun",
+          "profiles": [
+            {
+              "name": "supercharge",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "rapid fire 1"
+              ]
+            },
+            {
+              "name": "standard",
+              "range": 24,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Flamer",
           "profiles": [
             {
@@ -13114,6 +13160,38 @@
           ]
         },
         {
+          "name": "Astartes chainsword",
+          "profiles": [
+            {
+              "name": "Astartes chainsword",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Lascannon",
+          "profiles": [
+            {
+              "name": "Lascannon",
+              "range": 48,
+              "A": "1",
+              "skill": 4,
+              "S": 12,
+              "AP": -3,
+              "D": "D6+1",
+              "abilities": [
+                "heavy"
+              ]
+            }
+          ]
+        },
+        {
           "name": "Boltgun",
           "profiles": [
             {
@@ -13124,6 +13202,21 @@
               "S": 5,
               "AP": -1,
               "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Havoc autocannon",
+          "profiles": [
+            {
+              "name": "Havoc autocannon",
+              "range": 48,
+              "A": "2",
+              "skill": 4,
+              "S": 9,
+              "AP": -1,
+              "D": "3",
               "abilities": []
             }
           ]
@@ -13164,23 +13257,6 @@
           ]
         },
         {
-          "name": "Lascannon",
-          "profiles": [
-            {
-              "name": "Lascannon",
-              "range": 48,
-              "A": "1",
-              "skill": 4,
-              "S": 12,
-              "AP": -3,
-              "D": "D6+1",
-              "abilities": [
-                "heavy"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Missile launcher",
           "profiles": [
             {
@@ -13211,41 +13287,38 @@
           ]
         },
         {
-          "name": "Plasma pistol",
+          "name": "Close combat weapon",
           "profiles": [
             {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "3",
               "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "pistol"
-              ]
-            },
-            {
-              "name": "standard",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
+              "S": 5,
+              "AP": 0,
               "D": "1",
-              "abilities": [
-                "pistol"
-              ]
+              "abilities": []
             }
           ]
         },
         {
-          "name": "Plasma gun",
+          "name": "Plasma pistol",
           "profiles": [
             {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            },
+            {
               "name": "supercharge",
-              "range": 24,
+              "range": 12,
               "A": "1",
               "skill": 3,
               "S": 8,
@@ -13253,19 +13326,7 @@
               "D": "2",
               "abilities": [
                 "hazardous",
-                "rapid fire 1"
-              ]
-            },
-            {
-              "name": "standard",
-              "range": 24,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "rapid fire 1"
+                "pistol"
               ]
             }
           ]
@@ -13298,66 +13359,6 @@
               "S": 5,
               "AP": -2,
               "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Astartes chainsword",
-          "profiles": [
-            {
-              "name": "Astartes chainsword",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
-            {
-              "name": "Close combat weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Heavy melee weapon",
-          "profiles": [
-            {
-              "name": "Heavy melee weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Havoc autocannon",
-          "profiles": [
-            {
-              "name": "Havoc autocannon",
-              "range": 48,
-              "A": "2",
-              "skill": 4,
-              "S": 9,
-              "AP": -1,
-              "D": "3",
               "abilities": []
             }
           ]
@@ -13405,41 +13406,41 @@
       "name": "Master Of Possession",
       "role": "Infantry Character",
       "keywords": [
-        "INFANTRY",
         "UNDIVIDED",
-        "SHADOW LEGION",
+        "INFANTRY",
+        "CHARACTER",
+        "PSYKER",
         "CHAOS",
+        "MASTER OF POSSESSION",
+        "SHADOW LEGION",
+        "INFANTRY",
         "CHARACTER",
         "PSYKER",
         "CHAOS",
         "MASTER OF POSSESSION",
         "SHADOW LEGION",
         "INFANTRY",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "UNDIVIDED",
-        "MASTER OF POSSESSION",
-        "CHAOS",
-        "PSYKER",
-        "PSYKER",
         "CHARACTER",
+        "PSYKER",
+        "CHAOS",
+        "MASTER OF POSSESSION",
+        "UNDIVIDED",
+        "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
-        "SHADOW LEGION",
+        "PSYKER",
+        "CHAOS",
         "MASTER OF POSSESSION",
         "UNDIVIDED",
-        "MASTER OF POSSESSION",
-        "CHAOS",
-        "PSYKER",
-        "CHARACTER",
+        "SHADOW LEGION",
         "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "MASTER OF POSSESSION",
-        "CHAOS",
+        "CHARACTER",
         "PSYKER",
-        "CHARACTER"
+        "CHAOS",
+        "MASTER OF POSSESSION",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "UNDIVIDED"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES",
@@ -13482,23 +13483,6 @@
       "wargearOptions": [],
       "weapons": [
         {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Rite of Possession",
           "profiles": [
             {
@@ -13530,6 +13514,23 @@
                 "pistol",
                 "precision",
                 "psychic"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "1",
+              "abilities": [
+                "pistol"
               ]
             }
           ]
@@ -13601,33 +13602,33 @@
       "role": "Infantry",
       "keywords": [
         "POSSESSED",
-        "DAEMON",
+        "INFANTRY",
         "CHAOS",
-        "SHADOW LEGION",
-        "UNDIVIDED",
+        "DAEMON",
         "POSSESSED",
-        "DAEMON",
-        "SHADOW LEGION",
-        "CHAOS",
-        "INFANTRY",
-        "SHADOW LEGION",
         "UNDIVIDED",
-        "INFANTRY",
-        "UNDIVIDED",
-        "POSSESSED",
-        "DAEMON",
-        "CHAOS",
-        "INFANTRY",
-        "INFANTRY",
-        "CHAOS",
-        "DAEMON",
         "SHADOW LEGION",
+        "INFANTRY",
+        "CHAOS",
+        "DAEMON",
         "POSSESSED",
-        "UNDIVIDED"
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "CHAOS",
+        "DAEMON",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "CHAOS",
+        "DAEMON",
+        "POSSESSED",
+        "UNDIVIDED",
+        "SHADOW LEGION"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -13755,54 +13756,54 @@
       "name": "Raptors",
       "role": "Infantry",
       "keywords": [
-        "GRENADES",
         "JUMP PACKS",
-        "FLY",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "RAPTORS",
+        "GRENADES",
         "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
-        "FLY",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
         "RAPTORS",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
         "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
-        "FLY",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
         "RAPTORS",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
         "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
-        "FLY",
-        "INFANTRY",
-        "SHADOW LEGION",
+        "RAPTORS",
         "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
         "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
-        "FLY",
-        "INFANTRY",
         "RAPTORS",
-        "SHADOW LEGION",
         "UNDIVIDED",
-        "RAPTORS",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
         "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
-        "FLY",
+        "RAPTORS",
+        "SHADOW LEGION",
         "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
+        "CHAOS",
+        "RAPTORS",
+        "UNDIVIDED",
         "SHADOW LEGION",
         "UNDIVIDED",
-        "RAPTORS",
-        "CHAOS"
+        "INFANTRY",
+        "FLY"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA",
@@ -13982,15 +13983,127 @@
       ],
       "weapons": [
         {
-          "name": "Astartes chainsword",
+          "name": "Heavy melee weapon",
           "profiles": [
             {
-              "name": "Astartes chainsword",
+              "name": "Heavy melee weapon",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 8,
+              "AP": -2,
+              "D": "2",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Mutations",
+          "profiles": [
+            {
+              "name": "Mutations",
               "range": "Melee",
               "A": "4",
               "skill": 3,
               "S": 5,
+              "AP": -2,
+              "D": "1",
+              "abilities": []
+            }
+          ]
+        },
+        {
+          "name": "Flamer",
+          "profiles": [
+            {
+              "name": "Flamer",
+              "range": 12,
+              "A": "D6",
+              "skill": null,
+              "S": 4,
+              "AP": 0,
+              "D": "1",
+              "abilities": [
+                "ignores cover",
+                "torrent"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bolt pistol",
+          "profiles": [
+            {
+              "name": "Bolt pistol",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 5,
               "AP": -1,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Meltagun",
+          "profiles": [
+            {
+              "name": "Meltagun",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 9,
+              "AP": -4,
+              "D": "D6",
+              "abilities": [
+                "melta 2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Plasma pistol",
+          "profiles": [
+            {
+              "name": "standard",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 7,
+              "AP": -2,
+              "D": "1",
+              "abilities": [
+                "pistol"
+              ]
+            },
+            {
+              "name": "supercharge",
+              "range": 12,
+              "A": "1",
+              "skill": 3,
+              "S": 8,
+              "AP": -3,
+              "D": "2",
+              "abilities": [
+                "hazardous",
+                "pistol"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Close combat weapon",
+          "profiles": [
+            {
+              "name": "Close combat weapon",
+              "range": "Melee",
+              "A": "3",
+              "skill": 3,
+              "S": 5,
+              "AP": 0,
               "D": "1",
               "abilities": []
             }
@@ -14042,129 +14155,17 @@
           ]
         },
         {
-          "name": "Meltagun",
+          "name": "Astartes chainsword",
           "profiles": [
             {
-              "name": "Meltagun",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 9,
-              "AP": -4,
-              "D": "D6",
-              "abilities": [
-                "melta 2"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Flamer",
-          "profiles": [
-            {
-              "name": "Flamer",
-              "range": 12,
-              "A": "D6",
-              "skill": null,
-              "S": 4,
-              "AP": 0,
-              "D": "1",
-              "abilities": [
-                "ignores cover",
-                "torrent"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Mutations",
-          "profiles": [
-            {
-              "name": "Mutations",
+              "name": "Astartes chainsword",
               "range": "Melee",
               "A": "4",
               "skill": 3,
               "S": 5,
-              "AP": -2,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Heavy melee weapon",
-          "profiles": [
-            {
-              "name": "Heavy melee weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 8,
-              "AP": -2,
-              "D": "2",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Close combat weapon",
-          "profiles": [
-            {
-              "name": "Close combat weapon",
-              "range": "Melee",
-              "A": "3",
-              "skill": 3,
-              "S": 5,
-              "AP": 0,
-              "D": "1",
-              "abilities": []
-            }
-          ]
-        },
-        {
-          "name": "Plasma pistol",
-          "profiles": [
-            {
-              "name": "supercharge",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 8,
-              "AP": -3,
-              "D": "2",
-              "abilities": [
-                "hazardous",
-                "pistol"
-              ]
-            },
-            {
-              "name": "standard",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 7,
-              "AP": -2,
-              "D": "1",
-              "abilities": [
-                "pistol"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Bolt pistol",
-          "profiles": [
-            {
-              "name": "Bolt pistol",
-              "range": 12,
-              "A": "1",
-              "skill": 3,
-              "S": 5,
               "AP": -1,
               "D": "1",
-              "abilities": [
-                "pistol"
-              ]
+              "abilities": []
             }
           ]
         }
@@ -14229,12 +14230,6 @@
       "name": "Sorcerer",
       "role": "Infantry Character",
       "keywords": [
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "SHADOW LEGION",
-        "GRENADES",
-        "CHAOS",
         "SORCERER",
         "UNDIVIDED",
         "SHADOW LEGION",
@@ -14249,12 +14244,13 @@
         "INFANTRY",
         "CHARACTER",
         "PSYKER",
-        "PSYKER",
         "GRENADES",
+        "CHAOS",
+        "SORCERER",
+        "UNDIVIDED",
+        "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
-        "CHAOS",
-        "PSYKER",
         "PSYKER",
         "GRENADES",
         "CHAOS",
@@ -14263,12 +14259,12 @@
         "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
-        "SORCERER",
+        "PSYKER",
         "GRENADES",
-        "CHAOS",
+        "SHADOW LEGION",
         "SORCERER",
         "UNDIVIDED",
-        "UNDIVIDED",
+        "SHADOW LEGION",
         "INFANTRY",
         "CHARACTER",
         "PSYKER",
@@ -14276,11 +14272,16 @@
         "CHAOS",
         "SORCERER",
         "UNDIVIDED",
-        "SHADOW LEGION"
+        "CHAOS",
+        "INFANTRY",
+        "GRENADES",
+        "CHARACTER",
+        "PSYKER",
+        "CHAOS"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -14319,23 +14320,6 @@
       "wargearOptions": [],
       "weapons": [
         {
-          "name": "Force weapon",
-          "profiles": [
-            {
-              "name": "Force weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 6,
-              "AP": -1,
-              "D": "D3",
-              "abilities": [
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Bolt pistol",
           "profiles": [
             {
@@ -14356,6 +14340,18 @@
           "name": "Infernal Gaze",
           "profiles": [
             {
+              "name": "witchfire",
+              "range": 24,
+              "A": "D6",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "D3",
+              "abilities": [
+                "psychic"
+              ]
+            },
+            {
               "name": "focused witchfire",
               "range": 24,
               "A": "D6",
@@ -14368,13 +14364,18 @@
                 "hazardous",
                 "psychic"
               ]
-            },
+            }
+          ]
+        },
+        {
+          "name": "Force weapon",
+          "profiles": [
             {
-              "name": "witchfire",
-              "range": 24,
-              "A": "D6",
+              "name": "Force weapon",
+              "range": "Melee",
+              "A": "4",
               "skill": 3,
-              "S": 5,
+              "S": 6,
               "AP": -1,
               "D": "D3",
               "abilities": [
@@ -14430,35 +14431,9 @@
       "name": "Sorcerer In Terminator Armour",
       "role": "Infantry Character",
       "keywords": [
-        "TERMINATOR",
-        "SORCERER IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "PSYKER",
-        "CHAOS",
-        "TERMINATOR",
-        "SORCERER IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "CHARACTER",
-        "INFANTRY",
-        "CHAOS",
-        "TERMINATOR",
-        "SORCERER IN TERMINATOR ARMOUR",
-        "UNDIVIDED",
-        "PSYKER",
         "CHARACTER",
         "INFANTRY",
         "SHADOW LEGION",
-        "UNDIVIDED",
-        "SORCERER IN TERMINATOR ARMOUR",
-        "TERMINATOR",
-        "CHAOS",
-        "PSYKER",
-        "CHARACTER",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "CHARACTER",
         "UNDIVIDED",
         "SORCERER IN TERMINATOR ARMOUR",
         "TERMINATOR",
@@ -14472,12 +14447,38 @@
         "TERMINATOR",
         "CHAOS",
         "PSYKER",
-        "SHADOW LEGION",
-        "INFANTRY",
-        "CHARACTER",
-        "SHADOW LEGION",
         "PSYKER",
-        "CHAOS"
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "SORCERER IN TERMINATOR ARMOUR",
+        "TERMINATOR",
+        "CHAOS",
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "SORCERER IN TERMINATOR ARMOUR",
+        "TERMINATOR",
+        "CHAOS",
+        "PSYKER",
+        "CHARACTER",
+        "INFANTRY",
+        "SHADOW LEGION",
+        "UNDIVIDED",
+        "SORCERER IN TERMINATOR ARMOUR",
+        "TERMINATOR",
+        "CHAOS",
+        "PSYKER",
+        "CHARACTER",
+        "CHAOS",
+        "TERMINATOR",
+        "SORCERER IN TERMINATOR ARMOUR",
+        "UNDIVIDED",
+        "PSYKER",
+        "SHADOW LEGION",
+        "INFANTRY"
       ],
       "factionKeywords": [
         "HERETIC ASTARTES",
@@ -14548,54 +14549,6 @@
       ],
       "weapons": [
         {
-          "name": "Infernal Gaze",
-          "profiles": [
-            {
-              "name": "witchfire",
-              "range": 24,
-              "A": "D6",
-              "skill": 3,
-              "S": 5,
-              "AP": -1,
-              "D": "D3",
-              "abilities": [
-                "psychic"
-              ]
-            },
-            {
-              "name": "focused witchfire",
-              "range": 24,
-              "A": "D6",
-              "skill": 3,
-              "S": 6,
-              "AP": -2,
-              "D": "D3",
-              "abilities": [
-                "devastating wounds",
-                "hazardous",
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Force weapon",
-          "profiles": [
-            {
-              "name": "Force weapon",
-              "range": "Melee",
-              "A": "4",
-              "skill": 3,
-              "S": 6,
-              "AP": -1,
-              "D": "D3",
-              "abilities": [
-                "psychic"
-              ]
-            }
-          ]
-        },
-        {
           "name": "Combi-bolter",
           "profiles": [
             {
@@ -14627,6 +14580,54 @@
                 "anti-infantry 4+",
                 "devastating wounds",
                 "rapid fire 1"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Infernal Gaze",
+          "profiles": [
+            {
+              "name": "focused witchfire",
+              "range": 24,
+              "A": "D6",
+              "skill": 3,
+              "S": 6,
+              "AP": -2,
+              "D": "D3",
+              "abilities": [
+                "devastating wounds",
+                "hazardous",
+                "psychic"
+              ]
+            },
+            {
+              "name": "witchfire",
+              "range": 24,
+              "A": "D6",
+              "skill": 3,
+              "S": 5,
+              "AP": -1,
+              "D": "D3",
+              "abilities": [
+                "psychic"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Force weapon",
+          "profiles": [
+            {
+              "name": "Force weapon",
+              "range": "Melee",
+              "A": "4",
+              "skill": 3,
+              "S": 6,
+              "AP": -1,
+              "D": "D3",
+              "abilities": [
+                "psychic"
               ]
             }
           ]
@@ -14687,30 +14688,21 @@
       "name": "Warp Talons",
       "role": "Infantry",
       "keywords": [
-        "FLY",
         "SHADOW LEGION",
-        "INFANTRY",
+        "WARP TALONS",
         "UNDIVIDED",
-        "WARP TALONS",
-        "DAEMON",
-        "CHAOS",
-        "WARP TALONS",
-        "GRENADES",
         "JUMP PACKS",
         "FLY",
         "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
-        "WARP TALONS",
-        "DAEMON",
-        "CHAOS",
-        "GRENADES",
-        "JUMP PACKS",
         "FLY",
-        "INFANTRY",
-        "SHADOW LEGION",
-        "UNDIVIDED",
+        "JUMP PACKS",
+        "GRENADES",
+        "CHAOS",
+        "DAEMON",
         "WARP TALONS",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
         "DAEMON",
         "CHAOS",
         "GRENADES",
@@ -14719,13 +14711,14 @@
         "INFANTRY",
         "SHADOW LEGION",
         "UNDIVIDED",
-        "INFANTRY",
-        "JUMP PACKS",
+        "WARP TALONS",
         "DAEMON",
         "CHAOS",
         "GRENADES",
-        "JUMP PACKS",
-        "FLY",
+        "WARP TALONS",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
         "FLY",
         "JUMP PACKS",
         "GRENADES",
@@ -14743,17 +14736,25 @@
         "WARP TALONS",
         "UNDIVIDED",
         "SHADOW LEGION",
-        "UNDIVIDED",
-        "SHADOW LEGION",
         "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
         "GRENADES",
         "CHAOS",
         "DAEMON",
-        "WARP TALONS"
+        "WARP TALONS",
+        "UNDIVIDED",
+        "SHADOW LEGION",
+        "INFANTRY",
+        "FLY",
+        "JUMP PACKS",
+        "GRENADES",
+        "CHAOS",
+        "DAEMON"
       ],
       "factionKeywords": [
-        "HERETIC ASTARTES",
-        "LEGIONES DAEMONICA"
+        "LEGIONES DAEMONICA",
+        "HERETIC ASTARTES"
       ],
       "models": [
         {
@@ -14870,14 +14871,14 @@
       "name": "Tormentbringer",
       "role": "Mounted Character",
       "keywords": [
-        "SLAANESH",
+        "DAEMON",
+        "CHAOS",
+        "PSYKER",
+        "CHARACTER",
         "TORMENTBRINGER ON EXALTED SEEKER CHARIOT",
         "MOUNTED",
         "SHADOW LEGION",
-        "CHAOS",
-        "DAEMON",
-        "CHARACTER",
-        "PSYKER"
+        "SLAANESH"
       ],
       "factionKeywords": [
         "LEGIONES DAEMONICA"
