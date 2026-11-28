@@ -1082,7 +1082,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
     if (!faction) return null;
     const sheet = sheetOf(u.datasheet);
     const enh = enhancementOptions(list, faction, u);
-    const dsCol = dsColor(faction.id);
+    const dsCol = dsColor(faction.id, list.subfaction);
 
     const isSheetOpen = panelCollapse[u.uid]?.sheet !== false;
     const isEnhOpen = panelCollapse[u.uid]?.enh !== false;

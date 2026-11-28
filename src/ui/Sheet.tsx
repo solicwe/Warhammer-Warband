@@ -115,7 +115,12 @@ const CHAPTER_COLOR: Record<string, string> = {
 };
 export const armyColor = (factionId?: string, sub?: string) => readableOnDark((sub && CHAPTER_COLOR[sub]) || ARMY_COLOR[factionId ?? ''] || '#c9a13b');
 
-export const dsColor = (factionId?: string) => DS_COLOR[factionId ?? ''] ?? '#2c4440';
+/** Datasheet band of each Space Marine Chapter (dark, so white heading text reads on it). */
+const CHAPTER_DS: Record<string, string> = {
+  ULTRAMARINES: '#1b3768', 'BLOOD ANGELS': '#6e1218', 'DARK ANGELS': '#1c4a2a', 'SPACE WOLVES': '#3f5a70', 'BLACK TEMPLARS': '#3a3d42',
+  DEATHWATCH: '#3a3f47', 'IMPERIAL FISTS': '#6e5410', 'IRON HANDS': '#3c4650', 'RAVEN GUARD': '#2c3442', SALAMANDERS: '#1c5424', 'WHITE SCARS': '#6e1d1d',
+};
+export const dsColor = (factionId?: string, sub?: string) => (factionId === 'SM' && sub && CHAPTER_DS[sub]) || DS_COLOR[factionId ?? ''] || '#2c4440';
 
 interface ParsedBulletOption {
   name?: string;
@@ -178,9 +183,14 @@ export function renderAbilitiesContent(
     if (opts.length > 0) {
       out.push(
         <div key={`sec-c-${a.name}`} className="ds-sec">{a.name.toUpperCase()}</div>,
+        <div key={`sec-ci-${a.name}`} className="ds-ab small muted" style={{ fontStyle: 'italic', paddingBottom: 2 }}>
+          {rulesFaction && <AbilityBadge u={unit} a={{ ...a, sheet: abSheet, faction: rulesFaction }} />}
+          {' '}<Em text={parseBulletChoices(a.text)?.intro ?? a.text} names={names} />
+        </div>,
         ...opts.map(ab)
       );
       opts.forEach((o) => handledAbilityNames.add(o.name));
+      handledAbilityNames.add(a.name); // its own bullet list is the options above: do not draw it again in 1c
     }
   }
 
@@ -291,7 +301,7 @@ export function DatasheetView({
   const groups = statGroups(modelsWithOc);
   const names = [...sheet.abilities.map((a) => a.name), ...sheet.leads, sheet.name];
   return (
-    <div className="ds-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 8, ['--ds-band' as string]: dsColor(factionId) }}>
+    <div className="ds-sheet" style={{ display: 'flex', flexDirection: 'column', gap: 8, ['--ds-band' as string]: dsColor(factionId, list?.subfaction) }}>
       <div className="ds-head">
         <Portrait kind={tokenKind(activeKws, sheet.factionKeywords)} owner={0} character={sheet.keywords.includes('CHARACTER')} size={60} datasheet={sheet.name} editable={PHOTO_EDIT} />
         <div className="grow">
