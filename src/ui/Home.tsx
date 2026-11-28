@@ -9,7 +9,7 @@ import { Icon, Logo } from './Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
-import { IS_ADMIN, PHOTO_EDIT, setPhotoEdit, getPublishToken, setPublishToken, publishPortraits, freshPortraitCount, usePortraitsVersion } from './portraits';
+import { leaveAdmin, IS_ADMIN, PHOTO_EDIT, setPhotoEdit, getPublishToken, setPublishToken, publishPortraits, freshPortraitCount, usePortraitsVersion } from './portraits';
 
 interface Props {
   armies: Army[];
@@ -40,6 +40,7 @@ function PhotoTools() {
         <input type="checkbox" style={{ width: 20, height: 20, flex: 'none' }} checked={PHOTO_EDIT} onChange={(e) => setPhotoEdit(e.target.checked)} />
         Photo editing and export (the page reloads)
       </label>
+      <button type="button" className="btn small ghost" style={{ margin: '0 12px 8px' }} onClick={leaveAdmin}>Leave admin mode (hide this panel on this device)</button>
       {PHOTO_EDIT && (
         <>
           <div className="tiny muted" style={{ padding: '0 12px' }}>Photos changed since the last publish: {freshPortraitCount()}. Publishing uploads them to the site's GitHub repository with your own token (repo contents write). The token stays on this device.</div>

@@ -10,6 +10,7 @@ export const IS_ADMIN: boolean = (() => {
     return localStorage.getItem(ADMIN_FLAG) === '1';
   } catch { return false; }
 })();
+export function leaveAdmin() { try { localStorage.removeItem(ADMIN_FLAG); } catch { /* ignore */ } location.href = location.pathname; }
 /** Photo editing and export exist only in admin mode (?admin), and the owner can switch them off in Home, Photos (the page reloads to apply). */
 const PHOTO_FLAG = 'w40k11-photo-edit';
 export const PHOTO_EDIT: boolean = IS_ADMIN && (() => { try { return localStorage.getItem(PHOTO_FLAG) !== '0'; } catch { return true; } })();
