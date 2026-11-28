@@ -385,7 +385,7 @@ export function DatasheetView({
 }
 
 /** `model`: the model tapped on the board, listed first with its own weapons. */
-export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string; squadNum?: number }) {
+export function UnitView({ u, model, squadNum, sub }: { u: UnitState; model?: string; squadNum?: number; sub?: string }) {
   usePastePortrait(u.models.find((m) => m.isCharacter)?.source ?? u.sources?.[0] ?? u.name);
   const groups = new Map<string, { p: ModelProfileData; n: number; weapons: WeaponData[]; name: string; gear: string[]; tapped?: boolean }>();
   const activeModels = u.models.some((m) => !m.dead) ? u.models.filter((m) => !m.dead) : u.models;
@@ -507,7 +507,7 @@ export function UnitView({ u, model, squadNum }: { u: UnitState; model?: string;
           : u.factionKeywords.includes('ADEPTUS ASTARTES') ? 'SM'
           : undefined);
         return (
-          <div className="ds-sheet" style={{ ['--ds-band' as string]: dsColor(rulesFaction), borderRadius: 8, overflow: 'hidden' }}>
+          <div className="ds-sheet" style={{ ['--ds-band' as string]: dsColor(rulesFaction, sub), borderRadius: 8, overflow: 'hidden' }}>
             {renderAbilitiesContent(u.abilities, u, u.sources?.[0] ?? u.name, rulesFaction, u.abilities.map((x) => x.name))}
           </div>
         );

@@ -3160,6 +3160,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
             </div>
           )}
           <div className="small"><b>{modeUnit.name}</b> <span className="muted">· {mode.smode === 'snap' ? 'Snap Shooting' : mode.smode === 'normal' || mode.smode === 'assault' ? 'Shoot' : mode.smode === 'closeQuarters' ? 'Close-quarters' : mode.smode}{mode.target ? <> <Icon name="target" size={14} /> {U(mode.target).name}</> : targets.length ? ` · tap a target (${targets.length} in reach)` : ' · no enemy in range and sight'}</span></div>
+          {mode.target && unitCard(U(mode.target))}
           <WeaponFireModePanel
             hasCQ={hasCQ}
             smode={mode.smode}
@@ -3268,6 +3269,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
           {res && !res.error && res.notes.map((n) => <div key={n} className="err">{n}</div>)}
           <div className="row">
             <button className="btn" onClick={() => setMode(null)}>Cancel</button>
+            {mode.target && <button className="btn" onClick={() => setSheet(mode.target!)}>Datasheet</button>}
             <button className="btn primary grow" data-coach="fire" disabled={!res || !res.pools.length} onClick={() => {
               const skip = fastShooting || bots.includes(modeUnit.owner);
               act((g) => {
@@ -3425,6 +3427,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <>
           <div className="big-result">Charge roll: {roll}"</div>
+          {mode.targets.map((t) => <div key={t}>{unitCard(U(t))}</div>)}
           {!chargeOpts.length && <div className="small">No target within the rolled distance: the charge fails{nearest !== undefined ? ` · nearest enemy ${nearest.toFixed(1)}" away; need ${nearest.toFixed(1)}" to touch bases` : ''}</div>}
           {mode.targets.length > 0 && moveControls('charge', () => confirmMove('charge', finish), <button className="btn small" onClick={() => {
             const add = autoApproach(s, modeUnit, mode.targets.map(U), roll);
@@ -3670,6 +3673,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <>
           <div className="small"><b>{u.name}</b>{fightTargets.length > 1 ? ' · tap a target' : ''}{weapons.length > 1 ? ' · pick the weapon for models that carry several' : ''}</div>
+          {mode.target && unitCard(unitById(s, mode.target))}
           {pactRow(u)}
           <div className="row">
             {weapons.length > 1 && weapons.map((w) => <button key={w.name} className={`btn small ${mode.weapon === w.name ? 'on' : ''}`} onClick={() => setModeRaw({ ...mode, weapon: w.name })}>{w.name}</button>)}
@@ -4293,7 +4297,7 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
               const targetU = U(sheet);
               const sameNameUnits = targetU ? s.units.filter((x) => x.owner === targetU.owner && x.name === targetU.name) : [];
               const squadNum = sameNameUnits.length > 1 && targetU ? sameNameUnits.findIndex((x) => x.id === targetU.id) + 1 : undefined;
-              return <UnitView u={targetU} model={sheetModel} squadNum={squadNum} />;
+              return <UnitView u={targetU} model={sheetModel} squadNum={squadNum} sub={s.players[targetU.owner]?.subfaction} />;
             })()}
             {abilityBar(U(sheet).owner, { unitId: sheet })}
           </div>
