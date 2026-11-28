@@ -2501,8 +2501,9 @@
   "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Synaptic Auger": {
-  "status": "manual",
-  "note": "Not automated: doubles the wounds Psionic Parasitism heals"
+  "code": true,
+  "status": "auto",
+  "note": "Doubles the wounds Psionic Parasitism heals (cult.ts)"
  },
  "Enraptured Damnation": {
   "effects": [

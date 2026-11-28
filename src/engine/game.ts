@@ -1095,7 +1095,7 @@ function splitIntoSeparateUnits(s: GameState, u: UnitState) {
 }
 
 export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
-  const first = u.status !== 'board' && u.abilities.some((a) => a.name === 'DEPLOYMENT' && /treated as a separate unit/i.test(a.text ?? ''));
+  const first = u.status !== 'board' && u.abilities.some((a) => /treated as a separate unit/i.test(a.text ?? ''));
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
   if (first) splitIntoSeparateUnits(s, u);

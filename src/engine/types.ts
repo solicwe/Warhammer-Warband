@@ -363,6 +363,7 @@ export interface PlayerState {
   risenRubricae?: string[]; // unit IDs selected for Infiltrators via Risen Rubricae
   favoured?: string; // Slaanesh's Chosen: the unit that is the army's Favoured Champions
   favouredTurn?: number; // … last changed in this turn (only the first kill in each turn passes it on)
+  conqueror?: string; // Strategic Conqueror: the objective picked before the first turn
   pledge?: { round: number; n: number; boosted?: boolean }; // Coterie of the Conceited: this battle round's pledge to Slaanesh
   pactPoints?: number; // … Pact points gained so far
   /** World Eaters: Blessings of Khorne active this battle round, extra ones (one phase / round, maybe for a keyword only), Bloodshed points */
@@ -702,6 +703,7 @@ export type Window =
   | { kind: 'abilityMove'; player: PlayerId; offers: { unitId: string; key: string; label: string }[]; label: string }
   /** Coterie of the Conceited: the player pledges how many enemy units the army will destroy this battle round */
   | { kind: 'pledge'; player: PlayerId; max: number }
+  | { kind: 'conqueror'; player: PlayerId }
   /** a stratagem the game would use at this moment: a person says yes (and pays) or no (factions/cult.ts) */
   | { kind: 'cpAsk'; player: PlayerId; label: string; stratId: string; name: string; cp: number; act: 'cultSave' | 'lyingInWait' | 'downtrodden'; unitId?: string; at?: Pt; marker?: Pt }
   /** a one-roll test that came out badly: the player may Command Re-roll a die before it counts (factions/crTests.ts) */

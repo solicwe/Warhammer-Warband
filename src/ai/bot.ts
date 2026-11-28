@@ -16,6 +16,7 @@ import {
   canEmbarkIn, disembarkMode, disembarkUnit, embarkedIn, embarkUnit, hullSpots, validateDisembark, endRedeploy, markRuleName, nextDeployer, startConsolidate } from '../engine/game';
 import { applyPick } from '../factions/blessings';
 import { botPledge, setPledge } from '../factions/emperorsChildren';
+import { botConqueror, setConqueror } from '../factions/tau';
 import { botPlague, PLAGUE_IDS } from '../factions/deathGuard';
 import { crTestDone } from '../factions/crTests';
 import { answerCpAsk } from '../factions/cult';
@@ -886,6 +887,7 @@ export function botWindow(s: GameState) {
     const w = s.window;
     if (w.kind === 'blessings') { applyPick(s, w.player, w.picks[0] ?? null, w.extra); continue; }
     if (w.kind === 'pledge') { setPledge(s, w.player, botPledge(s, w.player)); continue; }
+    if (w.kind === 'conqueror') { setConqueror(s, w.player, botConqueror(s, w.player)); continue; }
     if (w.kind === 'crTest') { crTestDone(s); continue; }
     if (w.kind === 'cpAsk') { answerCpAsk(s, false); continue; } // asked of people only; a bot pays by itself
     if (w.kind === 'pickUnit') { resolvePickUnit(s, [...w.units].sort((a, b) => unitById(s, b).pts - unitById(s, a).pts)[0]); continue; }

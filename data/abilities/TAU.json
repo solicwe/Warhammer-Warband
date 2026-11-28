@@ -1090,8 +1090,20 @@
   "note": "Killing Blow applies to the bearer's unit in battle round 4 too (detachment-rules.json)"
  },
  "Strategic Conqueror": {
-  "status": "manual",
-  "note": "Not automated: +1 OC on the objective marker picked before the first turn"
+  "status": "auto",
+  "effects": [
+   {
+    "scope": "army",
+    "units": [
+     "T’AU EMPIRE"
+    ],
+    "if": [
+     "nearConqueror"
+    ],
+    "oc": 1
+   }
+  ],
+  "note": "Picked before the first turn (a button for a person); +1 OC in range of that objective while the bearer lives"
  },
  "Strike Swiftly": {
   "code": true,
@@ -1369,8 +1381,9 @@
   "note": "Kroot Hunting Pack: Kroot Carnivores count as BATTLELINE (army builder)"
  },
  "Integrated Command Structure": {
-  "status": "manual",
-  "note": "Not automated: prey-marking and the Stealth Battlesuit aura"
+  "code": true,
+  "status": "auto",
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Superior Craftsmanship": {
   "status": "auto",
@@ -1383,8 +1396,9 @@
   "note": "Battlesuit Character ranged attacks have +6\" Range."
  },
  "Expert Fieldcraft": {
-  "status": "manual",
-  "note": "Not automated: shooting does not stop the unit being hidden"
+  "code": true,
+  "status": "auto",
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Coordinated Strike": {
   "effects": [

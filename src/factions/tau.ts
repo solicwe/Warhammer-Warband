@@ -3,7 +3,9 @@
 // Observer has MARKERLIGHT. The Observer is picked for the player when a Guided shot is made (the best one that can
 // see the target), so a shot only becomes Guided when some unit could have spotted it.
 // Detachment rules, enhancements, datasheet abilities and stratagems are data.
-import { alive, boardUnits, hasKw, log, onBoard, pushFx, unitById } from '../engine/state';
+import { alive, boardUnits, hasKw, log, onBoard, playsItself, pushFx, unitById } from '../engine/state';
+import { unitInRange, zonePoly } from '../engine/missions';
+import { polyCentroid } from '../engine/geometry';
 import type { GameState, PlayerId, UnitState } from '../engine/types';
 import { modelVisible } from '../engine/visibility';
 
@@ -65,4 +67,39 @@ export function ftggTargetChosen(s: GameState, A: UnitState, T: UnitState) {
   log(s, `[Greater Good] For the Greater Good: ${o.name} marks ${T.name} as Spotted${o.id === A.id ? '' : ` for ${A.name}`}`, 'info', A.owner);
   const m = alive(o)[0];
   if (m) pushFx(s, { kind: 'skill', unitId: o.id, owner: o.owner, at: { x: m.x, y: m.y }, name: 'For the Greater Good', who: `Spotting ${T.name}`, style: 'holy', epic: false });
+}
+
+// ---------- Strategic Conqueror (enhancement): before the first turn the army picks one objective marker; friendly T'AU EMPIRE models in range of it have +1 OC while the bearer lives ----------
+
+const bearer = (s: GameState, p: PlayerId) => s.units.some((u) => u.owner === p && u.status !== 'destroyed' && alive(u).length && u.enhancements.some((e) => e.name === 'Strategic Conqueror'));
+
+/** The bot's pick: the objective outside its zone that is closest to its own units (a field objective, not home). */
+export function botConqueror(s: GameState, p: PlayerId): string {
+  const mine = s.units.filter((u) => u.owner === p && u.status !== 'destroyed' && alive(u).length);
+  const c = mine.length ? polyCentroid(mine.flatMap(alive)) : polyCentroid(zonePoly(s, p));
+  const field = s.objectives.filter((o) => o.type !== 'home');
+  const pool = field.length ? field : s.objectives;
+  return pool.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a)).id;
+}
+
+export function setConqueror(s: GameState, p: PlayerId, objId: string) {
+  if (s.window?.kind === 'conqueror' && s.window.player === p) s.window = null;
+  s.players[p].conqueror = objId;
+  log(s, `Strategic Conqueror: ${s.players[p].name} picks objective ${s.objectives.findIndex((o) => o.id === objId) + 1}`, 'info', p);
+}
+
+/** Start of the battle: each army with the enhancement picks (a person is asked, a bot picks by itself). */
+export function conquerorStart(s: GameState) {
+  for (const p of [0, 1] as PlayerId[]) {
+    if (!bearer(s, p)) continue;
+    if (!playsItself(s, p) && !s.window) { s.window = { kind: 'conqueror', player: p }; continue; }
+    setConqueror(s, p, botConqueror(s, p));
+  }
+}
+
+/** Is this unit in range of the objective its army picked, with the bearer alive? */
+export function nearConqueror(s: GameState, u: UnitState): boolean {
+  const id = s.players[u.owner].conqueror;
+  const o = id ? s.objectives.find((x) => x.id === id) : undefined;
+  return !!o && bearer(s, u.owner) && unitInRange(s, u, o);
 }

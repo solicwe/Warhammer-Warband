@@ -19,7 +19,7 @@ import { setUpAway, setUpNear, shootNow } from '../engine/game';
 import { unitInRange, zonePoly } from '../engine/missions';
 import { pointInPoly } from '../engine/geometry';
 import type { GameState, UnitState } from '../engine/types';
-import { ftggMods, ftggTargetChosen, guidedVs, isTauArmy, observerFor, spotOf } from './tau';
+import { conquerorStart, ftggMods, ftggTargetChosen, guidedVs, isTauArmy, nearConqueror, observerFor, spotOf } from './tau';
 import { activeIds, blessingEffects, blessingsRoll, blessingsRoundStart, butchersFightStart } from './blessings';
 import './crTests';
 import { autoPact } from './darkPacts';
@@ -58,6 +58,8 @@ on('unitSelected', (s, e) => autoPact(s, e.u, e.kind, (p) => (s.decides ?? []).i
 on('battleStart', (s) => initFavoured(s));
 on('turnBegin', (s) => snapshotEngaged(s));
 on('roundStart', (s) => pledgeRoundStart(s));
+on('battleStart', (s) => conquerorStart(s));
+addCondition('nearConqueror', (_c, { s, A }) => nearConqueror(s, A));
 on('commandStart', (s) => poisonTick(s));
 on('roundEnd', (s) => pledgeRoundEnd(s));
 on('targetChosen', (s, e) => noteTarget(s, e.attackerId, e.targetId));

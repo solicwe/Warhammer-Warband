@@ -6319,8 +6319,9 @@
   "code": true
  },
  "Blizzard shield": {
-  "status": "manual",
-  "note": "Not automated yet"
+  "code": true,
+  "status": "auto",
+  "note": "4+ invulnerable save through the wargear's own stat change"
  },
  "Grav-chutes": {
   "gear": true,

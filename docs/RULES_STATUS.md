@@ -31,20 +31,20 @@ That a rule runs does not prove its numbers match the card: see "Accuracy" below
 | Death Guard (DG) | 86 / 10 / 3 | 45 / 0 / 0 |
 | Drukhari (DRU) | 112 / 23 / 4 | 45 / 0 / 0 |
 | Emperor’s Children (EC) | 75 / 4 / 0 | 51 / 0 / 0 |
-| Genestealer Cults (GC) | 194 / 79 / 17 | 45 / 0 / 0 |
+| Genestealer Cults (GC) | 194 / 80 / 16 | 45 / 0 / 0 |
 | Grey Knights (GK) | 63 / 20 / 0 | 45 / 0 / 0 |
 | Imperial Agents (AoI) | 84 / 7 / 4 | 30 / 0 / 0 |
 | Imperial Knights (QI) | 73 / 2 / 1 | 39 / 0 / 0 |
 | Leagues of Votann (LoV) | 73 / 11 / 0 | 51 / 0 / 0 |
 | Necrons (NEC) | 124 / 14 / 8 | 63 / 0 / 0 |
 | Orks (ORK) | 127 / 13 / 0 | 40 / 0 / 0 |
-| Space Marines (SM) | 397 / 34 / 12 | 141 / 0 / 0 |
-| T’au Empire (TAU) | 84 / 15 / 11 | 28 / 0 / 0 |
+| Space Marines (SM) | 397 / 35 / 11 | 141 / 0 / 0 |
+| T’au Empire (TAU) | 85 / 17 / 8 | 28 / 0 / 0 |
 | Thousand Sons (TS) | 74 / 22 / 1 | 45 / 0 / 0 |
 | Tyranids (TYR) | 95 / 20 / 2 | 51 / 0 / 0 |
 | Unbound Adversaries (UA) | 0 / 0 / 0 | 0 / 0 / 0 |
 | World Eaters (WE) | 70 / 14 / 0 | 39 / 0 / 0 |
-| **All** | 2592 / 396 / 97 | 1198 / 0 / 0 |
+| **All** | 2593 / 400 / 92 | 1198 / 0 / 0 |
 <!-- status:end -->
 
 ## Known bugs (engine work needed)

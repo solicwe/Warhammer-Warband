@@ -26,6 +26,7 @@ import {
 import { effectsFor, isRiled, loneOperativeNow, unitFlags, withRuleCache, type Effect } from '../rules-engine/effects';
 import { activeIds, applyPick, BLESSINGS, blessingById, rerollBlessings } from '../factions/blessings';
 import { botPledge, setPledge } from '../factions/emperorsChildren';
+import { botConqueror, setConqueror } from '../factions/tau';
 import { BlessingsPanel } from './Blessings';
 import { detChoices, detSummary, pickDetChoice } from '../rules-engine/detachments';
 import { autoActions, botAct, botShouldAct, botStep } from '../ai/bot';
@@ -1726,6 +1727,15 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
         <>
           <div className="handoff">{pName(s, p)}: Pledges to the Dark Prince</div>
           <div className="row wrap">{Array.from({ length: w.max + 1 }, (_, n) => <button key={n} type="button" className={`btn ${n === botPledge(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setPledge(g, p, n))}>{n}</button>)}</div>
+        </>
+      );
+    }
+    if (w.kind === 'conqueror') {
+      return (
+        <>
+          <div className="handoff">{pName(s, p)}: Strategic Conqueror</div>
+          <div className="small">Pick one objective marker. Friendly T’AU EMPIRE models in range of it have +1 Objective Control while the bearer is on the battlefield.</div>
+          <div className="row wrap">{s.objectives.map((o, i) => <button key={o.id} type="button" className={`btn ${o.id === botConqueror(s, p) ? 'primary' : ''}`} onClick={() => act((g) => setConqueror(g, p, o.id))}>{`Objective ${i + 1}${o.type === 'home' ? ' (home)' : ''}`}</button>)}</div>
         </>
       );
     }
