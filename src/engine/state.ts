@@ -207,7 +207,7 @@ export function canUseStratagem(s: GameState, player: PlayerId, id: string, unit
     const blocked = blockHook?.(s, unit);
     if (blocked) return blocked;
     if (unit.stratagemPhase === phaseKey(s)) return 'This unit was already targeted by a Stratagem this phase';
-    if ((hasKw(unit, 'SIR HEKHTUR') || unit.name === 'Sir Hekhtur') && !RULES.coreStratagems.some((x) => x.id === id)) {
+    if (hasKw(unit, 'SIR HEKHTUR') && !RULES.coreStratagems.some((x) => x.id === id)) {
       return 'Sir Hekhtur can only be targeted by Core Stratagems';
     }
   }

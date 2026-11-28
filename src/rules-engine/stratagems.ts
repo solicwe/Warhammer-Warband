@@ -400,7 +400,8 @@ export function stratTargetOk(st: StratagemData, u: UnitState): boolean {
   const tgt = section(st.text, 'TARGET').replace(/[’]/g, "'");
   const kws = [...u.keywords, ...u.factionKeywords, ...(u.sources ?? [u.name])];
   const m = /\b([A-Z][A-Z'-]+(?:[ /][A-Z][A-Z'-]+)*)\b/.exec(tgt.replace(/^(?:One|That|Up to \w+)\s+/, ''));
-  if (m && m[1].length >= 3) return m[1].split('/').some((alt) => kwPhrase(alt.trim(), kws));
+  // "THOUSAND SONS PSYKER" is two keywords together (Kaleidoscopic Tempest could not target a Sorcerer)
+  if (m && m[1].length >= 3) return m[1].split('/').some((alt) => kwPhrase(alt.trim(), kws) || phraseCovered(alt.trim(), kws));
   // keywords written in ordinary capitals: "One Thousand Sons Psyker unit from your army" (Infernal Fusillade offered a
   // Defiler and a Rhino because only ALL-CAPS keywords were read)
   const phrase = targetPhrase(tgt);

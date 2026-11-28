@@ -9,6 +9,7 @@ import { Icon, Logo } from './Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
+import { PHOTO_EDIT, setPhotoEdit, getPublishToken, setPublishToken, publishPortraits, freshPortraitCount, usePortraitsVersion } from './portraits';
 
 interface Props {
   armies: Army[];
@@ -24,6 +25,31 @@ interface Props {
   onLogs: () => void;
   onContinue: () => void;
   onAbandon: () => void;
+}
+
+/** Photo tools: switch photo editing / export on or off, and publish the changed photos to the site with the player's own GitHub token. */
+function PhotoTools() {
+  usePortraitsVersion();
+  const [token, setToken] = useState(getPublishToken());
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className="group" aria-label="Photos">
+      <div className="group-head"><h3>Photos</h3><span className="group-count num">{PHOTO_EDIT ? freshPortraitCount() : 0}</span></div>
+      <label className="row small" style={{ gap: 8 }}>
+        <input type="checkbox" checked={PHOTO_EDIT} onChange={(e) => setPhotoEdit(e.target.checked)} />
+        Photo editing and export (the page reloads)
+      </label>
+      {PHOTO_EDIT && (
+        <>
+          <div className="tiny muted">Photos changed since the last publish: {freshPortraitCount()}. Publishing uploads them to the site's GitHub repository with your own token (repo contents write). The token stays on this device.</div>
+          <input className="ab-title" type="password" aria-label="GitHub token" placeholder="GitHub token" value={token} onChange={(e) => { setToken(e.target.value); setPublishToken(e.target.value); }} />
+          <button type="button" className="btn small" disabled={busy || !freshPortraitCount()} onClick={async () => { setBusy(true); try { setMsg(await publishPortraits()); } catch (e) { setMsg(e instanceof Error ? e.message : 'Could not publish'); } setBusy(false); }}>{busy ? 'Publishing...' : 'Publish photos to the site'}</button>
+          {msg && <div className="tiny">{msg}</div>}
+        </>
+      )}
+    </section>
+  );
 }
 
 export function Home({
@@ -99,6 +125,7 @@ export function Home({
           </nav>
         </div>
 
+        <PhotoTools />
         <section className="group" aria-label="Your armies">
           <div className="group-head">
             <h3>Armies</h3>

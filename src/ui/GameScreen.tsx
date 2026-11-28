@@ -18,7 +18,7 @@ import { useFateDie } from '../factions/aeldari';
 import { deploymentById, dispositionById, MISSIONS, primaryById, RULES, secondaryById, type DispositionId } from '../engine/config';
 import { rollN } from '../engine/dice';
 import {
-  autoApproach, autoCharge, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, answerRoleChoice, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkSpots, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
+  autoApproach, autoPileMove, bestLd, canIngress, chargeEligibility, chargeTargetOptions, closeWindow, commitCharge, commitMove, consolidateEligible, consolidateMode, counteroffensiveCandidates, crushingImpact, declareCharge, answerDiscard, answerRoleChoice, concludeFight, deployUnit, endConsolidateStep, endPhase, endPileInStep, fightCandidates, findPlacement, formationAt, heroicCandidates, heroicModes, ingressUnit, markFought, maxMoveDistance, nudgePlacement, objectiveTerrain, openCounteroffensive, overwatchCandidates, overwatchTargets, pileInEligible, rapidIngressCandidates, remainStationary, rerollCharge, rollAdvance, rollBattleShock, rerollBattleShock, declareReserves, armyPoints, reservesPoints, smokescreenCandidates, useCounteroffensive, validateMove, validatePlacement, chargeReach, type MoveCheck, hasArmyRule, markRuleLabel, markRuleName, setOathTarget, callWaaagh, isRiledUp, unitHasAbility, canEmbarkIn, embarkUnit, disembarkLabel, disembarkMode, disembarkSpots, disembarkUnit, validateDisembark, embarkedIn, scoutUnits, scoutReserves, scoutFromReserves, scoutsOf, endScouts, transportSpaceUsed, claimSecondary, swapSecondary, chooseFixedSecondaries, settleMove, canDetReroll, detReroll, beginMove, hasDeepStrike, setOathBackup, arrivalRound, pileDistance, endRedeploy, redeployCandidates, redeployUnit, zoneOf, rotateUnit, turnUnit, unitTouchedObjectives, assignedObjective, updateControl,
 } from '../engine/game';
 import {
   abilityChoices, acceptOffer, closeOffers, manualActs, pickAbilities, resolvePickUnit, useActByKey, useFreeDie, type Trigger,
@@ -787,22 +787,20 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
     }
     if (mode && targets.includes(unitId)) {
       if (mode.k === 'charge') {
-        // one tap: the unit charges that target and moves in by itself; only when no legal move is found does it
-        // fall back to dragging the models
+        // one tap: the models are moved in by themselves as a draft; the player can drag any model to fix it
+        // (an auto move can drop a model off an objective), then confirms
         const ch = mode;
-        const ok = act((g) => autoCharge(g, unitById(g, ch.unitId), [unitId]));
-        if (ok) {
-          const cu = U(ch.unitId);
-          flash(`${cu.name} charges ${U(unitId).name}!`);
-          if (ch.heroic) act((g) => { g.window = heroicCandidates(g, cu.owner).length ? { kind: 'heroicIntervention', player: cu.owner } : null; });
-          setSel(cu.id);
-          setMode(null);
-        } else {
-          const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
-          setModeRaw({ ...ch, targets: targetsNow });
-          setDraft(mergePaths(startPaths(U(ch.unitId)), autoApproach(s, U(ch.unitId), targetsNow.map(U), chargeReach(s, U(ch.unitId), targetsNow))));
-          flash('Could not move in automatically (blocked / not enough distance): drag the models');
-        }
+        const cu = U(ch.unitId);
+        const targetsNow = ch.targets.includes(unitId) ? ch.targets : [...ch.targets, unitId];
+        const roll = cu.chargeRoll ?? chargeReach(s, cu, targetsNow);
+        let pth = mergePaths(startPaths(cu), autoApproach(s, cu, targetsNow.map(U), roll));
+        pth = settleMove(s, cu, 'charge', pth, { targets: targetsNow, fly: ch.fly, maxFor: () => roll });
+        setModeRaw({ ...ch, targets: targetsNow });
+        setDraft(pth);
+        const chk = validateMove(s, cu, 'charge', pth, { targets: targetsNow, fly: ch.fly });
+        setCheck(chk.ok ? null : chk);
+        setSel(cu.id);
+        flash(chk.ok ? 'Models moved in: drag any model to adjust, then confirm' : 'Could not move in automatically: drag the models');
       }
       else if (mode.k === 'crush') {
         const u = U(mode.unitId);

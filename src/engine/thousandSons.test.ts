@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildShootPools } from './attack';
-import { applyDetachmentStratagem } from '../rules-engine/stratagems';
+import { applyDetachmentStratagem, stratagemBlock } from '../rules-engine/stratagems';
 import { botAct } from '../ai/bot';
 import { abilityRule, DET_RULES } from '../rules-engine/effects';
 import { listPoints, validateList } from './army';
@@ -603,5 +603,30 @@ describe('a bot owner of Malign Trickery does not get stuck after the human move
     for (let i = 0; i < 6 && s.window; i++) botStep(s, 0);
     expect(s.window).toBeNull();
     expect(s.attack).toBeNull();
+  });
+});
+
+describe('Hexwarp Thrallband stratagems the owner reported as unusable', () => {
+  it('Warding Hex: a Psyker in range of an objective you control inside your Flow of Magic can use it', () => {
+    const s = game([['Sorcerer', 1, 95], ['Rubric Marines', 5, 100]], [['Boyz', 10, 90]]);
+    s.phase = 'command'; s.players[0].cp = 5;
+    const own = s.objectives.find((o) => o.type === 'home' && o.owner === 0) ?? s.objectives[0];
+    const sorc = put(s, 'p0-x0', { x: own.x, y: own.y });
+    const rm = put(s, 'p0-x1', { x: own.x + 1.5, y: own.y });
+    put(s, 'p1-x0', { x: 30, y: 56 });
+    for (const o of s.objectives) o.controller = 0;
+    s.players[0].flow = undefined;
+    const st = strat('WARDING HEX');
+    expect(stratagemBlock(s, 0, st, sorc)).toBeNull();
+    expect(rm.keywords).toContain('PSYKER'); // Rubric Marines are Psykers too
+    s.objectives.forEach((o) => { o.controller = 1; });
+    expect(stratagemBlock(s, 0, st, sorc)).toMatch(/qualify/); // no objective of yours: no Warding Hex
+  });
+  it('Kaleidoscopic Tempest: a Psyker that was shot at can take it and gains Stealth', () => {
+    const s = game([['Sorcerer', 1, 95]], [['Boyz', 10, 90]]);
+    s.phase = 'shooting'; s.active = 1; s.players[0].cp = 5;
+    const sorc = put(s, 'p0-x0', { x: 30, y: 10 });
+    put(s, 'p1-x0', { x: 30, y: 30 });
+    expect(stratagemBlock(s, 0, strat('KALEIDOSCOPIC TEMPEST'), sorc, { react: true })).toBeNull();
   });
 });

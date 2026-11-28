@@ -1,5 +1,8 @@
 /** Players can change unit pictures or the army emblem in the app; photos can be exported as JSON or ZIP. */
-export const PHOTO_EDIT = true;
+/** Photo editing and photo export can be switched off by the player (Home screen, Photos); the page reloads to apply. */
+const PHOTO_FLAG = 'w40k11-photo-edit';
+export const PHOTO_EDIT: boolean = (() => { try { return localStorage.getItem(PHOTO_FLAG) !== '0'; } catch { return true; } })();
+export function setPhotoEdit(on: boolean) { try { localStorage.setItem(PHOTO_FLAG, on ? '1' : '0'); } catch { /* ignore */ } location.reload(); }
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
 //     `public/images/manifest.json` (built by `npm run images`). The folder can live elsewhere: set VITE_IMAGE_BASE.
@@ -601,4 +604,50 @@ export async function download(name: string, data: Uint8Array | string, type: st
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   return `Saved ${name}`;
+}
+
+// ---- publish the changed photos to the site's GitHub repository, with the player's own token (never stored beyond this device) ----
+const REPO = 'solicwe/Warhammer-Warband';
+const TOKEN_KEY = 'w40k11-gh-token';
+export const getPublishToken = (): string => { try { return localStorage.getItem(TOKEN_KEY) ?? ''; } catch { return ''; } };
+export const setPublishToken = (t: string) => { try { if (t) localStorage.setItem(TOKEN_KEY, t.trim()); else localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } };
+
+const b64 = (bytes: Uint8Array) => { let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(bin); };
+const utf8b64 = (t: string) => b64(new TextEncoder().encode(t));
+const fromB64 = (x: string) => new TextDecoder().decode(Uint8Array.from(atob(x.replace(/\s/g, '')), (c) => c.charCodeAt(0)));
+
+async function gh(token: string, path: string, init?: RequestInit) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', ...(init?.headers ?? {}) } });
+  if (r.status === 404 && (!init || init.method !== 'PUT')) return null;
+  if (!r.ok) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0, 120)}`);
+  return r.json() as Promise<{ sha?: string; content?: string }>;
+}
+
+/** Upload every photo changed since the last export to public/images/units/uploads and list it in names.json and manifest.json.
+ *  Returns a short message for the player. */
+export async function publishPortraits(branch = 'main'): Promise<string> {
+  const token = getPublishToken();
+  if (!token) return 'Paste a GitHub token first';
+  const names = Object.keys(cache).filter((n) => fresh.includes(n));
+  if (!names.length) return 'No changed photos to publish';
+  const added: Record<string, string> = {};
+  for (const name of names) {
+    const { bytes, ext } = dataUrlBytes(cache[name]);
+    let h = 0x811c9dc5; for (const b of bytes.subarray(0, 4096)) h = Math.imul(h ^ b, 0x01000193);
+    const rel = `units/uploads/${imageSlug(name)}-${(h >>> 0).toString(16)}.${ext}`;
+    const path = `public/images/${rel}`;
+    const old = await gh(token, `${path}?ref=${branch}`);
+    await gh(token, path, { method: 'PUT', body: JSON.stringify({ message: `Photo: ${name}`, content: b64(bytes), branch, sha: old?.sha }) });
+    added[name] = rel;
+  }
+  for (const file of ['names.json', 'manifest.json']) {
+    const path = `public/images/${file}`;
+    const cur = await gh(token, `${path}?ref=${branch}`);
+    const doc = cur?.content ? JSON.parse(fromB64(cur.content)) : file === 'names.json' ? {} : { version: 1, units: {} };
+    if (file === 'names.json') Object.assign(doc, added);
+    else { doc.units ??= {}; doc.units.uploads = { ...(doc.units.uploads ?? {}), ...added }; }
+    await gh(token, path, { method: 'PUT', body: JSON.stringify({ message: `Photos: ${Object.keys(added).length} added`, content: utf8b64(JSON.stringify(doc, null, 2)), branch, sha: cur?.sha }) });
+  }
+  markPortraitsExported();
+  return `Published ${names.length} photo${names.length > 1 ? 's' : ''}; the site shows them after it rebuilds`;
 }

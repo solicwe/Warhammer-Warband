@@ -35,9 +35,12 @@ export const DETACHMENT_ALLIES = [
   { id: 'QI', kw: 'ADEPTUS MECHANICUS', det: 'Questor Forgepact', rule: 'Mechanicus Allies', caps: [500, 500, 500] },
   { id: 'QT', kw: 'DAMNED', det: 'Iconoclast Fiefdom', rule: 'Wretched Thralls', caps: [500, 500, 500] },
   { id: 'CD', kw: 'HERETIC ASTARTES', det: 'Shadow Legion', rule: 'Thralls of the First Prince', caps: [500, 1000, 1500] },
+  // the Genestealer Cults book carries the Astra Militarum and Tyranids datasheets; each shows only after its detachment is chosen
+  { id: 'GC', kw: 'ASTRA MILITARUM', det: 'Brood Brother Auxilia', rule: 'Brood Brothers', caps: [500, 1000, 1500], notKw: 'GENESTEALER CULTS' },
+  { id: 'GC', kw: 'TYRANIDS', det: 'Final Day', rule: 'Tyranid Allies', caps: [500, 1000, 1500], notKw: 'GENESTEALER CULTS' },
 ];
 export const detachmentAllyOf = (factionId: string | undefined, d: { keywords: string[]; factionKeywords: string[] }) =>
-  DETACHMENT_ALLIES.find((a) => a.id === factionId && (d.factionKeywords.includes(a.kw) || d.keywords.includes(a.kw)));
+  DETACHMENT_ALLIES.find((a) => a.id === factionId && (d.factionKeywords.includes(a.kw) || d.keywords.includes(a.kw)) && !(a.notKw && (d.factionKeywords.includes(a.notKw) || d.keywords.includes(a.notKw))));
 
 export const allySources = (factionId: string, group?: string) => ALLIES.filter((a) => a.army(factionId, group));
 
