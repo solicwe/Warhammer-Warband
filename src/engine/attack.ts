@@ -1247,7 +1247,9 @@ export function finishAttack(s: GameState) {
   if (haz && alive(A).length) {
     // Rites of Thermal Appeasement: +1 to hazard rolls for its plasma weapons
     const plasma = A.abilities.some((a) => a.name === 'Rites of Thermal Appeasement') && at.pools.every((p) => !p.hazardous || /plasma/i.test(p.weapon));
-    const { rolls, fails } = hazardTest(s, A, haz, 'Hazardous', plasma ? -1 : 0);
+    // Overcharge profile (Arkanyst Evaluator): subtract 2 from its Hazardous test results
+    const over = at.pools.some((p) => p.hazardous > 0 && hasAbility(p.profile, 'overcharge')) ? 2 : 0;
+    const { rolls, fails } = hazardTest(s, A, haz, 'Hazardous', (plasma ? -1 : 0) + over);
     at.hazardousRolls = rolls;
     if (fails) {
       const mv = alive(A).every(isMV);

@@ -571,8 +571,9 @@
     "note": "Gaining 2YP after destroying a unit is not applied"
   },
   "Overcharge": {
-    "status": "partial",
-    "note": "Not automated: -2 to its Hazardous tests"
+    "code": true,
+    "status": "auto",
+    "note": "Subtract 2 from its Hazardous test results"
   },
   "Purge Response": {
     "effects": [
