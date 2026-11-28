@@ -10,9 +10,9 @@ export const IS_ADMIN: boolean = (() => {
     return localStorage.getItem(ADMIN_FLAG) === '1';
   } catch { return false; }
 })();
-/** Photo editing and photo export can be switched off by the player (Home screen, Photos); the page reloads to apply. */
+/** Photo editing and export exist only in admin mode (?admin), and the owner can switch them off in Home, Photos (the page reloads to apply). */
 const PHOTO_FLAG = 'w40k11-photo-edit';
-export const PHOTO_EDIT: boolean = (() => { try { return localStorage.getItem(PHOTO_FLAG) !== '0'; } catch { return true; } })();
+export const PHOTO_EDIT: boolean = IS_ADMIN && (() => { try { return localStorage.getItem(PHOTO_FLAG) !== '0'; } catch { return true; } })();
 export function setPhotoEdit(on: boolean) { try { localStorage.setItem(PHOTO_FLAG, on ? '1' : '0'); } catch { /* ignore */ } location.reload(); }
 // Unit photos, keyed by datasheet name. Two sources:
 //  1. images on the server: `public/images/units/<FACTION>/<datasheet-slug>.webp|jpg|png`, listed in
