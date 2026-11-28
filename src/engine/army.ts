@@ -1670,6 +1670,10 @@ export function effectiveKeywords(
     base.push('BATTLELINE');
   }
 
+  // Contagion Engines (Death Guard): these four datasheets count as CONTAGION ENGINE units (the Detachment rule grants it)
+  const dgDets = Array.isArray(listOrDets) ? listOrDets : (listOrDets?.detachments ?? []);
+  if (dgDets.includes('Contagion Engines') && /^(foetid bloat-drone|helbrute|myphitic blight-hauler)/i.test(sheet.name) && !base.includes('CONTAGION ENGINE')) base.push('CONTAGION ENGINE');
+
   // Dark Angels: The Deathwing & The Ravenwing
   const isDarkAngels = (() => {
     if (listOrDets && typeof listOrDets === 'object' && !Array.isArray(listOrDets)) {

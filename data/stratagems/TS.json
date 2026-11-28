@@ -18,8 +18,8 @@
   },
   "WARDING HEX": {
    "unitIf": [
-    "onControlledObjective",
-    "inFlow"
+    "kw:PSYKER",
+    "objInFlow"
    ],
    "do": [
     {

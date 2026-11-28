@@ -436,7 +436,6 @@ describe('enhancements that name an EPIC HERO or an ability', () => {
         for (const e of det.enhancements) if (!seen.has(e.name)) never.push(`${id} ${det.name}: ${e.name}`);
       }
     }
-    // Parasitic Woe-Reaper names CONTAGION ENGINE units; the data has no such keyword on any datasheet (open: docs/05-tech-debt.md)
-    expect(never).toEqual(['DG Contagion Engines: Parasitic Woe‑Reaper']);
+    expect(never).toEqual([]);
   });
 });

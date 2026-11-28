@@ -16,7 +16,7 @@ import { armyColor, dsColor, DatasheetView, weaponCounts } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { EnhTable, RuleCards, StratTable } from './RuleTable';
-import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion, exportPortraitsJson, exportPortraitsZip, download } from './portraits';
+import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion, exportPortraitsZip, freshPortraitCount, markPortraitsExported, download } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -609,10 +609,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
         }), ''];
       }),
     ].join('\n');
-    try {
-      if (navigator.share) await navigator.share({ title: list.name || 'Army list', text: lines });
-      else { await navigator.clipboard.writeText(lines); setNote('Army list copied'); }
-    } catch { /* cancelled */ }
+    // copy first (always works on a tap); then offer the share sheet if the device has one
+    let copied = false;
+    try { await navigator.clipboard.writeText(lines); copied = true; } catch {
+      try { const t = document.createElement('textarea'); t.value = lines; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); copied = document.execCommand('copy'); t.remove(); } catch { /* no clipboard */ }
+    }
+    if (copied) setNote('Army list copied');
+    try { if (navigator.share) { await navigator.share({ title: list.name || 'Army list', text: lines }); setNote('Army list shared'); } }
+    catch (e) { if ((e as Error)?.name !== 'AbortError' && !copied) setNote('Could not share the list'); }
   };
 
 
@@ -771,25 +775,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 className="btn small ghost"
                 style={{ fontSize: 11, padding: '3px 8px', height: 'auto' }}
                 onClick={async () => {
-                  const msg = await download('custom-portraits.json', exportPortraitsJson(), 'application/json');
-                  setNote(msg);
-                }}
-                title="Export all custom portraits as JSON"
-              >
-                <Icon name="history" size={13} /> Export JSON
-              </button>
-              <button
-                type="button"
-                className="btn small ghost"
-                style={{ fontSize: 11, padding: '3px 8px', height: 'auto' }}
-                onClick={async () => {
                   const zip = exportPortraitsZip();
                   const msg = await download('custom-portraits.zip', zip, 'application/zip');
+                  if (msg.startsWith('Saved')) markPortraitsExported();
                   setNote(msg);
                 }}
                 title="Export all custom portraits as a ZIP file"
               >
-                <Icon name="save" size={13} /> Export ZIP
+                <Icon name="save" size={13} /> Export ZIP ({freshPortraitCount()})
               </button>
             </div>
           )}
@@ -1855,25 +1848,14 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                       className="btn small ghost"
                       style={{ fontSize: 11, padding: '2px 6px', height: 'auto' }}
                       onClick={async () => {
-                        const msg = await download('custom-portraits.json', exportPortraitsJson(), 'application/json');
-                        setNote(msg);
-                      }}
-                      title="Export all custom portraits as JSON"
-                    >
-                      <Icon name="history" size={12} /> Export JSON
-                    </button>
-                    <button
-                      type="button"
-                      className="btn small ghost"
-                      style={{ fontSize: 11, padding: '2px 6px', height: 'auto' }}
-                      onClick={async () => {
                         const zip = exportPortraitsZip();
                         const msg = await download('custom-portraits.zip', zip, 'application/zip');
+                        if (msg.startsWith('Saved')) markPortraitsExported();
                         setNote(msg);
                       }}
                       title="Export all custom portraits as a ZIP file"
                     >
-                      <Icon name="save" size={12} /> Export ZIP
+                      <Icon name="save" size={12} /> Export ZIP ({freshPortraitCount()})
                     </button>
                   </div>
                 )}

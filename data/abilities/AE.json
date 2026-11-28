@@ -7,11 +7,13 @@
  },
  "Battle Focus": {
   "status": "auto",
-  "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres."
+  "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres.",
+  "code": true
  },
  "Agile Manoeuvres": {
   "status": "auto",
-  "note": "Manoeuvres: Swift as the Wind (+2\" M), Flitting Shadows (no Overwatch), Star Engines ([ASSAULT] on vehicles), Sudden Strike (6\" pile-in/consolidate), Opportunity Seized (normal move D6+1\" on enemy fallback), Fade Back (normal move D6+1\" after hit)."
+  "note": "Manoeuvres: Swift as the Wind (+2\" M), Flitting Shadows (no Overwatch), Star Engines ([ASSAULT] on vehicles), Sudden Strike (6\" pile-in/consolidate), Opportunity Seized (normal move D6+1\" on enemy fallback), Fade Back (normal move D6+1\" after hit).",
+  "code": true
  },
  "Disparate Paths": {
   "status": "auto",

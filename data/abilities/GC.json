@@ -1136,20 +1136,40 @@
   ]
  },
  "ORDERS": {
+  "code": true,
   "status": "auto",
-  "note": "This OFFICER can issue 2 Orders to Regiment units."
+  "note": "Orders are worked out by the Voice of Command rules (orders.ts)"
  },
  "Cadia Stands!": {
-  "status": "auto",
-  "note": "While this unit contains an OFFICER, each time a ranged attack targets this unit, if this unit is within range of an objective marker you control, models in this unit have the Benefit of Cover against that attack."
+  "effects": [
+   {
+    "if": [
+     "contains:Officer",
+     "onObjective"
+    ],
+    "rerollShock": true
+   }
+  ],
+  "note": "While the unit's OFFICER is alive"
  },
  "Master Vox": {
+  "code": true,
   "status": "auto",
-  "note": "Each time the OFFICER in the bearer’s unit issues an Order, it can issue it to an eligible unit up to 24\" away."
+  "note": "Orders up to 24\" away"
  },
  "Gung-ho Command": {
-  "status": "auto",
-  "note": "While this unit contains an OFFICER, ranged weapons equipped by models in this unit have the [ASSAULT] ability."
+  "effects": [
+   {
+    "if": [
+     "contains:Officer"
+    ],
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ],
+  "note": "While the unit's OFFICER is alive"
  },
  "Grim Determination": {
   "effects": [
@@ -1163,8 +1183,15 @@
   ]
  },
  "Alchemyk Counteragents": {
-  "status": "auto",
-  "note": "The bearer’s unit has the Feel No Pain 6+ ability against mortal wounds."
+  "gear": true,
+  "effects": [
+   {
+    "defend": {
+     "fnp": 6,
+     "fnpVs": "mortal"
+    }
+   }
+  ]
  },
  "Servo-scribes": {
   "act": {
@@ -1190,16 +1217,70 @@
   "note": "On a 2+ it shoots once more before it is removed (Astra Militarum: at the attacking unit, in the opponent's Shooting phase; its Deadly Demise is rolled first)"
  },
  "Malign Wardings(Psychic)": {
-  "status": "auto",
-  "note": "While this model is leading a unit, models in that unit have the Feel No Pain 4+ ability against Psychic Attacks."
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "psychic"
+    }
+   }
+  ]
  },
  "Psychic Barrier (Psychic)": {
-  "status": "auto",
-  "note": "At the start of your opponent’s Shooting phase, you can roll one D6: on a 1, this PSYKER’s unit suffers D3 mortal wounds; on a 2+, until the end of the phase, models in this PSYKER’s unit have a 4+ invulnerable save."
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "phase",
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 2,
+     "do": [
+      {
+       "on": "self",
+       "buff": [
+        {
+         "defend": {
+          "inv": 4
+         }
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    }
+   ]
+  }
  },
  "Called Shots": {
-  "status": "auto",
-  "note": "Each time this model is selected to shoot, you can re-roll one Hit roll, you can re-roll one Wound roll and you can re-roll one Damage roll when resolving its attacks."
+  "freeDie": [
+   {
+    "kind": "reroll",
+    "stage": "hit",
+    "limit": "phase"
+   },
+   {
+    "kind": "reroll",
+    "stage": "wound",
+    "limit": "phase"
+   },
+   {
+    "kind": "reroll",
+    "stage": "damage",
+    "limit": "phase"
+   }
+  ]
  },
  "Shock Troops": {
   "act": {
@@ -1327,12 +1408,35 @@
   "note": "One Officer inside issues its Orders in the Command phase, measured from this transport"
  },
  "Rapid Deployment": {
-  "status": "auto",
-  "note": "Units can disembark from this TRANSPORT after it has Advanced. Units that do so make a shock disembark move (Core Rules, 18.07) for that disembarkation."
+  "effects": [
+   {
+    "disembarkAfterAdvance": true
+   }
+  ],
+  "note": "The shock disembark move is not applied"
  },
  "Transport Support": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, select one enemy unit that was hit by one or more of those attacks. Until the end of the phase, each time a model that disembarked from this TRANSPORT this turn makes an attack that targets that enemy unit, you can re-roll the Hit roll."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "reroll": "hits"
+     },
+     "fromThisTransport": true,
+     "until": "phase",
+     "mark": "Transport Support"
+    }
+   ]
+  }
  },
  "Emplacement Platform": {
   "status": "auto",
@@ -1372,16 +1476,59 @@
   "note": "When this model is set up, it will consist of 1 platform section, up to 5 shield sections, up to 2 broken shield sections, and up to 2 end sections."
  },
  "Remorseless Barrage": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, if one or more of those attacks made with an Indirect Fire weapon scored a hit against an enemy unit, that unit must take a Battle-shock test (if an INFANTRY unit is hit by one or more attacks made by a multiple rocket launcher, they must subtract 1..."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  },
+  "note": "The -1 for multiple rocket launchers is not applied"
  },
  "Rolling Fortress": {
-  "status": "auto",
-  "note": "Each time a ranged attack is allocated to an ASTRA MILITARUM model from your army, if that model is not fully visible to every model in the attacking unit because of this BANEBLADE model, that model has the Benefit of Cover against that attack."
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 3,
+    "units": [
+     "ASTRA MILITARUM"
+    ],
+    "defend": {
+     "vs": "ranged",
+     "cover": true
+    }
+   }
+  ],
+  "note": "Within 3\" of the Baneblade (the card: not fully visible because of it)"
  },
  "Tremor Quake": {
-  "status": "auto",
-  "note": "In your Shooting phase, just after selecting a target for this model’s tremor cannon, the target unit and every other enemy INFANTRY unit within 3\" of that unit must take a Battle-shock test."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "tremor cannon",
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  },
+  "note": "Only the target unit (not INFANTRY within 3\" of it); taken after the attacks"
  },
  "Armour Obliteration": {
   "effects": [
@@ -1393,24 +1540,83 @@
   ]
  },
  "Earthshaker Rounds": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, if one or more of those attacks made with its earthshaker cannon scored a hit against an enemy INFANTRY unit, until the start of your next Shooting phase, that unit is shaken."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true,
+    "hitWeapon": "earthshaker cannon",
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "move": -2,
+       "chargeBonus": -2
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "shaken"
+    }
+   ]
+  }
  },
  "Covering Fire": {
-  "status": "auto",
-  "note": "Each time you target this unit with the Fire Overwatch Stratagem, while resolving that Stratagem, hits are scored on unmodified Hit rolls of 5+, or on unmodified Hit rolls of 4+ instead if this unit is within 6\" of one or more friendly Platoon units."
+  "effects": [
+   {
+    "if": [
+     "!near:6:PLATOON"
+    ],
+    "overwatchHitOn": 5
+   },
+   {
+    "if": [
+     "near:6:PLATOON"
+    ],
+    "overwatchHitOn": 4
+   }
+  ]
  },
  "EMBARKING": {
   "status": "auto",
   "note": "While embarked within a Transport, each model takes up the space of 2 models, and each weapon equipped by these models is considered to be 2 models’ weapons for the purposes of the Firing Deck ability."
  },
  "Bring it Down!": {
-  "status": "auto",
-  "note": "Each time a model in this unit makes a ranged attack that targets a MONSTER of VEHICLE unit, re-roll a Hit roll of 1 and re-roll a Wound roll of 1."
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": [
+     "hits1",
+     "wounds1"
+    ]
+   }
+  ]
  },
  "Screening Line": {
-  "status": "auto",
-  "note": "In your opponent’s Movement phase, if an enemy unit ends a move within 8\" of this unit, if this unit is not within Engagement Range of one or more enemy units, this unit can make a Normal move of up to 6\"."
+  "act": {
+   "when": "enemyMovedNear",
+   "range": 8,
+   "limit": "phase",
+   "if": [
+    "unengaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "move": "6"
+    }
+   ]
+  }
  },
  "Deathstrike Missile": {
   "code": true,
@@ -1435,80 +1641,430 @@
   ]
  },
  "Rearm, Reload, Fire": {
-  "status": "auto",
-  "note": "While this unit is being affected by an Order, provided it Remained Stationary this turn, all Heavy weapons equipped by models in this unit have the [SUSTAINED HITS 1] ability."
+  "effects": [
+   {
+    "if": [
+     "hasOrder",
+     "stationary",
+     "heavyWeapon"
+    ],
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
  },
  "Close-quarters Warfare": {
-  "status": "auto",
-  "note": "This model does not suffer the penalty to its Hit rolls for making ranged attacks while enemy units are within Engagement Range of it."
+  "effects": [
+   {
+    "noBigGunsPenalty": true
+   }
+  ]
  },
  "Flush Them Out": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, select one enemy unit that was hit by one or more of those attacks. Until the start of your next Shooting phase, that unit is scattered. While a unit is scattered, it cannot have the Benefit of Cover."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "noCover": true
+     },
+     "until": "nextTurnStart",
+     "mark": "scattered"
+    }
+   ]
+  }
  },
  "Flak Battery": {
-  "status": "auto",
-  "note": "Each time this model makes an attack that targets a unit that can FLY, you can re-roll the Hit roll."
+  "effects": [
+   {
+    "if": [
+     "targetFly"
+    ],
+    "reroll": "hits"
+   }
+  ]
  },
  "Warrior Elite": {
-  "status": "auto",
-  "note": "Once per battle round, at the start of any phase, you can select one Order to affect this unit until the start of your next Command phase, in addition to any other Orders issued to this unit by an Officer model this battle round."
+  "act": [
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: Take Aim!",
+    "botUse": "always",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "ranged",
+        "skill": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: Move! Move! Move!",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "move": 3
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: Take Cover!",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "defend": {
+         "save": 1,
+         "saveMax3": true
+        }
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: Fix Bayonets!",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "attack": "melee",
+        "skill": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: First Rank, Fire! Second Rank, Fire!",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "rapidFireAttacks": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   },
+   {
+    "when": "anyPhase",
+    "limit": "round",
+    "label": "Warrior Elite: Duty and Honour!",
+    "botUse": "never",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "ld": 1,
+        "oc": 1
+       }
+      ],
+      "until": "nextCommand"
+     }
+    ]
+   }
+  ]
  },
  "Melta Mine": {
-  "status": "auto",
-  "note": "Once per battle, at the start of any phase, you can select one enemy unit within 3\" of the bearer and roll one D6: on a 2+, that enemy unit suffers D3 mortal wounds, or 2D3 mortal wounds instead if it is a VEHICLE unit."
+  "gear": true,
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Melta Mine: an enemy unit within 3\", 2+: D3 mortal wounds (2D3 against a VEHICLE)",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 3
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "do": [
+      {
+       "on": "target",
+       "if": [
+        "!targetKw:VEHICLE"
+       ],
+       "mortals": "D3"
+      },
+      {
+       "on": "target",
+       "if": [
+        "targetKw:VEHICLE"
+       ],
+       "mortals": "2D3"
+      }
+     ]
+    }
+   ]
+  }
  },
  "Grenadiers": {
-  "status": "auto",
-  "note": "Once per turn, you can target this unit with the Explosives Stratagem for 0CP."
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "grenade",
+      "explosives"
+     ],
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
  },
  "Remote Mine": {
-  "status": "auto",
-  "note": "Once per battle, at the start of your Shooting phase, you can select one enemy unit within 9\" of and visible to the bearer and roll one D6: on a 3+, that enemy unit suffers D3 mortal wounds, or 2D3 mortal wounds instead if it is a VEHICLE or FORTIFICATIONS unit."
+  "gear": true,
+  "act": {
+   "when": "shooting",
+   "limit": "battle",
+   "label": "Remote Mine: an enemy unit within 9\", 3+: D3 mortal wounds (2D3 against VEHICLE / FORTIFICATIONS)",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 9,
+    "visible": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 3,
+     "do": [
+      {
+       "on": "target",
+       "if": [
+        "!targetKw:VEHICLE|FORTIFICATION"
+       ],
+       "mortals": "D3"
+      },
+      {
+       "on": "target",
+       "if": [
+        "targetKw:VEHICLE|FORTIFICATION"
+       ],
+       "mortals": "2D3"
+      }
+     ]
+    }
+   ]
+  }
  },
  "Final Duty": {
-  "status": "auto",
-  "note": "While the Fire Coordinator model is on the battlefield, each time a Heavy Weapons Gunner model is destroyed, roll one D6: on a 3+, do not remove it from play. The destroyed model can shoot after the attacking model’s unit has finished making its attacks, and is then removed from play."
+  "effects": [
+   {
+    "if": [
+     "contains:Fire Coordinator"
+    ],
+    "shootOnDeath": 3
+   }
+  ]
  },
  "Armoured Spearhead": {
-  "status": "auto",
-  "note": "Each time this model makes an attack that targets an enemy unit, re-roll a Hit roll of 1 and, if that unit is within range of an objective marker you do not control, you can re-roll the Hit roll instead."
+  "effects": [
+   {
+    "if": [
+     "!targetOnUncontrolledObjective"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "targetOnUncontrolledObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
  },
  "Line-breaker": {
-  "status": "auto",
-  "note": "When making ranged attacks with its demolisher battle cannon, this model can target enemy units within Engagement Range of it (provided no other friendly units are also within Engagement Range of that enemy unit)."
+  "effects": [
+   {
+    "noBigGunsPenalty": true,
+    "shootIntoEngagement": 1
+   }
+  ],
+  "note": "Shooting enemy units engaged with it (the card: demolisher battle cannon only)"
  },
  "Urban Warfare": {
-  "status": "auto",
-  "note": "Each time a ranged attack targets this model, if this model has the Benefit of Cover against that attack, subtract 1 from the Damage characteristic of that attack."
+  "effects": [
+   {
+    "if": [
+     "inCover"
+    ],
+    "defend": {
+     "vs": "ranged",
+     "damage": -1
+    }
+   }
+  ]
  },
  "Gung-ho Executioners": {
-  "status": "auto",
-  "note": "Each time this model makes an attack with its executioner plasma cannon that targets a unit that is Below Half-strength, add 1 to the Hit roll."
+  "effects": [
+   {
+    "weapon": "executioner plasma cannon",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "hit": 1
+   }
+  ]
  },
  "Withering Hail": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, select one enemy unit hit by one or more of those attacks made with its exterminator autocannon."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "exterminator autocannon",
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "ASTRA MILITARUM"
+      ],
+      "ap": 1
+     },
+     "until": "phase",
+     "mark": "Withering Hail"
+    }
+   ]
+  }
  },
  "Mow Down the Enemy": {
-  "status": "auto",
-  "note": "Each time this model makes an attack with its punisher gatling cannon that targets an enemy unit (excluding MONSTERS and VEHICLES), that attack has the [DEVASTATING WOUNDS] ability."
+  "effects": [
+   {
+    "weapon": "punisher gatling cannon",
+    "if": [
+     "targetNotMV"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
  },
  "Tank-killer": {
-  "status": "auto",
-  "note": "Each time this model makes a ranged attack with its vanquisher battle cannon that targets a MONSTER or VEHICLE unit, you can re-roll the Wound roll."
+  "effects": [
+   {
+    "weapon": "vanquisher battle cannon",
+    "if": [
+     "targetMV"
+    ],
+    "reroll": "wounds"
+   }
+  ]
  },
  "Furious Barrage": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, select one enemy unit (excluding MONSTERS and VEHICLES) that was hit by one or more of those attacks made with this model’s storm eagle rockets. Until the start of your next Shooting phase, that enemy unit is staggered."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true,
+    "hitWeapon": "storm eagle rockets",
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "oc": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "staggered"
+    }
+   ]
+  }
  },
  "Daring Recon": {
-  "status": "auto",
-  "note": "At the start of your Shooting phase, select one enemy unit within 18\" of and visible to this unit. Until the end of the phase, each time a friendly ASTRA MILITARUM model makes an attack that targets that unit, re-roll a Hit roll of 1."
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "ASTRA MILITARUM"
+      ],
+      "reroll": "hits1"
+     },
+     "until": "phase",
+     "mark": "Daring Recon"
+    }
+   ]
+  }
  },
  "Titan-killer": {
-  "status": "auto",
-  "note": "Each time this model makes a ranged attack with its volcano cannon that targets a MONSTER or VEHICLE unit, that attack has the [DEVASTATING WOUNDS] ability."
+  "effects": [
+   {
+    "weapon": "volcano cannon",
+    "if": [
+     "targetMV"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
  },
  "Mount Up!": {
   "code": true,
@@ -1516,12 +2072,59 @@
   "note": "At the end of the opponent's Movement phase an INFANTRY unit wholly within 6\" that is near the enemy and off the objectives embarks"
  },
  "Concussive Wave": {
-  "status": "auto",
-  "note": "In your Shooting phase, just after selecting a target for this model’s Stormsword siege cannon, roll one D6 for the target unit and every other unit within 3\" of that unit: on a 5+, the unit being rolled for is struck by a concussive wave."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "hitWeapon": "siege cannon",
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "Only the target unit is rolled for"
  },
  "Suppression Bombardment": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this model has shot, select one enemy unit (excluding MONSTERS and VEHICLES) that was hit by one or more of those attacks made with this model’s Wyvern quad stormshard mortar. Until the start of your next Shooting phase, that enemy unit is suppressed."
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "closest": true,
+    "hitWeapon": "stormshard mortar",
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "hit": -1
+      }
+     ],
+     "until": "nextTurnStart",
+     "mark": "suppressed"
+    }
+   ]
+  }
  },
  "Shadow In The Warp (Ravener Prime only)": {
   "status": "auto",
@@ -1558,12 +2161,32 @@
   ]
  },
  "Rapid Strike Vehicle": {
-  "status": "auto",
-  "note": "While one or more units are embarked within this model, unless this model is Battle-shocked, add 1 to this model’s Objective Control characteristic for every 3 models (rounding down) embarked within it."
+  "effects": [
+   {
+    "if": [
+     "notBattleShocked"
+    ],
+    "embarkedOc": true
+   }
+  ],
+  "note": "Adds the OC of embarked models (the card: +1 per 3 models)"
  },
  "Convoy Escort Vehicle": {
-  "status": "auto",
-  "note": "In your Shooting phase, after this unit has shot, it can make a Normal move of up to D6\". If it does, until the end of the turn, this unit is not eligible to declare a charge."
+  "act": {
+   "when": "afterShootingButton",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Convoy Escort Vehicle: Normal move of up to D6\" (no charge)",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6",
+     "noCharge": true
+    }
+   ]
+  }
  },
  "Swallow Whole": {
   "effects": [

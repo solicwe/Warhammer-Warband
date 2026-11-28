@@ -12,6 +12,9 @@ import namesSeed from './names.json';
 
 let cache: Record<string, string> = {};
 cache = readJSON<typeof cache>(KEYS.portraits) ?? {};
+/** photos added or changed since the last ZIP export: the next ZIP holds only these */
+const FRESH_KEY = 'w40k11-portraits-fresh';
+let fresh: string[] = readJSON<string[]>(FRESH_KEY) ?? [];
 let version = 0;
 const listeners = new Set<() => void>();
 
@@ -254,6 +257,8 @@ export const ownPortraitCount = (): number => Object.keys(cache).length;
 
 export function setPortrait(datasheet: string, dataUrl: string | null): boolean {
   if (dataUrl) cache[datasheet] = dataUrl; else delete cache[datasheet];
+  fresh = dataUrl ? [...new Set([...fresh, datasheet])] : fresh.filter((n) => n !== datasheet);
+  writeJSON(FRESH_KEY, fresh);
   save();
   // on the web link: the photo goes up to the site (shown at once from here, kept locally until the upload lands)
   if (dataUrl) void uploadToCloud(datasheet, dataUrl);
@@ -556,13 +561,14 @@ function dataUrlBytes(url: string): { bytes: Uint8Array; ext: string } {
   return { bytes, ext: mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg' };
 }
 
-/** A backup of the player's photos ({ datasheet: dataURL }), to move them to another browser. */
-export const exportPortraitsJson = (): string => JSON.stringify({ kind: 'w40k11-portraits', version: 1, portraits: cache });
-
-/** Export all custom portraits as a ZIP file. */
+/** Export the photos changed since the last export as a ZIP file. */
+export const freshPortraitCount = (): number => fresh.filter((n) => n in cache).length;
+/** Call after the ZIP was saved: the next one starts empty. */
+export function markPortraitsExported() { fresh = []; writeJSON(FRESH_KEY, fresh); version++; listeners.forEach((l) => l()); }
 export function exportPortraitsZip(): Uint8Array {
   const files: { name: string; data: Uint8Array }[] = [];
   for (const [name, url] of Object.entries(cache)) {
+    if (!fresh.includes(name)) continue;
     try {
       const { bytes, ext } = dataUrlBytes(url);
       files.push({ name: `${imageSlug(name)}.${ext}`, data: bytes });

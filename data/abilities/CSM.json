@@ -1398,7 +1398,8 @@
  },
  "Cabal of Sorcerers (Aspiring Sorcerer only)": {
   "status": "auto",
-  "note": "Thousand Sons army rule: not used in a Chaos Space Marines army"
+  "note": "Thousand Sons army rule: not used in a Chaos Space Marines army",
+  "code": true
  },
  "Bringers of Change": {
   "effects": [

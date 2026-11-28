@@ -7,7 +7,8 @@
  },
  "Power from Pain": {
   "status": "auto",
-  "note": "Pain Abilities All Drukhari units have a Pain ability, tagged with the word ‘Pain’. Pain abilities only apply to a unit while it is Empowered. If your Army Faction is DRUKHARI, you can Empower units from your army with Pain abilities by spending Pain tokens (see below)."
+  "note": "Pain Abilities All Drukhari units have a Pain ability, tagged with the word ‘Pain’. Pain abilities only apply to a unit while it is Empowered. If your Army Faction is DRUKHARI, you can Empower units from your army with Pain abilities by spending Pain tokens (see below).",
+  "code": true
  },
  "Hatred Eternal (Pain)": {
   "act": [

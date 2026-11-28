@@ -6,11 +6,13 @@
  },
  "Cabal of Sorcerers (Aspiring Sorcerer only)": {
   "status": "auto",
-  "note": "The Aspiring Sorcerer attempts Rituals (rituals.ts)"
+  "note": "The Aspiring Sorcerer attempts Rituals (rituals.ts)",
+  "code": true
  },
  "Cabal of Sorcerers (Scarab Occult Sorcerer only)": {
   "status": "auto",
-  "note": "The Scarab Occult Sorcerer attempts Rituals (rituals.ts)"
+  "note": "The Scarab Occult Sorcerer attempts Rituals (rituals.ts)",
+  "code": true
  },
  "Pact of Sorcery": {
   "status": "auto",
@@ -881,41 +883,41 @@
    ]
   }
  },
-  "Malign Trickery@Tzaangor Enlightened": {
-   "act": {
-    "when": "opponentMovementEnd",
-    "limit": "phase",
-    "range": 12,
-    "if": [
-     "notEngaged"
-    ],
-    "label": "Normal move D6 after the opponent's Movement phase",
-    "do": [
-     {
-      "on": "self",
-      "move": "D6"
-     }
-    ]
-   }
-  },
-  "Malign Trickery@Tzaangor Enlightened with Fatecaster Greatbows": {
-   "act": {
-    "when": "opponentMovementEnd",
-    "limit": "phase",
-    "range": 12,
-    "if": [
-     "notEngaged"
-    ],
-    "label": "Normal move D6 after the opponent's Movement phase",
-    "do": [
-     {
-      "on": "self",
-      "move": "D6"
-     }
-    ]
-   }
-  },
-  "One Head Looks Forward": {
+ "Malign Trickery@Tzaangor Enlightened": {
+  "act": {
+   "when": "opponentMovementEnd",
+   "limit": "phase",
+   "range": 12,
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Normal move D6 after the opponent's Movement phase",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "Malign Trickery@Tzaangor Enlightened with Fatecaster Greatbows": {
+  "act": {
+   "when": "opponentMovementEnd",
+   "limit": "phase",
+   "range": 12,
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Normal move D6 after the opponent's Movement phase",
+   "do": [
+    {
+     "on": "self",
+     "move": "D6"
+    }
+   ]
+  }
+ },
+ "One Head Looks Forward": {
   "act": {
    "when": "commandEnd",
    "auto": true,

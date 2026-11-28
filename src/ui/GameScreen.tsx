@@ -1735,10 +1735,16 @@ export function GameScreen({ initial, onExit, onWatchReplay, replay = false, rep
       return (
         <>
           <div className="handoff">{pName(s, p)} won the roll-off</div>
-          <div className="small">Choose who is the Attacker. The Defender deploys first.</div>
-          <div className="row">
-            <button className="btn primary grow" onClick={() => act((g) => answerRoleChoice(g, true))}>Attacker</button>
-            <button className="btn grow" onClick={() => act((g) => answerRoleChoice(g, false))}>Defender</button>
+          <div className="small">Choose your role. The roll-off is already rolled; you won it.</div>
+          <div className="row" style={{ alignItems: 'stretch' }}>
+            <div className="grow" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button className="btn primary" onClick={() => act((g) => answerRoleChoice(g, true))}>Attacker</button>
+              <div className="tiny muted">Deploys second, but redeploys first.</div>
+            </div>
+            <div className="grow" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button className="btn" onClick={() => act((g) => answerRoleChoice(g, false))}>Defender</button>
+              <div className="tiny muted">Deploys first.</div>
+            </div>
           </div>
         </>
       );

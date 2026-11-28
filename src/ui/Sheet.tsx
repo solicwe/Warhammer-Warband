@@ -18,7 +18,7 @@ function Stats({ p, noInv }: { p: ModelProfileData; noInv?: boolean }) {
     <div className="ds-stats">
       <div className="ds-statrow">
         {cells.map(([k, v]) => <div key={k} className="ds-stat"><span>{k}</span><b>{v}</b></div>)}
-        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span><span className="ds-inv-label">INV SAVE{p.InSvRanged ? "*" : ""}</span>{p.InSvRanged && <span className="ds-inv-label">* against ranged attacks only</span>}</div> : null}
+        {p.InSv && !noInv ? <div className="ds-inv" title="Invulnerable save"><span className="ds-shield">{p.InSv}+</span><span className="ds-inv-label">INV SAVE{p.InSvRanged ? "*" : ""}</span>{p.InSvRanged && <span className="ds-inv-label ds-inv-note">* against ranged attacks only</span>}</div> : null}
       </div>
     </div>
   );
@@ -549,6 +549,9 @@ function SirHekhturCard({ owner }: { owner: 0 | 1 }) {
         </div>
       </div>
       <Weapons weapons={SIR_HEKHTUR_WEAPONS} />
+      <div className="ds-ab" style={{ fontSize: 12 }}>
+        <b>LONE OPERATIVE:</b> Unless part of an attached unit, this unit cannot be selected as the target of a ranged attack unless the attacker is within 12".
+      </div>
       <div className="ds-ab" style={{ fontSize: 12 }}>
         <b>USING SIR HEKHTUR:</b> If your Canis Rex model is destroyed, this model is treated as a model disembarking from a destroyed TRANSPORT and must perform an Emergency Disembarkation. Sir Hekhtur cannot be selected as the target of any of your Stratagems other than Core Stratagems. Your Canis Rex unit is not considered to be destroyed until Sir Hekhtur is also destroyed.
       </div>

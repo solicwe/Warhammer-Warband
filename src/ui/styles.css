@@ -2329,6 +2329,8 @@ select option {
 .ds-statline .ds-inv { grid-column: 3 / span 4; display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin: 2px 0 0 5px; }
 .ds-inv-label { font: 700 11px var(--font-cond); letter-spacing: 0.04em; color: var(--text-2); white-space: nowrap; }
 .ds-sheet .ds-inv-label { color: #fff; }
+.ds-inv-note { white-space: normal; font-weight: 600; flex: 1 1 140px; min-width: 0; line-height: 1.2; }
+.ds-statline .ds-inv { flex-wrap: wrap; }
 .ds-mname { flex: none; padding-top: 6px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ds-mname small { display: inline; white-space: nowrap; }
 /* weapon rows: name and keywords on one line (a keyword breaks only at a space, never at its hyphen); the number columns stay narrow */
@@ -2683,3 +2685,9 @@ select option {
 /* end-of-turn discard: one block per active Tactical card, with what it asks for */
 .discard-card { border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; margin: 6px 0; background: var(--surface); display: grid; gap: 4px; }
 .discard-card.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* model pictures: small thumbnails in a wrapping row (was unstyled and filled the sheet) */
+.model-pics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.model-pic { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 64px; }
+.model-pic .portrait, .model-pic .portrait svg, .model-pic .portrait-img { width: 40px; height: 40px; }
+.model-pic > span { font-size: 10px; line-height: 1.15; text-align: center; color: var(--text-2); overflow-wrap: anywhere; max-height: 2.4em; overflow: hidden; }

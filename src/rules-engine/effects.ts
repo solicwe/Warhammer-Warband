@@ -835,6 +835,7 @@ export function cond(c: string, x: Ctx): boolean {
   // a detachment rule / army rule the unit's army has: "rule:Searing Soulflame" or the detachment's name
   if (c.startsWith('rule:')) return activeRules(s, A.owner).includes(c.slice(5));
   if (c.startsWith('roundAtLeast:')) return s.round >= Number(c.slice(13));
+  if (c.startsWith('roundAtMost:')) return s.round <= Number(c.slice(12));
   if (c.startsWith('targetFar:')) { const r = Number(c.slice(10)); return !!T && !boardUnits(s, other(T.owner)).some((e) => unitDistance(T, e) <= r + 1e-6); }
   if (c.startsWith('enemyBetween:')) { const [lo, hi] = c.slice(13).split(':').map(Number); return boardUnits(s, other(A.owner)).some((e) => { const d = unitDistance(A, e); return d > lo + 1e-6 && d <= hi + 1e-6; }); }
   // wholly within X" of one or more battlefield edges (every model near the same or any edge)

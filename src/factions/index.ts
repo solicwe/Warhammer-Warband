@@ -283,6 +283,8 @@ addModifier('assaultWeapons', (s, u) => isTauArmy(s, u.owner) && (s.players[u.ow
 // Thousand Sons: units that must Deep Strike within the Flow of Magic
 addModifier('deepStrikeZone', (s, p, at, r) => circleInFlow(s, p, at, r));
 addCondition('inFlow', (_c, x) => inFlow(x.s, x.holder ?? x.A));
+// Warding Hex: an objective the unit is in range of, that you control and that lies wholly within your Flow of Magic (the marker, not the unit)
+addCondition('objInFlow', (_c, x) => { const u = x.holder ?? x.A; return x.s.objectives.some((o) => o.controller === u.owner && unitInRange(x.s, u, o) && circleInFlow(x.s, u.owner, o, 0.8)); });
 
 // Tyranids: Synapse (Battle-shock and Leadership tests on 3D6)
 addCondition('inSynapse', (_c, x) => inSynapse(x.s, x.A)); // Tyranid Synapse check (Synaptic Link)

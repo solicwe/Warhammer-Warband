@@ -21,8 +21,19 @@
   "note": "Rounds 3+: [SUSTAINED HITS 1]. While Guided, also ignore modifiers to BS/Hit rolls (handled by For the Greater Good in tau.ts)"
  },
  "Killing Blow": {
-  "status": "auto",
-  "note": "Rounds 1-3: ranged weapons have [ASSAULT]. While Guided, ranged attacks have [LETHAL HITS]."
+  "effects": [
+   {
+    "attack": "ranged",
+    "if": [
+     "roundAtMost:3"
+    ],
+    "abilities": [
+     "assault"
+    ]
+   }
+  ],
+  "status": "partial",
+  "note": "Rounds 1-3: ranged weapons have [ASSAULT]. While Guided, ranged attacks have [LETHAL HITS] (not automated yet)."
  },
  "Bonded Heroes": {
   "effects": [
@@ -46,8 +57,23 @@
   "note": "Battlesuit models only (scope:model)"
  },
  "Hunter’s Instincts": {
-  "status": "auto",
-  "note": "Kroot attacks: +1 to Hit if target is below Starting Strength, and +1 to Wound if Below Half-strength."
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetBelowStarting"
+    ],
+    "hit": 1
+   },
+   {
+    "attack": "melee",
+    "if": [
+     "targetBelowHalf"
+    ],
+    "wound": 1
+   }
+  ],
+  "status": "auto"
  },
  "Skirmish Fighters": {
   "effects": [

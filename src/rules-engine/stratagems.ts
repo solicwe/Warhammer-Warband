@@ -507,7 +507,7 @@ const COND_TH: Record<string, string> = {
   targetOfLast: 'must be the target of the enemy unit that just attacked', lostToLast: 'must have lost models to that attack', halvedByLast: 'must be Below Half-strength after that attack',
   '!engaged': 'must be unengaged', engaged: 'must be engaged', belowStarting: 'must be below Starting Strength', onObjective: 'must be within range of an objective', charged: 'must have charged this turn',
   killedThisPhase: 'must have destroyed an enemy unit this phase', disembarkedThisTurn: 'must have disembarked this turn', entrenched: 'must be ENTRENCHED',
-  inFlow: "every model must be wholly within your army's Flow of Magic (your deployment zone, plus No Man's Land or the enemy zone while you hold half its objectives)", onControlledObjective: 'must control an objective', hasEmbarkedBattleline: 'must have a BATTLELINE unit embarked', fellBackFromLast: 'the enemy unit must have Fallen Back from this unit',
+  inFlow: "every model must be wholly within your army's Flow of Magic (your deployment zone, plus No Man's Land or the enemy zone while you hold half its objectives)", onControlledObjective: 'must control an objective', objInFlow: "must be in range of an objective you control that is wholly within your Flow of Magic", hasEmbarkedBattleline: 'must have a BATTLELINE unit embarked', fellBackFromLast: 'the enemy unit must have Fallen Back from this unit',
 };
 const condText = (c: string) => COND_TH[c] ?? (c.startsWith('nearLast:') ? `must be within ${c.slice(9)}" of that enemy unit` : c);
 
