@@ -633,7 +633,8 @@
  },
  "Pact of Blood": {
   "status": "auto",
-  "note": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)"
+  "note": "Blood Legions units only with Khorne Daemonkin (checked in the army builder)",
+  "code": true
  },
  "Rage Embodied (Aura)": {
   "effects": [

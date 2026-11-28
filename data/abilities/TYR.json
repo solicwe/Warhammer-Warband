@@ -720,7 +720,8 @@
   "status": "auto"
  },
  "Feed the Swarm": {
-  "status": "auto"
+  "status": "auto",
+  "code": true
  },
  "Elevated Might": {
   "effects": [
@@ -1962,7 +1963,8 @@
   ]
  },
  "Protean Purpose": {
-  "status": "manual",
-  "note": "Not automated: picking Singular Purpose again"
+  "code": true,
+  "status": "auto",
+  "note": "Talons of the Norn Queen: a Command phase button picks a new Singular Purpose enemy once the first is gone"
  }
 }

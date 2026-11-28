@@ -1,70 +1,71 @@
 {
-  "_comment": "Adeptus Titanicus Faction Pack. Complete datasheet, wargear, and army rules.",
-  "Towering Example": {
-    "status": "auto",
-    "note": "Muster without detachments (0 DP). Any Titanic model can be your Warlord without CHARACTER keyword."
-  },
-  "Striding Colossus": {
-    "code": true,
-    "status": "auto",
-    "note": "Each time you target this model with a Stratagem, you must spend three times that Stratagem’s stated CP cost to do so."
-  },
-  "Flank Speed": {
-    "effects": [
-      {
-        "advanceFixed": 8
-      }
+ "_comment": "Adeptus Titanicus Faction Pack. Complete datasheet, wargear, and army rules.",
+ "Towering Example": {
+  "status": "auto",
+  "note": "Muster without detachments (0 DP). Any Titanic model can be your Warlord without CHARACTER keyword.",
+  "code": true
+ },
+ "Striding Colossus": {
+  "code": true,
+  "status": "auto",
+  "note": "Each time you target this model with a Stratagem, you must spend three times that Stratagem’s stated CP cost to do so."
+ },
+ "Flank Speed": {
+  "effects": [
+   {
+    "advanceFixed": 8
+   }
+  ]
+ },
+ "God-machine": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack",
+     "chargeAfterFallBack"
     ]
-  },
-  "God-machine": {
-    "effects": [
-      {
-        "eligible": [
-          "shootAfterFallBack",
-          "chargeAfterFallBack"
-        ]
-      }
-    ]
-  },
-  "Wrath of the Omnissiah": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
+   }
+  ]
+ },
+ "Wrath of the Omnissiah": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
     }
-  },
-  "Titanic Fire Support": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "IMPERIUM"
-            ],
-            "critWoundAp": 1
-          },
-          "until": "phase",
-          "mark": "Titanic Fire Support"
-        }
-      ]
-    }
+   ]
   }
+ },
+ "Titanic Fire Support": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "IMPERIUM"
+      ],
+      "critWoundAp": 1
+     },
+     "until": "phase",
+     "mark": "Titanic Fire Support"
+    }
+   ]
+  }
+ }
 }

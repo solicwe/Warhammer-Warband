@@ -16,7 +16,8 @@
  },
  "Pact of Sorcery": {
   "status": "auto",
-  "note": "Checked by the army builder (allied units)"
+  "note": "Checked by the army builder (allied units)",
+  "code": true
  },
  "Dark Pacts": {
   "status": "info",

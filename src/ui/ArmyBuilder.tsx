@@ -16,7 +16,7 @@ import { armyColor, dsColor, DatasheetView, weaponCounts } from './Sheet';
 import { datasheetVariants } from './loadout';
 import { tokenKind } from './Tokens';
 import { EnhTable, RuleCards, StratTable } from './RuleTable';
-import { PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion, exportPortraitsZip, freshPortraitCount, markPortraitsExported, download } from './portraits';
+import { IS_ADMIN, PHOTO_EDIT, getPortrait, setPortrait, usePortraitsVersion, exportPortraitsZip, freshPortraitCount, markPortraitsExported, download } from './portraits';
 
 interface Props {
   list: ArmyList;
@@ -768,7 +768,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
           <div className="dt-det">{chosenDets.map((d) => d.name).join(' + ') || (list.factionId === 'TL' ? 'Towering Example (No Detachment)' : 'No Detachment selected')}</div>
           {chosenDets.length > 0 ? <div className="tiny">{dispositionChips()} {chosenDets.reduce((x, d) => x + d.dp, 0)}/{size.dp} DP</div> : (list.factionId === 'TL' ? <div className="tiny">{dispositionChips()}</div> : null)}
           <div className="tiny muted">{size.name} · {pts}/{size.points} pts</div>
-          {PHOTO_EDIT && (
+          {PHOTO_EDIT && IS_ADMIN && (
             <div className="ab-export-portraits-wrap" style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -1841,7 +1841,7 @@ export function ArmyBuilder({ list, onChange, onDone, startPicker }: Props) {
                 <input className="ab-title ab-name-input" aria-label="Army name" value={list.name} placeholder="Army name" onChange={(e) => set({ name: e.target.value })} />
                 <span className="ab-faction">{factionName}{sub ? ` · ${sub.name}` : ''}</span>
                 <span className="ab-det-name">{list.detachments.join(' · ') || 'No Detachment selected'}</span>
-                {PHOTO_EDIT && (
+                {PHOTO_EDIT && IS_ADMIN && (
                   <div className="ab-export-portraits-wrap" style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <button
                       type="button"

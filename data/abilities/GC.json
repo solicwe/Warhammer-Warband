@@ -224,7 +224,8 @@
  },
  "Cult Ambush": {
   "status": "auto",
-  "note": "If your Army Faction is GENESTEALER CULTS, you start the battle with a number of Resurgence points, depending on the battle size, as shown below."
+  "note": "If your Army Faction is GENESTEALER CULTS, you start the battle with a number of Resurgence points, depending on the battle size, as shown below.",
+  "code": true
  },
  "Claimed for the Cult": {
   "act": {
@@ -845,8 +846,8 @@
   ]
  },
  "Synapse": {
-  "status": "auto",
-  "note": "If your Army Faction is TYRANIDS, while a TYRANIDS unit from your army is within 6\" of one or more friendly Synapse models, that TYRANIDS unit is said to be within Synapse Range of that model and of your army."
+  "status": "info",
+  "note": "Applies only when your Army Faction is Tyranids"
  },
  "Feeder Tendrils": {
   "act": {
@@ -997,8 +998,14 @@
   }
  },
  "Aerial Seeding": {
-  "status": "partial",
-  "note": "It is set up from Reserves like other units; its passengers disembark more than 8\" from enemies by hand"
+  "status": "auto",
+  "code": true,
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ],
+  "note": "Starts in Reserves (no Reserves limit); can be set up from battle round 1; passengers disembark at once more than 8\" from enemies (automatic). After it is set up nothing can embark: not enforced"
  },
  "Pheromone Trail": {
   "effects": [
@@ -1439,12 +1446,12 @@
   }
  },
  "Emplacement Platform": {
-  "status": "auto",
-  "note": "Friendly ASTRA MILITARUM INFANTRY models can be set up or end any type of move on top of the platform section of this FORTIFICATION."
+  "status": "info",
+  "note": "Terrain: models can stand on the platform"
  },
  "Reinforced Cover": {
-  "status": "auto",
-  "note": "Each time a ranged attack is allocated to a model, if that model is not fully visible to every model in the attacking unit because of this FORTIFICATION, that model has the Benefit of Cover against that attack."
+  "status": "info",
+  "note": "Cover from the Fortification is worked out by the terrain rules"
  },
  "Defence Line": {
   "effects": [
@@ -1585,8 +1592,8 @@
   ]
  },
  "EMBARKING": {
-  "status": "auto",
-  "note": "While embarked within a Transport, each model takes up the space of 2 models, and each weapon equipped by these models is considered to be 2 models’ weapons for the purposes of the Firing Deck ability."
+  "status": "info",
+  "note": "Transport capacity: each model takes the space of 2 models (counted by the builder)"
  },
  "Bring it Down!": {
   "effects": [
@@ -2127,8 +2134,8 @@
   }
  },
  "Shadow In The Warp (Ravener Prime only)": {
-  "status": "auto",
-  "note": "If your Army Faction is TYRANIDS, once per battle, in either player’s Command phase, if one or more units from your army with this ability are on the battlefield, you can unleash the Shadow in the Warp. When you do, each enemy unit on the battlefield must take a Battle-shock test."
+  "status": "info",
+  "note": "Applies only when your Army Faction is Tyranids"
  },
  "Alpha Invader": {
   "effects": [
@@ -2230,8 +2237,9 @@
   }
  },
  "A Perfect Ambush": {
+  "code": true,
   "status": "auto",
-  "note": "Each time a GENESTEALER CULTS unit from your army is set up on the battlefield as Reinforcements, until the end of your next Fight phase, weapons equipped by models in that unit have the [SUSTAINED HITS 1] and [IGNORES COVER] abilities."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Prowling Agitant": {
   "act": {
@@ -2278,8 +2286,9 @@
   ]
  },
  "Unquestioning Fanaticism": {
+  "code": true,
   "status": "auto",
-  "note": "For each ACOLyTE HybRIDS, HybRID METAmORPHS and NEOPHyTE HybRIDS unit from your army, while one or more CHARACTER models are leading that unit, you can re-roll Advance and Charge rolls made for it."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Gene-sire’s Reliquant": {
   "effects": [
@@ -2314,8 +2323,9 @@
   ]
  },
  "Hypermorphic Fury": {
+  "code": true,
   "status": "auto",
-  "note": "Add 1 to Charge rolls made for AbERRANTS, BIOPHAgUS and PURESTRAIN GENESTEALERS units from your army. In addition, each time such a unit is selected to fight, if it made a Charge move this turn, until the end of the phase, add 1 to the Attacks characteristic of melee weapons equipped by models in that unit."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Predatory Instincts": {
   "effects": [
@@ -2366,8 +2376,9 @@
   ]
  },
  "Rapid Takeover": {
+  "code": true,
   "status": "auto",
-  "note": "While a GENESTEALER CULTS MOUNTED/VEHICLE model from your army is not Battle-shocked, add 1 to its Objective Control characteristic."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Serpentine Tactics": {
   "effects": [
@@ -2420,12 +2431,14 @@
   ]
  },
  "Integrated Tactics": {
+  "code": true,
   "status": "auto",
-  "note": "Each time an ASTRA MILITARUm unit from your army (see below) is selected to shoot, you can select one enemy unit within 18\" of and visible to that unit."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "BROOD BROTHERS": {
+  "code": true,
   "status": "auto",
-  "note": "You can include ASTRA MILITARUm units in your army, even though they do not have the GENESTEALER CULTS Faction keyword. The combined points cost of such units you can include in your army is: • Incursion: Up to 500 pts • Strike Force: Up to 1000 pts • Onslaught: Up to 1500 pts A GENESTEALER CULTS mo..."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Martial Espionage": {
   "act": {
@@ -2483,12 +2496,13 @@
   ]
  },
  "Psionic Parasitism": {
+  "code": true,
   "status": "auto",
-  "note": "At the end of your Movement phase, for each Tyranids Synapse unit from your army, you can select one friendly Genestealer Cults unit (excluding Purestrain Genestealer and Patriarch units) and one friendly Tyranids unit each within 9\" of and visible to that SYNAPSE unit."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Synaptic Auger": {
-  "status": "auto",
-  "note": "Tyranids model only. Each time the bearer would regain one or more lost wounds from the Psionic Parasitism Detachment rule, it regains up to twice that number of lost wounds instead."
+  "status": "manual",
+  "note": "Not automated: doubles the wounds Psionic Parasitism heals"
  },
  "Enraptured Damnation": {
   "effects": [
@@ -2520,8 +2534,9 @@
   ]
  },
  "Killer Reputation": {
+  "code": true,
   "status": "auto",
-  "note": "Friendly KELERMORPH/LOCUS/REDUCTUS SABOTEUR/SANCTUS models have KILLER. Friendly KILLER models’ attacks can: • Re-roll hit rolls of 1. • Re-roll wound rolls of 1"
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Gene-Tailored Toxins": {
   "effects": [
@@ -2540,8 +2555,9 @@
   ]
  },
  "Enemy Within": {
+  "code": true,
   "status": "auto",
-  "note": "At the end of your opponent’s Fight phase, friendly unengaged PURESTRAIN GENESTEALER units can be placed in strategic reserves. This detachment has the PURESTRAIN tag and cannot be taken with another PURESTRAIN detachment."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Mark of the Star Children": {
   "effects": [
@@ -2563,8 +2579,9 @@
   ]
  },
  "Hordes of the Faithful": {
+  "code": true,
   "status": "auto",
-  "note": "In your Command phase, if a friendly NEOPHYTE HYBRIDS unit is within a terrain area, that unit heals 3 wounds. This detachment has the HOSTS tag and cannot be taken with another HOSTS detachment."
+  "note": "Detachment rule: runs from data/detachment-rules.json"
  },
  "Inspired to Greatness": {
   "effects": [
@@ -3846,8 +3863,14 @@
   }
  },
  "Aerial Seeding@Tyrannocyte": {
-  "status": "info",
-  "note": "It arrives from Reserves in battle rounds 1-3 and its passengers disembark (set up by hand more than 8\" from enemy models)"
+  "status": "auto",
+  "code": true,
+  "effects": [
+   {
+    "arriveFromRound": 1
+   }
+  ],
+  "note": "Starts in Reserves (no Reserves limit); can be set up from battle round 1; passengers disembark at once more than 8\" from enemies (automatic). After it is set up nothing can embark: not enforced"
  },
  "Vox-relay Beacon": {
   "code": true,

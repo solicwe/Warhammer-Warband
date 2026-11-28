@@ -9,7 +9,7 @@ import { Icon, Logo } from './Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { armyColor } from './Sheet';
 import type { Army } from './library';
-import { PHOTO_EDIT, setPhotoEdit, getPublishToken, setPublishToken, publishPortraits, freshPortraitCount, usePortraitsVersion } from './portraits';
+import { IS_ADMIN, PHOTO_EDIT, setPhotoEdit, getPublishToken, setPublishToken, publishPortraits, freshPortraitCount, usePortraitsVersion } from './portraits';
 
 interface Props {
   armies: Army[];
@@ -125,7 +125,7 @@ export function Home({
           </nav>
         </div>
 
-        <PhotoTools />
+        {IS_ADMIN && <PhotoTools />}
         <section className="group" aria-label="Your armies">
           <div className="group-head">
             <h3>Armies</h3>

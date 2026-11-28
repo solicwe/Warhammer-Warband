@@ -1604,11 +1604,13 @@
  },
  "Battle Focus": {
   "status": "auto",
-  "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres."
+  "note": "Receive Battle Focus tokens each round based on battle size. Spend 1 token to trigger Agile Manoeuvres.",
+  "code": true
  },
  "Disparate Paths": {
   "status": "auto",
-  "note": "Can include Harlequins units in your army even without Asuryani keyword."
+  "note": "Can include Harlequins units in your army even without Asuryani keyword.",
+  "code": true
  },
  "Death is Not Enough": {
   "act": {

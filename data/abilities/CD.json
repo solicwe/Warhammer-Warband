@@ -1,2137 +1,2155 @@
 {
-  "The Shadow of Chaos": {
-    "code": true,
-    "status": "auto",
-    "note": "Daemonic Manifestation and Daemonic Terror"
-  },
-  "Pack Leader": {
-    "effects": [
-      {
-        "scope": "led",
-        "rerollAdvance": true,
-        "rerollCharge": true
-      }
-    ]
-  },
-  "Prey of the Blood God": {
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "targetQuarry"
-        ],
-        "reroll": "wounds"
-      }
+ "The Shadow of Chaos": {
+  "code": true,
+  "status": "auto",
+  "note": "Daemonic Manifestation and Daemonic Terror"
+ },
+ "Pack Leader": {
+  "effects": [
+   {
+    "scope": "led",
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Prey of the Blood God": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "targetQuarry"
     ],
-    "act": {
-      "when": "battleStart",
-      "auto": true,
-      "limit": "battle",
-      "target": {
-        "side": "enemy",
-        "anywhere": true
-      },
-      "do": [
-        {
-          "setQuarry": true
-        }
-      ]
-    },
-    "note": "A new prey when it is destroyed"
+    "reroll": "wounds"
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setQuarry": true
+    }
+   ]
   },
-  "Brass Collar of Bloody Vengeance": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "fnp": 3,
-          "fnpVs": "mortalPsychic"
-        }
-      }
-    ]
-  },
-  "Greater Daemon of Khorne (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
-  },
-  "Greater Daemon of Tzeentch (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
-  },
-  "Greater Daemon of Nurgle (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
-  },
-  "Greater Daemon of Slaanesh (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
-  },
-  "Rage Embodied (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "KHORNE"
-        ],
-        "attack": "melee",
-        "attacks": 1
-      }
-    ]
-  },
-  "Murderlust": {
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance"
-        ]
-      }
-    ]
-  },
-  "Lord of Decapitations": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "abilities": [
-          "devastating wounds"
-        ]
-      }
-    ]
-  },
-  "Skulls for Khorne": {
-    "effects": [
-      {
-        "scope": "model",
-        "if": [
-          "targetCharacter"
-        ],
-        "reroll": [
-          "hits",
-          "wounds"
-        ]
-      }
+  "note": "A new prey when it is destroyed"
+ },
+ "Brass Collar of Bloody Vengeance": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 3,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Greater Daemon of Khorne (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+ },
+ "Greater Daemon of Tzeentch (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+ },
+ "Greater Daemon of Nurgle (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+ },
+ "Greater Daemon of Slaanesh (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "Friendly units of its god within 6\" are within the Shadow of Chaos"
+ },
+ "Rage Embodied (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "KHORNE"
     ],
-    "act": [
-      {
-        "when": "afterFighting",
-        "auto": true,
-        "needCharacterKill": true,
-        "do": [
-          {
-            "cp": 1
-          }
-        ]
-      },
-      {
-        "when": "afterShooting",
-        "auto": true,
-        "needCharacterKill": true,
-        "do": [
-          {
-            "cp": 1
-          }
-        ]
-      }
+    "attack": "melee",
+    "attacks": 1
+   }
+  ]
+ },
+ "Murderlust": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance"
     ]
-  },
-  "Blood Throne": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 18,
-        "visible": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "LEGIONES DAEMONICA",
-              "KHORNE"
-            ],
-            "strength": 1,
-            "ap": 1,
-            "damage": 1
-          },
-          "until": "phase",
-          "mark": "Blood Throne"
-        }
-      ]
-    }
-  },
-  "Champion Slayer": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "targetKw:CHARACTER|MONSTER"
-        ],
-        "reroll": "wounds"
-      }
+   }
+  ]
+ },
+ "Lord of Decapitations": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Skulls for Khorne": {
+  "effects": [
+   {
+    "scope": "model",
+    "if": [
+     "targetCharacter"
     ],
-    "note": "Regaining D6 wounds after destroying one is not automated"
-  },
-  "Collar of Khorne": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "fnp": 3,
-          "fnpVs": "psychic"
-        }
-      }
+    "reroll": [
+     "hits",
+     "wounds"
     ]
-  },
-  "Hunters from the Warp": {
-    "act": {
-      "when": "opponentTurnEnd",
-      "if": [
-        "notEngaged"
+   }
+  ],
+  "act": [
+   {
+    "when": "afterFighting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "cp": 1
+     }
+    ]
+   },
+   {
+    "when": "afterShooting",
+    "auto": true,
+    "needCharacterKill": true,
+    "do": [
+     {
+      "cp": 1
+     }
+    ]
+   }
+  ]
+ },
+ "Blood Throne": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 18,
+    "visible": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "LEGIONES DAEMONICA",
+       "KHORNE"
       ],
-      "label": "Hunters from the Warp: into Strategic Reserves",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "reserves": true
-        }
-      ]
+      "strength": 1,
+      "ap": 1,
+      "damage": 1
+     },
+     "until": "phase",
+     "mark": "Blood Throne"
     }
-  },
-  "Daemonic Icon": {
-    "gear": true,
-    "effects": [
-      {
-        "ldSet": 6
-      }
-    ]
-  },
-  "Instrument of Chaos": {
-    "gear": true,
-    "effects": [
-      {
-        "chargeBonus": 1
-      }
-    ]
-  },
-  "Bane of Cowards": {
-    "effects": [
-      {
-        "forceDesperate": true
-      },
-      {
-        "if": [
-          "targetBattleShocked"
-        ],
-        "desperateMinus": 1
-      }
-    ],
-    "note": "Also against MONSTERS and VEHICLES"
-  },
-  "Brass Stampede": {
-    "act": {
-      "when": "endOfCharge",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "mortalRoll": {
-            "on": 4,
-            "all": true,
-            "dmg": "D3"
-          }
-        }
-      ]
-    },
-    "note": "D3 mortal wounds for each 4+"
-  },
-  "Skulls of the Fallen": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "One Head Looks Forward": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "ldTest": true,
-      "pass": [
-        {
-          "cp": 1
-        }
-      ],
-      "fail": []
-    }
-  },
-  "One Head Looks Back": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 12,
-        "stratTax": {
-          "cp": 1,
-          "limit": "turn"
-        }
-      }
-    ]
-  },
-  "Formless Horror": {
-    "code": true,
-    "status": "auto",
-    "note": "An enemy unit that wants to attack it takes a Battle-shock test first (once per phase); failed: it cannot target it"
-  },
-  "Mischief and Confusion": {
-    "act": {
-      "when": "oppShootingStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "visible": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "hit": -1
-                }
-              ],
-              "until": "phase"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "hit": -6
-                }
-              ],
-              "until": "phase"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
-  },
-  "P’tarix’s Sorcerous Syphon (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 12,
-        "if": [
-          "psychicWeapon"
-        ],
-        "wound": -1
-      }
-    ]
-  },
-  "Xirat’p’s Sorcerous Barrages (Psychic)": {
-    "act": {
-      "when": "movementEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 6,
-        "each": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "max": 3,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "1"
-            }
-          ]
-        },
-        {
-          "min": 4,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D6"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Daemon Lord of Tzeentch (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "TZEENTCH"
-        ],
-        "attack": "ranged",
-        "strength": 1
-      }
-    ]
-  },
-  "Master of Magicks (Psychic)": {
-    "act": [
-      {
-        "when": "shooting",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Master of Magicks: Bolt of Change has [IGNORES COVER]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "Bolt of Change",
-                "abilities": [
-                  "ignores cover"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "shooting",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Master of Magicks: Bolt of Change has [LETHAL HITS]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "Bolt of Change",
-                "abilities": [
-                  "lethal hits"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "shooting",
-        "limit": "phase",
-        "botUse": "always",
-        "label": "Master of Magicks: Bolt of Change has [SUSTAINED HITS D3]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "Bolt of Change",
-                "abilities": [
-                  "sustained hits d3"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Bounding Leaps": {
-    "effects": [
-      {
-        "eligible": [
-          "shootAfterFallBack"
-        ]
-      }
-    ]
-  },
-  "Blazing Warpfire (Psychic)": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "ranged",
-        "abilities": [
-          "assault"
-        ]
-      }
-    ]
-  },
-  "Flames of Change (Psychic)": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "units": [
-          "!MONSTER",
-          "!VEHICLE"
-        ]
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "move": -2,
-                  "advanceBonus": -2,
-                  "chargeBonus": -2
-                }
-              ],
-              "until": "endOfNextTurn",
-              "mark": "aflame"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "MANIFESTATION OF DESTRUCTION": {
-    "status": "info",
-    "note": "Army building: cannot be your WARLORD or take Enhancements"
-  },
-  "Slashing Dive": {
-    "act": {
-      "when": "endOfNormalMove",
-      "limit": "phase",
-      "label": "Slashing Dive: 1 D6 per model, 4+ = 1 mortal wound",
-      "target": {
-        "side": "enemy",
-        "movedOver": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "mortalRoll": {
-            "on": 4,
-            "all": true
-          }
-        }
-      ]
-    }
-  },
-  "Eldritch Flames (Psychic)": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "noCover": true
-          },
-          "until": "phase",
-          "mark": "Eldritch Flames"
-        }
-      ]
-    }
-  },
-  "Blessed by the Plague God": {
-    "effects": [
-      {
-        "scope": "led",
-        "defend": {
-          "inv": 4
-        }
-      }
-    ]
-  },
-  "Tally of Pestilence": {
-    "code": true,
-    "status": "auto",
-    "note": "Enemy models destroyed by Nurgle daemons are counted; 7+ at the start of your Command phase: +1CP"
-  },
-  "Daemon Lord of Nurgle (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "NURGLE"
-        ],
-        "toughness": 1
-      }
-    ]
-  },
-  "Nurgle’s Rot (Psychic)": {
-    "act": {
-      "when": "movementEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "toughness": -1
-            }
-          ],
-          "until": "nextMovement",
-          "mark": "Nurgle's Rot"
-        }
-      ]
-    }
-  },
-  "Reverberating Summons": {
-    "code": true,
-    "status": "auto",
-    "note": "Each model the Doomsday bell destroys returns a Plaguebearer to a unit within 12\""
-  },
-  "Infected Outbreak": {
-    "act": {
-      "when": "commandEnd",
-      "auto": true,
-      "if": [
-        "onControlledObjective"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "secure": true
-        }
-      ]
-    }
-  },
-  "Mischief Makers": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 1,
-        "if": [
-          "!kw:TITANIC"
-        ],
-        "attack": "melee",
-        "hit": -1
-      }
-    ]
-  },
-  "Grotesque Regeneration": {
-    "act": {
-      "when": "anyPhase",
-      "auto": true,
-      "if": [
-        "belowStartingW"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "heal": "99"
-        }
-      ]
-    },
-    "note": "Healed when its ability is checked (the card: at the end of each phase)"
-  },
-  "Death’s Heads": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "LEGIONES DAEMONICA",
-              "NURGLE"
-            ],
-            "reroll": "wounds"
-          },
-          "until": "turn",
-          "mark": "Death's Heads"
-        }
-      ]
-    }
-  },
-  "The Eternal Dance": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 6,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "LEGIONES DAEMONICA",
-              "SLAANESH"
-            ],
-            "attack": "melee",
-            "wound": 1
-          },
-          "until": "phase",
-          "mark": "Eternal Dance"
-        },
-        {
-          "on": "target",
-          "buff": [
-            {
-              "attack": "melee",
-              "wound": -1
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Dazzling Acrobatics": {
-    "effects": [
-      {
-        "eligible": [
-          "chargeAfterAdvance",
-          "chargeAfterFallBack"
-        ]
-      }
-    ]
-  },
-  "Shining Aegis": {
-    "gear": true,
-    "effects": [
-      {
-        "scope": "model",
-        "svSet": 3
-      }
-    ]
-  },
-  "Daemon Lord of Slaanesh (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "SLAANESH"
-        ],
-        "attack": "melee",
-        "ap": 1
-      }
-    ]
-  },
-  "Mesmerising Form": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "hit": -1
-        }
-      }
-    ]
-  },
-  "Tranceweaver": {
-    "effects": [
-      {
-        "if": [
-          "!targetInRangeOfObjective"
-        ],
-        "reroll": "hits1"
-      },
-      {
-        "if": [
-          "targetInRangeOfObjective"
-        ],
-        "reroll": "hits"
-      }
-    ]
-  },
-  "Symphony of Pain (Psychic)": {
-    "act": {
-      "when": "movementEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "shocked": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "LEGIONES DAEMONICA",
-              "SLAANESH"
-            ],
-            "reroll": [
-              "hits",
-              "wounds"
-            ]
-          },
-          "until": "turn",
-          "mark": "Symphony of Pain"
-        }
-      ]
-    }
-  },
-  "Horrifying Beauty": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "if": [
-            "!targetBelowHalf"
-          ],
-          "shock": 0
-        },
-        {
-          "on": "target",
-          "if": [
-            "targetBelowHalf"
-          ],
-          "shock": -1
-        }
-      ]
-    }
-  },
-  "Soporific Musk": {
-    "effects": [
-      {
-        "forceDesperate": true
-      },
-      {
-        "if": [
-          "targetBattleShocked"
-        ],
-        "desperateMinus": 1
-      }
-    ],
-    "note": "Also against MONSTERS and VEHICLES"
-  },
-  "Cutting Down the Foe": {
-    "effects": [
-      {
-        "attack": "melee",
-        "if": [
-          "charged"
-        ],
-        "strength": 1,
-        "damage": 1
-      }
-    ]
-  },
-  "Unholy Speed": {
-    "effects": [
-      {
-        "rerollAdvance": true,
-        "rerollCharge": true
-      }
-    ]
-  },
-  "The Dark Master (Aura)": {
-    "code": true,
-    "status": "auto",
-    "note": "The area within 6\" is within the Shadow of Chaos"
-  },
-  "Shadow Form": {
-    "choice": {
-      "name": "Shadow Form",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Wreathed in Shadows (Aura, Psychic)",
-        "Pall of Despair (Aura, Psychic)",
-        "Shadow Lord (Aura, Psychic)"
-      ]
-    },
-    "note": "Chosen in your Command phase (the card: at the start of the battle round)"
-  },
-  "SUPREME COMMANDER": {
-    "status": "info",
-    "note": "Army building: must be your WARLORD"
-  },
-  "Wreathed in Shadows (Aura, Psychic)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA|SHADOW LEGION"
-        ],
-        "targetableWithin": 18
-      }
-    ]
-  },
-  "Pall of Despair (Aura, Psychic)": {
-    "effects": [
-      {
-        "terrorBelow": 9,
-        "terrorBelowMod": 0
-      }
-    ],
-    "note": "Regaining wounds for failed tests is not automated"
-  },
-  "Shadow Lord (Aura, Psychic)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA|SHADOW LEGION"
-        ],
-        "reroll": "hits1"
-      }
-    ]
-  },
-  "Daemonic Lord": {
-    "effects": [
-      {
-        "if": [
-          "near:3:LEGIONES DAEMONICA+INFANTRY"
-        ],
-        "loneOperative": true
-      }
-    ]
-  },
-  "Prince of Darkness (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA"
-        ],
-        "stealth": true
-      }
-    ]
-  },
-  "Unholy Vigour": {
-    "act": {
-      "when": "anyPhase",
-      "limit": "battle",
-      "label": "Unholy Vigour: 3+ invulnerable save this phase",
-      "botUse": "damaged",
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "defend": {
-                "inv": 3
-              }
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "DAEMONIC ALLEGIANCE": {
-    "status": "info",
-    "note": "Army building: pick KHORNE, TZEENTCH, NURGLE or SLAANESH"
-  },
-  "Daemon Prince of Khorne": {
-    "effects": [
-      {
-        "if": [
-          "kw:KHORNE"
-        ],
-        "weapon": "hellforged",
-        "strength": 2
-      }
-    ]
-  },
-  "Daemon Prince of Tzeentch": {
-    "effects": [
-      {
-        "if": [
-          "kw:TZEENTCH"
-        ],
-        "weapon": "infernal cannon",
-        "attacks": 3
-      }
-    ]
-  },
-  "Daemon Prince of Nurgle": {
-    "effects": [
-      {
-        "if": [
-          "kw:NURGLE"
-        ],
-        "toughness": 1
-      }
-    ]
-  },
-  "Daemon Prince of Slaanesh": {
-    "effects": [
-      {
-        "if": [
-          "kw:SLAANESH"
-        ],
-        "move": 2
-      }
-    ]
-  },
-  "Scuttling Walker": {
-    "effects": [
-      {
-        "mobile": true
-      }
-    ],
-    "note": "It moves over terrain like INFANTRY (friendly MONSTERS / VEHICLES are not ignored)"
-  },
-  "Bloodmaster": {
-    "effects": [
-      {
-        "scope": "led",
-        "wound": 1
-      }
-    ]
-  },
-  "A Gory Path": {
-    "effects": [
-      {
-        "consolidate": 6
-      }
-    ]
-  },
-  "Skullmaster’s Fury": {
-    "effects": [
-      {
-        "scope": "led",
-        "weapon": "Juggernaut",
-        "if": [
-          "charged"
-        ],
-        "abilities": [
-          "devastating wounds"
-        ]
-      }
-    ]
-  },
-  "Devastating Charge": {
-    "act": {
-      "when": "endOfCharge",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "each": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Changecaster": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "ranged",
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Storm of Mutating Sorcery (Psychic)": {
-    "act": {
-      "when": "afterShooting",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "hit": true,
-        "units": [
-          "INFANTRY"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Fateskimmer": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "abilities": [
-          "lethal hits"
-        ]
-      }
-    ]
-  },
-  "Rider of the Immaterial Winds": {
-    "act": {
-      "when": "opponentTurnEnd",
-      "limit": "battle",
-      "if": [
-        "notEngaged"
-      ],
-      "label": "Rider of the Immaterial Winds: into Strategic Reserves",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "reserves": true
-        }
-      ]
-    }
-  },
-  "Fluxmaster": {
-    "effects": [
-      {
-        "stealth": true
-      },
-      {
-        "defend": {
-          "vs": "melee",
-          "hit": -1
-        }
-      }
-    ]
-  },
-  "Altered Reality (Psychic)": {
-    "freeDie": {
-      "kind": "setSix",
-      "stage": "any",
-      "limit": "round"
-    },
-    "status": "auto",
-    "note": "One Hit, Wound or saving throw roll becomes a 6, once per battle round"
-  },
-  "Virulent Blessing (Psychic)": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 24,
-        "visible": true,
-        "closest": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "incoming": {
-            "units": [
-              "LEGIONES DAEMONICA",
-              "NURGLE"
-            ],
-            "damage": 1
-          },
-          "until": "phase",
-          "mark": "Virulent Blessing"
-        }
-      ]
-    }
-  },
-  "Deluge of Nurgle (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 6,
-        "move": -2,
-        "oc": -1
-      }
-    ]
-  },
-  "Beast Handler": {
-    "effects": [
-      {
-        "scope": "led",
-        "rerollCharge": true
-      },
-      {
-        "stratDiscount": {
-          "ids": [
-            "heroic-intervention"
-          ],
-          "cp": 1,
-          "limit": "battle"
-        },
-        "stratRepeat": {
-          "ids": [
-            "heroic-intervention"
-          ],
-          "limit": "battle"
-        }
-      }
-    ]
-  },
-  "Seed the Garden of Nurgle": {
-    "code": true,
-    "status": "auto",
-    "note": "End of your Movement phase: the area terrain it stands in is in the Shadow of Chaos for the rest of the battle"
-  },
-  "Poxbringer": {
-    "effects": [
-      {
-        "scope": "led",
-        "critHitOn": 5
-      }
-    ]
-  },
-  "Feculent Despair (Aura, Psychic)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 6,
-        "shockBonus": -1
-      }
-    ]
-  },
-  "Jolly Gutpipes": {
-    "effects": [
-      {
-        "scope": "led",
-        "move": 1,
-        "rerollAdvance": true
-      }
-    ]
-  },
-  "Disease of Mirth (Aura)": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "range": 6,
-        "each": true,
-        "units": [
-          "!MONSTER",
-          "!VEHICLE"
-        ]
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ]
-    }
-  },
-  "Keep Counting!": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Meet Your Quota!": {
-    "effects": [
-      {
-        "scope": "led",
-        "oc": 1
-      }
-    ]
-  },
-  "Shroud of Flies (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "NURGLE"
-        ],
-        "stealth": true
-      }
-    ]
-  },
-  "Diseased Cover": {
-    "status": "info",
-    "note": "Cover from the Fortification is worked out by the terrain rules"
-  },
-  "Cover": {
-    "status": "info",
-    "note": "Cover from the Fortification is worked out by the terrain rules"
-  },
-  "Fortification": {
-    "status": "info",
-    "note": "Core FORTIFICATION rules"
-  },
-  "Shadow of Khorne (Aura)": {
-    "code": true,
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "KHORNE"
-        ],
-        "rerollShock": true
-      }
-    ],
-    "note": "The area within 6\" is within the Shadow of Chaos"
-  },
-  "Harmonic Alignment": {
-    "act": {
-      "when": "commandStart",
-      "auto": true,
-      "limit": "phase",
-      "if": [
-        "leaderAttached",
-        "belowStarting"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "revive": "D3"
-        }
-      ]
-    }
-  },
-  "Discordant Disruption (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 12,
-        "if": [
-          "kw:PSYKER",
-          "psychicWeapon"
-        ],
-        "abilities": [
-          "hazardous"
-        ]
-      }
-    ]
-  },
-  "Swallow Energy (Psychic)": {
-    "effects": [
-      {
-        "scope": "led",
-        "defend": {
-          "fnp": 4,
-          "fnpVs": "mortalPsychic"
-        }
-      }
-    ]
-  },
-  "Horrible Fascination(Psychic)": {
-    "act": {
-      "when": "oppShootingStart",
-      "auto": true,
-      "limit": "phase",
-      "per": "army",
-      "target": {
-        "side": "enemy",
-        "range": 12,
-        "visible": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 1,
-          "max": 1,
-          "do": [
-            {
-              "on": "self",
-              "mortals": "D3"
-            }
-          ]
-        },
-        {
-          "min": 2,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "hit": -1
-                }
-              ],
-              "until": "phase"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "buff": [
-                {
-                  "hit": -6
-                }
-              ],
-              "until": "phase"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
-  },
-  "No Prey Can Evade": {
-    "effects": [
-      {
-        "rerollAdvance": true,
-        "rerollCharge": true
-      }
-    ]
-  },
-  "Monarch of the Hunt": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "targetQuarry"
-        ],
-        "reroll": [
-          "hits",
-          "wounds"
-        ]
-      }
-    ],
-    "act": {
-      "when": "battleStart",
-      "auto": true,
-      "limit": "battle",
-      "target": {
-        "side": "enemy",
-        "anywhere": true
-      },
-      "do": [
-        {
-          "setQuarry": true
-        }
-      ]
-    }
-  },
-  "Prince of Slaanesh": {
-    "effects": [
-      {
-        "scope": "led",
-        "attack": "melee",
-        "critWoundOn": 5
-      }
-    ]
-  },
-  "Delightful Agonies": {
-    "act": {
-      "when": "onDeath",
-      "auto": true,
-      "modelDeath": true,
-      "limit": "battle",
-      "do": [
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "reviveLater": {
-            "on": 2,
-            "wounds": 99
-          }
-        }
-      ]
-    }
-  },
-  "Daemon Lord of Khorne (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "KHORNE"
-        ],
-        "attack": "melee",
-        "hit": 1
-      }
-    ]
-  },
-  "Relentless Carnage": {
-    "act": {
-      "when": "fightEnd",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "rollCount": 8,
-      "each": {
-        "on": 4,
-        "do": [
-          {
-            "on": "target",
-            "mortals": "1"
-          }
-        ]
-      }
-    }
-  },
-  "Split": {
-    "status": "manual",
-    "note": "Not automated: new Horror models joining the unit"
-  },
-  "Sullen Malevolence (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 6,
-        "if": [
-          "!contains:Pink Horror"
-        ],
-        "ld": -1
-      }
-    ],
-    "note": "Ld worsened by 1 (Leadership is 2D6 based: higher is worse)"
-  },
-  "Exploding Horrors": {
-    "status": "manual",
-    "note": "Not automated: Brimstone Horrors exploding"
-  },
-  "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
-    "status": "info",
-    "note": "Datasheet change when no Pink Horror is left"
-  },
-  "Malefic Destruction": {
-    "act": {
-      "when": "fightStartButton",
-      "limit": "battle",
-      "label": "Malefic Destruction: +3 Attacks for hellforged weapons this phase",
-      "botUse": "valuable",
-      "if": [
-        "engaged"
-      ],
-      "do": [
-        {
-          "on": "self",
-          "buff": [
-            {
-              "weapon": "hellforged",
-              "attacks": 3
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Harbinger of Death": {
-    "act": [
-      {
-        "when": "selectedToFight",
-        "limit": "phase",
-        "botUse": "always",
-        "label": "Harbinger of Death: hellforged weapons have [LETHAL HITS]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "hellforged",
-                "abilities": [
-                  "lethal hits"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Harbinger of Death: hellforged weapons have [PRECISION]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "hellforged",
-                "abilities": [
-                  "precision"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      },
-      {
-        "when": "selectedToFight",
-        "limit": "phase",
-        "botUse": "never",
-        "label": "Harbinger of Death: hellforged weapons have [SUSTAINED HITS 1]",
-        "do": [
-          {
-            "on": "self",
-            "buff": [
-              {
-                "weapon": "hellforged",
-                "abilities": [
-                  "sustained hits 1"
-                ]
-              }
-            ],
-            "until": "phase"
-          }
-        ]
-      }
-    ]
-  },
-  "Tormentbringer (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "SLAANESH"
-        ],
-        "attack": "melee",
-        "abilities": [
-          "sustained hits 1"
-        ]
-      }
-    ]
-  },
-  "Hysterical Frenzy (Psychic)": {
-    "effects": [
-      {
-        "fightOnDeath": 1
-      }
-    ]
-  },
-  "A’rgath, the King of Blades": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "!inShadow"
-        ],
-        "attacks": 1,
-        "strength": 1
-      },
-      {
-        "scope": "model",
-        "attack": "melee",
-        "if": [
-          "inShadow"
-        ],
-        "attacks": 2,
-        "strength": 2
-      }
-    ]
-  },
-  "Soulstealer": {
-    "act": {
-      "when": "afterFighting",
-      "auto": true,
-      "if": [
-        "killedModelThisPhase"
-      ],
-      "limit": "phase",
-      "roll": "D6",
-      "rollAdd": "if:inShadow",
-      "table": [
-        {
-          "min": 4,
-          "do": [
-            {
-              "on": "self",
-              "bearerOnly": true,
-              "heal": "1"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "One roll after it fights (the card: one per model destroyed)"
-  },
-  "The Endless Gift": {
-    "effects": [
-      {
-        "scope": "model",
-        "defend": {
-          "fnp": 5
-        }
-      }
-    ]
-  },
-  "The Everstave": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "ranged",
-        "if": [
-          "!inShadow"
-        ],
-        "strength": 1,
-        "weaponRange": 3
-      },
-      {
-        "scope": "model",
-        "attack": "ranged",
-        "if": [
-          "inShadow"
-        ],
-        "strength": 2,
-        "weaponRange": 6
-      }
-    ]
-  },
-  "False Majesty (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "SLAANESH",
-          "!MONSTER"
-        ],
-        "attack": "melee",
-        "wound": 1
-      }
-    ]
-  },
-  "Dreaming Crown (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "SLAANESH",
-          "!MONSTER"
-        ],
-        "attack": "melee",
-        "hit": 1
-      }
-    ]
-  },
-  "Avatar of Perfection": {
-    "effects": [
-      {
-        "if": [
-          "!near:6:LEGIONES DAEMONICA"
-        ],
-        "rerollAdvance": true,
-        "rerollCharge": true,
-        "ignoreMoveMods": true
-      }
-    ]
-  },
-  "Soul Glutton": {
-    "act": {
-      "when": "fightEnd",
-      "auto": true,
-      "if": [
-        "killedModelThisPhase"
-      ],
-      "limit": "phase",
-      "do": [
-        {
-          "on": "self",
-          "heal": "D3"
-        }
-      ]
-    }
-  },
-  "Inescapable Eye": {
-    "code": true,
-    "status": "auto",
-    "note": "One more Flux token in your Command phase while the opponent holds any"
-  },
-  "Infernal Puppeteer": {
-    "act": {
-      "when": "selectedToShoot",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "visible": true,
-        "each": true
-      },
-      "do": [
-        {
-          "on": "target",
-          "buff": [
-            {
-              "detection": 9
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    },
-    "note": "Every enemy unit visible to it (the card: visible to any friendly LEGIONES DAEMONICA TZEENTCH unit)"
-  },
-  "Neverblade": {
-    "effects": [
-      {
-        "scope": "model",
-        "attack": "melee",
-        "strength": 2,
-        "attacks": 1,
-        "ap": 1,
-        "hit": 1
-      }
-    ]
-  },
-  "Improbable Shield (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "TZEENTCH"
-        ],
-        "defend": {
-          "fnp": 4,
-          "fnpVs": "mortalPsychic"
-        }
-      }
-    ]
-  },
-  "Slaughterthirst (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "KHORNE",
-          "!MONSTER"
-        ],
-        "abilities": [
-          "lance"
-        ]
-      }
-    ]
-  },
-  "Fury’s Cage": {
-    "act": {
-      "when": "selectedToFight",
-      "limit": "phase",
-      "label": "Fury's Cage: suffer D3+1 mortal wounds, re-roll Hit and Wound rolls this phase",
-      "botUse": "healthy",
-      "do": [
-        {
-          "on": "self",
-          "mortals": "D3+1"
-        },
-        {
-          "on": "self",
-          "bearerOnly": true,
-          "buff": [
-            {
-              "reroll": [
-                "hits",
-                "wounds"
-              ]
-            }
-          ],
-          "until": "phase"
-        }
-      ]
-    }
-  },
-  "Brazenmaw": {
-    "effects": [
-      {
-        "chargeBonus": 2
-      }
-    ]
-  },
-  "Gateway Unto Damnation": {
-    "effects": [
-      {
-        "scope": "model",
-        "deadlyDemiseOn": 2
-      }
-    ],
-    "status": "auto",
-    "note": "Deadly Demise on 2+; Deadly Demise D3+3 once the bearer has destroyed an enemy unit"
-  },
-  "Cankerblight": {
-    "code": true,
-    "status": "auto",
-    "note": "An enemy unit (not MONSTER / VEHICLE) within 6\" that fails a Battle-shock test loses one model (no Daemonic Terror mortal wounds)"
-  },
-  "Maggot Maws": {
-    "act": {
-      "when": "shooting",
-      "limit": "phase",
-      "label": "Maggot Maws: an enemy unit within 6\" takes a Battle-shock test, then 3+: D3 mortal wounds",
-      "botUse": "always",
-      "target": {
-        "side": "enemy",
-        "range": 6
-      },
-      "do": [
-        {
-          "on": "target",
-          "shock": 0
-        }
-      ],
-      "roll": "D6",
-      "table": [
-        {
-          "min": 3,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        }
-      ]
-    },
-    "note": "Daemonic Terror's mortal wounds are not switched off for this test"
-  },
-  "Droning Shroud (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "NURGLE"
-        ],
-        "targetableWithin": 18
-      }
-    ]
-  },
-  "Font of Spores (Aura)": {
-    "effects": [
-      {
-        "scope": "aura",
-        "range": 6,
-        "units": [
-          "LEGIONES DAEMONICA",
-          "NURGLE"
-        ],
-        "ap": 1
-      }
-    ]
-  },
-  "Leaping Shadows": {
-    "effects": [
-      {
-        "scouts": 9
-      }
-    ]
-  },
-  "Mantle of Gloom (Aura)": {
-    "effects": [
-      {
-        "scope": "enemyAura",
-        "range": 1,
-        "oc": -1
-      }
-    ]
-  },
-  "Fade to Darkness": {
-    "act": {
-      "when": "fightEndButton",
-      "if": [
-        "destroyedUnitThisPhase",
-        "notEngaged"
-      ],
-      "label": "Fade to Darkness: into Strategic Reserves",
-      "botUse": "never",
-      "do": [
-        {
-          "on": "self",
-          "reserves": true
-        }
-      ]
-    }
-  },
-  "Malice Made Manifest": {
-    "act": {
-      "when": "fightStart",
-      "auto": true,
-      "limit": "phase",
-      "target": {
-        "side": "enemy",
-        "engaged": true,
-        "closest": true
-      },
-      "roll": "D6",
-      "table": [
-        {
-          "min": 2,
-          "max": 5,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "D3"
-            }
-          ]
-        },
-        {
-          "min": 6,
-          "do": [
-            {
-              "on": "target",
-              "mortals": "3"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "Apocalyptic Steeds": {
-    "effects": [
-      {
-        "move": 1
-      }
-    ]
-  },
-  "Soul-Shattering Charge": {
-    "effects": [
-      {
-        "if": [
-          "charged"
-        ],
-        "fightReach3": true
-      }
-    ]
-  },
-  "Swollen with Power": {
-    "effects": [
-      {
-        "scope": "model",
-        "statW": 2
-      }
-    ]
-  },
-  "Bane-Forged Weapons": {
-    "effects": [
-      {
-        "strength": 1
-      }
-    ]
-  },
-  "Soul-Hungry Slaughterers": {
-    "effects": [
-      {
-        "stratDiscount": {
-          "ids": [
-            "heroic-intervention",
-            "fire-overwatch"
-          ],
-          "cp": 1
-        }
-      }
-    ]
-  },
-  "Shadow Form Abilities": {
-    "choice": {
-      "name": "Shadow Form",
-      "pick": 1,
-      "when": "command",
-      "options": [
-        "Wreathed in Shadows (Aura, Psychic)",
-        "Pall of Despair (Aura, Psychic)",
-        "Shadow Lord (Aura, Psychic)"
-      ]
-    },
-    "note": "Chosen in your Command phase (the card: at the start of the battle round)"
+   ]
   }
+ },
+ "Champion Slayer": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetKw:CHARACTER|MONSTER"
+    ],
+    "reroll": "wounds"
+   }
+  ],
+  "note": "Regaining D6 wounds after destroying one is not automated"
+ },
+ "Collar of Khorne": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 3,
+     "fnpVs": "psychic"
+    }
+   }
+  ]
+ },
+ "Hunters from the Warp": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Hunters from the Warp: into Strategic Reserves",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Daemonic Icon": {
+  "gear": true,
+  "effects": [
+   {
+    "ldSet": 6
+   }
+  ]
+ },
+ "Instrument of Chaos": {
+  "gear": true,
+  "effects": [
+   {
+    "chargeBonus": 1
+   }
+  ]
+ },
+ "Bane of Cowards": {
+  "effects": [
+   {
+    "forceDesperate": true
+   },
+   {
+    "if": [
+     "targetBattleShocked"
+    ],
+    "desperateMinus": 1
+   }
+  ],
+  "note": "Also against MONSTERS and VEHICLES"
+ },
+ "Brass Stampede": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "all": true,
+      "dmg": "D3"
+     }
+    }
+   ]
+  },
+  "note": "D3 mortal wounds for each 4+"
+ },
+ "Skulls of the Fallen": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "One Head Looks Forward": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "ldTest": true,
+   "pass": [
+    {
+     "cp": 1
+    }
+   ],
+   "fail": []
+  }
+ },
+ "One Head Looks Back": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "stratTax": {
+     "cp": 1,
+     "limit": "turn"
+    }
+   }
+  ]
+ },
+ "Formless Horror": {
+  "code": true,
+  "status": "auto",
+  "note": "An enemy unit that wants to attack it takes a Battle-shock test first (once per phase); failed: it cannot target it"
+ },
+ "Mischief and Confusion": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "buff": [
+        {
+         "hit": -1
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "buff": [
+        {
+         "hit": -6
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
+ },
+ "P’tarix’s Sorcerous Syphon (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "if": [
+     "psychicWeapon"
+    ],
+    "wound": -1
+   }
+  ]
+ },
+ "Xirat’p’s Sorcerous Barrages (Psychic)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 3,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "1"
+      }
+     ]
+    },
+    {
+     "min": 4,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D6"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Daemon Lord of Tzeentch (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "TZEENTCH"
+    ],
+    "attack": "ranged",
+    "strength": 1
+   }
+  ]
+ },
+ "Master of Magicks (Psychic)": {
+  "act": [
+   {
+    "when": "shooting",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Master of Magicks: Bolt of Change has [IGNORES COVER]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "ignores cover"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "shooting",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Master of Magicks: Bolt of Change has [LETHAL HITS]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "shooting",
+    "limit": "phase",
+    "botUse": "always",
+    "label": "Master of Magicks: Bolt of Change has [SUSTAINED HITS D3]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "Bolt of Change",
+        "abilities": [
+         "sustained hits d3"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Bounding Leaps": {
+  "effects": [
+   {
+    "eligible": [
+     "shootAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Blazing Warpfire (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "assault"
+    ]
+   }
+  ]
+ },
+ "Flames of Change (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "target",
+       "buff": [
+        {
+         "move": -2,
+         "advanceBonus": -2,
+         "chargeBonus": -2
+        }
+       ],
+       "until": "endOfNextTurn",
+       "mark": "aflame"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "MANIFESTATION OF DESTRUCTION": {
+  "status": "info",
+  "note": "Army building: cannot be your WARLORD or take Enhancements"
+ },
+ "Slashing Dive": {
+  "act": {
+   "when": "endOfNormalMove",
+   "limit": "phase",
+   "label": "Slashing Dive: 1 D6 per model, 4+ = 1 mortal wound",
+   "target": {
+    "side": "enemy",
+    "movedOver": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "mortalRoll": {
+      "on": 4,
+      "all": true
+     }
+    }
+   ]
+  }
+ },
+ "Eldritch Flames (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "noCover": true
+     },
+     "until": "phase",
+     "mark": "Eldritch Flames"
+    }
+   ]
+  }
+ },
+ "Blessed by the Plague God": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "inv": 4
+    }
+   }
+  ]
+ },
+ "Tally of Pestilence": {
+  "code": true,
+  "status": "auto",
+  "note": "Enemy models destroyed by Nurgle daemons are counted; 7+ at the start of your Command phase: +1CP"
+ },
+ "Daemon Lord of Nurgle (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "NURGLE"
+    ],
+    "toughness": 1
+   }
+  ]
+ },
+ "Nurgle’s Rot (Psychic)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "toughness": -1
+      }
+     ],
+     "until": "nextMovement",
+     "mark": "Nurgle's Rot"
+    }
+   ]
+  }
+ },
+ "Reverberating Summons": {
+  "code": true,
+  "status": "auto",
+  "note": "Each model the Doomsday bell destroys returns a Plaguebearer to a unit within 12\""
+ },
+ "Infected Outbreak": {
+  "act": {
+   "when": "commandEnd",
+   "auto": true,
+   "if": [
+    "onControlledObjective"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "secure": true
+    }
+   ]
+  }
+ },
+ "Mischief Makers": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 1,
+    "if": [
+     "!kw:TITANIC"
+    ],
+    "attack": "melee",
+    "hit": -1
+   }
+  ]
+ },
+ "Grotesque Regeneration": {
+  "act": {
+   "when": "anyPhase",
+   "auto": true,
+   "if": [
+    "belowStartingW"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "heal": "99"
+    }
+   ]
+  },
+  "note": "Healed when its ability is checked (the card: at the end of each phase)"
+ },
+ "Death’s Heads": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "LEGIONES DAEMONICA",
+       "NURGLE"
+      ],
+      "reroll": "wounds"
+     },
+     "until": "turn",
+     "mark": "Death's Heads"
+    }
+   ]
+  }
+ },
+ "The Eternal Dance": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "LEGIONES DAEMONICA",
+       "SLAANESH"
+      ],
+      "attack": "melee",
+      "wound": 1
+     },
+     "until": "phase",
+     "mark": "Eternal Dance"
+    },
+    {
+     "on": "target",
+     "buff": [
+      {
+       "attack": "melee",
+       "wound": -1
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Dazzling Acrobatics": {
+  "effects": [
+   {
+    "eligible": [
+     "chargeAfterAdvance",
+     "chargeAfterFallBack"
+    ]
+   }
+  ]
+ },
+ "Shining Aegis": {
+  "gear": true,
+  "effects": [
+   {
+    "scope": "model",
+    "svSet": 3
+   }
+  ]
+ },
+ "Daemon Lord of Slaanesh (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "SLAANESH"
+    ],
+    "attack": "melee",
+    "ap": 1
+   }
+  ]
+ },
+ "Mesmerising Form": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Tranceweaver": {
+  "effects": [
+   {
+    "if": [
+     "!targetInRangeOfObjective"
+    ],
+    "reroll": "hits1"
+   },
+   {
+    "if": [
+     "targetInRangeOfObjective"
+    ],
+    "reroll": "hits"
+   }
+  ]
+ },
+ "Symphony of Pain (Psychic)": {
+  "act": {
+   "when": "movementEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "shocked": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "LEGIONES DAEMONICA",
+       "SLAANESH"
+      ],
+      "reroll": [
+       "hits",
+       "wounds"
+      ]
+     },
+     "until": "turn",
+     "mark": "Symphony of Pain"
+    }
+   ]
+  }
+ },
+ "Horrifying Beauty": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "if": [
+      "!targetBelowHalf"
+     ],
+     "shock": 0
+    },
+    {
+     "on": "target",
+     "if": [
+      "targetBelowHalf"
+     ],
+     "shock": -1
+    }
+   ]
+  }
+ },
+ "Soporific Musk": {
+  "effects": [
+   {
+    "forceDesperate": true
+   },
+   {
+    "if": [
+     "targetBattleShocked"
+    ],
+    "desperateMinus": 1
+   }
+  ],
+  "note": "Also against MONSTERS and VEHICLES"
+ },
+ "Cutting Down the Foe": {
+  "effects": [
+   {
+    "attack": "melee",
+    "if": [
+     "charged"
+    ],
+    "strength": 1,
+    "damage": 1
+   }
+  ]
+ },
+ "Unholy Speed": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "The Dark Master (Aura)": {
+  "code": true,
+  "status": "auto",
+  "note": "The area within 6\" is within the Shadow of Chaos"
+ },
+ "Shadow Form": {
+  "choice": {
+   "name": "Shadow Form",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Wreathed in Shadows (Aura, Psychic)",
+    "Pall of Despair (Aura, Psychic)",
+    "Shadow Lord (Aura, Psychic)"
+   ]
+  },
+  "note": "Chosen in your Command phase (the card: at the start of the battle round)"
+ },
+ "SUPREME COMMANDER": {
+  "status": "info",
+  "note": "Army building: must be your WARLORD"
+ },
+ "Wreathed in Shadows (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA|SHADOW LEGION"
+    ],
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Pall of Despair (Aura, Psychic)": {
+  "effects": [
+   {
+    "terrorBelow": 9,
+    "terrorBelowMod": 0
+   }
+  ],
+  "note": "Regaining wounds for failed tests is not automated"
+ },
+ "Shadow Lord (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA|SHADOW LEGION"
+    ],
+    "reroll": "hits1"
+   }
+  ]
+ },
+ "Daemonic Lord": {
+  "effects": [
+   {
+    "if": [
+     "near:3:LEGIONES DAEMONICA+INFANTRY"
+    ],
+    "loneOperative": true
+   }
+  ]
+ },
+ "Prince of Darkness (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA"
+    ],
+    "stealth": true
+   }
+  ]
+ },
+ "Unholy Vigour": {
+  "act": {
+   "when": "anyPhase",
+   "limit": "battle",
+   "label": "Unholy Vigour: 3+ invulnerable save this phase",
+   "botUse": "damaged",
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "defend": {
+        "inv": 3
+       }
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "DAEMONIC ALLEGIANCE": {
+  "status": "info",
+  "note": "Army building: pick KHORNE, TZEENTCH, NURGLE or SLAANESH"
+ },
+ "Daemon Prince of Khorne": {
+  "effects": [
+   {
+    "if": [
+     "kw:KHORNE"
+    ],
+    "weapon": "hellforged",
+    "strength": 2
+   }
+  ]
+ },
+ "Daemon Prince of Tzeentch": {
+  "effects": [
+   {
+    "if": [
+     "kw:TZEENTCH"
+    ],
+    "weapon": "infernal cannon",
+    "attacks": 3
+   }
+  ]
+ },
+ "Daemon Prince of Nurgle": {
+  "effects": [
+   {
+    "if": [
+     "kw:NURGLE"
+    ],
+    "toughness": 1
+   }
+  ]
+ },
+ "Daemon Prince of Slaanesh": {
+  "effects": [
+   {
+    "if": [
+     "kw:SLAANESH"
+    ],
+    "move": 2
+   }
+  ]
+ },
+ "Scuttling Walker": {
+  "effects": [
+   {
+    "mobile": true
+   }
+  ],
+  "note": "It moves over terrain like INFANTRY (friendly MONSTERS / VEHICLES are not ignored)"
+ },
+ "Bloodmaster": {
+  "effects": [
+   {
+    "scope": "led",
+    "wound": 1
+   }
+  ]
+ },
+ "A Gory Path": {
+  "effects": [
+   {
+    "consolidate": 6
+   }
+  ]
+ },
+ "Skullmaster’s Fury": {
+  "effects": [
+   {
+    "scope": "led",
+    "weapon": "Juggernaut",
+    "if": [
+     "charged"
+    ],
+    "abilities": [
+     "devastating wounds"
+    ]
+   }
+  ]
+ },
+ "Devastating Charge": {
+  "act": {
+   "when": "endOfCharge",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Changecaster": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "ranged",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Storm of Mutating Sorcery (Psychic)": {
+  "act": {
+   "when": "afterShooting",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "hit": true,
+    "units": [
+     "INFANTRY"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Fateskimmer": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "lethal hits"
+    ]
+   }
+  ]
+ },
+ "Rider of the Immaterial Winds": {
+  "act": {
+   "when": "opponentTurnEnd",
+   "limit": "battle",
+   "if": [
+    "notEngaged"
+   ],
+   "label": "Rider of the Immaterial Winds: into Strategic Reserves",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Fluxmaster": {
+  "effects": [
+   {
+    "stealth": true
+   },
+   {
+    "defend": {
+     "vs": "melee",
+     "hit": -1
+    }
+   }
+  ]
+ },
+ "Altered Reality (Psychic)": {
+  "freeDie": {
+   "kind": "setSix",
+   "stage": "any",
+   "limit": "round"
+  },
+  "status": "auto",
+  "note": "One Hit, Wound or saving throw roll becomes a 6, once per battle round"
+ },
+ "Virulent Blessing (Psychic)": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 24,
+    "visible": true,
+    "closest": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "incoming": {
+      "units": [
+       "LEGIONES DAEMONICA",
+       "NURGLE"
+      ],
+      "damage": 1
+     },
+     "until": "phase",
+     "mark": "Virulent Blessing"
+    }
+   ]
+  }
+ },
+ "Deluge of Nurgle (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "move": -2,
+    "oc": -1
+   }
+  ]
+ },
+ "Beast Handler": {
+  "effects": [
+   {
+    "scope": "led",
+    "rerollCharge": true
+   },
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "cp": 1,
+     "limit": "battle"
+    },
+    "stratRepeat": {
+     "ids": [
+      "heroic-intervention"
+     ],
+     "limit": "battle"
+    }
+   }
+  ]
+ },
+ "Seed the Garden of Nurgle": {
+  "code": true,
+  "status": "auto",
+  "note": "End of your Movement phase: the area terrain it stands in is in the Shadow of Chaos for the rest of the battle"
+ },
+ "Poxbringer": {
+  "effects": [
+   {
+    "scope": "led",
+    "critHitOn": 5
+   }
+  ]
+ },
+ "Feculent Despair (Aura, Psychic)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "shockBonus": -1
+   }
+  ]
+ },
+ "Jolly Gutpipes": {
+  "effects": [
+   {
+    "scope": "led",
+    "move": 1,
+    "rerollAdvance": true
+   }
+  ]
+ },
+ "Disease of Mirth (Aura)": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "range": 6,
+    "each": true,
+    "units": [
+     "!MONSTER",
+     "!VEHICLE"
+    ]
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ]
+  }
+ },
+ "Keep Counting!": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Meet Your Quota!": {
+  "effects": [
+   {
+    "scope": "led",
+    "oc": 1
+   }
+  ]
+ },
+ "Shroud of Flies (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "NURGLE"
+    ],
+    "stealth": true
+   }
+  ]
+ },
+ "Diseased Cover": {
+  "status": "info",
+  "note": "Cover from the Fortification is worked out by the terrain rules"
+ },
+ "Cover": {
+  "status": "info",
+  "note": "Cover from the Fortification is worked out by the terrain rules"
+ },
+ "Fortification": {
+  "status": "info",
+  "note": "Core FORTIFICATION rules"
+ },
+ "Shadow of Khorne (Aura)": {
+  "code": true,
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "KHORNE"
+    ],
+    "rerollShock": true
+   }
+  ],
+  "note": "The area within 6\" is within the Shadow of Chaos"
+ },
+ "Harmonic Alignment": {
+  "act": {
+   "when": "commandStart",
+   "auto": true,
+   "limit": "phase",
+   "if": [
+    "leaderAttached",
+    "belowStarting"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "revive": "D3"
+    }
+   ]
+  }
+ },
+ "Discordant Disruption (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 12,
+    "if": [
+     "kw:PSYKER",
+     "psychicWeapon"
+    ],
+    "abilities": [
+     "hazardous"
+    ]
+   }
+  ]
+ },
+ "Swallow Energy (Psychic)": {
+  "effects": [
+   {
+    "scope": "led",
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Horrible Fascination(Psychic)": {
+  "act": {
+   "when": "oppShootingStart",
+   "auto": true,
+   "limit": "phase",
+   "per": "army",
+   "target": {
+    "side": "enemy",
+    "range": 12,
+    "visible": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 1,
+     "max": 1,
+     "do": [
+      {
+       "on": "self",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "buff": [
+        {
+         "hit": -1
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "buff": [
+        {
+         "hit": -6
+        }
+       ],
+       "until": "phase"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "On a 6 the unit hits only on an unmodified 6 (the card: it cannot shoot)"
+ },
+ "No Prey Can Evade": {
+  "effects": [
+   {
+    "rerollAdvance": true,
+    "rerollCharge": true
+   }
+  ]
+ },
+ "Monarch of the Hunt": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "targetQuarry"
+    ],
+    "reroll": [
+     "hits",
+     "wounds"
+    ]
+   }
+  ],
+  "act": {
+   "when": "battleStart",
+   "auto": true,
+   "limit": "battle",
+   "target": {
+    "side": "enemy",
+    "anywhere": true
+   },
+   "do": [
+    {
+     "setQuarry": true
+    }
+   ]
+  }
+ },
+ "Prince of Slaanesh": {
+  "effects": [
+   {
+    "scope": "led",
+    "attack": "melee",
+    "critWoundOn": 5
+   }
+  ]
+ },
+ "Delightful Agonies": {
+  "act": {
+   "when": "onDeath",
+   "auto": true,
+   "modelDeath": true,
+   "limit": "battle",
+   "do": [
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "reviveLater": {
+      "on": 2,
+      "wounds": 99
+     }
+    }
+   ]
+  }
+ },
+ "Daemon Lord of Khorne (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "KHORNE"
+    ],
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ },
+ "Relentless Carnage": {
+  "act": {
+   "when": "fightEnd",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "rollCount": 8,
+   "each": {
+    "on": 4,
+    "do": [
+     {
+      "on": "target",
+      "mortals": "1"
+     }
+    ]
+   }
+  }
+ },
+ "Split": {
+  "code": true,
+  "status": "auto",
+  "note": "Destroyed Pink Horrors may become two Blue Horrors, Blue Horrors a Brimstone Horror (4+)"
+ },
+ "Sullen Malevolence (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 6,
+    "if": [
+     "!contains:Pink Horror"
+    ],
+    "ld": -1
+   }
+  ],
+  "note": "Ld worsened by 1 (Leadership is 2D6 based: higher is worse)"
+ },
+ "Exploding Horrors": {
+  "act": {
+   "when": "selectedToFight",
+   "if": [
+    "contains:Brimstone"
+   ],
+   "target": {
+    "side": "enemy",
+    "engaged": true
+   },
+   "label": "Brimstone Horrors explode (4+: 1 mortal wound each)",
+   "do": [
+    {
+     "explodeModels": {
+      "name": "Brimstone",
+      "on": 4
+     }
+    }
+   ]
+  }
+ },
+ "HORRORS ARE PINK. HORRORS ARE BLUE. WHEREONCE THERE WAS ONE, NOW THERE ARE TWO.": {
+  "status": "info",
+  "note": "Datasheet change when no Pink Horror is left"
+ },
+ "Malefic Destruction": {
+  "act": {
+   "when": "fightStartButton",
+   "limit": "battle",
+   "label": "Malefic Destruction: +3 Attacks for hellforged weapons this phase",
+   "botUse": "valuable",
+   "if": [
+    "engaged"
+   ],
+   "do": [
+    {
+     "on": "self",
+     "buff": [
+      {
+       "weapon": "hellforged",
+       "attacks": 3
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Harbinger of Death": {
+  "act": [
+   {
+    "when": "selectedToFight",
+    "limit": "phase",
+    "botUse": "always",
+    "label": "Harbinger of Death: hellforged weapons have [LETHAL HITS]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "hellforged",
+        "abilities": [
+         "lethal hits"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Harbinger of Death: hellforged weapons have [PRECISION]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "hellforged",
+        "abilities": [
+         "precision"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   },
+   {
+    "when": "selectedToFight",
+    "limit": "phase",
+    "botUse": "never",
+    "label": "Harbinger of Death: hellforged weapons have [SUSTAINED HITS 1]",
+    "do": [
+     {
+      "on": "self",
+      "buff": [
+       {
+        "weapon": "hellforged",
+        "abilities": [
+         "sustained hits 1"
+        ]
+       }
+      ],
+      "until": "phase"
+     }
+    ]
+   }
+  ]
+ },
+ "Tormentbringer (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "SLAANESH"
+    ],
+    "attack": "melee",
+    "abilities": [
+     "sustained hits 1"
+    ]
+   }
+  ]
+ },
+ "Hysterical Frenzy (Psychic)": {
+  "effects": [
+   {
+    "fightOnDeath": 1
+   }
+  ]
+ },
+ "A’rgath, the King of Blades": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "!inShadow"
+    ],
+    "attacks": 1,
+    "strength": 1
+   },
+   {
+    "scope": "model",
+    "attack": "melee",
+    "if": [
+     "inShadow"
+    ],
+    "attacks": 2,
+    "strength": 2
+   }
+  ]
+ },
+ "Soulstealer": {
+  "act": {
+   "when": "afterFighting",
+   "auto": true,
+   "if": [
+    "killedModelThisPhase"
+   ],
+   "limit": "phase",
+   "roll": "D6",
+   "rollAdd": "if:inShadow",
+   "table": [
+    {
+     "min": 4,
+     "do": [
+      {
+       "on": "self",
+       "bearerOnly": true,
+       "heal": "1"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "One roll after it fights (the card: one per model destroyed)"
+ },
+ "The Endless Gift": {
+  "effects": [
+   {
+    "scope": "model",
+    "defend": {
+     "fnp": 5
+    }
+   }
+  ]
+ },
+ "The Everstave": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": [
+     "!inShadow"
+    ],
+    "strength": 1,
+    "weaponRange": 3
+   },
+   {
+    "scope": "model",
+    "attack": "ranged",
+    "if": [
+     "inShadow"
+    ],
+    "strength": 2,
+    "weaponRange": 6
+   }
+  ]
+ },
+ "False Majesty (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "SLAANESH",
+     "!MONSTER"
+    ],
+    "attack": "melee",
+    "wound": 1
+   }
+  ]
+ },
+ "Dreaming Crown (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "SLAANESH",
+     "!MONSTER"
+    ],
+    "attack": "melee",
+    "hit": 1
+   }
+  ]
+ },
+ "Avatar of Perfection": {
+  "effects": [
+   {
+    "if": [
+     "!near:6:LEGIONES DAEMONICA"
+    ],
+    "rerollAdvance": true,
+    "rerollCharge": true,
+    "ignoreMoveMods": true
+   }
+  ]
+ },
+ "Soul Glutton": {
+  "act": {
+   "when": "fightEnd",
+   "auto": true,
+   "if": [
+    "killedModelThisPhase"
+   ],
+   "limit": "phase",
+   "do": [
+    {
+     "on": "self",
+     "heal": "D3"
+    }
+   ]
+  }
+ },
+ "Inescapable Eye": {
+  "code": true,
+  "status": "auto",
+  "note": "One more Flux token in your Command phase while the opponent holds any"
+ },
+ "Infernal Puppeteer": {
+  "act": {
+   "when": "selectedToShoot",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "visible": true,
+    "each": true
+   },
+   "do": [
+    {
+     "on": "target",
+     "buff": [
+      {
+       "detection": 9
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  },
+  "note": "Every enemy unit visible to it (the card: visible to any friendly LEGIONES DAEMONICA TZEENTCH unit)"
+ },
+ "Neverblade": {
+  "effects": [
+   {
+    "scope": "model",
+    "attack": "melee",
+    "strength": 2,
+    "attacks": 1,
+    "ap": 1,
+    "hit": 1
+   }
+  ]
+ },
+ "Improbable Shield (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "TZEENTCH"
+    ],
+    "defend": {
+     "fnp": 4,
+     "fnpVs": "mortalPsychic"
+    }
+   }
+  ]
+ },
+ "Slaughterthirst (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "KHORNE",
+     "!MONSTER"
+    ],
+    "abilities": [
+     "lance"
+    ]
+   }
+  ]
+ },
+ "Fury’s Cage": {
+  "act": {
+   "when": "selectedToFight",
+   "limit": "phase",
+   "label": "Fury's Cage: suffer D3+1 mortal wounds, re-roll Hit and Wound rolls this phase",
+   "botUse": "healthy",
+   "do": [
+    {
+     "on": "self",
+     "mortals": "D3+1"
+    },
+    {
+     "on": "self",
+     "bearerOnly": true,
+     "buff": [
+      {
+       "reroll": [
+        "hits",
+        "wounds"
+       ]
+      }
+     ],
+     "until": "phase"
+    }
+   ]
+  }
+ },
+ "Brazenmaw": {
+  "effects": [
+   {
+    "chargeBonus": 2
+   }
+  ]
+ },
+ "Gateway Unto Damnation": {
+  "effects": [
+   {
+    "scope": "model",
+    "deadlyDemiseOn": 2
+   }
+  ],
+  "status": "auto",
+  "note": "Deadly Demise on 2+; Deadly Demise D3+3 once the bearer has destroyed an enemy unit"
+ },
+ "Cankerblight": {
+  "code": true,
+  "status": "auto",
+  "note": "An enemy unit (not MONSTER / VEHICLE) within 6\" that fails a Battle-shock test loses one model (no Daemonic Terror mortal wounds)"
+ },
+ "Maggot Maws": {
+  "act": {
+   "when": "shooting",
+   "limit": "phase",
+   "label": "Maggot Maws: an enemy unit within 6\" takes a Battle-shock test, then 3+: D3 mortal wounds",
+   "botUse": "always",
+   "target": {
+    "side": "enemy",
+    "range": 6
+   },
+   "do": [
+    {
+     "on": "target",
+     "shock": 0
+    }
+   ],
+   "roll": "D6",
+   "table": [
+    {
+     "min": 3,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    }
+   ]
+  },
+  "note": "Daemonic Terror's mortal wounds are not switched off for this test"
+ },
+ "Droning Shroud (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "NURGLE"
+    ],
+    "targetableWithin": 18
+   }
+  ]
+ },
+ "Font of Spores (Aura)": {
+  "effects": [
+   {
+    "scope": "aura",
+    "range": 6,
+    "units": [
+     "LEGIONES DAEMONICA",
+     "NURGLE"
+    ],
+    "ap": 1
+   }
+  ]
+ },
+ "Leaping Shadows": {
+  "effects": [
+   {
+    "scouts": 9
+   }
+  ]
+ },
+ "Mantle of Gloom (Aura)": {
+  "effects": [
+   {
+    "scope": "enemyAura",
+    "range": 1,
+    "oc": -1
+   }
+  ]
+ },
+ "Fade to Darkness": {
+  "act": {
+   "when": "fightEndButton",
+   "if": [
+    "destroyedUnitThisPhase",
+    "notEngaged"
+   ],
+   "label": "Fade to Darkness: into Strategic Reserves",
+   "botUse": "never",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true
+    }
+   ]
+  }
+ },
+ "Malice Made Manifest": {
+  "act": {
+   "when": "fightStart",
+   "auto": true,
+   "limit": "phase",
+   "target": {
+    "side": "enemy",
+    "engaged": true,
+    "closest": true
+   },
+   "roll": "D6",
+   "table": [
+    {
+     "min": 2,
+     "max": 5,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "D3"
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "do": [
+      {
+       "on": "target",
+       "mortals": "3"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Apocalyptic Steeds": {
+  "effects": [
+   {
+    "move": 1
+   }
+  ]
+ },
+ "Soul-Shattering Charge": {
+  "effects": [
+   {
+    "if": [
+     "charged"
+    ],
+    "fightReach3": true
+   }
+  ]
+ },
+ "Swollen with Power": {
+  "effects": [
+   {
+    "scope": "model",
+    "statW": 2
+   }
+  ]
+ },
+ "Bane-Forged Weapons": {
+  "effects": [
+   {
+    "strength": 1
+   }
+  ]
+ },
+ "Soul-Hungry Slaughterers": {
+  "effects": [
+   {
+    "stratDiscount": {
+     "ids": [
+      "heroic-intervention",
+      "fire-overwatch"
+     ],
+     "cp": 1
+    }
+   }
+  ]
+ },
+ "Shadow Form Abilities": {
+  "choice": {
+   "name": "Shadow Form",
+   "pick": 1,
+   "when": "command",
+   "options": [
+    "Wreathed in Shadows (Aura, Psychic)",
+    "Pall of Despair (Aura, Psychic)",
+    "Shadow Lord (Aura, Psychic)"
+   ]
+  },
+  "note": "Chosen in your Command phase (the card: at the start of the battle round)"
+ }
 }

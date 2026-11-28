@@ -3411,11 +3411,13 @@
  },
  "Special Move Types": {
   "status": "auto",
-  "note": "Shock / Assault disembark: done by the transport's ability"
+  "note": "Shock / Assault disembark: done by the transport's ability",
+  "code": true
  },
  "Hunter": {
   "status": "auto",
-  "note": "Hunter profile can only target units with the matching keyword"
+  "note": "Hunter profile can only target units with the matching keyword",
+  "code": true
  },
  "Codex Adept": {
   "doctrines": [
@@ -5039,8 +5041,31 @@
   "status": "auto"
  },
  "Fealty to the Lion": {
-  "status": "manual",
-  "note": "Movement phase: remove and set up again more than 9\" from enemies — place manually"
+  "act": {
+   "when": "movement",
+   "limit": "round",
+   "if": [
+    "notMovedYet",
+    "unengaged"
+   ],
+   "botUse": "never",
+   "label": "Fealty to the Lion: remove this model and set it up again more than 9\" from enemies",
+   "do": [
+    {
+     "on": "self",
+     "reserves": true,
+     "earlyArrival": true,
+     "buff": [
+      {
+       "deepStrike": true
+      }
+     ],
+     "until": "turn"
+    }
+   ]
+  },
+  "status": "auto",
+  "note": "Movement phase: the model goes into Reserves and is set up at once anywhere more than 9\" from enemies"
  },
  "Rampart (Once per battle, per army)": {
   "act": {
@@ -6294,9 +6319,8 @@
   "code": true
  },
  "Blizzard shield": {
-  "gear": true,
-  "status": "auto",
-  "note": "W / invulnerable save adjusted per wargear chosen in the list"
+  "status": "manual",
+  "note": "Not automated yet"
  },
  "Grav-chutes": {
   "gear": true,

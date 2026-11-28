@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { KEYS, readJSON, removeKey, writeJSON } from '../services/storage';
 import type { GameState } from '../engine/types';
-import { sanitizeGameState } from '../engine/game';
+import { sanitizeGameState, updateControl } from '../engine/game';
 
 
 export const SAVE_VERSION = 3;
@@ -82,6 +82,8 @@ export function useGame(initial: GameState, persist = true, readOnly = false, on
   useEffect(() => { if (persist) queueSave(ref.current); }, [persist]);
   const commit = (next: GameState, undone = false) => {
     sanitizeGameState(next);
+    // who holds an objective follows the models as they move (it was fixed only at the end of each phase)
+    if (next.phase !== 'deploy' && next.phase !== 'scouts' && next.phase !== 'gameover') updateControl(next, true);
     ref.current = next;
     setState(next);
     if (persist) queueSave(next);

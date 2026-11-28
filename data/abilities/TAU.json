@@ -1364,12 +1364,13 @@
   "status": "auto"
  },
  "KEYWORDS": {
+  "code": true,
   "status": "auto",
-  "note": "Kroot Carnivore units have the Battleline keyword."
+  "note": "Kroot Hunting Pack: Kroot Carnivores count as BATTLELINE (army builder)"
  },
  "Integrated Command Structure": {
-  "status": "auto",
-  "note": "Auxiliary Cadre rules for Kroot and Vespid."
+  "status": "manual",
+  "note": "Not automated: prey-marking and the Stealth Battlesuit aura"
  },
  "Superior Craftsmanship": {
   "status": "auto",
@@ -1382,8 +1383,8 @@
   "note": "Battlesuit Character ranged attacks have +6\" Range."
  },
  "Expert Fieldcraft": {
-  "status": "auto",
-  "note": "Shooting attacks do not prevent unit from being hidden."
+  "status": "manual",
+  "note": "Not automated: shooting does not stop the unit being hidden"
  },
  "Coordinated Strike": {
   "effects": [

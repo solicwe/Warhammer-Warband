@@ -1,271 +1,291 @@
 {
- "_comment": "Space Marines 11th edition codex: units moved to Warhammer Legends (Classic Dreadnought, Centurions, Razorback, Predators, Vindicator, Whirlwind, Stormhawk/Stormtalon/Stormraven, Hammerfall Bunker) and units that became Legendary Proxies only (Tactical Squad, Devastator Squad, Suppressor Squad, Pedro Kantor, Uriel Ventris).",
- "datasheets": [
-  {
-   "name": "Dreadnought",
-   "_delete": true
-  },
-  {
-   "name": "Centurion Assault Squad",
-   "_delete": true
-  },
-  {
-   "name": "Centurion Devastator Squad",
-   "_delete": true
-  },
-  {
-   "name": "Razorback",
-   "_delete": true
-  },
-  {
-   "name": "Predator Annihilator",
-   "_delete": true
-  },
-  {
-   "name": "Predator Destructor",
-   "_delete": true
-  },
-  {
-   "name": "Vindicator",
-   "_delete": true
-  },
-  {
-   "name": "Whirlwind",
-   "_delete": true
-  },
-  {
-   "name": "Stormhawk Interceptor",
-   "_delete": true
-  },
-  {
-   "name": "Stormtalon Gunship",
-   "_delete": true
-  },
-  {
-   "name": "Stormraven Gunship",
-   "_delete": true
-  },
-  {
-   "name": "Hammerfall Bunker",
-   "_delete": true
-  },
-  {
-   "name": "Tactical Squad",
-   "_delete": true
-  },
-  {
-   "name": "Devastator Squad",
-   "_delete": true
-  },
-  {
-   "name": "Suppressor Squad",
-   "_delete": true
-  },
-  {
-   "name": "Pedro Kantor",
-   "_delete": true
-  },
-  {
-   "name": "Uriel Ventris",
-   "_delete": true
-  },
-  {
-   "name": "Victrix Honour Guard",
-   "_note": "0-1 Chapter Ancient (banner of Macragge, +15) and 0-1 Chapter Champion (blades of honour, +10) are Honour Guard models with other gear",
-   "wargearOptions": [
+  "_comment": "Space Marines 11th edition codex: units moved to Warhammer Legends (Classic Dreadnought, Centurions, Razorback, Predators, Vindicator, Whirlwind, Stormhawk/Stormtalon/Stormraven, Hammerfall Bunker) and units that became Legendary Proxies only (Tactical Squad, Devastator Squad, Suppressor Squad, Pedro Kantor, Uriel Ventris).",
+  "datasheets": [
     {
-     "text": "1 Victrix Honour Guard model can be the Chapter Ancient: master-crafted power weapon and banner of Macragge.",
-     "scope": "one",
-     "who": "Victrix Honour Guard",
-     "replace": [
-      "master-crafted bolt carbine",
-      "master-crafted power weapon"
-     ],
-     "choices": [
-      [
-       "master-crafted power weapon",
-       "banner of Macragge"
-      ]
-     ]
+      "name": "Dreadnought",
+      "_delete": true
     },
     {
-     "text": "1 Victrix Honour Guard model can be the Chapter Champion: blades of honour.",
-     "scope": "one",
-     "who": "Victrix Honour Guard",
-     "replace": [
-      "master-crafted bolt carbine",
-      "master-crafted power weapon"
-     ],
-     "choices": [
-      [
-       "blades of honour"
-      ]
-     ]
-    }
-   ]
-  },
-  {
-   "name": "Wulfen",
-   "models": [
-    {
-     "name": "Wulfen",
-     "M": 9,
-     "T": 6,
-     "Sv": 4,
-     "InSv": null,
-     "W": 2,
-     "Ld": 7,
-     "OC": 0,
-     "base": {
-      "w": 40,
-      "h": 40,
-      "text": "40mm"
-     }
-    }
-   ],
-   "composition": [
-    {
-     "name": "Wulfen",
-     "min": 5,
-     "max": 10,
-     "text": "5-10 Wulfen"
-    }
-   ],
-   "loadout": {
-    "*": [
-     "Wulfen weapons",
-     "Death totem"
-    ]
-   },
-   "loadoutText": "Each model is equipped with: Death Totem; 1 Wulfen Weapons.",
-   "options": [
-    "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher."
-   ],
-   "wargearOptions": [
-    {
-     "text": "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher.",
-     "scope": "any",
-     "who": "*",
-     "replace": [
-      "Death totem"
-     ],
-     "choices": [
-      [
-       "Stormfrag auto-launcher"
-      ]
-     ]
-    }
-   ],
-   "abilities": [
-    {
-     "name": "Death Totem",
-     "type": "Wargear",
-     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
-    }
-   ]
-  },
-  {
-   "name": "Wulfen with Storm Shields",
-   "models": [
-    {
-     "name": "Wulfen with Storm Shield",
-     "M": 9,
-     "T": 6,
-     "Sv": 4,
-     "InSv": 4,
-     "W": 2,
-     "Ld": 7,
-     "OC": 0,
-     "base": {
-      "w": 40,
-      "h": 40,
-      "text": "40mm"
-     }
-    }
-   ],
-   "composition": [
-    {
-     "name": "Wulfen with Storm Shield",
-     "min": 5,
-     "max": 10,
-     "text": "5-10 Wulfen with Storm Shield"
-    }
-   ],
-   "loadout": {
-    "*": [
-     "Thunder hammer",
-     "Stormfrag auto-launcher"
-    ]
-   },
-   "loadoutText": "Every model is equipped with: 1 Stormfrag Auto-launcher; 1 Thunder Hammer.",
-   "options": [
-    "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem."
-   ],
-   "wargearOptions": [
-    {
-     "text": "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem.",
-     "scope": "any",
-     "who": "*",
-     "replace": [
-      "Stormfrag auto-launcher"
-     ],
-     "choices": [
-      [
-       "Death totem"
-      ]
-     ]
-    }
-   ],
-   "abilities": [
-    {
-     "name": "Death Totem",
-     "type": "Wargear",
-     "text": "This unit’s melee attacks can re-roll hit rolls of 1."
-    }
-   ]
-  },
-  {
-   "name": "Wulfen Dreadnought",
-   "composition": [
-    {
-     "name": "Wulfen Dreadnought",
-     "min": 1,
-     "max": 1,
-     "text": "1 Wulfen Dreadnought"
-    }
-   ],
-   "options": [
-    "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
-    "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield."
-   ],
-   "wargearOptions": [
-    {
-     "text": "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
-     "scope": "one",
-     "who": "Wulfen Dreadnought",
-     "replace": [
-      "Storm Bolter"
-     ],
-     "choices": [
-      [
-       "Heavy Flamer"
-      ]
-     ]
+      "name": "Centurion Assault Squad",
+      "_delete": true
     },
     {
-     "text": "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield.",
-     "scope": "one",
-     "who": "Wulfen Dreadnought",
-     "replace": [
-      "Fenrisian Great Axe"
-     ],
-     "choices": [
-      [
-       "Blizzard Shield"
+      "name": "Centurion Devastator Squad",
+      "_delete": true
+    },
+    {
+      "name": "Razorback",
+      "_delete": true
+    },
+    {
+      "name": "Predator Annihilator",
+      "_delete": true
+    },
+    {
+      "name": "Predator Destructor",
+      "_delete": true
+    },
+    {
+      "name": "Vindicator",
+      "_delete": true
+    },
+    {
+      "name": "Whirlwind",
+      "_delete": true
+    },
+    {
+      "name": "Stormhawk Interceptor",
+      "_delete": true
+    },
+    {
+      "name": "Stormtalon Gunship",
+      "_delete": true
+    },
+    {
+      "name": "Stormraven Gunship",
+      "_delete": true
+    },
+    {
+      "name": "Hammerfall Bunker",
+      "_delete": true
+    },
+    {
+      "name": "Tactical Squad",
+      "_delete": true
+    },
+    {
+      "name": "Devastator Squad",
+      "_delete": true
+    },
+    {
+      "name": "Suppressor Squad",
+      "_delete": true
+    },
+    {
+      "name": "Pedro Kantor",
+      "_delete": true
+    },
+    {
+      "name": "Uriel Ventris",
+      "_delete": true
+    },
+    {
+      "name": "Victrix Honour Guard",
+      "_note": "0-1 Chapter Ancient (banner of Macragge, +15) and 0-1 Chapter Champion (blades of honour, +10) are Honour Guard models with other gear",
+      "wargearOptions": [
+        {
+          "text": "1 Victrix Honour Guard model can be the Chapter Ancient: master-crafted power weapon and banner of Macragge.",
+          "scope": "one",
+          "who": "Victrix Honour Guard",
+          "replace": [
+            "master-crafted bolt carbine",
+            "master-crafted power weapon"
+          ],
+          "choices": [
+            [
+              "master-crafted power weapon",
+              "banner of Macragge"
+            ]
+          ]
+        },
+        {
+          "text": "1 Victrix Honour Guard model can be the Chapter Champion: blades of honour.",
+          "scope": "one",
+          "who": "Victrix Honour Guard",
+          "replace": [
+            "master-crafted bolt carbine",
+            "master-crafted power weapon"
+          ],
+          "choices": [
+            [
+              "blades of honour"
+            ]
+          ]
+        }
       ]
-     ]
+    },
+    {
+      "name": "Wulfen",
+      "models": [
+        {
+          "name": "Wulfen",
+          "M": 9,
+          "T": 6,
+          "Sv": 4,
+          "InSv": null,
+          "W": 2,
+          "Ld": 7,
+          "OC": 0,
+          "base": {
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
+          }
+        }
+      ],
+      "composition": [
+        {
+          "name": "Wulfen",
+          "min": 5,
+          "max": 10,
+          "text": "5-10 Wulfen"
+        }
+      ],
+      "loadout": {
+        "*": [
+          "Wulfen weapons",
+          "Death totem"
+        ]
+      },
+      "loadoutText": "Each model is equipped with: Death Totem; 1 Wulfen Weapons.",
+      "options": [
+        "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher."
+      ],
+      "wargearOptions": [
+        {
+          "text": "Any number of models can each have their death totem replaced with 1 stormfrag auto-launcher.",
+          "scope": "any",
+          "who": "*",
+          "replace": [
+            "Death totem"
+          ],
+          "choices": [
+            [
+              "Stormfrag auto-launcher"
+            ]
+          ]
+        }
+      ],
+      "abilities": [
+        {
+          "name": "Death Totem",
+          "type": "Wargear",
+          "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+        }
+      ]
+    },
+    {
+      "name": "Wulfen with Storm Shields",
+      "models": [
+        {
+          "name": "Wulfen with Storm Shield",
+          "M": 9,
+          "T": 6,
+          "Sv": 4,
+          "InSv": 4,
+          "W": 2,
+          "Ld": 7,
+          "OC": 0,
+          "base": {
+            "w": 40,
+            "h": 40,
+            "text": "40mm"
+          }
+        }
+      ],
+      "composition": [
+        {
+          "name": "Wulfen with Storm Shield",
+          "min": 5,
+          "max": 10,
+          "text": "5-10 Wulfen with Storm Shield"
+        }
+      ],
+      "loadout": {
+        "*": [
+          "Thunder hammer",
+          "Stormfrag auto-launcher"
+        ]
+      },
+      "loadoutText": "Every model is equipped with: 1 Stormfrag Auto-launcher; 1 Thunder Hammer.",
+      "options": [
+        "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem."
+      ],
+      "wargearOptions": [
+        {
+          "text": "Any number of models can each have their Stormfrag Auto-launcher replaced with 1 Death Totem.",
+          "scope": "any",
+          "who": "*",
+          "replace": [
+            "Stormfrag auto-launcher"
+          ],
+          "choices": [
+            [
+              "Death totem"
+            ]
+          ]
+        }
+      ],
+      "abilities": [
+        {
+          "name": "Death Totem",
+          "type": "Wargear",
+          "text": "This unit’s melee attacks can re-roll hit rolls of 1."
+        }
+      ]
+    },
+    {
+      "name": "Wulfen Dreadnought",
+      "composition": [
+        {
+          "name": "Wulfen Dreadnought",
+          "min": 1,
+          "max": 1,
+          "text": "1 Wulfen Dreadnought"
+        }
+      ],
+      "options": [
+        "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+        "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield."
+      ],
+      "wargearOptions": [
+        {
+          "text": "This model's Storm Bolter can be replaced with 1 Heavy Flamer.",
+          "scope": "one",
+          "who": "Wulfen Dreadnought",
+          "replace": [
+            "Storm Bolter"
+          ],
+          "choices": [
+            [
+              "Heavy Flamer"
+            ]
+          ]
+        },
+        {
+          "text": "This model's Fenrisian Great Axe can be replaced with 1 Blizzard Shield.",
+          "scope": "one",
+          "who": "Wulfen Dreadnought",
+          "replace": [
+            "Fenrisian Great Axe"
+          ],
+          "choices": [
+            [
+              "Blizzard Shield"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lion El’jonson",
+      "abilities": [
+        {
+          "name": "Martial Exemplar (Aura)",
+          "type": "Datasheet",
+          "text": "While a friendly DARK ANGELS unit is within 6\" of this model, that unit's attacks can re-roll hit rolls of 1 and wound rolls of 1."
+        },
+        {
+          "name": "No Hiding From the Watchers (Aura)",
+          "type": "Datasheet",
+          "text": "While a friendly DARK ANGELS unit is within 6\" of this model, that unit has Feel No Pain 5+ against psychic attacks and mortal wounds."
+        },
+        {
+          "name": "Fealty to the Lion",
+          "type": "Datasheet",
+          "text": "In your Movement phase, you can remove this model from the battlefield and set it up again anywhere on the battlefield that is more than 9\" horizontally away from all enemy models."
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

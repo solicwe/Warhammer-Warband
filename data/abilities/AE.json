@@ -17,7 +17,8 @@
  },
  "Disparate Paths": {
   "status": "auto",
-  "note": "Can include Harlequins units in your army even without Asuryani keyword."
+  "note": "Can include Harlequins units in your army even without Asuryani keyword.",
+  "code": true
  },
  "Branching Fates (Psychic)": {
   "freeDie": {

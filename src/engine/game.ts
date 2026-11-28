@@ -1074,9 +1074,31 @@ function arcFormation(u: UnitState, tm: ModelState, angle: number, maxArc: numbe
   return out;
 }
 
+/** DEPLOYMENT (Convergence of Dominion): when first set up its models need no coherency, and from then on each is a separate unit. */
+function splitIntoSeparateUnits(s: GameState, u: UnitState) {
+  const ms = alive(u);
+  if (ms.length < 2) return;
+  const each = Math.round(u.pts / ms.length);
+  const rest = ms.slice(1);
+  rest.forEach((m, i) => {
+    const c = structuredClone(u);
+    c.id = `${u.id}-sep${i + 1}`;
+    c.models = [m];
+    c.startingStrength = 1;
+    c.pts = each;
+    s.units.push(c);
+  });
+  u.models = [ms[0], ...u.models.filter((m) => m.dead)];
+  u.startingStrength = 1;
+  u.pts = u.pts - each * rest.length;
+  log(s, `${u.name}: each model is now a separate unit`, 'info', u.owner);
+}
+
 export function placeUnit(s: GameState, u: UnitState, pos: Map<string, Pt>) {
+  const first = u.status !== 'board' && u.abilities.some((a) => a.name === 'DEPLOYMENT' && /treated as a separate unit/i.test(a.text ?? ''));
   for (const m of alive(u)) { const p = pos.get(m.id)!; m.x = p.x; m.y = p.y; }
   u.status = 'board';
+  if (first) splitIntoSeparateUnits(s, u);
   u.setUpTurn = s.turn;
   if (s.phase !== 'deploy' && s.phase !== 'scouts') { arrivalShock(s, u); unleashWrathHook?.(s, u); }
   // Seeker of the Unfound: the first time it is set up, it picks an objective (the nearest one out in the field)
@@ -1868,7 +1890,7 @@ export function ingressUnit(s: GameState, u: UnitState, pos: Map<string, Pt>): M
   }
   fire(s, 'arrived', [u]);
   emit(s, 'arrived', { u });
-  if (unitHasAbility(u, 'Drop Pod Assault')) dropPodAssault(s, u);
+  if (unitHasAbility(u, 'Drop Pod Assault') || unitHasAbility(u, 'Aerial Seeding')) dropPodAssault(s, u);
   if (u.homer && s.active !== u.owner) { log(s, `Teleport Homer: ${u.name} arrives at the token (token removed)`, 'info', u.owner); u.homer = undefined; }
   return chk;
 }
@@ -1887,7 +1909,7 @@ function dropPodAssault(s: GameState, pod: UnitState) {
       const far = alive(p).every((m) => { const q = pos.get(m.id)!; return enemies.every((n) => gap(bodyAt(m, q), n) > 8); });
       if (far && validateDisembark(s, p, pod, pos).ok) { disembarkUnit(s, p, pod, pos); done = true; break; }
     }
-    log(s, done ? `Drop Pod Assault: ${p.name} disembarks from ${pod.name} (more than 8" from enemies)` : `Drop Pod Assault: no room for ${p.name} more than 8" from enemies — it stays in the pod`, 'info', pod.owner);
+    log(s, done ? `${unitHasAbility(pod, 'Aerial Seeding') ? 'Aerial Seeding' : 'Drop Pod Assault'}: ${p.name} disembarks from ${pod.name} (more than 8" from enemies)` : `Drop Pod Assault: no room for ${p.name} more than 8" from enemies — it stays in the pod`, 'info', pod.owner);
   }
 }
 
@@ -2546,7 +2568,8 @@ export function levelOfControl(s: GameState, o: ObjectiveState): [number, number
   return lv;
 }
 
-export function updateControl(s: GameState) {
+/** `live`: refresh who holds each objective while units move (the screen shows it); a secured objective keeps its flag until the phase ends. */
+export function updateControl(s: GameState, live = false) {
   const levels = s.objectives.map((o) => levelOfControl(s, o));
   for (let i = 0; i < s.objectives.length; i++) {
     const o = s.objectives[i];
@@ -2555,10 +2578,10 @@ export function updateControl(s: GameState) {
     // "secured" objectives (Objective Secured …) stay yours until the opponent controls them
     if (o.secured !== undefined && o.secured !== null) {
       const mine = o.secured === 0 ? a : b, theirs = o.secured === 0 ? b : a;
-      if (theirs > mine) { o.secured = null; o.sabotaged = null; } else c = o.secured;
+      if (theirs > mine) { if (!live) { o.secured = null; o.sabotaged = null; } } else c = o.secured;
     }
     o.controller = c;
-    if (o.warded != null && c === other(o.warded)) o.warded = null;
+    if (!live && o.warded != null && c === other(o.warded)) o.warded = null;
   }
 }
 

@@ -1,4 +1,15 @@
 /** Players can change unit pictures or the army emblem in the app; photos can be exported as JSON or ZIP. */
+/** Owner tools (publish photos, export ZIP) show only on a device where the owner opened the page once with ?admin in the address;
+ *  `?admin=off` hides them again. Visitors never see them. (The real protection is the GitHub token: only the owner's token can write.) */
+const ADMIN_FLAG = 'w40k11-admin';
+export const IS_ADMIN: boolean = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('admin');
+    if (q === 'off') localStorage.removeItem(ADMIN_FLAG);
+    else if (q !== null) localStorage.setItem(ADMIN_FLAG, '1');
+    return localStorage.getItem(ADMIN_FLAG) === '1';
+  } catch { return false; }
+})();
 /** Photo editing and photo export can be switched off by the player (Home screen, Photos); the page reloads to apply. */
 const PHOTO_FLAG = 'w40k11-photo-edit';
 export const PHOTO_EDIT: boolean = (() => { try { return localStorage.getItem(PHOTO_FLAG) !== '0'; } catch { return true; } })();

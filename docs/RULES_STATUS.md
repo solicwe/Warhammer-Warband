@@ -22,29 +22,29 @@ That a rule runs does not prove its numbers match the card: see "Accuracy" below
 | Adepta Sororitas (AS) | 72 / 21 / 3 | 36 / 0 / 0 |
 | Adeptus Custodes (AC) | 65 / 3 / 0 | 41 / 0 / 0 |
 | Adeptus Mechanicus (AdM) | 90 / 3 / 5 | 50 / 0 / 0 |
-| Adeptus Titanicus (TL) | 5 / 1 / 1 | 0 / 0 / 0 |
-| Aeldari (AE) | 156 / 19 / 7 | 78 / 0 / 0 |
+| Adeptus Titanicus (TL) | 5 / 2 / 0 | 0 / 0 / 0 |
+| Aeldari (AE) | 156 / 20 / 6 | 78 / 0 / 0 |
 | Astra Militarum (AM) | 119 / 29 / 9 | 57 / 0 / 0 |
-| Chaos Daemons (CD) | 121 / 13 / 9 | 46 / 0 / 0 |
+| Chaos Daemons (CD) | 122 / 14 / 7 | 46 / 0 / 0 |
 | Chaos Knights (QT) | 69 / 4 / 1 | 39 / 0 / 0 |
 | Chaos Space Marines (CSM) | 163 / 12 / 3 | 93 / 0 / 0 |
 | Death Guard (DG) | 86 / 10 / 3 | 45 / 0 / 0 |
-| Drukhari (DRU) | 112 / 21 / 6 | 45 / 0 / 0 |
+| Drukhari (DRU) | 112 / 23 / 4 | 45 / 0 / 0 |
 | Emperor’s Children (EC) | 75 / 4 / 0 | 51 / 0 / 0 |
-| Genestealer Cults (GC) | 194 / 66 / 30 | 45 / 0 / 0 |
+| Genestealer Cults (GC) | 194 / 79 / 17 | 45 / 0 / 0 |
 | Grey Knights (GK) | 63 / 20 / 0 | 45 / 0 / 0 |
 | Imperial Agents (AoI) | 84 / 7 / 4 | 30 / 0 / 0 |
 | Imperial Knights (QI) | 73 / 2 / 1 | 39 / 0 / 0 |
 | Leagues of Votann (LoV) | 73 / 11 / 0 | 51 / 0 / 0 |
-| Necrons (NEC) | 124 / 13 / 9 | 63 / 0 / 0 |
+| Necrons (NEC) | 124 / 14 / 8 | 63 / 0 / 0 |
 | Orks (ORK) | 127 / 13 / 0 | 40 / 0 / 0 |
-| Space Marines (SM) | 396 / 32 / 15 | 141 / 0 / 0 |
-| T’au Empire (TAU) | 84 / 14 / 12 | 28 / 0 / 0 |
-| Thousand Sons (TS) | 74 / 21 / 2 | 45 / 0 / 0 |
-| Tyranids (TYR) | 95 / 18 / 4 | 51 / 0 / 0 |
+| Space Marines (SM) | 397 / 34 / 12 | 141 / 0 / 0 |
+| T’au Empire (TAU) | 84 / 15 / 11 | 28 / 0 / 0 |
+| Thousand Sons (TS) | 74 / 22 / 1 | 45 / 0 / 0 |
+| Tyranids (TYR) | 95 / 20 / 2 | 51 / 0 / 0 |
 | Unbound Adversaries (UA) | 0 / 0 / 0 | 0 / 0 / 0 |
-| World Eaters (WE) | 70 / 13 / 1 | 39 / 0 / 0 |
-| **All** | 2590 / 370 / 125 | 1198 / 0 / 0 |
+| World Eaters (WE) | 70 / 14 / 0 | 39 / 0 / 0 |
+| **All** | 2592 / 396 / 97 | 1198 / 0 / 0 |
 <!-- status:end -->
 
 ## Known bugs (engine work needed)

@@ -1417,8 +1417,9 @@
   "note": "Core FORTIFICATION rules"
  },
  "DEPLOYMENT": {
-  "status": "manual",
-  "note": "Not automated: the models set up apart and count as separate units"
+  "code": true,
+  "status": "auto",
+  "note": "When first set up, each model becomes a separate unit (the 12\" set-up limit is not checked)"
  },
  "Translocation Shroud": {
   "effects": [

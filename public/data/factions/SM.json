@@ -25130,6 +25130,21 @@
           "name": "The Watchers",
           "type": "Datasheet",
           "text": "This model has Feel No Pain 4+ against psychic attacks and mortal wounds."
+        },
+        {
+          "name": "Martial Exemplar (Aura)",
+          "type": "Datasheet",
+          "text": "While a friendly DARK ANGELS unit is within 6\" of this model, that unit's attacks can re-roll hit rolls of 1 and wound rolls of 1."
+        },
+        {
+          "name": "No Hiding From the Watchers (Aura)",
+          "type": "Datasheet",
+          "text": "While a friendly DARK ANGELS unit is within 6\" of this model, that unit has Feel No Pain 5+ against psychic attacks and mortal wounds."
+        },
+        {
+          "name": "Fealty to the Lion",
+          "type": "Datasheet",
+          "text": "In your Movement phase, you can remove this model from the battlefield and set it up again anywhere on the battlefield that is more than 9\" horizontally away from all enemy models."
         }
       ],
       "leads": [],
