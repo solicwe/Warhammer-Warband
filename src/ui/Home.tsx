@@ -36,16 +36,16 @@ function PhotoTools() {
   return (
     <section className="group" aria-label="Photos">
       <div className="group-head"><h3>Photos</h3><span className="group-count num">{PHOTO_EDIT ? freshPortraitCount() : 0}</span></div>
-      <label className="row small" style={{ gap: 8 }}>
-        <input type="checkbox" checked={PHOTO_EDIT} onChange={(e) => setPhotoEdit(e.target.checked)} />
+      <label className="small" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 12px' }}>
+        <input type="checkbox" style={{ width: 20, height: 20, flex: 'none' }} checked={PHOTO_EDIT} onChange={(e) => setPhotoEdit(e.target.checked)} />
         Photo editing and export (the page reloads)
       </label>
       {PHOTO_EDIT && (
         <>
-          <div className="tiny muted">Photos changed since the last publish: {freshPortraitCount()}. Publishing uploads them to the site's GitHub repository with your own token (repo contents write). The token stays on this device.</div>
-          <input className="ab-title" type="password" aria-label="GitHub token" placeholder="GitHub token" value={token} onChange={(e) => { setToken(e.target.value); setPublishToken(e.target.value); }} />
-          <button type="button" className="btn small" disabled={busy || !freshPortraitCount()} onClick={async () => { setBusy(true); try { setMsg(await publishPortraits()); } catch (e) { setMsg(e instanceof Error ? e.message : 'Could not publish'); } setBusy(false); }}>{busy ? 'Publishing...' : 'Publish photos to the site'}</button>
-          {msg && <div className="tiny">{msg}</div>}
+          <div className="tiny muted" style={{ padding: '0 12px' }}>Photos changed since the last publish: {freshPortraitCount()}. Publishing uploads them to the site's GitHub repository with your own token (repo contents write). The token stays on this device.</div>
+          <input type="password" aria-label="GitHub token" placeholder="GitHub token (github_pat_...)" autoComplete="off" style={{ display: 'block', width: 'calc(100% - 24px)', margin: '6px 12px', padding: '8px 10px', font: '400 14px var(--font-ui)', textTransform: 'none', letterSpacing: 0, borderRadius: 6 }} value={token} onChange={(e) => { setToken(e.target.value); setPublishToken(e.target.value); }} />
+          <button type="button" className="btn small" style={{ margin: '4px 12px 8px' }} disabled={busy || !freshPortraitCount()} onClick={async () => { setBusy(true); try { setMsg(await publishPortraits()); } catch (e) { setMsg(e instanceof Error ? e.message : 'Could not publish'); } setBusy(false); }}>{busy ? 'Publishing...' : 'Publish photos to the site'}</button>
+          {msg && <div className="tiny" style={{ padding: '0 12px 8px' }}>{msg}</div>}
         </>
       )}
     </section>
